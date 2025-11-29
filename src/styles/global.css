@@ -1,0 +1,58 @@
+:root {
+  --color-terracotta: #E2725B;
+  --color-laterite: #A04000;
+  --color-beige: #F5F5DC;
+  --color-slate: #37474F;
+  --color-white: #FFFFFF;
+  --color-grey-light: #F0F0F0;
+
+  --font-serif: 'Merriweather', serif;
+  --font-sans: 'Inter', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-beige);
+  background-image: url('../assets/bg_pattern.png');
+  background-repeat: repeat;
+  background-size: 300px;
+  color: var(--color-slate);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  color: var(--color-slate);
+}
+
+button {
+  cursor: pointer;
+  font-family: var(--font-sans);
+  border: none;
+  outline: none;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Utilities */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}

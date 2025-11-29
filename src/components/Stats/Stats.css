@@ -1,0 +1,124 @@
+
+.stats {
+  padding: 100px 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.stats__bg {
+  position: absolute;
+  inset: 0;
+}
+
+.stats__gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(212, 175, 55, 0.05) 0%,
+    transparent 50%,
+    rgba(0, 143, 93, 0.05) 100%
+  );
+}
+
+.stats__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 40px;
+  position: relative;
+  z-index: 1;
+}
+
+.stats__card {
+  text-align: center;
+  padding: 40px 24px;
+  background: rgba(17, 34, 64, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 24px;
+  transition: all var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+}
+
+.stats__card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-gold), var(--color-emerald));
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+}
+
+.stats__card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(212, 175, 55, 0.2);
+}
+
+.stats__card:hover::before {
+  opacity: 1;
+}
+
+.stats__card-value {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.stats__card-number {
+  font-family: var(--font-serif);
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: var(--color-gold);
+  line-height: 1;
+}
+
+.stats__card-suffix {
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--color-emerald);
+}
+
+.stats__card-label {
+  font-family: var(--font-sans);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--color-off-white);
+  margin-bottom: 8px;
+}
+
+.stats__card-description {
+  font-size: 0.9rem;
+  color: var(--color-gray);
+  line-height: 1.5;
+}
+
+@media (max-width: 1024px) {
+  .stats__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .stats {
+    padding: 60px 0;
+  }
+
+  .stats__grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .stats__card {
+    padding: 32px 20px;
+  }
+
+  .stats__card-number {
+    font-size: 2.5rem;
+  }
+}
