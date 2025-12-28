@@ -1,25 +1,28 @@
-
 import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Search } from 'lucide-react';
 import './Navbar.css';
 
-interface NavbarProps {
-  scrolled?: boolean;
-}
 function Navbar({ scrolled }: { scrolled: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <nav className={`navbar ${scrolled ? 'navbar--scrolled' : ''}`}>
       <div className="navbar__container container">
-        <a href="#" className="navbar__logo">
+        <Link to="/" className="navbar__logo">
           LEXENEGAL
-        </a>
+        </Link>
+
+        {/* Simple Global Search Icon for Quick Access */}
+        <div style={{ marginLeft: 'auto', marginRight: '1rem', cursor: 'pointer' }} onClick={() => navigate('/search')}>
+          <Search size={20} color={scrolled ? '#111827' : '#FFFFFF'} />
+        </div>
 
         <div className={`navbar__menu ${menuOpen ? 'navbar__menu--open' : ''}`}>
-          <a href="#hero" className="navbar__link" onClick={() => setMenuOpen(false)}>Accueil</a>
-          <a href="#ecosystem" className="navbar__link" onClick={() => setMenuOpen(false)}>Solutions</a>
-          <a href="#innovation" className="navbar__link" onClick={() => setMenuOpen(false)}>Innovation</a>
-          <a href="#trust" className="navbar__link" onClick={() => setMenuOpen(false)}>À propos</a>
+          <Link to="/" className="navbar__link" onClick={() => setMenuOpen(false)}>Accueil</Link>
+          <a href="/#ecosystem" className="navbar__link" onClick={() => setMenuOpen(false)}>Solutions</a>
+          <Link to="/search" className="navbar__link" onClick={() => setMenuOpen(false)}>Recherche</Link>
           <button className="navbar__cta">Espace Professionnel</button>
         </div>
 

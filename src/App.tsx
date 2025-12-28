@@ -1,12 +1,20 @@
 import React, { useEffect, useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar/Navbar';
-import Hero from './components/Hero/Hero';
-import SecurityStandards from './components/Trust/SecurityStandards';
-import Innovation from './components/Innovation/Innovation';
-import Ecosystem from './components/Ecosystem/Ecosystem';
-import Impact from './components/Impact/Impact';
 import Footer from './components/Footer/Footer';
+import Home from './pages/Home/Home';
+import SearchPage from './pages/Search/SearchPage'; // Placeholder
+import DecisionPage from './pages/Decision/DecisionPage'; // Placeholder
 import './App.css';
+
+// ScrollToTop component to reset scroll on route change
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+};
 
 function App() {
   const [scrolled, setScrolled] = useState(false);
@@ -21,17 +29,18 @@ function App() {
   }, []);
 
   return (
-    <div className="app">
-      <Navbar scrolled={scrolled} />
-      <main>
-        <Hero />
-        <SecurityStandards />
-        <Innovation />
-        <Ecosystem />
-        <Impact />
-      </main>
-      <Footer />
-    </div>
+    <Router>
+      <ScrollToTop />
+      <div className="app">
+        <Navbar scrolled={scrolled} />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/decision/:slug" element={<DecisionPage />} />
+        </Routes>
+        <Footer />
+      </div>
+    </Router>
   );
 }
 
