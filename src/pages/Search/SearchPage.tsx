@@ -17,18 +17,19 @@ interface Decision {
     date_decision: string;
     matiere_principale: string;
     chambre: string;
-    resume: string; // generated preview
+    resume: string;
     slug: string;
     mots_cles: string[];
 }
 
 const SearchPage: React.FC = () => {
     const [searchParams, setSearchParams] = useSearchParams();
-    const query = searchParams.get('q') || '';
+    const queryParam = searchParams.get('q') || '';
+    const [query, setQuery] = useState(queryParam); // Local state for input
 
     const [results, setResults] = useState<Decision[]>([]);
     const [totalHits, setTotalHits] = useState(0);
-    const [facets, setFacets] = useState<any>({}); // For storing dynamic facets
+    const [facets, setFacets] = useState<any>({});
     const [loading, setLoading] = useState(false);
 
     const navigate = useNavigate();
@@ -37,8 +38,17 @@ const SearchPage: React.FC = () => {
     const [selectedMatiere, setSelectedMatiere] = useState<string[]>([]);
     const [dateSort, setDateSort] = useState<'desc' | 'asc'>('desc');
 
+    // Sync URL param to Local State on mount
     useEffect(() => {
-        performSearch();
+        setQuery(queryParam);
+    }, [queryParam]);
+
+    // AS YOU TYPE SEARCH (Debounced effectively by logic or rapid updates, explicit debounce opt)
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            performSearch();
+        }, 300); // 300ms debounce
+        return () => clearTimeout(timer);
     }, [query, selectedMatiere, dateSort]);
 
     const performSearch = async () => {
@@ -53,10 +63,8 @@ const SearchPage: React.FC = () => {
                 attributesToSnippet: ['texte_integral:50'],
                 filter: filterExpression,
                 sort: [`date_decision:${dateSort}`],
-                facets: ['matiere_principale', 'chambre']
+                facets: ['matiere_principale', 'date_decision'] // Ensure facets returned
             });
-
-            console.log("Search results:", searchResponse); // Debug
 
             setResults(searchResponse.hits as unknown as Decision[]);
             setTotalHits(searchResponse.estimatedTotalHits);
@@ -70,7 +78,11 @@ const SearchPage: React.FC = () => {
     };
 
     const handleSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSearchParams({ q: e.target.value });
+        const newVal = e.target.value;
+        setQuery(newVal);
+        // We update URL seamlessly? Or just keep local? 
+        // Better to keep local for typing speed, but maybe sync on debounce?
+        // For now, simple local state + debounce is best for UX.
     };
 
     const toggleMatiere = (matiere: string) => {
@@ -87,28 +99,39 @@ const SearchPage: React.FC = () => {
             <aside className="searchSidebar">
                 <div className="filterGroup">
                     <h3>Matière</h3>
-                    {facets?.matiere_principale && Object.keys(facets.matiere_principale).map(matiere => (
-                        <label key={matiere}>
-                            <input
-                                type="checkbox"
-                                checked={selectedMatiere.includes(matiere)}
-                                onChange={() => toggleMatiere(matiere)}
-                            />
-                            {matiere} <span style={{ color: '#9CA3AF', fontSize: '0.8em' }}>({facets.matiere_principale[matiere]})</span>
-                        </label>
-                    ))}
+                    <ul className="filterList">
+                        {facets?.matiere_principale && Object.keys(facets.matiere_principale).map(matiere => (
+                            <li key={matiere} className="filterItem" onClick={() => toggleMatiere(matiere)}>
+                                <div style={{ display: 'flex', alignItems: 'center' }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedMatiere.includes(matiere)}
+                                        readOnly
+                                    />
+                                    <span>{matiere}</span>
+                                </div>
+                                <span className="filterCount">{facets.matiere_principale[matiere]}</span>
+                            </li>
+                        ))}
+                    </ul>
                 </div>
 
-                <div className="filterGroup" style={{ marginTop: '2rem' }}>
-                    <h3>Année</h3>
-                    <select
-                        value={dateSort}
-                        onChange={(e) => setDateSort(e.target.value as 'asc' | 'desc')}
-                        style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #E5E7EB' }}
-                    >
-                        <option value="desc">Plus récent d'abord</option>
-                        <option value="asc">Plus ancien d'abord</option>
-                    </select>
+                <div className="filterGroup">
+                    <h3>Année / Tri</h3>
+                    <ul className="filterList">
+                        <li className="filterItem" onClick={() => setDateSort('desc')}>
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                <span style={{ width: '16px', marginRight: '0.75rem', textAlign: 'center', color: dateSort === 'desc' ? '#047857' : '#D1D5DB' }}>●</span>
+                                <span>Plus récent d'abord</span>
+                            </div>
+                        </li>
+                        <li className="filterItem" onClick={() => setDateSort('asc')}>
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                <span style={{ width: '16px', marginRight: '0.75rem', textAlign: 'center', color: dateSort === 'asc' ? '#047857' : '#D1D5DB' }}>●</span>
+                                <span>Plus ancien d'abord</span>
+                            </div>
+                        </li>
+                    </ul>
                 </div>
             </aside>
 
@@ -118,13 +141,13 @@ const SearchPage: React.FC = () => {
                     <input
                         type="text"
                         className="searchInput"
-                        placeholder="Rechercher un arrêt, un mot-clé, une référence..."
+                        placeholder="Rechercher..."
                         value={query}
                         onChange={handleSearchInput}
                         autoFocus
                     />
                     <div className="resultsCount">
-                        {loading ? 'Recherche en cours...' : `${totalHits} résultats trouvés`}
+                        {loading ? '...' : `${totalHits} décisions trouvées`}
                     </div>
                 </div>
 
@@ -133,7 +156,7 @@ const SearchPage: React.FC = () => {
                         <div key={hit.id} className="resultCard" onClick={() => navigate(`/decision/${hit.slug}`)}>
                             <div className="cardHeader">
                                 <span className="cardRef">{hit.reference}</span>
-                                <span className="cardDate">{hit.date_decision ? new Date(hit.date_decision).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Date inconnue'}</span>
+                                <span className="cardDate">{hit.date_decision ? new Date(hit.date_decision).toLocaleDateString('fr-FR', { year: 'numeric' }) : 'N/A'}</span>
                             </div>
                             <h2 className="cardTitle">{hit.matiere_principale} - {hit.chambre}</h2>
                             <p className="cardSnippet" dangerouslySetInnerHTML={{ __html: (hit as any)._formatted?.texte_integral || hit.resume }} />
@@ -147,8 +170,8 @@ const SearchPage: React.FC = () => {
                     ))}
 
                     {!loading && results.length === 0 && (
-                        <div style={{ textAlign: 'center', marginTop: '4rem', color: '#6B7280' }}>
-                            <p>Aucun résultat trouvé pour "{query}".</p>
+                        <div style={{ textAlign: 'center', marginTop: '4rem', color: '#9CA3AF' }}>
+                            <p>Aucun résultat.</p>
                         </div>
                     )}
                 </div>

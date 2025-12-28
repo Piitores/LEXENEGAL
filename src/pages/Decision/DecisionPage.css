@@ -16,28 +16,32 @@
     margin: 3rem 0;
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     position: relative;
+    border-top: 4px solid #047857;
+    /* Prestige touch */
 }
 
 .decisionHeader {
     text-align: center;
     margin-bottom: 3rem;
     padding-bottom: 2rem;
-    border-bottom: 2px solid #047857;
+    border-bottom: 2px solid #F3F4F6;
 }
 
 .decisionRef {
-    color: #6B7280;
-    font-weight: 500;
+    color: #047857;
+    font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 1px;
     font-size: 0.9rem;
+    display: block;
+    margin-bottom: 1rem;
 }
 
 .decisionTitle {
     font-family: 'Playfair Display', serif;
     font-size: 2.5rem;
     color: #111827;
-    margin: 1rem 0;
+    margin: 0.5rem 0 1.5rem 0;
     line-height: 1.2;
 }
 
@@ -45,15 +49,17 @@
     display: flex;
     justify-content: center;
     gap: 2rem;
-    color: #4B5563;
+    color: #6B7280;
     font-size: 0.95rem;
+    font-style: italic;
 }
 
 .decisionBody {
-    font-family: 'Inter', sans-serif;
-    line-height: 1.8;
-    color: #1F2937;
-    font-size: 1.05rem;
+    font-family: 'Merriweather', serif;
+    /* Better reading font */
+    line-height: 1.9;
+    color: #374151;
+    font-size: 1.1rem;
     text-align: justify;
 }
 
@@ -74,16 +80,18 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    box-shadow: 0 10px 15px -3px rgba(4, 120, 87, 0.3);
+    box-shadow: 0 10px 20px -5px rgba(4, 120, 87, 0.4);
     cursor: pointer;
-    transition: transform 0.2s;
+    transition: all 0.2s;
     border: none;
     z-index: 50;
+    font-family: 'Inter', sans-serif;
 }
 
 .fabExport:hover {
     transform: translateY(-2px);
     background: #065F46;
+    box-shadow: 0 15px 25px -5px rgba(4, 120, 87, 0.5);
 }
 
 /* Hidden Print Template */
@@ -92,45 +100,55 @@
     top: -9999px;
     left: -9999px;
     width: 210mm;
-    /* A4 width */
+    min-height: 297mm;
     padding: 20mm;
     background: white;
     color: black !important;
     font-family: 'Times New Roman', serif;
-    /* Legal standard */
 }
 
-.printHeader {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #000;
-    padding-bottom: 1rem;
-    margin-bottom: 2rem;
+.printContainer {
+    position: relative;
+    z-index: 10;
 }
 
-.printFooter {
-    position: fixed;
-    /* In PDF generation this handles differently, usually needs manual placement per page or html2pdf config */
-    bottom: 0;
-    width: 100%;
-    border-top: 1px solid #ccc;
-    padding-top: 10px;
-    font-size: 0.8rem;
-    display: flex;
-    justify-content: space-between;
-}
-
-.watermark {
+.watermark-img {
     position: absolute;
-    top: 50%;
+    top: 55%;
     left: 50%;
-    transform: translate(-50%, -50%) rotate(-45deg);
-    font-size: 8rem;
-    color: rgba(0, 0, 0, 0.03);
-    font-weight: bold;
+    width: 70%;
+    transform: translate(-50%, -50%);
+    opacity: 0.04;
+    /* Requested 0.03, slightly higher for html2canvas visibility sometimes needed */
     pointer-events: none;
     z-index: 0;
+}
+
+.legal-line {
+    display: flex;
+    margin-bottom: 1mm;
+    position: relative;
+}
+
+.line-number {
+    width: 8mm;
+    color: #AAA;
+    font-size: 8pt;
+    text-align: right;
+    padding-right: 2mm;
+    user-select: none;
+    border-right: 1px solid #ddd;
+    margin-right: 3mm;
+    font-family: 'Inter', sans-serif;
+    padding-top: 1pt;
+}
+
+.line-content {
+    flex: 1;
+    text-align: justify;
+    font-size: 10.5pt;
+    line-height: 1.4;
+    font-family: 'Times New Roman', serif;
 }
 
 /* Responsive */
@@ -139,9 +157,16 @@
         padding: 2rem;
         margin: 0;
         box-shadow: none;
+        border-top: none;
     }
 
     .decisionTitle {
         font-size: 1.75rem;
+    }
+
+    .fabExport {
+        bottom: 1rem;
+        right: 1rem;
+        padding: 0.8rem 1.5rem;
     }
 }

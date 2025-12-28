@@ -7,8 +7,7 @@ import html2canvas from 'html2canvas';
 
 import './DecisionPage.css';
 
-// --- CONFIG MEILISEARCH CLOUD ---
-// Reuse same config (ideally move to a config/services file)
+// --- CONFIG ---
 const client = new MeiliSearch({
     host: 'https://ms-9c13e7ae24b5-37398.fra.meilisearch.io',
     apiKey: 'eabe07740906b7bad2b7dcbe72ab6c010888bc827d3e7ec28b365810a5cad73a',
@@ -31,17 +30,12 @@ const DecisionPage: React.FC = () => {
     const fetchDecision = async () => {
         setLoading(true);
         try {
-            // Find by slug
             const searchResponse = await index.search(slug, {
                 filter: `slug = "${slug}"`,
                 limit: 1
             });
-
             if (searchResponse.hits.length > 0) {
                 setDecision(searchResponse.hits[0]);
-            } else {
-                console.error("Decision not found");
-                // navigate('/search'); // Optional redirect
             }
         } catch (error) {
             console.error(error);
@@ -53,38 +47,42 @@ const DecisionPage: React.FC = () => {
     const handleDownloadPDF = async () => {
         if (!printRef.current || !decision) return;
 
-        const element = printRef.current;
-
         try {
-            const canvas = await html2canvas(element, { scale: 2 });
-            const imgData = canvas.toDataURL('image/png');
+            const element = printRef.current;
+            // High scale for clarity, useCORS for external images if any (QR)
+            const canvas = await html2canvas(element, { scale: 2, useCORS: true });
+            const imgData = canvas.toDataURL('image/jpeg', 0.9);
 
+            // A4 dimensions in mm
             const pdf = new jsPDF('p', 'mm', 'a4');
-            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfWidth = 210;
             const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
-            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-            pdf.save(`Lexenegal-${decision.reference}.pdf`);
+            pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save(`Lexenegal-${decision.reference.replace(/\//g, '-')}.pdf`);
         } catch (err) {
             console.error("PDF Export failed", err);
         }
     };
 
-    if (loading) return <div style={{ textAlign: 'center', marginTop: '4rem' }}>Chargement de la décision...</div>;
-    if (!decision) return <div style={{ textAlign: 'center', marginTop: '4rem' }}>Décision introuvable.</div>;
+    if (loading) return <div className="decisionPage" style={{ alignItems: 'center' }}>Chargement...</div>;
+    if (!decision) return <div className="decisionPage" style={{ alignItems: 'center' }}>Décision introuvable.</div>;
+
+    // Process text for paragraphs
+    const paragraphs = decision.texte_integral.split('\n').filter((p: string) => p.trim() !== '');
 
     return (
         <div className="decisionPage">
             <button className="fabExport" onClick={handleDownloadPDF}>
                 <Download size={20} />
-                Télécharger PDF
+                <span>Télécharger PDF (Officiel)</span>
             </button>
 
             <button
                 onClick={() => navigate('/search')}
-                style={{ position: 'fixed', top: '100px', left: '2rem', border: 'none', background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#4B5563' }}
+                style={{ position: 'fixed', top: '100px', left: '2rem', border: 'none', background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#4B5563', fontSize: '0.95rem' }}
             >
-                <ArrowLeft size={20} /> Retour
+                <ArrowLeft size={18} /> Retour
             </button>
 
             {/* SCREEN VIEW */}
@@ -94,6 +92,7 @@ const DecisionPage: React.FC = () => {
                     <h1 className="decisionTitle">{decision.chambre}</h1>
                     <div className="decisionMeta">
                         <span>{new Date(decision.date_decision).toLocaleDateString('fr-FR', { dateStyle: 'long' })}</span>
+                        <span>•</span>
                         <span>{decision.matiere_principale}</span>
                     </div>
                 </div>
@@ -105,33 +104,54 @@ const DecisionPage: React.FC = () => {
                 </div>
             </div>
 
-            {/* HIDDEN PRINT TEMPLATE (Simplistic approach for html2canvas) */}
+            {/* HIDDEN PRINT TEMPLATE */}
             <div className="printTemplate" ref={printRef}>
-                <div className="watermark">LEXENEGAL</div>
-                <div className="printHeader">
-                    <img src="/logo.png" alt="Lexenegal" style={{ height: '40px' }} onError={(e) => e.currentTarget.style.display = 'none'} />
-                    <div style={{ textAlign: 'right' }}>
-                        <h2 style={{ margin: 0, fontSize: '14pt' }}>CERTIFIÉ CONFORME</h2>
-                        <span style={{ fontSize: '10pt' }}>République du Sénégal</span>
-                    </div>
-                </div>
+                {/* Watermark Logo */}
+                <img src="/watermark-logo.jpg" className="watermark-img" alt="" />
 
-                <div style={{ padding: '20mm 0' }}>
-                    <h1 style={{ textAlign: 'center', fontSize: '18pt', marginBottom: '10mm' }}>
-                        {decision.reference} - {new Date(decision.date_decision).toLocaleDateString()}
-                    </h1>
-                    <div style={{ fontSize: '11pt', lineHeight: '1.5', textAlign: 'justify' }}>
-                        {decision.texte_integral.split('\n').map((para: string, idx: number) => (
-                            <p key={idx} style={{ marginBottom: '3mm' }}>{para}</p>
-                        ))}
+                <div className="printContainer">
+                    {/* Official Header */}
+                    <div className="printHeader" style={{ borderBottom: '2px solid #000', paddingBottom: '8mm', marginBottom: '10mm', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                        <div>
+                            <h2 style={{ margin: 0, fontSize: '22pt', fontFamily: 'Times New Roman', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold' }}>
+                                <span style={{ color: '#047857' }}>LEX</span>ENEGAL
+                            </h2>
+                            <div style={{ fontSize: '9pt', color: '#444', marginTop: '2mm', textTransform: 'uppercase', letterSpacing: '1px' }}>Base de Jurisprudence Certifiée</div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                            <h3 style={{ margin: 0, fontSize: '12pt', textTransform: 'uppercase' }}>République du Sénégal</h3>
+                            <div style={{ fontSize: '10pt', fontStyle: 'italic' }}>Au nom du Peuple Sénégalais</div>
+                        </div>
                     </div>
-                </div>
 
-                <div className="printFooter" style={{ marginTop: '20mm', borderTop: '1px solid #000', paddingTop: '5mm', display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Source: Lexenegal.sn</span>
-                    <span>Document généré le {new Date().toLocaleDateString()}</span>
-                    {/* Placeholder QR Code */}
-                    <div style={{ width: '20mm', height: '20mm', background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8pt' }}>QR</div>
+                    {/* Content with Line Numbers */}
+                    <div>
+                        <h1 style={{ textAlign: 'center', fontSize: '14pt', marginBottom: '8mm', fontWeight: 'bold', textDecoration: 'underline' }}>
+                            {decision.reference} du {new Date(decision.date_decision).toLocaleDateString('fr-FR')}
+                        </h1>
+
+                        <div>
+                            {paragraphs.map((para: string, idx: number) => (
+                                <div key={idx} className="legal-line">
+                                    <div className="line-number">{idx + 1}</div>
+                                    <div className="line-content">{para}</div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div style={{ marginTop: '15mm', paddingTop: '5mm', borderTop: '1px solid #ccc', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '8pt', color: '#555' }}>
+                        <div>
+                            <strong>Source Certifiée :</strong> www.lexenegal.sn<br />
+                            Document généré électroniquement le {new Date().toLocaleDateString('fr-FR')}
+                        </div>
+                        <img
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://lexenegal.sn/decision/${slug}&color=047857`}
+                            alt="QR Verification"
+                            style={{ width: '18mm', height: '18mm' }}
+                        />
+                    </div>
                 </div>
             </div>
         </div>
