@@ -21,7 +21,7 @@ function Navbar({ scrolled }: { scrolled: boolean }) {
 
         {/* Simple Global Search Icon for Quick Access */}
         <div style={{ marginLeft: 'auto', marginRight: '1rem', cursor: 'pointer' }} onClick={() => navigate('/search')}>
-          <Search size={20} color={isScrolled ? '#111827' : '#FFFFFF'} />
+          <Search size={20} color="#111827" />
         </div>
 
         <div className={`navbar__menu ${menuOpen ? 'navbar__menu--open' : ''}`}>

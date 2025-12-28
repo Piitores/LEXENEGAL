@@ -1,8 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Hero.css';
 
 function Hero() {
+  const [query, setQuery] = useState('');
+  const navigate = useNavigate();
   const suggestions = ['Code pénal', 'Droit du travail', 'Conseil constitutionnel'];
+
+  const handleSearch = () => {
+    if (query.trim()) {
+      navigate(`/search?q=${encodeURIComponent(query)}`);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') handleSearch();
+  };
 
   return (
     <section id="hero" className="hero">
@@ -26,13 +39,20 @@ function Hero() {
                 type="text"
                 placeholder="Rechercher une décision, un décret, une loi..."
                 className="hero__search-input"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={handleKeyDown}
               />
-              <button className="hero__search-btn">Rechercher</button>
+              <button className="hero__search-btn" onClick={handleSearch}>Rechercher</button>
             </div>
             <div className="hero__suggestions">
               <span className="hero__suggestions-label">Tendances :</span>
               {suggestions.map((tag, i) => (
-                <button key={i} className="hero__suggestion-tag">
+                <button
+                  key={i}
+                  className="hero__suggestion-tag"
+                  onClick={() => navigate(`/search?q=${encodeURIComponent(tag)}`)}
+                >
                   {tag}
                 </button>
               ))}
