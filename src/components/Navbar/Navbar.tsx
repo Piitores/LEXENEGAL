@@ -5,16 +5,8 @@ import './Navbar.css';
 interface NavbarProps {
   scrolled?: boolean;
 }
-
-function Navbar({ scrolled }: NavbarProps) {
+function Navbar({ scrolled }: { scrolled: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false);
-
-  const navLinks = [
-    { label: 'Accueil', href: '#' },
-    { label: 'Jurisprudence', href: '#jurisprudence' },
-    { label: 'Législation', href: '#legislation' },
-    { label: 'À propos', href: '#about' },
-  ];
 
   return (
     <nav className={`navbar ${scrolled ? 'navbar--scrolled' : ''}`}>
@@ -24,32 +16,21 @@ function Navbar({ scrolled }: NavbarProps) {
         </a>
 
         <div className={`navbar__menu ${menuOpen ? 'navbar__menu--open' : ''}`}>
-          <ul className="navbar__links">
-            {navLinks.map((link) => (
-              <li key={link.label}>
-                <a
-                  href={link.href}
-                  className="navbar__link"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  {link.label}
-                </a>
-              </li>
-            ))}
-          </ul>
-          <a href="#login" className="navbar__cta" onClick={() => setMenuOpen(false)}>
-            Connexion
-          </a>
+          <a href="#hero" className="navbar__link" onClick={() => setMenuOpen(false)}>Accueil</a>
+          <a href="#ecosystem" className="navbar__link" onClick={() => setMenuOpen(false)}>Solutions</a>
+          <a href="#innovation" className="navbar__link" onClick={() => setMenuOpen(false)}>Innovation</a>
+          <a href="#trust" className="navbar__link" onClick={() => setMenuOpen(false)}>À propos</a>
+          <button className="navbar__cta">Espace Professionnel</button>
         </div>
 
         <button
-          className={`navbar__toggle ${menuOpen ? 'navbar__toggle--active' : ''}`}
+          className="navbar__toggle"
           onClick={() => setMenuOpen(!menuOpen)}
           aria-label="Toggle menu"
         >
-          <span></span>
-          <span></span>
-          <span></span>
+          <span className="navbar__toggle-bar"></span>
+          <span className="navbar__toggle-bar"></span>
+          <span className="navbar__toggle-bar"></span>
         </button>
       </div>
     </nav>

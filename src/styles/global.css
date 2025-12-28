@@ -1,13 +1,27 @@
 :root {
-  --color-terracotta: #E2725B;
-  --color-laterite: #A04000;
-  --color-beige: #F5F5DC;
-  --color-slate: #37474F;
+  /* Palette Principal */
+  --color-bg: #F5F5F7;
+  /* Gris Perle */
+  --color-accent: #004D40;
+  /* Vert Émeraude Profond */
+  --color-text-main: #333333;
+  /* Anthracite */
+  --color-text-light: #555555;
   --color-white: #FFFFFF;
-  --color-grey-light: #F0F0F0;
 
-  --font-serif: 'Merriweather', serif;
+  /* Palette Secondaire & UI */
+  --color-gold: #D4AF37;
+  /* Touche dorée subtile pour le premium */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.5);
+  --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.05);
+
+  /* Typography */
+  --font-serif: 'Playfair Display', serif;
   --font-sans: 'Inter', sans-serif;
+
+  /* Spacing */
+  --container-width: 1200px;
 }
 
 * {
@@ -18,13 +32,10 @@
 
 body {
   font-family: var(--font-sans);
-  background-color: var(--color-beige);
-  background-image: url('../assets/bg_pattern.png');
-  background-repeat: repeat;
-  background-size: 300px;
-  color: var(--color-slate);
+  background-color: var(--color-bg);
+  color: var(--color-text-main);
   line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 h1,
@@ -34,15 +45,14 @@ h4,
 h5,
 h6 {
   font-family: var(--font-serif);
-  font-weight: 700;
-  color: var(--color-slate);
+  font-weight: 600;
+  color: var(--color-accent);
 }
 
-button {
-  cursor: pointer;
-  font-family: var(--font-sans);
-  border: none;
-  outline: none;
+.container {
+  max-width: var(--container-width);
+  margin: 0 auto;
+  padding: 0 24px;
 }
 
 a {
@@ -50,9 +60,42 @@ a {
   color: inherit;
 }
 
+button {
+  font-family: var(--font-sans);
+  cursor: pointer;
+  border: none;
+}
+
 /* Utilities */
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px;
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-soft);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, var(--color-accent) 0%, #00796B 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Animations */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.8s ease-out forwards;
 }

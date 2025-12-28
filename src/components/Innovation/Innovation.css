@@ -1,0 +1,86 @@
+.innovation {
+    padding: 100px 0;
+    background-color: var(--color-bg);
+}
+
+.innovation__header {
+    text-align: center;
+    margin-bottom: 60px;
+}
+
+.innovation__title {
+    font-size: 2.5rem;
+    margin-bottom: 16px;
+}
+
+.innovation__subtitle {
+    color: var(--color-text-light);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.innovation__grid {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.innovation__card {
+    flex: 1;
+    min-width: 200px;
+    padding: 32px 20px;
+    text-align: center;
+    position: relative;
+    /* Flat architectural style */
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: 12px;
+    box-shadow: none;
+}
+
+.innovation__icon {
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--color-accent);
+}
+
+.innovation__icon svg {
+    width: 40px;
+    height: 40px;
+    stroke-width: 1.2px;
+}
+
+.innovation__step-title {
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+    color: var(--color-accent);
+}
+
+.innovation__step-desc {
+    font-size: 0.9rem;
+    color: var(--color-text-light);
+}
+
+.innovation__arrow {
+    position: absolute;
+    right: -15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.5rem;
+    color: var(--color-accent);
+    opacity: 0.3;
+}
+
+@media (max-width: 768px) {
+    .innovation__grid {
+        flex-direction: column;
+    }
+
+    .innovation__arrow {
+        display: none;
+    }
+}

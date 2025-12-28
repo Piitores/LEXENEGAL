@@ -1,0 +1,122 @@
+.ecosystem {
+    padding: 100px 0;
+    background-color: #fff;
+}
+
+.ecosystem__header {
+    text-align: center;
+    margin-bottom: 60px;
+}
+
+.ecosystem__title {
+    font-size: 2.5rem;
+    margin-bottom: 16px;
+}
+
+.ecosystem__subtitle {
+    color: var(--color-text-light);
+    font-size: 1.1rem;
+}
+
+.ecosystem__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.ecosystem__card {
+    padding: 40px;
+    position: relative;
+    transition: transform 0.3s ease;
+    background: white;
+    /* Fallback for glass */
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.ecosystem__card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+}
+
+.ecosystem__card--pro {
+    border: 1px solid rgba(0, 77, 64, 0.1);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 1) 0%, rgba(0, 77, 64, 0.02) 100%);
+}
+
+.ecosystem__badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: #eee;
+    color: #666;
+    margin-bottom: 24px;
+}
+
+.ecosystem__badge--premium {
+    background: rgba(212, 175, 55, 0.1);
+    color: #AA8C2C;
+}
+
+.ecosystem__card-title {
+    font-size: 1.5rem;
+    margin-bottom: 16px;
+    color: var(--color-text-main);
+}
+
+.ecosystem__card-desc {
+    color: var(--color-text-light);
+    margin-bottom: 32px;
+    min-height: 48px;
+}
+
+.ecosystem__list {
+    list-style: none;
+    margin-bottom: 40px;
+}
+
+.ecosystem__list li {
+    margin-bottom: 12px;
+    font-size: 0.95rem;
+    color: var(--color-text-main);
+}
+
+.ecosystem__btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.ecosystem__btn--outline {
+    border: 1px solid #ccc;
+    background: transparent;
+    color: var(--color-text-main);
+}
+
+.ecosystem__btn--outline:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+}
+
+.ecosystem__btn--primary {
+    background: var(--color-accent);
+    color: white;
+    box-shadow: 0 4px 12px rgba(0, 77, 64, 0.2);
+}
+
+.ecosystem__btn--primary:hover {
+    background: #00695C;
+    transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+    .ecosystem__grid {
+        grid-template-columns: 1fr;
+    }
+}
