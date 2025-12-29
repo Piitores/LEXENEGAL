@@ -147,13 +147,12 @@ const DecisionPage: React.FC = () => {
                 top: '0',
                 width: '210mm'
             }}>
-                <div ref={printRef} className="print-template">
-                    {/* WATERMARK */}
-                    <img
-                        src="/watermark-logo.jpg"
-                        alt=""
-                        className="print-watermark"
-                    />
+                <div ref={printRef} className="print-template" style={{
+                    backgroundImage: 'url(/watermark-logo.jpg)',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'center center',
+                    backgroundSize: '50%'
+                }}>
 
                     {/* HEADER */}
                     <div className="print-header">

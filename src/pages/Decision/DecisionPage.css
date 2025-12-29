@@ -430,9 +430,30 @@
     font-size: 11pt;
     line-height: 1.6;
     padding: 20mm 30mm;
-    /* More padding on sides for centered text */
     position: relative;
     box-sizing: border-box;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+}
+
+/* Watermark via pseudo-element for better print control */
+.print-template::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 50%;
+    height: 50%;
+    background-image: url('/watermark-logo.jpg');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    opacity: 0.03;
+    pointer-events: none;
+    z-index: 0;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
 }
 
 .print-watermark {
