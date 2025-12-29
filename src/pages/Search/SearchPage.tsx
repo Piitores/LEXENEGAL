@@ -60,10 +60,11 @@ const SearchPage: React.FC = () => {
 
             const searchResponse = await index.search(query, {
                 limit: 20,
-                attributesToSnippet: ['texte_integral:50'],
+                attributesToCrop: ['texte_integral'], // Correct param
+                cropLength: 50,
                 filter: filterExpression,
                 sort: [`date_decision:${dateSort}`],
-                facets: ['matiere_principale', 'date_decision'] // Ensure facets returned
+                facets: ['matiere_principale', 'date_decision']
             });
 
             setResults(searchResponse.hits as unknown as Decision[]);
