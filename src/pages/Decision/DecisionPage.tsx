@@ -53,148 +53,203 @@ const DecisionPage: React.FC = () => {
         if (!decision) return;
 
         try {
-            // 1. Prepare HTML Content with EXPLICIT numbering (No CSS Counters)
+            // 1. Create an invisible Iframe to ISOLATE the PDF rendering from the app's CSS (Dark Mode, etc.)
+            const iframe = document.createElement('iframe');
+            iframe.style.position = 'fixed';
+            iframe.style.top = '-10000px';
+            iframe.style.left = '-10000px';
+            iframe.style.width = '794px'; // A4 width at 96 DPI
+            iframe.style.height = '1200px'; // Initial height, will expand
+            iframe.style.border = 'none';
+            document.body.appendChild(iframe);
+
+            // 2. Construct the CLEAN HTML for the iframe
+            // We duplicate the logic for numbering but inject it into a clean string.
+
+            // Numbering Logic on a temporary DOM to get the HTML string
             const parser = new DOMParser();
             let htmlContent = decision.texte_integral || '';
             const doc = parser.parseFromString(htmlContent, 'text/html');
-
-            // Find all P tags in the body
             const paragraphs = doc.querySelectorAll('.master-body p, .decisionBody p');
             let paraCount = 1;
-
             Array.from(paragraphs).forEach((pNode) => {
                 const p = pNode as HTMLElement;
                 if (p.textContent?.trim().length === 0) return;
-
                 const numSpan = doc.createElement('span');
-                numSpan.style.position = 'absolute';
-                numSpan.style.left = '-15mm';
-                numSpan.style.width = '12mm';
-                numSpan.style.textAlign = 'right';
-                numSpan.style.color = '#9aa1a7';
-                numSpan.style.fontSize = '8pt';
-                numSpan.style.fontWeight = 'normal';
-                numSpan.style.userSelect = 'none';
-                numSpan.textContent = (paraCount * 5).toString();
-
+                numSpan.className = 'line-number';
+                numSpan.innerHTML = (paraCount % 5 === 0) ? paraCount.toString() : (paraCount * 5).toString();
+                // Logic change: user wanted every 5. Let's stick to simple "every 5 shows number, others shows nothing or dot?"
+                // User said: "Numérotation des lignes : Obligatoire sur la marge gauche". Usually means line numbers 5, 10, 15...
+                // Previous code did (paraCount * 5) which was wrong logic.
+                // Let's print EVERY ONE for now lightly, or every 5 boldly.
+                // Actually user said: "Intègre la numérotation des lignes (tous les 5 numéros)".
                 if (paraCount % 5 === 0) {
                     numSpan.textContent = paraCount.toString();
-                    if (p.style) {
-                        p.style.position = 'relative';
-                    } else {
-                        (p as any).style = { position: 'relative' };
-                        (p as any).style.position = 'relative';
-                    }
-                    p.prepend(numSpan);
+                    numSpan.style.color = '#999';
+                } else {
+                    numSpan.textContent = ''; // Hide others
                 }
+
+                // Style for the span
+                numSpan.style.position = 'absolute';
+                numSpan.style.left = '-35px';
+                numSpan.style.width = '30px';
+                numSpan.style.textAlign = 'right';
+                numSpan.style.fontSize = '10px';
+                numSpan.style.userSelect = 'none';
+
+                p.style.position = 'relative';
+                p.prepend(numSpan);
                 paraCount++;
             });
 
-            // 2. Setup VISUAL PDF Container (Mirror of Web)
-            const pdfContainer = document.createElement('div');
-            const A4_WIDTH_PX = 794;
+            const processedBodyContent = doc.body.innerHTML;
 
-            pdfContainer.style.width = `${A4_WIDTH_PX}px`;
-            pdfContainer.style.padding = '20mm';
+            const docContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Georgia&display=swap');
+                        
+                        body {
+                            background-color: #FFFFFF !important;
+                            color: #000000 !important;
+                            font-family: 'Georgia', 'Times New Roman', serif;
+                            font-size: 12pt;
+                            line-height: 1.6;
+                            margin: 0;
+                            padding: 20mm; /* A4 Margins */
+                            -webkit-print-color-adjust: exact;
+                        }
+                        
+                        /* HEADER */
+                        .master-header { text-align: center; margin-bottom: 30px; border-bottom: 3px double #047857; padding-bottom: 10px; }
+                        .master-header h2 { font-family: 'Playfair Display', serif; font-size: 20pt; color: #000; margin: 0; text-transform: uppercase; letter-spacing: 2px; }
+                        .master-header .sub { font-style: italic; color: #444; margin-top: 5px; }
+                        
+                        /* CARTOUCHE */
+                        .master-cartouche {
+                            background: #FAFAF9;
+                            border: 1px solid #CCC;
+                            padding: 15px;
+                            margin-bottom: 30px;
+                            text-align: center;
+                            font-family: 'Helvetica', sans-serif;
+                            font-size: 10pt;
+                        }
+                        .master-cartouche strong { display: block; color: #047857; text-transform: uppercase; margin-bottom: 5px; }
+                        
+                        /* BODY */
+                        .master-body { text-align: justify; }
+                        .master-body h4 { color: #047857; text-align: center; margin-top: 30px; font-size: 14pt; border-bottom: 1px solid #EEE; padding-bottom: 5px; font-family: 'Playfair Display', serif; }
+                        p { margin-bottom: 15px; position: relative; }
+                        
+                        /* WATERMARK */
+                        .watermark {
+                            position: fixed;
+                            top: 50%;
+                            left: 50%;
+                            transform: translate(-50%, -50%);
+                            width: 400px;
+                            opacity: 0.03;
+                            z-index: -1;
+                        }
 
-            // CRITICAL: Force WHITE background to avoid Dark Mode bleed
-            pdfContainer.style.setProperty('background-color', '#ffffff', 'important');
-            pdfContainer.style.setProperty('color', '#000000', 'important');
+                        /* FOOTER */
+                        .footer {
+                            position: fixed;
+                            bottom: 10mm;
+                            width: 100%;
+                            text-align: center;
+                            font-size: 9pt;
+                            color: #888;
+                            border-top: 1px solid #EEE;
+                            padding-top: 5px;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <img src="/watermark-logo.jpg" class="watermark" />
+                    
+                    <!-- HEADER INJECTION -->
+                    <div class="master-header">
+                        <h2>République du Sénégal</h2>
+                        <div class="sub">Au nom du Peuple Sénégalais</div>
+                    </div>
+                    
+                    <!-- CARTOUCHE INJECTION -->
+                     <div class="master-cartouche">
+                        <strong>${decision.juridiction || 'Tribunal de Grande Instance'}</strong>
+                        <div style="font-weight:bold; margin: 5px 0;">${decision.chambre || '2ème Chambre Correctionnelle'}</div>
+                        <div>${decision.reference} du ${decision.date_decision ? new Date(decision.date_decision).toLocaleDateString() : ''}</div>
+                    </div>
 
-            pdfContainer.style.fontFamily = 'Georgia, serif';
-            pdfContainer.style.fontSize = '12pt';
-            pdfContainer.style.lineHeight = '1.6';
-            pdfContainer.style.position = 'absolute';
-            pdfContainer.style.top = '0';
-            pdfContainer.style.left = '0';
-            pdfContainer.style.zIndex = '-9999';
+                    <!-- CONTENT -->
+                    <div class="master-body">
+                        ${processedBodyContent}
+                    </div>
 
-            // Insert Stylesheet to force fonts and overrides
-            const styleTag = document.createElement('style');
-            styleTag.innerHTML = `
-                .master-header h2 { font-family: 'Playfair Display', serif; color: #047857; text-align: center; font-size: 18pt; margin-bottom: 5mm; }
-                .master-cartouche { border: 1px solid #ddd; padding: 10px; margin-bottom: 10mm; font-family: sans-serif; font-size: 10pt; text-align: center; background: #fff !important; color: #000; }
-                .master-body { font-family: 'Georgia', serif; font-size: 12pt; text-align: justify; color: #000; }
-                .master-body h4 { color: #047857; text-align: center; margin-top: 10mm; font-size: 14pt; border-bottom: 1px solid #eee; }
-                p { margin-bottom: 4mm; page-break-inside: avoid; }
+                    <!-- FOOTER (Will be repeated by JS usually, but for Image capture checking plain footer) -->
+                    <div class="footer">
+                        Édition certifiée Lexenegal.sn
+                    </div>
+                </body>
+                </html>
             `;
-            pdfContainer.appendChild(styleTag);
 
-            // Watermark
-            const watermarkOverlay = document.createElement('div');
-            watermarkOverlay.style.position = 'absolute';
-            watermarkOverlay.style.top = '0';
-            watermarkOverlay.style.left = '0';
-            watermarkOverlay.style.width = '100%';
-            watermarkOverlay.style.height = '100%';
-            watermarkOverlay.style.backgroundImage = 'url(/watermark-logo.jpg)';
-            watermarkOverlay.style.backgroundRepeat = 'repeat';
-            watermarkOverlay.style.backgroundSize = '300px';
-            watermarkOverlay.style.opacity = '0.03'; // Requested 3%
-            watermarkOverlay.style.pointerEvents = 'none';
-            watermarkOverlay.style.zIndex = '0';
-            pdfContainer.appendChild(watermarkOverlay);
-
-            // Container for Text
-            const textContainer = document.createElement('div');
-            textContainer.style.position = 'relative';
-            textContainer.style.zIndex = '1';
-
-            // HEADER INJECTION (If missing from HTML)
-            if (!decision.texte_integral?.includes('master-header')) {
-                const headerDiv = document.createElement('div');
-                headerDiv.className = 'master-header';
-                headerDiv.innerHTML = `<h2>République du Sénégal</h2><div class="sub">Au nom du Peuple Sénégalais</div>`;
-                textContainer.appendChild(headerDiv);
+            const iframeDoc = iframe.contentWindow?.document;
+            if (iframeDoc) {
+                iframeDoc.open();
+                iframeDoc.write(docContent);
+                iframeDoc.close();
             }
 
-            // METADATA INJECTION (Force Chambre display)
-            // Even if existing HTML has cartouche, we might want to check if Chambre is there. 
-            // For safety, we rely on the HTML being regenerated by ingestion script now.
-            // But if we want to FORCE missing metadata:
-            if (!decision.texte_integral?.includes('master-cartouche')) {
-                const metaDiv = document.createElement('div');
-                metaDiv.className = 'master-cartouche';
-                metaDiv.innerHTML = `
-                    <strong>${decision.juridiction || 'Tribunal'}</strong>
-                    <div>${decision.chambre || 'Chambre non spécifiée'}</div>
-                    <div>${decision.reference} du ${decision.date_decision ? new Date(decision.date_decision).toLocaleDateString() : ''}</div>
-                `;
-                textContainer.appendChild(metaDiv);
-            }
+            // 3. Wait for content to render (Images, Fonts)
+            iframe.onload = async () => {
+                try {
+                    const pdf = new jsPDF('p', 'mm', 'a4');
+                    const pdfWidth = pdf.internal.pageSize.getWidth();
 
-            textContainer.innerHTML += doc.body.innerHTML;
-            pdfContainer.appendChild(textContainer);
+                    // We capture the BODY of the iframe
+                    // Note: html2canvas inside iframe might need window context
+                    // But we can pass the body element.
 
-            document.body.appendChild(pdfContainer);
+                    const elementToCapture = iframeDoc?.body;
 
-            // 3. Generate PDF
-            const pdf = new jsPDF('p', 'mm', 'a4');
-            const pdfWidth = pdf.internal.pageSize.getWidth();
+                    if (elementToCapture) {
+                        // Force dimensions for capture to mimic A4
+                        // A4 is 210mm wide. At 96dpi approx 794px.
+                        // High res capture: scale 2 or 3.
 
-            await pdf.html(pdfContainer, {
-                callback: function (doc) {
-                    const totalPages = (doc as any).internal.getNumberOfPages();
-                    for (let i = 1; i <= totalPages; i++) {
-                        doc.setPage(i);
-                        doc.setFontSize(9);
-                        doc.setTextColor(100, 100, 100);
-                        doc.text(`Édition certifiée Lexenegal.sn - Page ${i}/${totalPages}`, pdfWidth / 2, 290, { align: 'center' });
+                        await pdf.html(elementToCapture as HTMLElement, {
+                            callback: (doc) => {
+                                // Cleanup
+                                document.body.removeChild(iframe);
+                                // Safe replacement for slashes
+                                const safeRef = decision.reference.replace(/\//g, '-');
+                                doc.save(`Lexenegal-Master-${safeRef}.pdf`);
+                            },
+                            x: 0,
+                            y: 0,
+                            html2canvas: {
+                                scale: 2,
+                                useCORS: true,
+                                backgroundColor: '#ffffff', // FORCE WHITE AGAIN
+                                windowWidth: 794
+                            },
+                            width: 210,
+                            windowWidth: 794
+                        });
                     }
-                    doc.save(`Lexenegal-Master-${decision.reference.replace(/\//g, '-')}.pdf`);
-                    document.body.removeChild(pdfContainer);
-                },
-                x: 0,
-                y: 0,
-                html2canvas: {
-                    useCORS: true,
-                    logging: false,
-                    scale: 2, // Better resolution
-                    backgroundColor: '#ffffff' // FORCE WHITE capture
-                },
-                width: 210,
-                windowWidth: 794
-            });
+                } catch (e) {
+                    console.error("Capture failed", e);
+                    alert("Erreur PDF");
+                }
+            };
+
+            // Fallback trigger if onload hangs
+            // setTimeout(() => { if (document.body.contains(iframe)) iframe.onload?.(new Event('load')); }, 1000);
 
         } catch (err) {
             console.error("PDF Export failed", err);
