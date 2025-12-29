@@ -10,6 +10,7 @@
     },
     "dependencies": {
         "html2canvas": "^1.4.1",
+        "html2pdf.js": "^0.12.1",
         "jspdf": "^3.0.4",
         "lucide-react": "^0.562.0",
         "meilisearch": "^0.54.0",

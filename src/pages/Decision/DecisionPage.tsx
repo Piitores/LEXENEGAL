@@ -1,9 +1,8 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MeiliSearch } from 'meilisearch';
 import { Download, ArrowLeft, Copy, Scale, BookOpen } from 'lucide-react';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import html2pdf from 'html2pdf.js';
 
 import './DecisionPage.css';
 
@@ -52,204 +51,117 @@ const DecisionPage: React.FC = () => {
     const handleDownloadPDF = async () => {
         if (!decision) return;
 
-        try {
-            // BACK TO BASICS: Create a Hidden Container in DOM (No Iframe)
-            // This allows cleaner styles control while preserving the "Document" feel.
-
-            const pdfContainer = document.createElement('div');
-            const A4_WIDTH_PX = 794;
-
-            pdfContainer.id = 'pdf-export-container';
-            pdfContainer.style.width = `${A4_WIDTH_PX}px`;
-            pdfContainer.style.padding = '20mm';
-            pdfContainer.style.backgroundColor = '#ffffff'; // Force White
-            pdfContainer.style.position = 'absolute';
-            pdfContainer.style.top = '-10000px';
-            pdfContainer.style.left = '-10000px';
-            pdfContainer.style.zIndex = '-9999';
-
-            // Insert Stylesheet SCOPED to this container
-            const styleTag = document.createElement('style');
-            styleTag.innerHTML = `
-                #pdf-export-container * {
-                    color: #000000 !important;
-                    font-family: 'Georgia', serif !important;
-                    line-height: 1.6 !important;
-                }
-                #pdf-export-container .header {
+        // 1. Build complete PDF HTML document
+        const pdfHTML = `
+            <div id="pdf-content" style="
+                width: 100%;
+                padding: 20mm;
+                background-color: #ffffff;
+                color: #1a1a1a;
+                font-family: Georgia, 'Times New Roman', serif;
+                font-size: 11pt;
+                line-height: 1.6;
+            ">
+                <!-- WATERMARK -->
+                <img src="/filigranne lexenegal.png" style="
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    width: 400px;
+                    opacity: 0.03;
+                    z-index: 0;
+                    pointer-events: none;
+                " />
+                
+                <!-- HEADER -->
+                <div style="
                     display: flex;
                     justify-content: space-between;
-                    border-bottom: 2px solid #000;
-                    padding-bottom: 5px;
-                    margin-bottom: 30px;
-                }
-                #pdf-export-container .header-left h1 {
-                    font-size: 24px; color: #047857 !important; margin: 0; text-transform: uppercase; font-family: 'Times New Roman', serif !important;
-                }
-                #pdf-export-container .header-left span {
-                    font-size: 10px; color: #555 !important; text-transform: uppercase; letter-spacing: 1px;
-                }
-                #pdf-export-container .header-right {
-                    text-align: right;
-                }
-                #pdf-export-container .header-right h3 {
-                    font-size: 12px; margin: 0; text-transform: uppercase;
-                }
-                #pdf-export-container .header-right div {
-                    font-style: italic; font-size: 10px;
-                }
-                
-                #pdf-export-container .document-title {
-                    text-align: center;
+                    align-items: flex-start;
+                    border-bottom: 2px solid #047857;
+                    padding-bottom: 10px;
                     margin-bottom: 20px;
-                }
-                #pdf-export-container .document-title h2 {
-                    font-size: 16px; color: #047857 !important; text-decoration: underline; margin-bottom: 5px;
-                }
-                
-                #pdf-export-container .content-body {
-                    font-size: 11px;
-                    text-align: justify;
-                }
-                #pdf-export-container .line-wrapper {
-                    position: relative;
-                    margin-bottom: 4px;
-                }
-                #pdf-export-container .line-num {
-                    position: absolute;
-                    left: -25px;
-                    width: 20px;
-                    text-align: right;
-                    color: #888 !important;
-                    font-size: 8px;
-                    user-select: none;
-                }
-                
-                #pdf-export-container .footer {
-                    margin-top: 50px;
+                ">
+                    <div>
+                        <h1 style="color: #047857; margin: 0; font-size: 22px; text-transform: uppercase; font-family: Georgia, serif;">LEXENEGAL</h1>
+                        <span style="font-size: 9px; color: #666; text-transform: uppercase; letter-spacing: 1px;">Base de Jurisprudence Certifiée</span>
+                    </div>
+                    <div style="text-align: right;">
+                        <strong style="font-size: 11px; text-transform: uppercase;">République du Sénégal</strong><br/>
+                        <em style="font-size: 10px; color: #555;">Au nom du Peuple Sénégalais</em>
+                    </div>
+                </div>
+
+                <!-- TITLE -->
+                <div style="text-align: center; margin-bottom: 25px;">
+                    <h2 style="color: #047857; text-decoration: underline; font-size: 16px; margin-bottom: 8px;">
+                        ${decision.reference} du ${decision.date_decision ? new Date(decision.date_decision).toLocaleDateString('fr-FR') : ''}
+                    </h2>
+                    <div style="font-size: 12px; font-weight: bold;">${decision.juridiction || ''}</div>
+                    <div style="font-size: 12px; margin-top: 3px;">${decision.chambre || ''}</div>
+                </div>
+
+                <!-- BODY CONTENT -->
+                <div style="text-align: justify; position: relative; z-index: 1;">
+                    ${decision.texte_integral || '<p>Contenu non disponible.</p>'}
+                </div>
+
+                <!-- FOOTER -->
+                <div style="
+                    margin-top: 40px;
                     border-top: 1px solid #ccc;
                     padding-top: 10px;
                     display: flex;
                     justify-content: space-between;
-                    font-size: 9px;
-                    color: #555 !important;
-                }
-            `;
-            pdfContainer.appendChild(styleTag);
-
-            // HEADER (Classic Look)
-            const header = document.createElement('div');
-            header.className = 'header';
-            header.innerHTML = `
-                <div class="header-left">
-                    <h1>LEXENEGAL</h1>
-                    <span>Base de Jurisprudence Certifiée</span>
+                    font-size: 8px;
+                    color: #666;
+                ">
+                    <div>
+                        Source Certifiée : www.lexenegal.sn<br/>
+                        Généré le ${new Date().toLocaleDateString('fr-FR')}
+                    </div>
+                    <div>
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://lexenegal.sn/decision/${slug}&color=047857" style="width: 35px; height: 35px;" />
+                    </div>
                 </div>
-                <div class="header-right">
-                    <h3>République du Sénégal</h3>
-                    <div>Au nom du Peuple Sénégalais</div>
-                </div>
-            `;
-            pdfContainer.appendChild(header);
+            </div>
+        `;
 
-            // TITLE & METADATA
-            const titleSection = document.createElement('div');
-            titleSection.className = 'document-title';
-            titleSection.innerHTML = `
-                <h2>${decision.reference} du ${decision.date_decision ? new Date(decision.date_decision).toLocaleDateString() : ''}</h2>
-                <div style="font-size: 12px; font-weight: bold; margin-top: 5px;">${decision.juridiction || ''}</div>
-                <div style="font-size: 12px; margin-top: 2px;">${decision.chambre || ''}</div>
-            `;
-            pdfContainer.appendChild(titleSection);
+        // 2. Create temp container
+        const container = document.createElement('div');
+        container.innerHTML = pdfHTML;
+        container.style.position = 'absolute';
+        container.style.left = '-9999px';
+        container.style.top = '0';
+        document.body.appendChild(container);
 
-            // CONTENT PREPARATION (Logic: Split lines vs Paragraphs?)
-            // If data is HTML p tags, we process them.
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(decision.texte_integral || '', 'text/html');
-            const paragraphs = doc.querySelectorAll('.master-body p, .decisionBody p');
+        // 3. Configure html2pdf options
+        const options = {
+            margin: 0,
+            filename: `Lexenegal-${decision.reference.replace(/\//g, '-')}.pdf`,
+            image: { type: 'jpeg' as const, quality: 0.98 },
+            html2canvas: {
+                scale: 2,
+                useCORS: true,
+                backgroundColor: '#ffffff'
+            },
+            jsPDF: {
+                unit: 'mm' as const,
+                format: 'a4' as const,
+                orientation: 'portrait' as const
+            },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+        };
 
-            const contentBody = document.createElement('div');
-            contentBody.className = 'content-body';
-
-            let lineCounter = 1;
-            Array.from(paragraphs).forEach((p) => {
-                if (!p.textContent?.trim()) return;
-
-                const lineWrapper = document.createElement('div');
-                lineWrapper.className = 'line-wrapper';
-
-                // Number logic
-                const numSpan = document.createElement('span');
-                numSpan.className = 'line-num';
-                // Show number every 5 ? Or every 1? User implies visual guide.
-                // Let's show every 5 explicitly, or dots?
-                // Sample image shows 1, 2, 3, 4. Let's do ALL.
-                numSpan.textContent = lineCounter.toString();
-
-                lineWrapper.appendChild(numSpan);
-
-                const textSpan = document.createElement('span');
-                textSpan.innerHTML = p.innerHTML;
-                lineWrapper.appendChild(textSpan);
-
-                contentBody.appendChild(lineWrapper);
-                lineCounter++;
-            });
-            pdfContainer.appendChild(contentBody);
-
-            // FOOTER & WATERMARK LOGIC handled by PDF call or DOM?
-            // DOM Footer for single page or bottom logic
-            const footer = document.createElement('div');
-            footer.className = 'footer';
-            footer.innerHTML = `
-               <div>
-                   Source Certifiée : www.lexenegal.sn<br/>
-                   Document généré électroniquement le ${new Date().toLocaleDateString()}
-               </div>
-               <div>
-                   <!-- QR Placeholder or real usage -->
-                   <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://lexenegal.sn/decision/${slug}&color=047857" style="width:40px;height:40px;" />
-               </div>
-            `;
-            pdfContainer.appendChild(footer);
-
-            document.body.appendChild(pdfContainer);
-
-            // GENERATE
-            const pdf = new jsPDF('p', 'mm', 'a4');
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-
-            await pdf.html(pdfContainer, {
-                callback: function (doc) {
-                    // Watermark on Pages?
-                    // We can loop pages and add watermark manually or use CSS bg on container?
-                    // CSS bg on container is safer for html2canvas. 
-                    // But let's add it via jsPDF for "3% opacity" precision.
-                    const totalPages = (doc as any).internal.getNumberOfPages();
-                    for (let i = 1; i <= totalPages; i++) {
-                        doc.setPage(i);
-                        doc.text(`Page ${i}/${totalPages}`, pdfWidth - 20, 290, { align: 'right' });
-                        // Watermark logic via API if needed, or rely on clean white bg.
-                    }
-
-                    const safeRef = decision.reference.replace(/\//g, '-');
-                    doc.save(`Lexenegal-Master-${safeRef}.pdf`);
-                    document.body.removeChild(pdfContainer);
-                },
-                x: 0,
-                y: 0,
-                html2canvas: {
-                    scale: 2,
-                    useCORS: true,
-                    backgroundColor: '#ffffff'
-                },
-                width: 210,
-                windowWidth: 794
-            });
-
+        // 4. Generate PDF
+        try {
+            await html2pdf().set(options as any).from(container).save();
         } catch (err) {
-            console.error("PDF Export failed", err);
-            alert("Erreur lors de la génération du PDF.");
+            console.error('PDF generation error:', err);
+            alert('Erreur lors de la génération du PDF');
+        } finally {
+            document.body.removeChild(container);
         }
     };
 
@@ -261,7 +173,7 @@ const DecisionPage: React.FC = () => {
     return (
         <div className="decisionPage">
             <div className="elite-grid">
-                {/* 1. LEFT SIDEBAR: NAVIGATION */}
+                {/* 1. LEFT SIDEBAR */}
                 <aside className="sidebar-left">
                     <nav className="nav-sticky">
                         <button onClick={() => navigate('/search')} style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', border: 'none', background: 'transparent', cursor: 'pointer', color: '#6B7280' }}>
@@ -272,8 +184,6 @@ const DecisionPage: React.FC = () => {
                             Sommaire
                         </div>
                         <a href="#expert-block" className="jump-link">Synthèse Expert</a>
-                        <a href="#composition-block" className="jump-link">Composition</a>
-                        {/* New Semantic Links based on Ingest IDs */}
                         <a href="#faits" className="jump-link">Faits & Procédure</a>
                         <a href="#motifs" className="jump-link">Motifs</a>
                         <a href="#dispositif" className="jump-link">Dispositif</a>
@@ -286,7 +196,7 @@ const DecisionPage: React.FC = () => {
                         <Scale size={14} /> Source Certifiée : Lexenegal.sn
                     </div>
 
-                    <h1 className="decision-title">{decision.chambre || 'Chambre Inconnue'}</h1>
+                    <h1 className="decision-title">{decision.chambre || 'Chambre'}</h1>
                     <div className="decision-ref">{decision.reference} • {decision.date_decision ? new Date(decision.date_decision).toLocaleDateString('fr-FR', { dateStyle: 'long' }) : 'Date N/D'}</div>
 
                     {/* EXPERT BLOCK */}
@@ -295,9 +205,6 @@ const DecisionPage: React.FC = () => {
 
                         <div style={{ marginBottom: '1rem' }}>
                             {decision.matiere_principale && <span className="keyword-badge">{decision.matiere_principale}</span>}
-                            {decision.sections_inferred && decision.sections_inferred.map((sec: string) => (
-                                <span className="keyword-badge" key={sec}>{sec}</span>
-                            ))}
                         </div>
 
                         {decision.resume && (
@@ -309,12 +216,11 @@ const DecisionPage: React.FC = () => {
 
                     {/* LEGAL TEXT CONTENT */}
                     <div className="legal-content">
-                        {/* We use dangerouslySetInnerHTML to render the Master Edition HTML structure */}
                         <div dangerouslySetInnerHTML={{ __html: rawText }} />
                     </div>
                 </main>
 
-                {/* 3. RIGHT SIDEBAR: TOOLS */}
+                {/* 3. RIGHT SIDEBAR */}
                 <aside className="sidebar-right">
                     <div className="tools-sticky">
                         <button className="btn-elite-primary" onClick={handleDownloadPDF}>
