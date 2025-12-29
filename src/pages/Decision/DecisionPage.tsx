@@ -60,7 +60,8 @@ const DecisionPage: React.FC = () => {
             const paragraphs = doc.querySelectorAll('.master-body p, .decisionBody p');
             let paraCount = 1;
 
-            paragraphs.forEach(p => {
+            Array.from(paragraphs).forEach((pNode) => {
+                const p = pNode as HTMLElement;
                 // Ignore empty paragraphs
                 if (p.textContent?.trim().length === 0) return;
 
@@ -73,18 +74,18 @@ const DecisionPage: React.FC = () => {
                 numSpan.style.fontSize = '8pt';
                 numSpan.style.fontWeight = 'normal';
                 numSpan.style.userSelect = 'none';
-                numSpan.textContent = (paraCount * 5).toString(); // Every 5? No, usually every line. Let's do every 5 for legal standard or every 1. 
-                // User asked: "numérotation des lignes... tous les 5 numéros".
-                // But this is paragraph based. Approximating line numbers on web is hard.
-                // Let's just number every paragraph for now as "Line Reference".
-                // If user insisted "tous les 5 numéros", we can do `if (paraCount % 5 === 0)`.
-                // Let's stick to simple numbering for every paragraph to ensure density, or specifically every 5.
-                // Re-reading user request: "numérotation des lignes sur la marge gauche (tous les 5 numéros)".
-                // Implementing exactly:
+                numSpan.textContent = (paraCount * 5).toString();
 
                 if (paraCount % 5 === 0) {
-                    numSpan.innerText = paraCount.toString();
-                    p.style.position = 'relative'; // Ensure positioning context
+                    numSpan.textContent = paraCount.toString();
+                    // Strict cast to avoid TS2339
+                    if (p.style) {
+                        p.style.position = 'relative';
+                    } else {
+                        // Fallback if style missing on element type (unlikely in DOM but possible in types)
+                        (p as any).style = { position: 'relative' };
+                        (p as any).style.position = 'relative';
+                    }
                     p.prepend(numSpan);
                 }
                 paraCount++;
@@ -178,7 +179,6 @@ const DecisionPage: React.FC = () => {
                 x: 0,
                 y: 0,
                 html2canvas: {
-                    scale: 0.265, // Conversion factor: 1px = 0.264583 mm. 794px * 0.265 = 210mm.
                     useCORS: true, // Important for images
                     logging: false
                 },
