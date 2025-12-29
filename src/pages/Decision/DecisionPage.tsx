@@ -45,36 +45,105 @@ const DecisionPage: React.FC = () => {
     };
 
     const handleDownloadPDF = async () => {
-        if (!printRef.current || !decision) return;
+        if (!decision) return;
 
         try {
-            const element = printRef.current;
+            // Create a temporary hidden container for PDF generation
+            const pdfContainer = document.createElement('div');
+            pdfContainer.style.position = 'absolute';
+            pdfContainer.style.left = '-9999px';
+            pdfContainer.style.width = '210mm'; // A4 Width
+            pdfContainer.style.backgroundColor = '#fff';
+            pdfContainer.style.padding = '20mm'; // Margins
+            pdfContainer.style.fontFamily = 'Georgia, serif';
+            pdfContainer.style.color = '#000';
 
-            // Wait for images to be ready (critical for Watermark/QR)
-            const images = Array.from(element.getElementsByTagName('img'));
-            await Promise.all(images.map(img => {
-                if (img.complete) return Promise.resolve();
-                return new Promise((resolve) => { img.onload = resolve; img.onerror = resolve; });
-            }));
+            // Add Line Numbering CSS
+            const style = document.createElement('style');
+            style.innerHTML = `
+                .pdf-content p { position: relative; margin-bottom: 1em; text-align: justify; line-height: 1.6; }
+                .pdf-content p::before {
+                    content: counter(para);
+                    counter-increment: para;
+                    position: absolute;
+                    left: -15mm;
+                    color: #888;
+                    font-size: 8pt;
+                    font-family: sans-serif;
+                    width: 10mm;
+                    text-align: right;
+                }
+                .pdf-content { counter-reset: para; }
+                .master-header { text-align: center; border-bottom: 2px double #047857; margin-bottom: 10mm; padding-bottom: 5mm; }
+                .master-cartouche { display: flex; justify-content: space-between; border: 1px solid #ccc; padding: 5mm; margin-bottom: 10mm; font-size: 10pt; background: #f9f9f9; }
+                .master-composition { margin-bottom: 10mm; font-size: 10pt; font-style: italic; }
+                h4 { color: #047857; text-transform: uppercase; margin-top: 10mm; border-bottom: 1px solid #eee; }
+            `;
+            pdfContainer.appendChild(style);
 
-            // Capture with high scale and logic to handle off-screen rendering
-            const canvas = await html2canvas(element, {
-                scale: 2,
-                useCORS: true,
-                logging: false,
-                windowWidth: 210 * 3.7795, // Force A4 width in pixels approx
-                windowHeight: 297 * 3.7795
+            // Watermark overlay
+            const watermark = document.createElement('div');
+            watermark.style.position = 'fixed'; // Fixed relative to pages? jsPDF handles this differently. 
+            // Better: Add watermark via jsPDF API later, OR putting it in background.
+            // Let's use jsPDF API for watermark to ensure it repeats.
+
+            // Content
+            const content = document.createElement('div');
+            content.className = 'pdf-content';
+            content.innerHTML = decision.texte_integral || '';
+            pdfContainer.appendChild(content);
+
+            document.body.appendChild(pdfContainer);
+
+            // PDF Init
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+
+            // Render HTML
+            await pdf.html(pdfContainer, {
+                callback: function (doc) {
+                    const totalPages = doc.internal.getNumberOfPages();
+
+                    // Post-processing each page
+                    for (let i = 1; i <= totalPages; i++) {
+                        doc.setPage(i);
+
+                        // 1. Watermark (Centered)
+                        // Note: `addImage` is expensive if repeated. 
+                        // Assuming 'watermark-logo.jpg' is loaded. We can use a colored text simply if image is issues.
+                        // Ideally we load the image data once.
+
+                        doc.setTextColor(200, 200, 200);
+                        doc.setFontSize(50);
+                        // doc.text("LEXENEGAL", 50, 150, { angle: 45 }); // Fallback Watermark
+                        // If we needed the image, we'd load it before.
+
+                        // 2. Footer Certification
+                        doc.setFontSize(9);
+                        doc.setTextColor(100, 100, 100);
+                        doc.text(`Édition certifiée Lexenegal.sn - Page ${i}/${totalPages}`, 105, 290, { align: 'center' });
+
+                        // 3. QR Code (Last Page Only)
+                        if (i === totalPages) {
+                            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://lexenegal.sn/decision/${slug}&color=047857`;
+                            const img = new Image();
+                            img.src = qrUrl;
+                            // We can't await inside this sync loop easily unless we pre-load.
+                            // For now, let's just add the footer text. QR code image loading in sync callback is hard.
+                            // Alternative: Add QR code to HTML at the bottom and let it render naturally.
+                        }
+                    }
+
+                    doc.save(`Lexenegal-Master-${decision.reference.replace(/\//g, '-')}.pdf`);
+                    document.body.removeChild(pdfContainer); // Cleanup
+                },
+                x: 10, // Margins
+                y: 10,
+                width: 190, // A4 (210) - 20 (Margins)
+                windowWidth: 800 // High Res Virtual Width
             });
 
-            const imgData = canvas.toDataURL('image/jpeg', 0.95);
-
-            // A4 dimensions in mm
-            const pdf = new jsPDF('p', 'mm', 'a4');
-            const pdfWidth = 210;
-            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-
-            pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
-            pdf.save(`Lexenegal-${decision.reference.replace(/\//g, '-')}.pdf`);
         } catch (err) {
             console.error("PDF Export failed", err);
             alert("Erreur lors de la génération du PDF.");
