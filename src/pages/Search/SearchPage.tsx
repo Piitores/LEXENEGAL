@@ -25,12 +25,14 @@ interface Decision {
 const SearchPage: React.FC = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const queryParam = searchParams.get('q') || '';
-    const [query, setQuery] = useState(queryParam); // Local state for input
+    const [query, setQuery] = useState(queryParam);
 
     const [results, setResults] = useState<Decision[]>([]);
     const [totalHits, setTotalHits] = useState(0);
     const [facets, setFacets] = useState<any>({});
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [offset, setOffset] = useState(0);
 
     const navigate = useNavigate();
 
@@ -38,52 +40,73 @@ const SearchPage: React.FC = () => {
     const [selectedMatiere, setSelectedMatiere] = useState<string[]>([]);
     const [dateSort, setDateSort] = useState<'desc' | 'asc'>('desc');
 
-    // Sync URL param to Local State on mount
+    // Sync URL param to Local State
     useEffect(() => {
         setQuery(queryParam);
+        setOffset(0); // Reset pagination on new URL query
     }, [queryParam]);
 
-    // AS YOU TYPE SEARCH (Debounced effectively by logic or rapid updates, explicit debounce opt)
+    // Triggers search when params change
     useEffect(() => {
         const timer = setTimeout(() => {
-            performSearch();
-        }, 300); // 300ms debounce
+            performSearch(false); // false = reset list (fresh search)
+        }, 300);
         return () => clearTimeout(timer);
-    }, [query, selectedMatiere, dateSort]);
+    }, [query, selectedMatiere, dateSort]); // Removed offset from here to avoid double-fetch loops, handled by loadMore
 
-    const performSearch = async () => {
+    // Trigger explicit load more
+    useEffect(() => {
+        if (offset > 0) {
+            performSearch(true); // true = append
+        }
+    }, [offset]);
+
+    const performSearch = async (append: boolean) => {
         setLoading(true);
+        setError(null);
         try {
-            const filterExpression = selectedMatiere.length > 0
-                ? `matiere_principale IN [${selectedMatiere.map(m => `"${m}"`).join(', ')}]`
+            // ROBUST FILTER: Escape double quotes in values to prevent syntax crashes
+            const safeMatieres = selectedMatiere.map(m => `"${m.replace(/"/g, '\\"')}"`);
+            const filterExpression = safeMatieres.length > 0
+                ? `matiere_principale IN [${safeMatieres.join(', ')}]`
                 : undefined;
+
+            console.log("🔍 Searching:", { query, filter: filterExpression, offset, sort: dateSort });
 
             const searchResponse = await index.search(query, {
                 limit: 20,
-                attributesToCrop: ['texte_integral'], // Correct param
+                offset: append ? offset : 0,
+                attributesToCrop: ['texte_integral'], // Corrected from attributesToSnippet
                 cropLength: 50,
                 filter: filterExpression,
                 sort: [`date_decision:${dateSort}`],
                 facets: ['matiere_principale', 'date_decision']
             });
 
-            setResults(searchResponse.hits as unknown as Decision[]);
-            setTotalHits(searchResponse.estimatedTotalHits);
-            setFacets(searchResponse.facetDistribution);
+            if (append) {
+                setResults(prev => [...prev, ...searchResponse.hits as unknown as Decision[]]);
+            } else {
+                setResults(searchResponse.hits as unknown as Decision[]);
+            }
 
-        } catch (error) {
-            console.error("Meilisearch Error:", error);
+            setTotalHits(searchResponse.estimatedTotalHits);
+            if (!append) {
+                // Keep existing facets if appending, or update? Update usually safe.
+                setFacets(searchResponse.facetDistribution);
+            }
+
+        } catch (err: any) {
+            console.error("❌ Meilisearch Error:", err);
+            // Display technical error to user for easy debugging via screenshot
+            setError(err.message || 'Erreur inconnue lors de la recherche.');
         } finally {
             setLoading(false);
         }
     };
 
     const handleSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newVal = e.target.value;
-        setQuery(newVal);
-        // We update URL seamlessly? Or just keep local? 
-        // Better to keep local for typing speed, but maybe sync on debounce?
-        // For now, simple local state + debounce is best for UX.
+        setQuery(e.target.value);
+        setOffset(0); // Reset pagination
     };
 
     const toggleMatiere = (matiere: string) => {
@@ -92,6 +115,11 @@ const SearchPage: React.FC = () => {
                 ? prev.filter(m => m !== matiere)
                 : [...prev, matiere]
         );
+        setOffset(0);
+    };
+
+    const handleLoadMore = () => {
+        setOffset(prev => prev + 20);
     };
 
     return (
@@ -148,19 +176,32 @@ const SearchPage: React.FC = () => {
                         autoFocus
                     />
                     <div className="resultsCount">
-                        {loading ? '...' : `${totalHits} décisions trouvées`}
+                        {totalHits} décisions trouvées
                     </div>
                 </div>
 
+                {error && (
+                    <div style={{ padding: '1rem', background: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: '8px', color: '#991B1B', marginBottom: '2rem' }}>
+                        <strong>Erreur technique :</strong> {error}
+                    </div>
+                )}
+
                 <div className="resultsGrid">
-                    {results.map(hit => (
-                        <div key={hit.id} className="resultCard" onClick={() => navigate(`/decision/${hit.slug}`)}>
+                    {results.map((hit, idx) => (
+                        <div key={`${hit.id}-${idx}`} className="resultCard" onClick={() => navigate(`/decision/${hit.slug}`)}>
                             <div className="cardHeader">
-                                <span className="cardRef">{hit.reference}</span>
-                                <span className="cardDate">{hit.date_decision ? new Date(hit.date_decision).toLocaleDateString('fr-FR', { year: 'numeric' }) : 'N/A'}</span>
+                                <span className="cardRef">{hit.reference || 'Réf. Inconnue'}</span>
+                                <span className="cardDate">
+                                    {hit.date_decision && !isNaN(Date.parse(hit.date_decision))
+                                        ? new Date(hit.date_decision).toLocaleDateString('fr-FR', { year: 'numeric' })
+                                        : 'Date N/D'}
+                                </span>
                             </div>
                             <h2 className="cardTitle">{hit.matiere_principale} - {hit.chambre}</h2>
-                            <p className="cardSnippet" dangerouslySetInnerHTML={{ __html: (hit as any)._formatted?.texte_integral || hit.resume }} />
+                            <p
+                                className="cardSnippet"
+                                dangerouslySetInnerHTML={{ __html: (hit as any)._formatted?.texte_integral || hit.resume || 'Aucun aperçu disponible.' }}
+                            />
 
                             <div className="cardTags">
                                 {hit.mots_cles && hit.mots_cles.slice(0, 3).map(tag => (
@@ -170,9 +211,32 @@ const SearchPage: React.FC = () => {
                         </div>
                     ))}
 
-                    {!loading && results.length === 0 && (
+                    {!loading && !error && results.length === 0 && (
                         <div style={{ textAlign: 'center', marginTop: '4rem', color: '#9CA3AF' }}>
-                            <p>Aucun résultat.</p>
+                            <p>Aucun résultat trouvé pour "{query}".</p>
+                        </div>
+                    )}
+
+                    {loading && (
+                        <div style={{ textAlign: 'center', marginTop: '2rem', color: '#047857' }}>Recherche en cours...</div>
+                    )}
+
+                    {!loading && results.length < totalHits && (
+                        <div style={{ textAlign: 'center', marginTop: '3rem' }}>
+                            <button
+                                onClick={handleLoadMore}
+                                style={{
+                                    padding: '0.75rem 2rem',
+                                    background: '#fff',
+                                    border: '1px solid #E5E7EB',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    color: '#374151',
+                                    fontWeight: 500
+                                }}
+                            >
+                                Voir plus de résultats
+                            </button>
                         </div>
                     )}
                 </div>
