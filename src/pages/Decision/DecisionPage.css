@@ -419,3 +419,146 @@
     line-height: 1.4;
     font-family: 'Times New Roman', serif;
 }
+
+/* ========== REACT-TO-PRINT TEMPLATE ========== */
+.print-template {
+    width: 210mm;
+    min-height: 297mm;
+    background: #ffffff !important;
+    color: #1a1a1a !important;
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 11pt;
+    line-height: 1.6;
+    padding: 15mm;
+    position: relative;
+}
+
+.print-watermark {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 300px;
+    opacity: 0.03;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.print-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 2px solid #047857;
+    padding-bottom: 10px;
+    margin-bottom: 25px;
+}
+
+.print-header-left h1 {
+    color: #047857;
+    margin: 0;
+    font-size: 22px;
+    text-transform: uppercase;
+    font-family: 'Georgia', serif;
+}
+
+.print-header-left span {
+    font-size: 9px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.print-header-right {
+    text-align: right;
+}
+
+.print-header-right strong {
+    font-size: 11px;
+    text-transform: uppercase;
+    display: block;
+}
+
+.print-header-right em {
+    font-size: 10px;
+    color: #555;
+}
+
+.print-title {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.print-title h2 {
+    color: #047857;
+    text-decoration: underline;
+    font-size: 16px;
+    margin-bottom: 8px;
+}
+
+.print-subtitle {
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.print-chambre {
+    font-size: 12px;
+    margin-top: 3px;
+}
+
+.print-body {
+    text-align: justify;
+    position: relative;
+    z-index: 1;
+}
+
+.print-body p {
+    margin-bottom: 10px;
+}
+
+.print-body h4 {
+    color: #047857;
+    text-align: center;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    font-size: 13px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+}
+
+.print-footer {
+    margin-top: 40px;
+    border-top: 1px solid #ccc;
+    padding-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 8px;
+    color: #666;
+}
+
+/* ========== @MEDIA PRINT OVERRIDES ========== */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+
+    .print-template,
+    .print-template * {
+        visibility: visible !important;
+    }
+
+    .print-template {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: white !important;
+        color: black !important;
+    }
+
+    .print-watermark {
+        position: fixed !important;
+        opacity: 0.03 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+}

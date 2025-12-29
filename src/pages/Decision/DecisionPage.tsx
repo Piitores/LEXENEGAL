@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MeiliSearch } from 'meilisearch';
-import { Download, ArrowLeft, Copy, Scale, BookOpen } from 'lucide-react';
-import html2pdf from 'html2pdf.js';
+import { Download, ArrowLeft, Copy, Scale, BookOpen, Printer } from 'lucide-react';
+import { useReactToPrint } from 'react-to-print';
 
 import './DecisionPage.css';
 
@@ -18,6 +18,9 @@ const DecisionPage: React.FC = () => {
     const navigate = useNavigate();
     const [decision, setDecision] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
+
+    // Ref for printable content
+    const printRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (!slug) return;
@@ -48,122 +51,23 @@ const DecisionPage: React.FC = () => {
         alert("Référence copiée : " + refText);
     };
 
-    const handleDownloadPDF = async () => {
-        if (!decision) return;
-
-        // 1. Build complete PDF HTML document
-        const pdfHTML = `
-            <div id="pdf-content" style="
-                width: 100%;
-                padding: 20mm;
-                background-color: #ffffff;
-                color: #1a1a1a;
-                font-family: Georgia, 'Times New Roman', serif;
-                font-size: 11pt;
-                line-height: 1.6;
-            ">
-                <!-- WATERMARK -->
-                <img src="/watermark-logo.jpg" style="
-                    position: fixed;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    width: 400px;
-                    opacity: 0.03;
-                    z-index: 0;
-                    pointer-events: none;
-                " />
-                
-                <!-- HEADER -->
-                <div style="
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: flex-start;
-                    border-bottom: 2px solid #047857;
-                    padding-bottom: 10px;
-                    margin-bottom: 20px;
-                ">
-                    <div>
-                        <h1 style="color: #047857; margin: 0; font-size: 22px; text-transform: uppercase; font-family: Georgia, serif;">LEXENEGAL</h1>
-                        <span style="font-size: 9px; color: #666; text-transform: uppercase; letter-spacing: 1px;">Base de Jurisprudence Certifiée</span>
-                    </div>
-                    <div style="text-align: right;">
-                        <strong style="font-size: 11px; text-transform: uppercase;">République du Sénégal</strong><br/>
-                        <em style="font-size: 10px; color: #555;">Au nom du Peuple Sénégalais</em>
-                    </div>
-                </div>
-
-                <!-- TITLE -->
-                <div style="text-align: center; margin-bottom: 25px;">
-                    <h2 style="color: #047857; text-decoration: underline; font-size: 16px; margin-bottom: 8px;">
-                        ${decision.reference} du ${decision.date_decision ? new Date(decision.date_decision).toLocaleDateString('fr-FR') : ''}
-                    </h2>
-                    <div style="font-size: 12px; font-weight: bold;">${decision.juridiction || ''}</div>
-                    <div style="font-size: 12px; margin-top: 3px;">${decision.chambre || ''}</div>
-                </div>
-
-                <!-- BODY CONTENT -->
-                <div style="text-align: justify; position: relative; z-index: 1;">
-                    ${decision.texte_integral || '<p>Contenu non disponible.</p>'}
-                </div>
-
-                <!-- FOOTER -->
-                <div style="
-                    margin-top: 40px;
-                    border-top: 1px solid #ccc;
-                    padding-top: 10px;
-                    display: flex;
-                    justify-content: space-between;
-                    font-size: 8px;
-                    color: #666;
-                ">
-                    <div>
-                        Source Certifiée : www.lexenegal.sn<br/>
-                        Généré le ${new Date().toLocaleDateString('fr-FR')}
-                    </div>
-                    <div>
-                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://lexenegal.sn/decision/${slug}&color=047857" style="width: 35px; height: 35px;" />
-                    </div>
-                </div>
-            </div>
-        `;
-
-        // 2. Create temp container
-        const container = document.createElement('div');
-        container.innerHTML = pdfHTML;
-        container.style.position = 'absolute';
-        container.style.left = '-9999px';
-        container.style.top = '0';
-        document.body.appendChild(container);
-
-        // 3. Configure html2pdf options
-        const options = {
-            margin: 0,
-            filename: `Lexenegal-${decision.reference.replace(/\//g, '-')}.pdf`,
-            image: { type: 'jpeg' as const, quality: 0.98 },
-            html2canvas: {
-                scale: 2,
-                useCORS: true,
-                backgroundColor: '#ffffff'
-            },
-            jsPDF: {
-                unit: 'mm' as const,
-                format: 'a4' as const,
-                orientation: 'portrait' as const
-            },
-            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-        };
-
-        // 4. Generate PDF
-        try {
-            await html2pdf().set(options as any).from(container).save();
-        } catch (err) {
-            console.error('PDF generation error:', err);
-            alert('Erreur lors de la génération du PDF');
-        } finally {
-            document.body.removeChild(container);
-        }
-    };
+    // Use react-to-print for reliable PDF generation via browser print
+    const handlePrint = useReactToPrint({
+        contentRef: printRef,
+        documentTitle: decision ? `Lexenegal-${decision.reference.replace(/\//g, '-')}` : 'Lexenegal-Decision',
+        pageStyle: `
+            @page {
+                size: A4;
+                margin: 15mm;
+            }
+            @media print {
+                body {
+                    -webkit-print-color-adjust: exact !important;
+                    print-color-adjust: exact !important;
+                }
+            }
+        `
+    });
 
     if (loading) return <div className="decisionPage" style={{ alignItems: 'center' }}>Chargement...</div>;
     if (!decision) return <div className="decisionPage" style={{ alignItems: 'center' }}>Décision introuvable.</div>;
@@ -223,9 +127,9 @@ const DecisionPage: React.FC = () => {
                 {/* 3. RIGHT SIDEBAR */}
                 <aside className="sidebar-right">
                     <div className="tools-sticky">
-                        <button className="btn-elite-primary" onClick={handleDownloadPDF}>
-                            <Download size={18} />
-                            PDF Certifié
+                        <button className="btn-elite-primary" onClick={() => handlePrint()}>
+                            <Printer size={18} />
+                            Imprimer / PDF
                         </button>
 
                         <button className="btn-elite-secondary" onClick={handleCopyRef}>
@@ -234,6 +138,49 @@ const DecisionPage: React.FC = () => {
                         </button>
                     </div>
                 </aside>
+            </div>
+
+            {/* ========== HIDDEN PRINT TEMPLATE ========== */}
+            <div style={{ display: 'none' }}>
+                <div ref={printRef} className="print-template">
+                    {/* WATERMARK */}
+                    <img
+                        src="/watermark-logo.jpg"
+                        alt=""
+                        className="print-watermark"
+                    />
+
+                    {/* HEADER */}
+                    <div className="print-header">
+                        <div className="print-header-left">
+                            <h1>LEXENEGAL</h1>
+                            <span>Base de Jurisprudence Certifiée</span>
+                        </div>
+                        <div className="print-header-right">
+                            <strong>RÉPUBLIQUE DU SÉNÉGAL</strong>
+                            <em>Au nom du Peuple Sénégalais</em>
+                        </div>
+                    </div>
+
+                    {/* TITLE */}
+                    <div className="print-title">
+                        <h2>{decision.reference} du {decision.date_decision ? new Date(decision.date_decision).toLocaleDateString('fr-FR') : ''}</h2>
+                        <div className="print-subtitle">{decision.juridiction || ''}</div>
+                        <div className="print-chambre">{decision.chambre || ''}</div>
+                    </div>
+
+                    {/* CONTENT */}
+                    <div className="print-body" dangerouslySetInnerHTML={{ __html: rawText }} />
+
+                    {/* FOOTER */}
+                    <div className="print-footer">
+                        <div>
+                            Source Certifiée : www.lexenegal.sn<br />
+                            Généré le {new Date().toLocaleDateString('fr-FR')}
+                        </div>
+                        <div>Édition certifiée Lexenegal.sn</div>
+                    </div>
+                </div>
             </div>
         </div>
     );
