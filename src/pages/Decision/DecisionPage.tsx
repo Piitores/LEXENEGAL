@@ -105,6 +105,7 @@ const DecisionPage: React.FC = () => {
             <div className="readerContainer">
                 {isMasterEdition ? (
                     /* MASTER EDITION RENDERING (Direct HTML) */
+                    /* The HTML contains the header, cartouche, everything. We don't need the React Header above it. */
                     <div className="master-container" dangerouslySetInnerHTML={{ __html: rawText }} />
                 ) : (
                     /* LEGACY RENDERING (Fallback) */
@@ -118,14 +119,14 @@ const DecisionPage: React.FC = () => {
                                 <span>{decision.matiere_principale}</span>
                             </div>
 
-                            {/* Parties (Master Edition) */}
+                            {/* Parties (Legacy) */}
                             {decision.parties_principales && (
                                 <div className="decisionParties">
                                     <strong>Entre :</strong> {decision.parties_principales}
                                 </div>
                             )}
 
-                            {/* Résumé (Master Edition) */}
+                            {/* Résumé (Legacy) */}
                             {decision.resume && (
                                 <div className="decisionResume">
                                     <h3>📜 Résumé</h3>
