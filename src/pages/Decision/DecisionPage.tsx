@@ -68,8 +68,9 @@ const DecisionPage: React.FC = () => {
     if (loading) return <div className="decisionPage" style={{ alignItems: 'center' }}>Chargement...</div>;
     if (!decision) return <div className="decisionPage" style={{ alignItems: 'center' }}>Décision introuvable.</div>;
 
-    // Process text for paragraphs
-    const paragraphs = decision.texte_integral.split('\n').filter((p: string) => p.trim() !== '');
+    // Process text for paragraphs safely
+    const rawText = decision.texte_integral || decision.resume || "Texte intégral non disponible.";
+    const paragraphs = typeof rawText === 'string' ? rawText.split('\n').filter((p: string) => p.trim() !== '') : ["Contenu invalide."];
 
     return (
         <div className="decisionPage">
@@ -91,14 +92,14 @@ const DecisionPage: React.FC = () => {
                     <span className="decisionRef">{decision.reference}</span>
                     <h1 className="decisionTitle">{decision.chambre}</h1>
                     <div className="decisionMeta">
-                        <span>{new Date(decision.date_decision).toLocaleDateString('fr-FR', { dateStyle: 'long' })}</span>
+                        <span>{decision.date_decision && !isNaN(Date.parse(decision.date_decision)) ? new Date(decision.date_decision).toLocaleDateString('fr-FR', { dateStyle: 'long' }) : 'Date N/D'}</span>
                         <span>•</span>
                         <span>{decision.matiere_principale}</span>
                     </div>
                 </div>
 
                 <div className="decisionBody">
-                    {decision.texte_integral.split('\n').map((para: string, idx: number) => (
+                    {paragraphs.map((para: string, idx: number) => (
                         <p key={idx}>{para}</p>
                     ))}
                 </div>
@@ -127,7 +128,7 @@ const DecisionPage: React.FC = () => {
                     {/* Content with Line Numbers */}
                     <div>
                         <h1 style={{ textAlign: 'center', fontSize: '14pt', marginBottom: '8mm', fontWeight: 'bold', textDecoration: 'underline' }}>
-                            {decision.reference} du {new Date(decision.date_decision).toLocaleDateString('fr-FR')}
+                            {decision.reference} du {decision.date_decision && !isNaN(Date.parse(decision.date_decision)) ? new Date(decision.date_decision).toLocaleDateString('fr-FR') : 'Date N/D'}
                         </h1>
 
                         <div>
