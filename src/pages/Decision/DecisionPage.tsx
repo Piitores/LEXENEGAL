@@ -112,65 +112,59 @@ const DecisionPage: React.FC = () => {
                     <style>
                         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Georgia&display=swap');
                         
-                        body {
+                        /* UNIVERSAL RESET FOR PDF - BRUTE FORCE */
+                        * {
                             background-color: #FFFFFF !important;
                             color: #000000 !important;
-                            font-family: 'Georgia', 'Times New Roman', serif;
-                            font-size: 12pt;
-                            line-height: 1.6;
+                            box-shadow: none !important;
+                            text-shadow: none !important;
+                        }
+
+                        body {
                             margin: 0;
-                            padding: 20mm; /* A4 Margins */
+                            padding: 20mm;
+                            font-family: 'Georgia', 'Times New Roman', serif;
+                            font-size: 11pt; /* Slightly smaller for better fit */
+                            line-height: 1.5;
                             -webkit-print-color-adjust: exact;
                         }
                         
-                        /* HEADER */
-                        .master-header { text-align: center; margin-bottom: 30px; border-bottom: 3px double #047857; padding-bottom: 10px; }
-                        .master-header h2 { font-family: 'Playfair Display', serif; font-size: 20pt; color: #000; margin: 0; text-transform: uppercase; letter-spacing: 2px; }
-                        .master-header .sub { font-style: italic; color: #444; margin-top: 5px; }
+                        /* RESTORE SPECIFIC COLORS (Only where needed, filtering out dark mode garbage) */
+                        .master-header h2 { color: #000000 !important; border: none; }
+                        .master-header { border-bottom: 3px double #000000 !important; }
+                        
+                        /* EMERALD ACCENTS overridden to BLACK for pure crisp PDF or keep Emerald? */
+                        /* User requested Emerald titles. Let's try to allow specific overrides */
+                        h2, h4, strong { color: #047857 !important; }
                         
                         /* CARTOUCHE */
                         .master-cartouche {
-                            background: #FAFAF9;
-                            border: 1px solid #CCC;
-                            padding: 15px;
-                            margin-bottom: 30px;
-                            text-align: center;
-                            font-family: 'Helvetica', sans-serif;
-                            font-size: 10pt;
+                            border: 1px solid #777 !important;
+                            background-color: #f9f9f9 !important; /* Extremely light gray allowed */
                         }
-                        .master-cartouche strong { display: block; color: #047857; text-transform: uppercase; margin-bottom: 5px; }
                         
-                        /* BODY */
-                        .master-body { text-align: justify; }
-                        .master-body h4 { color: #047857; text-align: center; margin-top: 30px; font-size: 14pt; border-bottom: 1px solid #EEE; padding-bottom: 5px; font-family: 'Playfair Display', serif; }
-                        p { margin-bottom: 15px; position: relative; }
-                        
-                        /* WATERMARK */
+                        /* WATERMARK specific */
                         .watermark {
-                            position: fixed;
-                            top: 50%;
-                            left: 50%;
-                            transform: translate(-50%, -50%);
-                            width: 400px;
-                            opacity: 0.03;
-                            z-index: -1;
+                            opacity: 0.04 !important; /* Slightly more visible */
+                            background: transparent !important; /* Exception */
                         }
-
-                        /* FOOTER */
-                        .footer {
-                            position: fixed;
-                            bottom: 10mm;
-                            width: 100%;
-                            text-align: center;
-                            font-size: 9pt;
-                            color: #888;
-                            border-top: 1px solid #EEE;
-                            padding-top: 5px;
+                        
+                        /* LINE NUMBERS */
+                        .line-number {
+                            color: #666 !important;
+                            font-size: 8pt !important;
+                            background: transparent !important;
+                            border: none !important;
+                            left: -12mm !important; 
+                            width: 10mm !important;
                         }
+                        
+                        p { margin-bottom: 12px; text-align: justify; }
                     </style>
                 </head>
                 <body>
-                    <img src="/watermark-logo.jpg" class="watermark" />
+                    <!-- Force Image to be transparent background -->
+                    <img src="/watermark-logo.jpg" class="watermark" style="background:transparent !important;" />
                     
                     <!-- HEADER INJECTION -->
                     <div class="master-header">
