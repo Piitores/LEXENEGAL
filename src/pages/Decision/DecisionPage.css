@@ -563,31 +563,48 @@
 
 /* ========== @MEDIA PRINT OVERRIDES ========== */
 @media print {
-    body * {
-        visibility: hidden;
+
+    /* Hide EVERYTHING on the page */
+    body>*:not(.decisionPage) {
+        display: none !important;
     }
 
-    .print-template,
+    .decisionPage>*:not([style*="position: absolute"]) {
+        display: none !important;
+    }
+
+    .elite-grid,
+    .sidebar-left,
+    .sidebar-right,
+    .content-main,
+    .nav-sticky,
+    .tools-sticky {
+        display: none !important;
+    }
+
+    /* Show ONLY the print template */
+    .print-template {
+        display: block !important;
+        visibility: visible !important;
+        position: fixed !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        background: white !important;
+        color: black !important;
+        z-index: 999999 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
     .print-template * {
         visibility: visible !important;
     }
 
-    .print-template {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        background: white !important;
-        color: black !important;
-    }
-
-    .print-watermark {
-        visibility: visible !important;
-        display: block !important;
-        position: absolute !important;
+    .print-template::before {
         opacity: 0.03 !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
-        color-adjust: exact !important;
     }
 }
