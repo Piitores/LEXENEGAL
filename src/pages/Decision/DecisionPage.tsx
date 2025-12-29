@@ -140,8 +140,13 @@ const DecisionPage: React.FC = () => {
                 </aside>
             </div>
 
-            {/* ========== HIDDEN PRINT TEMPLATE ========== */}
-            <div style={{ display: 'none' }}>
+            {/* ========== HIDDEN PRINT TEMPLATE (Off-screen but RENDERED) ========== */}
+            <div style={{
+                position: 'absolute',
+                left: '-9999px',
+                top: '0',
+                width: '210mm'
+            }}>
                 <div ref={printRef} className="print-template">
                     {/* WATERMARK */}
                     <img

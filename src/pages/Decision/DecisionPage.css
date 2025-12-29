@@ -429,8 +429,10 @@
     font-family: 'Georgia', 'Times New Roman', serif;
     font-size: 11pt;
     line-height: 1.6;
-    padding: 15mm;
+    padding: 20mm 30mm;
+    /* More padding on sides for centered text */
     position: relative;
+    box-sizing: border-box;
 }
 
 .print-watermark {
