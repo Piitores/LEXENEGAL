@@ -84,9 +84,8 @@ const DecisionPage: React.FC = () => {
     if (loading) return <div className="decisionPage" style={{ alignItems: 'center' }}>Chargement...</div>;
     if (!decision) return <div className="decisionPage" style={{ alignItems: 'center' }}>Décision introuvable.</div>;
 
-    // Process text for paragraphs safely
     const rawText = decision.texte_integral || decision.resume || "Texte intégral non disponible.";
-    const paragraphs = typeof rawText === 'string' ? rawText.split('\n').filter((p: string) => p.trim() !== '') : ["Contenu invalide."];
+    const isMasterEdition = rawText.includes("master-header") || rawText.includes("<div"); // Detection Strategy
 
     return (
         <div className="decisionPage">
@@ -104,46 +103,48 @@ const DecisionPage: React.FC = () => {
 
             {/* SCREEN VIEW */}
             <div className="readerContainer">
-                <div className="decisionHeader">
-                    <span className="decisionRef">{decision.reference}</span>
-                    <h1 className="decisionTitle">{decision.chambre}</h1>
-                    <div className="decisionMeta">
-                        <span>{decision.date_decision && !isNaN(Date.parse(decision.date_decision)) ? new Date(decision.date_decision).toLocaleDateString('fr-FR', { dateStyle: 'long' }) : 'Date N/D'}</span>
-                        <span>•</span>
-                        <span>{decision.matiere_principale}</span>
-                    </div>
+                {isMasterEdition ? (
+                    /* MASTER EDITION RENDERING (Direct HTML) */
+                    <div className="master-container" dangerouslySetInnerHTML={{ __html: rawText }} />
+                ) : (
+                    /* LEGACY RENDERING (Fallback) */
+                    <>
+                        <div className="decisionHeader">
+                            <span className="decisionRef">{decision.reference}</span>
+                            <h1 className="decisionTitle">{decision.chambre}</h1>
+                            <div className="decisionMeta">
+                                <span>{decision.date_decision && !isNaN(Date.parse(decision.date_decision)) ? new Date(decision.date_decision).toLocaleDateString('fr-FR', { dateStyle: 'long' }) : 'Date N/D'}</span>
+                                <span>•</span>
+                                <span>{decision.matiere_principale}</span>
+                            </div>
 
-                    {/* Parties (Master Edition) */}
-                    {decision.parties_principales && (
-                        <div className="decisionParties">
-                            <strong>Entre :</strong> {decision.parties_principales}
+                            {/* Parties (Master Edition) */}
+                            {decision.parties_principales && (
+                                <div className="decisionParties">
+                                    <strong>Entre :</strong> {decision.parties_principales}
+                                </div>
+                            )}
+
+                            {/* Résumé (Master Edition) */}
+                            {decision.resume && (
+                                <div className="decisionResume">
+                                    <h3>📜 Résumé</h3>
+                                    <p>{decision.resume}</p>
+                                </div>
+                            )}
                         </div>
-                    )}
 
-                    {/* Résumé (Master Edition) */}
-                    {decision.resume && (
-                        <div className="decisionResume">
-                            <h3>📜 Résumé</h3>
-                            <p>{decision.resume}</p>
+                        <div className="decisionBody">
+                            {/* Logic to fix broken lines */}
+                            {typeof rawText === 'string'
+                                ? rawText.split(/\n\s*\n/).map((para, idx) => (
+                                    <p key={idx} dangerouslySetInnerHTML={{ __html: para.replace(/\n/g, ' ') }} />
+                                ))
+                                : <p>Texte non disponible</p>
+                            }
                         </div>
-                    )}
-                </div>
-
-                <div className="decisionBody">
-                    {/* Logic to fix broken lines: Join all by space, then split by double newline if possible, 
-                        OR just trust the LLM. Given the screenshot, we have hard breaks. 
-                        Let's try to merge lines that don't end with punctuation or start with capital? 
-                        Safer strategy: display as is but use CSS white-space: pre-wrap? 
-                        Actually, split('\n') creates a <p> for every line, which defines the 'huge spacing' seen in screenshot.
-                        Let's try to join single newlines.
-                    */}
-                    {typeof rawText === 'string'
-                        ? rawText.split(/\n\s*\n/).map((para, idx) => (
-                            <p key={idx} dangerouslySetInnerHTML={{ __html: para.replace(/\n/g, ' ') }} />
-                        ))
-                        : <p>Texte non disponible</p>
-                    }
-                </div>
+                    </>
+                )}
             </div>
 
             {/* HIDDEN PRINT TEMPLATE */}
@@ -151,38 +152,47 @@ const DecisionPage: React.FC = () => {
                 {/* Watermark Logo */}
                 <img src="/watermark-logo.jpg" className="watermark-img" alt="" />
 
+                {/* For PDF, if Master Edition, we just dump the HTML inside the print container + Footer 
+                    But we need the footer outside the dangerous HTML.
+                */}
                 <div className="printContainer">
-                    {/* Official Header */}
-                    <div className="printHeader" style={{ borderBottom: '2px solid #000', paddingBottom: '8mm', marginBottom: '10mm', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                        <div>
-                            <h2 style={{ margin: 0, fontSize: '22pt', fontFamily: 'Times New Roman', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold' }}>
-                                <span style={{ color: '#047857' }}>LEX</span>ENEGAL
-                            </h2>
-                            <div style={{ fontSize: '9pt', color: '#444', marginTop: '2mm', textTransform: 'uppercase', letterSpacing: '1px' }}>Base de Jurisprudence Certifiée</div>
-                        </div>
-                        <div style={{ textAlign: 'right' }}>
-                            <h3 style={{ margin: 0, fontSize: '12pt', textTransform: 'uppercase' }}>République du Sénégal</h3>
-                            <div style={{ fontSize: '10pt', fontStyle: 'italic' }}>Au nom du Peuple Sénégalais</div>
-                        </div>
-                    </div>
-
-                    {/* Content with Line Numbers */}
-                    <div>
-                        <h1 style={{ textAlign: 'center', fontSize: '14pt', marginBottom: '8mm', fontWeight: 'bold', textDecoration: 'underline' }}>
-                            {decision.reference} du {decision.date_decision && !isNaN(Date.parse(decision.date_decision)) ? new Date(decision.date_decision).toLocaleDateString('fr-FR') : 'Date N/D'}
-                        </h1>
-
-                        <div>
-                            {paragraphs.map((para: string, idx: number) => (
-                                <div key={idx} className="legal-line">
-                                    <div className="line-number">{idx + 1}</div>
-                                    <div className="line-content">{para}</div>
+                    {isMasterEdition ? (
+                        <>
+                            <div dangerouslySetInnerHTML={{ __html: rawText }} />
+                        </>
+                    ) : (
+                        <>
+                            {/* Legacy Print Structure */}
+                            <div className="printHeader" style={{ borderBottom: '2px solid #000', paddingBottom: '8mm', marginBottom: '10mm', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                                <div>
+                                    <h2 style={{ margin: 0, fontSize: '22pt', fontFamily: 'Times New Roman', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold' }}>
+                                        <span style={{ color: '#047857' }}>LEX</span>ENEGAL
+                                    </h2>
+                                    <div style={{ fontSize: '9pt', color: '#444', marginTop: '2mm', textTransform: 'uppercase', letterSpacing: '1px' }}>Base de Jurisprudence Certifiée</div>
                                 </div>
-                            ))}
-                        </div>
-                    </div>
+                                <div style={{ textAlign: 'right' }}>
+                                    <h3 style={{ margin: 0, fontSize: '12pt', textTransform: 'uppercase' }}>République du Sénégal</h3>
+                                    <div style={{ fontSize: '10pt', fontStyle: 'italic' }}>Au nom du Peuple Sénégalais</div>
+                                </div>
+                            </div>
 
-                    {/* Footer */}
+                            <div>
+                                <h1 style={{ textAlign: 'center', fontSize: '14pt', marginBottom: '8mm', fontWeight: 'bold', textDecoration: 'underline' }}>
+                                    {decision.reference} du {decision.date_decision && !isNaN(Date.parse(decision.date_decision)) ? new Date(decision.date_decision).toLocaleDateString('fr-FR') : 'Date N/D'}
+                                </h1>
+                                <div>
+                                    {typeof rawText === 'string' && rawText.split(/\n\s*\n/).map((para: string, idx: number) => (
+                                        <div key={idx} className="legal-line">
+                                            <div className="line-number">{idx + 1}</div>
+                                            <div className="line-content" dangerouslySetInnerHTML={{ __html: para.replace(/\n/g, ' ') }}></div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </>
+                    )}
+
+                    {/* Footer (Always Present) */}
                     <div style={{ marginTop: '15mm', paddingTop: '5mm', borderTop: '1px solid #ccc', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '8pt', color: '#555' }}>
                         <div>
                             <strong>Source Certifiée :</strong> www.lexenegal.sn<br />

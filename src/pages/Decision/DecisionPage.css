@@ -93,6 +93,91 @@
     line-height: 1.6;
 }
 
+/* MASTER EDITION STYLES */
+
+.master-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 3px double #047857;
+}
+
+.master-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    color: #111827;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.master-header .sub {
+    font-family: 'Times New Roman', serif;
+    font-style: italic;
+    color: #4B5563;
+    margin-top: 0.5rem;
+}
+
+.master-cartouche {
+    background: #FAFAF9;
+    /* Warm off-white */
+    border: 1px solid #D1D5DB;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 1rem;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+}
+
+.master-cartouche div {
+    text-align: center;
+}
+
+.master-cartouche strong {
+    display: block;
+    color: #047857;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    margin-bottom: 0.25rem;
+}
+
+.master-composition {
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background: #fff;
+    border-left: 2px solid #047857;
+    font-size: 0.9rem;
+    color: #374151;
+}
+
+.master-body {
+    font-family: 'Georgia', serif;
+    /* Authority Font */
+    line-height: 1.8;
+    font-size: 1.05rem;
+    color: #1F2937;
+    text-align: justify;
+}
+
+.master-body h4 {
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    text-align: center;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #047857;
+    border-bottom: 1px solid #E5E7EB;
+    padding-bottom: 0.5rem;
+}
+
+.master-body p {
+    margin-bottom: 1.2rem;
+}
+
 .decisionBody {
     font-family: 'Merriweather', serif;
     /* Better reading font */
