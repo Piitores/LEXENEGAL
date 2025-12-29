@@ -94,17 +94,20 @@
     box-shadow: 0 15px 25px -5px rgba(4, 120, 87, 0.5);
 }
 
-/* Hidden Print Template */
+/* PRINT TEMPLATE (Hidden from screen but visible to DOM for capture) */
 .printTemplate {
     position: absolute;
-    top: -9999px;
-    left: -9999px;
+    top: -10000px;
+    left: -10000px;
     width: 210mm;
+    /* A4 Width */
     min-height: 297mm;
-    padding: 20mm;
+    /* A4 Height */
     background: white;
-    color: black !important;
-    font-family: 'Times New Roman', serif;
+    color: black;
+    padding: 0;
+    /* Do NOT use display:none or visibility:hidden */
+    z-index: -1;
 }
 
 .printContainer {

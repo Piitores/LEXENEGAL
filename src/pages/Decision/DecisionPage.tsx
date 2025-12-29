@@ -49,9 +49,24 @@ const DecisionPage: React.FC = () => {
 
         try {
             const element = printRef.current;
-            // High scale for clarity, useCORS for external images if any (QR)
-            const canvas = await html2canvas(element, { scale: 2, useCORS: true });
-            const imgData = canvas.toDataURL('image/jpeg', 0.9);
+
+            // Wait for images to be ready (critical for Watermark/QR)
+            const images = Array.from(element.getElementsByTagName('img'));
+            await Promise.all(images.map(img => {
+                if (img.complete) return Promise.resolve();
+                return new Promise((resolve) => { img.onload = resolve; img.onerror = resolve; });
+            }));
+
+            // Capture with high scale and logic to handle off-screen rendering
+            const canvas = await html2canvas(element, {
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                windowWidth: 210 * 3.7795, // Force A4 width in pixels approx
+                windowHeight: 297 * 3.7795
+            });
+
+            const imgData = canvas.toDataURL('image/jpeg', 0.95);
 
             // A4 dimensions in mm
             const pdf = new jsPDF('p', 'mm', 'a4');
@@ -62,6 +77,7 @@ const DecisionPage: React.FC = () => {
             pdf.save(`Lexenegal-${decision.reference.replace(/\//g, '-')}.pdf`);
         } catch (err) {
             console.error("PDF Export failed", err);
+            alert("Erreur lors de la génération du PDF.");
         }
     };
 
