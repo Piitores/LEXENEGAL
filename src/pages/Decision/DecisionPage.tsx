@@ -63,7 +63,7 @@ const DecisionPage: React.FC = () => {
                 line-height: 1.6;
             ">
                 <!-- WATERMARK -->
-                <img src="/filigranne lexenegal.png" style="
+                <img src="/watermark-logo.jpg" style="
                     position: fixed;
                     top: 50%;
                     left: 50%;
