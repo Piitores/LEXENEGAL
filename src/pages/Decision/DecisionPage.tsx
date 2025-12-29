@@ -112,12 +112,37 @@ const DecisionPage: React.FC = () => {
                         <span>•</span>
                         <span>{decision.matiere_principale}</span>
                     </div>
+
+                    {/* Parties (Master Edition) */}
+                    {decision.parties_principales && (
+                        <div className="decisionParties">
+                            <strong>Entre :</strong> {decision.parties_principales}
+                        </div>
+                    )}
+
+                    {/* Résumé (Master Edition) */}
+                    {decision.resume && (
+                        <div className="decisionResume">
+                            <h3>📜 Résumé</h3>
+                            <p>{decision.resume}</p>
+                        </div>
+                    )}
                 </div>
 
                 <div className="decisionBody">
-                    {paragraphs.map((para: string, idx: number) => (
-                        <p key={idx}>{para}</p>
-                    ))}
+                    {/* Logic to fix broken lines: Join all by space, then split by double newline if possible, 
+                        OR just trust the LLM. Given the screenshot, we have hard breaks. 
+                        Let's try to merge lines that don't end with punctuation or start with capital? 
+                        Safer strategy: display as is but use CSS white-space: pre-wrap? 
+                        Actually, split('\n') creates a <p> for every line, which defines the 'huge spacing' seen in screenshot.
+                        Let's try to join single newlines.
+                    */}
+                    {typeof rawText === 'string'
+                        ? rawText.split(/\n\s*\n/).map((para, idx) => (
+                            <p key={idx} dangerouslySetInnerHTML={{ __html: para.replace(/\n/g, ' ') }} />
+                        ))
+                        : <p>Texte non disponible</p>
+                    }
                 </div>
             </div>
 

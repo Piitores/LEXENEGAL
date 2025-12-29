@@ -48,23 +48,63 @@
 .decisionMeta {
     display: flex;
     justify-content: center;
-    gap: 2rem;
+    gap: 1rem;
     color: #6B7280;
     font-size: 0.95rem;
+    margin-bottom: 2rem;
     font-style: italic;
+}
+
+.decisionParties {
+    background: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    padding: 1rem;
+    border-radius: 6px;
+    margin-bottom: 2rem;
+    font-family: 'Merriweather', serif;
+    font-size: 0.95rem;
+    color: #374151;
+    text-align: center;
+}
+
+.decisionResume {
+    background: #F0FDF4;
+    /* Emerald tint */
+    border-left: 4px solid #047857;
+    padding: 1.5rem;
+    border-radius: 4px;
+    margin-bottom: 3rem;
+    text-align: left;
+}
+
+.decisionResume h3 {
+    margin-top: 0;
+    color: #065F46;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.decisionResume p {
+    margin: 0;
+    color: #1F2937;
+    font-style: italic;
+    line-height: 1.6;
 }
 
 .decisionBody {
     font-family: 'Merriweather', serif;
     /* Better reading font */
     line-height: 1.9;
-    color: #374151;
-    font-size: 1.1rem;
-    text-align: justify;
+    color: #111827;
+    font-size: 1.05rem;
+    /* Larger for better reading */
 }
 
 .decisionBody p {
     margin-bottom: 1.5rem;
+    text-align: justify;
 }
 
 /* Print/Export Button */
