@@ -7,6 +7,7 @@ import { useReactToPrint } from 'react-to-print';
 import './DecisionPage.css';
 
 // --- CONFIG ---
+// --- CONFIG ---
 const client = new MeiliSearch({
     host: 'https://ms-9c13e7ae24b5-37398.fra.meilisearch.io',
     apiKey: 'eabe07740906b7bad2b7dcbe72ab6c010888bc827d3e7ec28b365810a5cad73a',
@@ -29,8 +30,9 @@ const DecisionPage: React.FC = () => {
 
     const fetchDecision = async () => {
         setLoading(true);
+        console.log("🔍 Fetching decision for slug:", slug);
         try {
-            const searchResponse = await index.search(slug, {
+            const searchResponse = await index.search('', {
                 filter: `slug = "${slug}"`,
                 limit: 1
             });
@@ -70,7 +72,19 @@ const DecisionPage: React.FC = () => {
     });
 
     if (loading) return <div className="decisionPage" style={{ alignItems: 'center' }}>Chargement...</div>;
-    if (!decision) return <div className="decisionPage" style={{ alignItems: 'center' }}>Décision introuvable.</div>;
+
+    if (!decision) return (
+        <div className="decisionPage" style={{ alignItems: 'center', flexDirection: 'column', gap: '1rem', marginTop: '5rem' }}>
+            <h2>Décision introuvable</h2>
+            <div style={{ background: '#F3F4F6', padding: '2rem', borderRadius: '8px', textAlign: 'left', fontFamily: 'monospace' }}>
+                <p><strong>Slug demandé :</strong> {slug}</p>
+                <p><strong>URL API :</strong> {client.config.host}</p>
+                <p><strong>Index :</strong> decisions</p>
+                <p><strong>Debug Status :</strong> {loading ? 'Loading' : 'Finished'}</p>
+                <button onClick={fetchDecision} style={{ padding: '0.5rem 1rem', marginTop: '1rem', cursor: 'pointer' }}>Réessayer</button>
+            </div>
+        </div>
+    );
 
     const rawText = decision.texte_integral || "Texte intégral non disponible.";
 
@@ -84,13 +98,8 @@ const DecisionPage: React.FC = () => {
                             <ArrowLeft size={16} /> Retour
                         </button>
 
-                        <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px', color: '#9CA3AF', marginBottom: '1rem' }}>
-                            Sommaire
-                        </div>
-                        <a href="#expert-block" className="jump-link">Synthèse Expert</a>
-                        <a href="#faits" className="jump-link">Faits & Procédure</a>
-                        <a href="#motifs" className="jump-link">Motifs</a>
-                        <a href="#dispositif" className="jump-link">Dispositif</a>
+                        <a href="#expert-block" className="jump-link">Synthèse</a>
+                        <a href="#texte-integral" className="jump-link">Texte intégral</a>
                     </nav>
                 </aside>
 
@@ -141,18 +150,19 @@ const DecisionPage: React.FC = () => {
             </div>
 
             {/* ========== HIDDEN PRINT TEMPLATE (Off-screen but RENDERED) ========== */}
-            <div className="print-wrapper" style={{
+            <div style={{
                 position: 'absolute',
                 left: '-9999px',
                 top: '0',
                 width: '210mm'
             }}>
-                <div ref={printRef} className="print-template" style={{
-                    backgroundImage: 'url(/watermark-logo.jpg)',
-                    backgroundRepeat: 'no-repeat',
-                    backgroundPosition: 'center center',
-                    backgroundSize: '50%'
-                }}>
+                <div ref={printRef} className="print-template">
+                    {/* WATERMARK */}
+                    <img
+                        src="/watermark-logo.jpg"
+                        alt=""
+                        className="print-watermark"
+                    />
 
                     {/* HEADER */}
                     <div className="print-header">

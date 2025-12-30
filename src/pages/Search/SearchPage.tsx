@@ -198,10 +198,9 @@ const SearchPage: React.FC = () => {
                                 </span>
                             </div>
                             <h2 className="cardTitle">{hit.matiere_principale} - {hit.chambre}</h2>
-                            <p
-                                className="cardSnippet"
-                                dangerouslySetInnerHTML={{ __html: (hit as any)._formatted?.texte_integral || hit.resume || 'Aucun aperçu disponible.' }}
-                            />
+                            <p className="cardSnippet">
+                                {hit.resume || 'Aucun aperçu disponible.'}
+                            </p>
 
                             <div className="cardTags">
                                 {hit.mots_cles && hit.mots_cles.slice(0, 3).map(tag => (

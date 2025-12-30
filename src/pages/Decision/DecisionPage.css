@@ -155,29 +155,54 @@
     color: #111827;
 }
 
-/* LEGAL TEXT */
+/* LEGAL TEXT - Georgia for elegant reading */
 .legal-content {
-    font-family: var(--font-serif);
+    font-family: 'Georgia', serif;
     font-size: 18px;
-    line-height: 1.8;
+    line-height: 1.9;
     color: #1F2937;
     text-align: justify;
 }
 
 .legal-content p {
-    position: relative;
     margin-bottom: 1.5rem;
 }
 
-/* Web Line Numbers via CSS Counters */
-.legal-content {
-    counter-reset: webpara;
+/* Master HTML Structure Styles */
+.master-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    font-family: 'Georgia', serif;
 }
 
-.legal-content p::before {
-    content: counter(webpara);
-    counter-increment: webpara 5;
-    /* Can only increment by 1 usually */
+.master-header p {
+    margin: 0.25rem 0;
+}
+
+.master-cartouche {
+    text-align: center;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #f8f6f0 0%, #fffdf8 100%);
+    border: 1px solid #e0d8c8;
+    margin-bottom: 2rem;
+    font-family: 'Georgia', serif;
+}
+
+.master-composition {
+    padding: 1.5rem;
+    background: #FFFCF5;
+    border: 1px solid #E5E7EB;
+    margin-bottom: 2rem;
+    font-family: 'Georgia', serif;
+}
+
+.master-composition p {
+    margin: 0.5rem 0;
+}
+
+.master-body {
+    font-family: 'Georgia', serif;
+    line-height: 1.9;
 }
 
 /* Trick for "Every 5": Use JS to inject specific classes or just number all paras faintly */
@@ -430,44 +455,20 @@
     font-size: 11pt;
     line-height: 1.6;
     padding: 20mm 30mm;
+    /* More padding on sides for centered text */
     position: relative;
     box-sizing: border-box;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-}
-
-/* Watermark via pseudo-element for better print control */
-.print-template::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 50%;
-    height: 50%;
-    background-image: url('/watermark-logo.jpg');
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: contain;
-    opacity: 0.03;
-    pointer-events: none;
-    z-index: 0;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
 }
 
 .print-watermark {
-    position: absolute;
+    position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 50%;
-    max-width: 400px;
+    width: 300px;
     opacity: 0.03;
     pointer-events: none;
     z-index: 0;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
 }
 
 .print-header {
@@ -561,31 +562,28 @@
     color: #666;
 }
 
-/* ========== @MEDIA PRINT - SIMPLE APPROACH ========== */
+/* ========== @MEDIA PRINT OVERRIDES ========== */
 @media print {
-
-    /* Hide the entire page */
-    .decisionPage .elite-grid {
-        display: none !important;
+    body * {
+        visibility: hidden;
     }
 
-    /* Show and position the print wrapper */
-    .print-wrapper {
-        position: static !important;
-        left: auto !important;
-        display: block !important;
+    .print-template,
+    .print-template * {
+        visibility: visible !important;
     }
 
     .print-template {
-        display: block !important;
-        width: 100% !important;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
         background: white !important;
         color: black !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
     }
 
-    .print-template::before {
+    .print-watermark {
+        position: fixed !important;
         opacity: 0.03 !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
