@@ -561,45 +561,28 @@
     color: #666;
 }
 
-/* ========== @MEDIA PRINT OVERRIDES ========== */
+/* ========== @MEDIA PRINT - SIMPLE APPROACH ========== */
 @media print {
 
-    /* Hide EVERYTHING on the page */
-    body>*:not(.decisionPage) {
+    /* Hide the entire page */
+    .decisionPage .elite-grid {
         display: none !important;
     }
 
-    .decisionPage>*:not([style*="position: absolute"]) {
-        display: none !important;
+    /* Show and position the print wrapper */
+    .print-wrapper {
+        position: static !important;
+        left: auto !important;
+        display: block !important;
     }
 
-    .elite-grid,
-    .sidebar-left,
-    .sidebar-right,
-    .content-main,
-    .nav-sticky,
-    .tools-sticky {
-        display: none !important;
-    }
-
-    /* Show ONLY the print template */
     .print-template {
         display: block !important;
-        visibility: visible !important;
-        position: fixed !important;
-        left: 0 !important;
-        top: 0 !important;
         width: 100% !important;
-        height: auto !important;
         background: white !important;
         color: black !important;
-        z-index: 999999 !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
-    }
-
-    .print-template * {
-        visibility: visible !important;
     }
 
     .print-template::before {

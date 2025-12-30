@@ -141,7 +141,7 @@ const DecisionPage: React.FC = () => {
             </div>
 
             {/* ========== HIDDEN PRINT TEMPLATE (Off-screen but RENDERED) ========== */}
-            <div style={{
+            <div className="print-wrapper" style={{
                 position: 'absolute',
                 left: '-9999px',
                 top: '0',
