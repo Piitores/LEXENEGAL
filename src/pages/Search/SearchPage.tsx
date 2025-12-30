@@ -188,7 +188,7 @@ const SearchPage: React.FC = () => {
 
                 <div className="resultsGrid">
                     {results.map((hit, idx) => (
-                        <div key={`${hit.id}-${idx}`} className="resultCard" onClick={() => navigate(`/decision/${hit.slug}`)}>
+                        <div key={`${hit.id}-${idx}`} className="resultCard" onClick={() => window.open(`/decision/${hit.slug}`, '_blank')}>
                             <div className="cardHeader">
                                 <span className="cardRef">{hit.reference || 'Réf. Inconnue'}</span>
                                 <span className="cardDate">
