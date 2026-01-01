@@ -205,20 +205,7 @@
     line-height: 1.9;
 }
 
-/* Trick for "Every 5": Use JS to inject specific classes or just number all paras faintly */
-.legal-content p::before {
-    counter-increment: webpara;
-    content: counter(webpara);
-    position: absolute;
-    left: -3rem;
-    width: 2rem;
-    text-align: right;
-    font-family: var(--font-sans);
-    font-size: 0.75rem;
-    color: #D1D5DB;
-    font-variant-numeric: tabular-nums;
-    user-select: none;
-}
+/* Paragraph numbers removed by user request */
 
 /* RIGHT: ACTIONS */
 .sidebar-right {
@@ -342,24 +329,7 @@
     position: relative;
 }
 
-/* Apply Line Numbers to Master Body too */
-.master-body {
-    counter-reset: masterpara;
-}
-
-.master-body p::before {
-    counter-increment: masterpara;
-    content: counter(masterpara);
-    position: absolute;
-    left: -3rem;
-    width: 2rem;
-    text-align: right;
-    font-family: var(--font-sans);
-    font-size: 0.75rem;
-    color: #D1D5DB;
-    font-variant-numeric: tabular-nums;
-    user-select: none;
-}
+/* Master body paragraph numbers removed */
 
 /* RESPONSIVE */
 @media (max-width: 1024px) {
