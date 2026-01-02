@@ -162,10 +162,38 @@
     line-height: 1.9;
     color: #1F2937;
     text-align: justify;
+    position: relative;
+    z-index: 1;
 }
 
 .legal-content p {
     margin-bottom: 1.5rem;
+}
+
+/* WATERMARK WRAPPER */
+.legal-content-wrapper {
+    position: relative;
+}
+
+.watermark-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* PRINT WATERMARK (Repeat on each page) */
+@media print {
+    .watermark-container {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 0;
+        opacity: 0.03 !important;
+    }
 }
 
 /* Master HTML Structure Styles */
@@ -500,6 +528,43 @@
 .print-chambre {
     font-size: 12px;
     margin-top: 3px;
+}
+
+/* PRINT SYNTHESE BLOCK */
+.print-synthese {
+    background: #f8faf9;
+    border: 1px solid #e5e7eb;
+    border-left: 4px solid #047857;
+    padding: 15px 20px;
+    margin-bottom: 25px;
+}
+
+.print-synthese-title {
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: #047857;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+}
+
+.print-synthese-matiere {
+    display: inline-block;
+    background: #ecfdf5;
+    color: #047857;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.print-synthese-resume {
+    font-style: italic;
+    color: #374151;
+    font-size: 11px;
+    line-height: 1.5;
+    margin: 0;
 }
 
 .print-body {

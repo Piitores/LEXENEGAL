@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { MeiliSearch } from 'meilisearch';
 import { Download, ArrowLeft, Copy, Scale, BookOpen, Printer } from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
+import LexenegalSymbol from '../../components/LexenegalSymbol/LexenegalSymbol';
 
 import './DecisionPage.css';
 
@@ -127,9 +128,14 @@ const DecisionPage: React.FC = () => {
                         )}
                     </div>
 
-                    {/* LEGAL TEXT CONTENT */}
-                    <div className="legal-content">
-                        <div dangerouslySetInnerHTML={{ __html: rawText }} />
+                    {/* LEGAL TEXT CONTENT with WATERMARK */}
+                    <div className="legal-content-wrapper">
+                        <div className="watermark-container">
+                            <LexenegalSymbol size={400} opacity={0.03} />
+                        </div>
+                        <div className="legal-content" id="texte-integral">
+                            <div dangerouslySetInnerHTML={{ __html: rawText }} />
+                        </div>
                     </div>
                 </main>
 
@@ -182,6 +188,19 @@ const DecisionPage: React.FC = () => {
                         <div className="print-subtitle">{decision.juridiction || ''}</div>
                         <div className="print-chambre">{decision.chambre || ''}</div>
                     </div>
+
+                    {/* SYNTHÈSE JURIDIQUE */}
+                    {(decision.matiere_principale || decision.resume) && (
+                        <div className="print-synthese">
+                            <div className="print-synthese-title">Synthèse Juridique</div>
+                            {decision.matiere_principale && (
+                                <div className="print-synthese-matiere">{decision.matiere_principale}</div>
+                            )}
+                            {decision.resume && (
+                                <p className="print-synthese-resume">{decision.resume}</p>
+                            )}
+                        </div>
+                    )}
 
                     {/* CONTENT */}
                     <div className="print-body" dangerouslySetInnerHTML={{ __html: rawText }} />

@@ -1,0 +1,6 @@
+<svg width="32" height="32" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Circle border -->
+  <circle cx="50" cy="50" r="48" stroke="#047857" stroke-width="3" fill="#ffffff"/>
+  <!-- Elegant "L" -->
+  <text x="50" y="68" text-anchor="middle" font-family="Georgia, serif" font-size="52" font-weight="600" fill="#047857">L</text>
+</svg>

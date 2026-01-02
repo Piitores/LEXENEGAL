@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Search } from 'lucide-react';
+import LexenegalSymbol from '../LexenegalSymbol/LexenegalSymbol';
 import './Navbar.css';
 
 function Navbar({ scrolled }: { scrolled: boolean }) {
@@ -16,7 +17,8 @@ function Navbar({ scrolled }: { scrolled: boolean }) {
     <nav className={`navbar ${isScrolled ? 'navbar--scrolled' : ''}`}>
       <div className="navbar__container container">
         <Link to="/" className="navbar__logo">
-          LEXENEGAL
+          <LexenegalSymbol size={32} />
+          <span>LEXENEGAL</span>
         </Link>
 
         {/* Simple Global Search Icon for Quick Access */}

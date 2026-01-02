@@ -47,13 +47,20 @@
 
 .ecosystem__badge {
     display: inline-block;
-    padding: 6px 12px;
+    padding: 6px 14px;
     border-radius: 20px;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     font-weight: 600;
-    background: #eee;
-    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: rgba(4, 120, 87, 0.1);
+    color: #047857;
     margin-bottom: 24px;
+}
+
+.ecosystem__badge--educatif {
+    background: rgba(4, 120, 87, 0.1);
+    color: #047857;
 }
 
 .ecosystem__badge--premium {
@@ -79,9 +86,26 @@
 }
 
 .ecosystem__list li {
-    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
     font-size: 0.95rem;
     color: var(--color-text-main);
+    line-height: 1.6;
+}
+
+/* SVG Icon Styling */
+.eco-icon {
+    flex-shrink: 0;
+}
+
+.eco-icon--check {
+    stroke: #047857;
+}
+
+.eco-icon--diamond {
+    stroke: #AA8C2C;
 }
 
 .ecosystem__btn {
