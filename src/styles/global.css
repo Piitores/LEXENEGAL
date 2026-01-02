@@ -1,26 +1,33 @@
-:root {
-  /* Palette Principal */
-  --color-bg: #F5F5F7;
-  /* Gris Perle */
-  --color-accent: #004D40;
-  /* Vert Émeraude Profond */
-  --color-text-main: #333333;
-  /* Anthracite */
-  --color-text-light: #555555;
-  --color-white: #FFFFFF;
+/* =========================================
+   LEXENEGAL - MÉMOIRE JURIDIQUE IDENTITY
+   "La mémoire juridique organisée du Sénégal"
+   ========================================= */
 
-  /* Palette Secondaire & UI */
+:root {
+  /* Palette Mémoire Juridique */
+  --color-bg: #FFFFFF;
+  --color-bg-alt: #F9FAFB;
+  --color-bg-emerald: #F0FDF4;
+  --color-accent: #047857;
+  --color-accent-dark: #064E3B;
+  --color-text-main: #1A1A1A;
+  --color-text-light: #4B5563;
+  --color-text-muted: #9CA3AF;
+  --color-white: #FFFFFF;
   --color-gold: #D4AF37;
-  /* Touche dorée subtile pour le premium */
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.5);
-  --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.05);
+  --color-border: #E5E7EB;
+
+  /* Glassmorphism */
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.04);
+  --shadow-medium: 0 10px 40px rgba(0, 0, 0, 0.06);
 
   /* Typography */
-  --font-serif: 'Playfair Display', serif;
-  --font-sans: 'Inter', sans-serif;
+  --font-serif: 'Georgia', 'Playfair Display', serif;
+  --font-display: 'Playfair Display', serif;
+  --font-sans: 'Inter', -apple-system, sans-serif;
 
-  /* Spacing */
   --container-width: 1200px;
 }
 
@@ -30,23 +37,57 @@
   padding: 0;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   font-family: var(--font-sans);
   background-color: var(--color-bg);
   color: var(--color-text-main);
-  line-height: 1.6;
+  line-height: 1.7;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
+/* Paper Noise Texture (0.02 opacity) */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.02;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+/* Headings - Serif for Authority */
 h1,
 h2,
 h3,
 h4,
 h5,
 h6 {
-  font-family: var(--font-serif);
+  font-family: var(--font-display);
   font-weight: 600;
-  color: var(--color-accent);
+  color: var(--color-text-main);
+  letter-spacing: -0.02em;
+}
+
+h1 {
+  font-size: 3rem;
+}
+
+h2 {
+  font-size: 2.25rem;
+}
+
+h3 {
+  font-size: 1.5rem;
 }
 
 .container {
@@ -66,18 +107,19 @@ button {
   border: none;
 }
 
-/* Utilities */
+/* Glass Panel */
 .glass-panel {
   background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--glass-border);
   border-radius: 16px;
   box-shadow: var(--shadow-soft);
 }
 
+/* Text Gradient */
 .text-gradient {
-  background: linear-gradient(135deg, var(--color-accent) 0%, #00796B 100%);
+  background: linear-gradient(135deg, var(--color-accent) 0%, #059669 100%);
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -97,5 +139,46 @@ button {
 }
 
 .animate-fade-up {
-  animation: fadeUp 0.8s ease-out forwards;
+  animation: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ========== PRINT STYLES ========== */
+@media print {
+
+  /* Hide browser chrome */
+  @page {
+    margin: 20mm;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body::before {
+    display: none !important;
+  }
+
+  /* Hide navigation elements */
+  nav,
+  footer,
+  .sidebar-left,
+  .sidebar-right,
+  .breadcrumbs,
+  button {
+    display: none !important;
+  }
+
+  /* Force white background */
+  * {
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  /* Hide URL and date in browser */
+  a[href]:after {
+    content: none !important;
+  }
 }

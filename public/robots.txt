@@ -1,0 +1,16 @@
+# LEXENEGAL - Robots.txt
+# Autorisation complète de l'indexation de la base publique
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://lexenegal.sn/sitemap.xml
+
+# Crawl-delay pour éviter la surcharge (optionnel)
+Crawl-delay: 1
+
+# Interdire l'accès aux pages techniques (si applicable)
+Disallow: /api/
+Disallow: /_next/
+Disallow: /admin/

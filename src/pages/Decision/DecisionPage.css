@@ -16,6 +16,163 @@
     padding-top: 80px;
     font-family: var(--font-sans);
     color: var(--charcoal);
+    position: relative;
+}
+
+/* ===== BREADCRUMBS (SEO) ===== */
+.breadcrumbs {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 1rem 2rem 0;
+}
+
+.breadcrumbs ol {
+    display: flex;
+    flex-wrap: wrap;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 0.8rem;
+    color: #9CA3AF;
+}
+
+.breadcrumbs li {
+    display: flex;
+    align-items: center;
+}
+
+.breadcrumbs li::after {
+    content: '›';
+    margin: 0 8px;
+    color: #D1D5DB;
+}
+
+.breadcrumbs li:last-child::after {
+    display: none;
+}
+
+.breadcrumbs a {
+    color: #6B7280;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.breadcrumbs a:hover {
+    color: var(--emerald-700);
+}
+
+/* ===== TOP LOADING BAR ===== */
+.loading-bar-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    z-index: 9999;
+    overflow: hidden;
+}
+
+.loading-bar {
+    width: 30%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, var(--emerald-700), transparent);
+    animation: loadingSlide 1.2s ease-in-out infinite;
+}
+
+@keyframes loadingSlide {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(400%);
+    }
+}
+
+/* ===== SKELETON LOADER ===== */
+.skeleton-content {
+    animation: skeletonPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes skeletonPulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+}
+
+.skeleton-line {
+    height: 14px;
+    background: linear-gradient(90deg, #E5E7EB 25%, #F3F4F6 50%, #E5E7EB 75%);
+    background-size: 200% 100%;
+    animation: skeletonShimmer 1.5s ease-in-out infinite;
+    border-radius: 4px;
+    margin-bottom: 12px;
+    width: 100%;
+}
+
+.skeleton-badge {
+    width: 120px;
+    height: 16px;
+    background: #E5E7EB;
+    border-radius: 20px;
+    margin: 0 auto 2rem;
+}
+
+.skeleton-title {
+    width: 60%;
+    height: 32px;
+    background: #E5E7EB;
+    border-radius: 4px;
+    margin: 0 auto 1rem;
+}
+
+.skeleton-subtitle {
+    width: 40%;
+    height: 18px;
+    background: #E5E7EB;
+    border-radius: 4px;
+    margin: 0 auto 3rem;
+}
+
+.skeleton-box {
+    width: 100%;
+    height: 120px;
+    background: linear-gradient(90deg, #E5E7EB 25%, #F3F4F6 50%, #E5E7EB 75%);
+    background-size: 200% 100%;
+    animation: skeletonShimmer 1.5s ease-in-out infinite;
+    border-radius: 8px;
+    margin-bottom: 3rem;
+}
+
+.skeleton-text {
+    padding: 0 2rem;
+}
+
+.skeleton-btn {
+    width: 100%;
+    height: 48px;
+    background: #E5E7EB;
+    border-radius: 8px;
+}
+
+.skeleton-nav {
+    padding: 1rem;
+}
+
+@keyframes skeletonShimmer {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
 }
 
 /* --- 3-COLUMN LAYOUT --- */

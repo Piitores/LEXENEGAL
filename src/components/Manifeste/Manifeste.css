@@ -1,0 +1,46 @@
+.manifeste {
+    padding: 100px 0;
+    background: #FAFAF9;
+}
+
+.manifeste__divider {
+    width: 60px;
+    height: 2px;
+    background: linear-gradient(90deg, #047857, #059669);
+    margin: 0 auto 30px;
+}
+
+.manifeste__tagline {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    color: #047857;
+    text-align: center;
+    margin-bottom: 30px;
+    letter-spacing: 0.02em;
+}
+
+.manifeste__text {
+    font-family: 'Georgia', serif;
+    font-size: 1.15rem;
+    line-height: 2;
+    color: #374151;
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+    font-style: italic;
+    padding: 0 2rem;
+}
+
+.manifeste__text strong {
+    font-style: normal;
+    color: #111827;
+}
+
+.manifeste__signature {
+    text-align: center;
+    margin-top: 40px;
+    font-family: 'Playfair Display', serif;
+    font-size: 0.9rem;
+    color: #047857;
+    letter-spacing: 1px;
+}

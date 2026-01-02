@@ -1,0 +1,162 @@
+.master-edition {
+    padding: 100px 0;
+    background: linear-gradient(180deg, #FAFAF9 0%, #FFFFFF 100%);
+}
+
+.master-edition__header {
+    text-align: center;
+    margin-bottom: 60px;
+}
+
+.master-edition__badge {
+    display: inline-block;
+    padding: 6px 16px;
+    background: rgba(4, 120, 87, 0.1);
+    color: #047857;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+}
+
+.master-edition__title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem;
+    color: #111827;
+    margin-bottom: 16px;
+}
+
+.master-edition__subtitle {
+    font-size: 1.1rem;
+    color: #6B7280;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* COMPARISON GRID */
+.master-edition__comparison {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+/* CARDS */
+.master-edition__card {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease;
+}
+
+.master-edition__card:hover {
+    transform: translateY(-4px);
+}
+
+.master-edition__card-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.master-edition__card--raw {
+    background: #F9FAFB;
+    border: 1px solid #E5E7EB;
+}
+
+.master-edition__card--premium {
+    background: #FFFFFF;
+    border: 2px solid #047857;
+    position: relative;
+}
+
+.master-edition__card--premium::before {
+    content: 'CERTIFIÉ';
+    position: absolute;
+    top: 16px;
+    right: -30px;
+    background: linear-gradient(135deg, #047857, #059669);
+    color: white;
+    padding: 4px 40px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    transform: rotate(45deg);
+}
+
+.master-edition__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.master-edition__label--raw {
+    color: #9CA3AF;
+}
+
+.master-edition__label--premium {
+    color: #047857;
+}
+
+.master-edition__card-body {
+    padding: 24px;
+}
+
+/* PREMIUM CARD CONTENT */
+.master-edition__composition {
+    background: #FEF7E0;
+    border-left: 3px solid #D4AF37;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    font-size: 0.85rem;
+}
+
+.master-edition__composition p {
+    margin: 4px 0;
+    color: #374151;
+}
+
+.master-edition__chambre {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    color: #047857;
+    margin-bottom: 12px;
+}
+
+.master-edition__matiere {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.master-edition__tag {
+    background: #ECFDF5;
+    color: #047857;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.master-edition__resume {
+    font-family: 'Georgia', serif;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: #374151;
+    font-style: italic;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .master-edition__comparison {
+        grid-template-columns: 1fr;
+    }
+
+    .master-edition__card--premium::before {
+        display: none;
+    }
+}

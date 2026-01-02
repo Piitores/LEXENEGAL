@@ -28,9 +28,9 @@ function Navbar({ scrolled }: { scrolled: boolean }) {
 
         <div className={`navbar__menu ${menuOpen ? 'navbar__menu--open' : ''}`}>
           <Link to="/" className="navbar__link" onClick={() => setMenuOpen(false)}>Accueil</Link>
-          <a href="/#ecosystem" className="navbar__link" onClick={() => setMenuOpen(false)}>Solutions</a>
+          <Link to="/solutions" className="navbar__link" onClick={() => setMenuOpen(false)}>Solutions</Link>
           <Link to="/search" className="navbar__link" onClick={() => setMenuOpen(false)}>Recherche</Link>
-          <button className="navbar__cta">Espace Professionnel</button>
+          <button className="navbar__cta" onClick={() => navigate('/espace-professionnel')}>Solliciter un Accès</button>
         </div>
 
         <button

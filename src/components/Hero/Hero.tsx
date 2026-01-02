@@ -1,15 +1,19 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Search } from 'lucide-react';
 import './Hero.css';
 
 function Hero() {
   const [query, setQuery] = useState('');
+  const [isFocused, setIsFocused] = useState(false);
   const navigate = useNavigate();
-  const suggestions = ['Code pénal', 'Droit du travail', 'Conseil constitutionnel'];
+  const suggestions = ['Abus de confiance', 'Contrat de travail', 'Cassation'];
 
   const handleSearch = () => {
     if (query.trim()) {
       navigate(`/search?q=${encodeURIComponent(query)}`);
+    } else {
+      navigate('/search');
     }
   };
 
@@ -24,29 +28,30 @@ function Hero() {
       <div className="hero__container container">
         <div className="hero__content animate-fade-up">
           <h1 className="hero__title">
-            L'Éveil du <span className="text-gradient">Droit</span>
+            La <span className="text-gradient">référence</span> numérique<br />
+            du droit sénégalais.
           </h1>
           <p className="hero__subtitle">
-            Accédez à l'intégralité de la jurisprudence et de la législation sénégalaise.
-            <br />
-            Une recherche puissante, une information fiable.
+            LEXENEGAL n'est pas un outil. C'est la mémoire juridique organisée du Sénégal.
           </p>
 
-          <div className="hero__search-wrapper glass-panel">
+          <div className={`hero__search-wrapper glass-panel ${isFocused ? 'hero__search-wrapper--focus' : ''}`}>
             <div className="hero__search-bar">
-              <span className="hero__search-icon">🔍</span>
+              <Search className="hero__search-icon-svg" size={20} />
               <input
                 type="text"
-                placeholder="Rechercher une décision, un décret, une loi..."
+                placeholder="Rechercher une décision, un mot-clé..."
                 className="hero__search-input"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
               />
               <button className="hero__search-btn" onClick={handleSearch}>Rechercher</button>
             </div>
             <div className="hero__suggestions">
-              <span className="hero__suggestions-label">Tendances :</span>
+              <span className="hero__suggestions-label">Suggestions :</span>
               {suggestions.map((tag, i) => (
                 <button
                   key={i}
@@ -65,3 +70,4 @@ function Hero() {
 }
 
 export default Hero;
+

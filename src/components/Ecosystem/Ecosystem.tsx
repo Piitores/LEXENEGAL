@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import './Ecosystem.css';
 
 // Minimalist SVG Icons
@@ -15,15 +15,36 @@ const DiamondIcon = () => (
 );
 
 function Ecosystem() {
+    const sectionRef = useRef<HTMLElement>(null);
+    const [isVisible, setIsVisible] = useState(false);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    setIsVisible(true);
+                    observer.disconnect();
+                }
+            },
+            { threshold: 0.2 }
+        );
+
+        if (sectionRef.current) {
+            observer.observe(sectionRef.current);
+        }
+
+        return () => observer.disconnect();
+    }, []);
+
     return (
-        <section id="ecosystem" className="ecosystem">
+        <section id="ecosystem" className="ecosystem" ref={sectionRef}>
             <div className="container">
                 <div className="ecosystem__header">
                     <h2 className="ecosystem__title">L'Écosystème <span className="text-gradient">LEXENEGAL</span></h2>
                     <p className="ecosystem__subtitle">Une double approche pour démocratiser le droit.</p>
                 </div>
 
-                <div className="ecosystem__grid">
+                <div className={`ecosystem__grid ${isVisible ? 'ecosystem__grid--visible' : ''}`}>
                     {/* Card Étudiant */}
                     <div className="ecosystem__card ecosystem__card--citizen glass-panel">
                         <div className="ecosystem__badge ecosystem__badge--educatif">Accès Éducatif</div>
@@ -60,4 +81,5 @@ function Ecosystem() {
 }
 
 export default Ecosystem;
+
 
