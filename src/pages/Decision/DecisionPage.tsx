@@ -176,7 +176,7 @@ const DecisionPage: React.FC = () => {
                 {/* 1. LEFT SIDEBAR */}
                 <aside className="sidebar-left">
                     <nav className="nav-sticky">
-                        <button onClick={() => navigate('/search')} style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', border: 'none', background: 'transparent', cursor: 'pointer', color: '#6B7280' }}>
+                        <button className="btn-back" onClick={() => navigate('/search')}>
                             <ArrowLeft size={16} /> Retour
                         </button>
 

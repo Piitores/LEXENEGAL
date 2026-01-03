@@ -1,335 +1,685 @@
-/* --- ELITE UI VARIABLES --- */
+/* ═══════════════════════════════════════════════════════════════════
+   LEXENEGAL ULTRA PREMIUM CSS
+   Réplique exactement la mise en page du Jugement n°363-2019
+   Typographie luxueuse, respiration parfaite, identité visuelle prestige
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────────────────────────────────────────
+   VARIABLES DE COULEURS LEXENEGAL
+   ───────────────────────────────────────────────────── */
 :root {
-    --emerald-900: #064E3B;
-    --emerald-700: #047857;
-    --emerald-50: #ECFDF5;
-    --charcoal: #1F2937;
-    --paper: #FAFAF9;
-    --font-serif: 'Georgia', 'Times New Roman', serif;
-    --font-display: 'Playfair Display', serif;
-    --font-sans: 'Inter', sans-serif;
+    --emerald-prestige: #047857;
+    --emerald-dark: #065f46;
+    --noir-charbon: #1A1A1A;
+    --gris-texte: #374151;
+    --blanc-pur: #FFFFFF;
+    --gris-elegant: #F8F9FA;
+    --gris-clair: #E5E7EB;
+    --or-subtil: #D4AF37;
 }
 
-.decisionPage {
-    background-color: var(--paper);
-    min-height: 100vh;
-    padding-top: 80px;
-    font-family: var(--font-sans);
-    color: var(--charcoal);
-    position: relative;
+/* ─────────────────────────────────────────────────────
+   EN-TÊTE DE DÉCISION
+   ───────────────────────────────────────────────────── */
+.decision-header {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding: 2rem 0;
+    border-bottom: 3px double var(--emerald-prestige);
 }
 
-/* ===== BREADCRUMBS (SEO) ===== */
-.breadcrumbs {
-    max-width: 1440px;
+.republique {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--emerald-prestige);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 0.75rem;
+}
+
+.devise {
+    font-family: Georgia, serif;
+    font-size: 1.1rem;
+    font-style: italic;
+    color: var(--gris-texte);
+    margin: 0;
+}
+
+/* ─────────────────────────────────────────────────────
+   COMPOSITION DE LA JURIDICTION
+   Style identique au Jugement 363 (encadré élégant)
+   ───────────────────────────────────────────────────── */
+.master-composition {
+    background: linear-gradient(135deg, #f8faf9 0%, var(--blanc-pur) 100%);
+    border: 2px solid var(--gris-elegant);
+    border-left: 5px solid var(--emerald-prestige);
+    padding: 2rem 2.5rem;
+    margin: 2.5rem 0 3rem 0;
+    border-radius: 6px;
+    box-shadow: 0 4px 16px rgba(4, 120, 87, 0.06);
+}
+
+.composition-title {
+    font-family: Georgia, serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--emerald-dark);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 1.75rem;
+    padding-bottom: 0.875rem;
+    border-bottom: 2px solid var(--emerald-prestige);
+}
+
+.composition-item {
+    display: grid;
+    grid-template-columns: 140px 20px 1fr;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    line-height: 1.7;
+    align-items: baseline;
+}
+
+.composition-role {
+    font-family: Georgia, serif;
+    font-weight: 600;
+    color: var(--emerald-dark);
+    font-size: 0.925rem;
+    text-transform: capitalize;
+}
+
+.composition-sep {
+    color: var(--emerald-prestige);
+    font-weight: 700;
+}
+
+.composition-name {
+    font-family: Georgia, serif;
+    font-weight: 400;
+    color: var(--noir-charbon);
+    font-size: 0.975rem;
+}
+
+/* ─────────────────────────────────────────────────────
+   CORPS DE LA DÉCISION
+   Typographie premium Georgia avec respiration parfaite
+   ───────────────────────────────────────────────────── */
+.decision-body {
+    font-family: Georgia, serif;
+    font-size: 1.05rem;
+    line-height: 1.9;
+    color: var(--noir-charbon);
+    max-width: 900px;
     margin: 0 auto;
-    padding: 1rem 2rem 0;
+    padding: 0 2rem;
+}
+
+/* ─────────────────────────────────────────────────────
+   SECTIONS MAJEURES (H2)
+   FAITS ET PROCÉDURE, MOTIFS, PAR CES MOTIFS, etc.
+   ───────────────────────────────────────────────────── */
+.section-major {
+    font-family: Georgia, serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--emerald-prestige);
+    text-align: center;
+    margin: 3.5rem 0 2.5rem 0;
+    padding: 1.5rem 0;
+    border-top: 3px solid var(--emerald-prestige);
+    border-bottom: 3px solid var(--emerald-prestige);
+    text-transform: uppercase;
+    letter-spacing: 2.5px;
+    background: linear-gradient(to bottom, transparent 0%, var(--gris-elegant) 50%, transparent 100%);
+}
+
+/* ─────────────────────────────────────────────────────
+   SECTIONS INTERMÉDIAIRES (H3)
+   EN LA FORME, AU FOND, SUR LA COMPÉTENCE, etc.
+   ───────────────────────────────────────────────────── */
+.section-intermediate {
+    font-family: Georgia, serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--emerald-dark);
+    margin: 2.75rem 0 1.75rem 0;
+    padding-left: 1.25rem;
+    border-left: 5px solid var(--emerald-prestige);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+}
+
+/* ─────────────────────────────────────────────────────
+   PARAGRAPHES
+   Respiration généreuse entre chaque paragraphe
+   ───────────────────────────────────────────────────── */
+.decision-paragraph {
+    margin-bottom: 1.75rem;
+    text-align: justify;
+    hyphens: auto;
+    orphans: 3;
+    widows: 3;
+    text-indent: 0;
+}
+
+.decision-paragraph.has-formule {
+    margin-bottom: 2rem;
+}
+
+/* ─────────────────────────────────────────────────────
+   CONSIDÉRANTS / VU / ATTENDU NUMÉROTÉS
+   ───────────────────────────────────────────────────── */
+.decision-paragraph.considerant {
+    position: relative;
+    padding-left: 3.5rem;
+    margin-bottom: 2rem;
+}
+
+.numero-considerant {
+    position: absolute;
+    left: 0;
+    top: 0;
+    font-weight: 700;
+    color: var(--emerald-prestige);
+    font-size: 1.15rem;
+    font-family: Georgia, serif;
+}
+
+/* ─────────────────────────────────────────────────────
+   PARAGRAPHES NUMÉROTÉS SIMPLES
+   "1. ...", "2. ...", etc. (sans formule juridique)
+   ───────────────────────────────────────────────────── */
+.decision-paragraph.numerote {
+    position: relative;
+    padding-left: 3rem;
+    margin-bottom: 1.75rem;
+}
+
+.numero-paragraphe {
+    position: absolute;
+    left: 0;
+    top: 0;
+    font-weight: 600;
+    color: var(--gris-texte);
+    font-size: 1rem;
+    font-family: Georgia, serif;
+}
+
+/* ─────────────────────────────────────────────────────
+   FORMULES JURIDIQUES
+   VU, CONSIDÉRANT, ATTENDU QUE (en gras vert)
+   ───────────────────────────────────────────────────── */
+.formule-juridique {
+    font-weight: 700;
+    color: var(--emerald-dark);
+    text-transform: none;
+    font-size: 1em;
+    letter-spacing: 0.3px;
+}
+
+/* ─────────────────────────────────────────────────────
+   VISAS (Vu la loi, Vu le décret, etc.)
+   ───────────────────────────────────────────────────── */
+.decision-paragraph.visa {
+    border-left: 4px solid var(--gris-clair);
+    padding: 0.75rem 1.25rem;
+    margin: 1rem 0;
+    background: rgba(248, 249, 250, 0.5);
+    font-size: 0.95rem;
+    color: var(--gris-texte);
+    font-style: italic;
+    border-radius: 2px;
+}
+
+/* ─────────────────────────────────────────────────────
+   MESSAGE SI PAS DE CONTENU
+   ───────────────────────────────────────────────────── */
+.no-content {
+    text-align: center;
+    font-style: italic;
+    color: var(--gris-texte);
+    padding: 3rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   STYLES D'IMPRESSION PDF (IDENTITÉ VISUELLE PRESTIGE)
+   ═══════════════════════════════════════════════════════════════════ */
+
+@media print {
+    @page {
+        margin: 22mm;
+        size: A4 portrait;
+    }
+
+    /* ─────────────────────────────────────────────────────
+     FOND ET COULEURS POUR PDF
+     ───────────────────────────────────────────────────── */
+    * {
+        background: var(--blanc-pur) !important;
+    }
+
+    body {
+        font-family: Georgia, serif !important;
+        background: var(--blanc-pur);
+        color: var(--noir-charbon);
+    }
+
+    /* ─────────────────────────────────────────────────────
+     NUMÉROTATION DES LIGNES (TOUS LES 5)
+     Marge gauche comme dans les vrais documents officiels
+     ───────────────────────────────────────────────────── */
+    .decision-paragraph {
+        counter-increment: line-count;
+        position: relative;
+    }
+
+    .decision-paragraph:nth-child(5n)::before {
+        content: counter(line-count);
+        position: absolute;
+        left: -28mm;
+        color: #999;
+        font-size: 0.7rem;
+        font-family: 'Courier New', monospace;
+        font-weight: normal;
+    }
+
+    /* ─────────────────────────────────────────────────────
+     CONSERVER LES COULEURS ÉMERAUDE (IDENTITÉ LEXENEGAL)
+     ───────────────────────────────────────────────────── */
+    .republique,
+    .section-major,
+    .section-intermediate,
+    .formule-juridique,
+    .composition-role,
+    .composition-sep,
+    .numero-considerant,
+    .composition-title {
+        color: var(--emerald-prestige) !important;
+    }
+
+    .decision-header {
+        border-bottom-color: var(--emerald-prestige) !important;
+    }
+
+    .section-major {
+        border-top-color: var(--emerald-prestige) !important;
+        border-bottom-color: var(--emerald-prestige) !important;
+    }
+
+    .section-intermediate {
+        border-left-color: var(--emerald-prestige) !important;
+    }
+
+    .master-composition {
+        border-left-color: var(--emerald-prestige) !important;
+        border-color: var(--gris-clair) !important;
+    }
+
+    .composition-title {
+        border-bottom-color: var(--emerald-prestige) !important;
+    }
+
+    /* ─────────────────────────────────────────────────────
+     ÉVITER LES COUPURES DE PAGE MALHEUREUSES
+     ───────────────────────────────────────────────────── */
+    .decision-header,
+    .master-composition,
+    .section-major,
+    .section-intermediate {
+        page-break-after: avoid;
+        page-break-inside: avoid;
+    }
+
+    .decision-paragraph {
+        page-break-inside: avoid;
+    }
+
+    h1,
+    h2,
+    h3 {
+        page-break-after: avoid;
+    }
+
+    /* ─────────────────────────────────────────────────────
+     MASQUER LES ÉLÉMENTS NON PERTINENTS
+     ───────────────────────────────────────────────────── */
+    nav,
+    .sidebar,
+    .search-bar,
+    button,
+    .navigation,
+    .header,
+    .footer,
+    .back-button,
+    .share-button,
+    .download-button,
+    .toolbar {
+        display: none !important;
+    }
+
+    /* ─────────────────────────────────────────────────────
+     OPTIMISER LA LISIBILITÉ POUR L'IMPRESSION
+     ───────────────────────────────────────────────────── */
+    .decision-body {
+        max-width: 100%;
+        padding: 0;
+    }
+
+    .decision-paragraph {
+        font-size: 11pt;
+        line-height: 1.7;
+        margin-bottom: 12pt;
+    }
+
+    .section-major {
+        font-size: 14pt;
+        margin: 24pt 0 18pt 0;
+    }
+
+    .section-intermediate {
+        font-size: 12pt;
+        margin: 18pt 0 12pt 0;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   RESPONSIVE (MOBILE)
+   ═══════════════════════════════════════════════════════════════════ */
+
+@media screen and (max-width: 768px) {
+    .decision-body {
+        font-size: 1rem;
+        padding: 0 1.25rem;
+        line-height: 1.75;
+    }
+
+    .republique {
+        font-size: 1.5rem;
+        letter-spacing: 1.5px;
+    }
+
+    .section-major {
+        font-size: 1.25rem;
+        padding: 1rem 0;
+    }
+
+    .section-intermediate {
+        font-size: 1.05rem;
+    }
+
+    .master-composition {
+        padding: 1.5rem 1.25rem;
+    }
+
+    .composition-item {
+        grid-template-columns: 110px 15px 1fr;
+        gap: 0.35rem;
+    }
+
+    .composition-role {
+        font-size: 0.85rem;
+    }
+
+    .composition-name {
+        font-size: 0.9rem;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   LAYOUT DE LA PAGE (STRUCTURE)
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Page Container */
+.decisionPage {
+    min-height: 100vh;
+    background: linear-gradient(180deg, #FAFBFC 0%, #FFFFFF 100%);
+    padding: 0;
+}
+
+/* Breadcrumbs */
+.breadcrumbs {
+    padding: 1rem 2rem;
+    background: var(--blanc-pur);
+    border-bottom: 1px solid var(--gris-clair);
+    font-size: 0.85rem;
 }
 
 .breadcrumbs ol {
     display: flex;
-    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
     list-style: none;
-    padding: 0;
     margin: 0;
-    font-size: 0.8rem;
-    color: #9CA3AF;
+    padding: 0;
+    max-width: 1400px;
+    margin: 0 auto;
 }
 
 .breadcrumbs li {
     display: flex;
     align-items: center;
+    gap: 0.5rem;
+    color: var(--gris-texte);
 }
 
 .breadcrumbs li::after {
     content: '›';
-    margin: 0 8px;
-    color: #D1D5DB;
+    color: var(--gris-clair);
+    font-weight: 300;
 }
 
 .breadcrumbs li:last-child::after {
-    display: none;
+    content: '';
 }
 
 .breadcrumbs a {
-    color: #6B7280;
+    color: var(--emerald-prestige);
     text-decoration: none;
     transition: color 0.2s;
 }
 
 .breadcrumbs a:hover {
-    color: var(--emerald-700);
+    color: var(--emerald-dark);
+    text-decoration: underline;
 }
 
-/* ===== TOP LOADING BAR ===== */
-.loading-bar-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 2px;
-    z-index: 9999;
-    overflow: hidden;
-}
-
-.loading-bar {
-    width: 30%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, var(--emerald-700), transparent);
-    animation: loadingSlide 1.2s ease-in-out infinite;
-}
-
-@keyframes loadingSlide {
-    0% {
-        transform: translateX(-100%);
-    }
-
-    100% {
-        transform: translateX(400%);
-    }
-}
-
-/* ===== SKELETON LOADER ===== */
-.skeleton-content {
-    animation: skeletonPulse 1.5s ease-in-out infinite;
-}
-
-@keyframes skeletonPulse {
-
-    0%,
-    100% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0.6;
-    }
-}
-
-.skeleton-line {
-    height: 14px;
-    background: linear-gradient(90deg, #E5E7EB 25%, #F3F4F6 50%, #E5E7EB 75%);
-    background-size: 200% 100%;
-    animation: skeletonShimmer 1.5s ease-in-out infinite;
-    border-radius: 4px;
-    margin-bottom: 12px;
-    width: 100%;
-}
-
-.skeleton-badge {
-    width: 120px;
-    height: 16px;
-    background: #E5E7EB;
-    border-radius: 20px;
-    margin: 0 auto 2rem;
-}
-
-.skeleton-title {
-    width: 60%;
-    height: 32px;
-    background: #E5E7EB;
-    border-radius: 4px;
-    margin: 0 auto 1rem;
-}
-
-.skeleton-subtitle {
-    width: 40%;
-    height: 18px;
-    background: #E5E7EB;
-    border-radius: 4px;
-    margin: 0 auto 3rem;
-}
-
-.skeleton-box {
-    width: 100%;
-    height: 120px;
-    background: linear-gradient(90deg, #E5E7EB 25%, #F3F4F6 50%, #E5E7EB 75%);
-    background-size: 200% 100%;
-    animation: skeletonShimmer 1.5s ease-in-out infinite;
-    border-radius: 8px;
-    margin-bottom: 3rem;
-}
-
-.skeleton-text {
-    padding: 0 2rem;
-}
-
-.skeleton-btn {
-    width: 100%;
-    height: 48px;
-    background: #E5E7EB;
-    border-radius: 8px;
-}
-
-.skeleton-nav {
-    padding: 1rem;
-}
-
-@keyframes skeletonShimmer {
-    0% {
-        background-position: -200% 0;
-    }
-
-    100% {
-        background-position: 200% 0;
-    }
-}
-
-/* --- 3-COLUMN LAYOUT --- */
+/* Elite Grid Layout */
 .elite-grid {
     display: grid;
-    grid-template-columns: 240px 1fr 280px;
-    gap: 3rem;
-    max-width: 1440px;
+    grid-template-columns: 220px 1fr 240px;
+    gap: 2rem;
+    max-width: 1400px;
     margin: 0 auto;
     padding: 2rem;
+    min-height: calc(100vh - 100px);
 }
 
-/* LEFT: NAVIGATION */
+/* Sidebar Left */
 .sidebar-left {
     position: relative;
 }
 
 .nav-sticky {
     position: sticky;
-    top: 100px;
-    padding-right: 1rem;
-    border-right: 1px solid #E5E7EB;
+    top: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.btn-back {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1.5rem;
+    border: none;
+    background: transparent;
+    color: var(--gris-texte);
+    font-size: 0.9rem;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.btn-back:hover {
+    background: var(--gris-elegant);
+    color: var(--emerald-prestige);
 }
 
 .jump-link {
     display: block;
-    padding: 0.75rem 0;
-    color: #6B7280;
+    padding: 0.65rem 1rem;
+    color: var(--gris-texte);
     text-decoration: none;
     font-size: 0.9rem;
-    font-weight: 500;
+    border-left: 3px solid transparent;
     transition: all 0.2s;
-    border-right: 3px solid transparent;
-    margin-right: -1px;
 }
 
-.jump-link:hover,
-.jump-link.active {
-    color: var(--emerald-700);
-    border-color: var(--emerald-700);
-    padding-left: 0.5rem;
+.jump-link:hover {
+    color: var(--emerald-prestige);
+    border-left-color: var(--emerald-prestige);
+    background: rgba(4, 120, 87, 0.04);
 }
 
-/* CENTER: CONTENT */
-.content-main {
-    background: white;
-    padding: 4rem;
-    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
-    border-top: 4px solid var(--emerald-700);
+/* Sidebar Right */
+.sidebar-right {
+    position: relative;
 }
 
-.certification-badge {
-    text-align: center;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    color: #9CA3AF;
-    margin-bottom: 2rem;
+.tools-sticky {
+    position: sticky;
+    top: 2rem;
     display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* Elite Buttons */
+.btn-elite-primary {
+    display: flex;
+    align-items: center;
     justify-content: center;
+    gap: 0.6rem;
+    padding: 0.9rem 1.25rem;
+    background: linear-gradient(135deg, var(--emerald-prestige) 0%, var(--emerald-dark) 100%);
+    color: var(--blanc-pur);
+    border: none;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s;
+    box-shadow: 0 4px 12px rgba(4, 120, 87, 0.25);
+}
+
+.btn-elite-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(4, 120, 87, 0.35);
+}
+
+.btn-elite-secondary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    padding: 0.75rem 1.25rem;
+    background: var(--blanc-pur);
+    color: var(--emerald-prestige);
+    border: 2px solid var(--emerald-prestige);
+    border-radius: 10px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s;
+}
+
+.btn-elite-secondary:hover {
+    background: rgba(4, 120, 87, 0.06);
+    transform: translateY(-1px);
+}
+
+/* Main Content Area */
+.content-main {
+    background: var(--blanc-pur);
+    border-radius: 16px;
+    padding: 2.5rem;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+    border: 1px solid var(--gris-elegant);
+}
+
+/* Certification Badge */
+.certification-badge {
+    display: inline-flex;
     align-items: center;
     gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, rgba(4, 120, 87, 0.08) 0%, rgba(4, 120, 87, 0.04) 100%);
+    color: var(--emerald-dark);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-radius: 20px;
+    margin-bottom: 1.5rem;
 }
 
+/* Decision Title & Ref */
 .decision-title {
-    font-family: var(--font-display);
-    font-size: 2.5rem;
-    text-align: center;
-    line-height: 1.2;
-    margin-bottom: 1rem;
-    color: #111827;
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--noir-charbon);
+    margin: 0 0 0.5rem 0;
+    line-height: 1.3;
 }
 
 .decision-ref {
-    text-align: center;
-    color: var(--emerald-700);
-    font-weight: 600;
-    margin-bottom: 3rem;
+    font-size: 1rem;
+    color: var(--gris-texte);
+    margin-bottom: 2rem;
 }
 
-/* EXPERT BLOCK */
+/* Expert Box (Synthèse) */
 .expert-box {
-    background: var(--emerald-50);
-    border-left: 5px solid var(--emerald-700);
-    padding: 2rem;
-    margin-bottom: 3rem;
+    background: linear-gradient(135deg, #f8faf9 0%, var(--blanc-pur) 100%);
+    border: 1px solid var(--gris-clair);
+    border-left: 4px solid var(--emerald-prestige);
+    border-radius: 12px;
+    padding: 1.5rem 2rem;
+    margin-bottom: 2.5rem;
 }
 
 .expert-title {
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    color: var(--emerald-700);
+    font-family: Georgia, serif;
+    font-size: 0.9rem;
     font-weight: 700;
-    margin-bottom: 1rem;
+    color: var(--emerald-dark);
+    text-transform: uppercase;
     letter-spacing: 1px;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
 }
 
 .keyword-badge {
     display: inline-block;
-    background: white;
-    border: 1px solid var(--emerald-700);
-    color: var(--emerald-700);
-    padding: 0.25rem 0.75rem;
-    border-radius: 99px;
+    padding: 0.4rem 0.8rem;
+    background: var(--emerald-prestige);
+    color: var(--blanc-pur);
     font-size: 0.75rem;
     font-weight: 600;
-    margin-right: 0.5rem;
-    margin-bottom: 0.5rem;
-}
-
-/* COMPOSITION */
-.composition-box {
-    margin-bottom: 4rem;
-    padding: 2rem;
-    border: 1px solid #E5E7EB;
-    background: #FFFCF5;
-    /* Subtle parchment */
-}
-
-.magistrate-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
-    margin-top: 1rem;
-}
-
-.role-label {
-    display: block;
-    font-size: 0.7rem;
-    color: #9CA3AF;
     text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-radius: 4px;
 }
 
-.person-name {
-    font-family: var(--font-display);
-    font-size: 1.1rem;
-    color: #111827;
-}
-
-/* LEGAL TEXT - Georgia for elegant reading */
-.legal-content {
-    font-family: 'Georgia', serif;
-    font-size: 18px;
-    line-height: 1.9;
-    color: #1F2937;
-    text-align: justify;
-    position: relative;
-    z-index: 1;
-}
-
-.legal-content p {
-    margin-bottom: 1.5rem;
-}
-
-/* WATERMARK WRAPPER */
+/* Legal Content Wrapper (with Watermark) */
 .legal-content-wrapper {
     position: relative;
+    overflow: hidden;
 }
 
 .watermark-container {
@@ -337,187 +687,126 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    z-index: 0;
     pointer-events: none;
+    z-index: 0;
+    opacity: 0.03;
 }
 
-/* PRINT WATERMARK (Repeat on each page) */
-@media print {
-    .watermark-container {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        z-index: 0;
-        opacity: 0.03 !important;
+.legal-content {
+    position: relative;
+    z-index: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SKELETON LOADER (Chargement)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.loading-bar-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--gris-clair);
+    z-index: 9999;
+}
+
+.loading-bar {
+    height: 100%;
+    width: 30%;
+    background: linear-gradient(90deg, var(--emerald-prestige), var(--emerald-dark));
+    animation: loadingProgress 1.5s infinite ease-in-out;
+}
+
+@keyframes loadingProgress {
+    0% {
+        width: 0%;
+        margin-left: 0;
+    }
+
+    50% {
+        width: 60%;
+        margin-left: 20%;
+    }
+
+    100% {
+        width: 0%;
+        margin-left: 100%;
     }
 }
 
-/* Master HTML Structure Styles */
-.master-header {
-    text-align: center;
+.skeleton-nav,
+.skeleton-content {
+    animation: pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.skeleton-line {
+    height: 12px;
+    background: var(--gris-clair);
+    border-radius: 6px;
+    margin-bottom: 0.75rem;
+}
+
+.skeleton-badge {
+    width: 150px;
+    height: 28px;
+    background: var(--gris-clair);
+    border-radius: 14px;
+    margin-bottom: 1.5rem;
+}
+
+.skeleton-title {
+    width: 60%;
+    height: 32px;
+    background: var(--gris-clair);
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+}
+
+.skeleton-subtitle {
+    width: 40%;
+    height: 18px;
+    background: var(--gris-clair);
+    border-radius: 6px;
     margin-bottom: 2rem;
-    font-family: 'Georgia', serif;
 }
 
-.master-header p {
-    margin: 0.25rem 0;
-}
-
-.master-cartouche {
-    text-align: center;
-    padding: 1.5rem;
-    background: linear-gradient(135deg, #f8f6f0 0%, #fffdf8 100%);
-    border: 1px solid #e0d8c8;
+.skeleton-box {
+    width: 100%;
+    height: 120px;
+    background: var(--gris-clair);
+    border-radius: 12px;
     margin-bottom: 2rem;
-    font-family: 'Georgia', serif;
 }
 
-.master-composition {
-    padding: 1.5rem;
-    background: #FFFCF5;
-    border: 1px solid #E5E7EB;
-    margin-bottom: 2rem;
-    font-family: 'Georgia', serif;
+.skeleton-text .skeleton-line {
+    width: 100%;
 }
 
-.master-composition p {
-    margin: 0.5rem 0;
+.skeleton-btn {
+    width: 100%;
+    height: 44px;
+    background: var(--gris-clair);
+    border-radius: 10px;
 }
 
-.master-body {
-    font-family: 'Georgia', serif;
-    line-height: 1.9;
-}
+/* ═══════════════════════════════════════════════════════════════════
+   RESPONSIVE - LAYOUT
+   ═══════════════════════════════════════════════════════════════════ */
 
-/* Paragraph numbers removed by user request */
-
-/* RIGHT: ACTIONS */
-.sidebar-right {
-    position: relative;
-}
-
-.tools-sticky {
-    position: sticky;
-    top: 100px;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.btn-elite-primary {
-    background: var(--emerald-700);
-    color: white;
-    padding: 1rem;
-    border-radius: 4px;
-    font-weight: 600;
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    transition: all 0.2s;
-    box-shadow: 0 4px 6px -1px rgba(4, 120, 87, 0.2);
-}
-
-.btn-elite-primary:hover {
-    background: var(--emerald-900);
-}
-
-.btn-elite-secondary {
-    background: white;
-    color: var(--charcoal);
-    padding: 0.75rem;
-    border-radius: 4px;
-    font-weight: 500;
-    border: 1px solid #E5E7EB;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-}
-
-.btn-elite-secondary:hover {
-    border-color: var(--emerald-700);
-    color: var(--emerald-700);
-}
-
-/* --- MASTER EDITION HTML COMPATIBILITY --- */
-.master-header {
-    text-align: center;
-    margin-bottom: 2rem;
-    padding-bottom: 1rem;
-    border-bottom: 3px double var(--emerald-700);
-}
-
-.master-header h2 {
-    font-family: var(--font-display);
-    font-size: 1.8rem;
-    color: #111827;
-    margin: 0;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-}
-
-.master-header .sub {
-    font-family: var(--font-serif);
-    font-style: italic;
-    color: #4B5563;
-    margin-top: 0.5rem;
-}
-
-.master-cartouche {
-    background: var(--paper);
-    border: 1px solid #D1D5DB;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-    display: flex;
-    justify-content: space-around;
-    flex-wrap: wrap;
-    gap: 1rem;
-    font-family: var(--font-sans);
-    font-size: 0.85rem;
-}
-
-.master-cartouche strong {
-    display: block;
-    color: var(--emerald-700);
-    text-transform: uppercase;
-    font-size: 0.75rem;
-    margin-bottom: 0.25rem;
-}
-
-.master-body {
-    font-family: var(--font-serif);
-    font-size: 18px;
-    line-height: 1.8;
-    color: var(--charcoal);
-    text-align: justify;
-}
-
-.master-body h4 {
-    margin-top: 2rem;
-    margin-bottom: 1rem;
-    text-align: center;
-    font-size: 1.1rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: var(--emerald-700);
-    border-bottom: 1px solid #E5E7EB;
-    padding-bottom: 0.5rem;
-}
-
-.master-body p {
-    margin-bottom: 1.2rem;
-    position: relative;
-}
-
-/* Master body paragraph numbers removed */
-
-/* RESPONSIVE */
-@media (max-width: 1024px) {
+@media screen and (max-width: 1200px) {
     .elite-grid {
         grid-template-columns: 1fr;
         padding: 1rem;
@@ -526,126 +815,77 @@
     .sidebar-left,
     .sidebar-right {
         display: none;
-        /* Mobile Menu needed ideally, but user asked for "Elite Web" first */
     }
 
     .content-main {
-        padding: 2rem;
-    }
-
-    .fabExport {
-        /* Restore FAB for mobile */
-        display: flex;
+        padding: 1.5rem;
     }
 }
 
-/* --- KEEPING PRINT STYLES UNTOUCHED --- */
-/* PRINT TEMPLATE (Hidden from screen but visible to DOM for capture) */
-.printTemplate {
-    position: absolute;
-    top: -10000px;
-    left: -10000px;
-    width: 210mm;
-    /* A4 Width */
-    min-height: 297mm;
-    /* A4 Height */
-    background: white;
-    color: black;
-    padding: 0;
-    /* Do NOT use display:none or visibility:hidden */
-    z-index: -1;
+@media screen and (max-width: 768px) {
+    .decision-title {
+        font-size: 1.5rem;
+    }
+
+    .breadcrumbs {
+        padding: 0.75rem 1rem;
+        font-size: 0.75rem;
+    }
+
+    .expert-box {
+        padding: 1rem 1.25rem;
+    }
 }
 
-.printContainer {
-    position: relative;
-    z-index: 10;
-}
+/* ═══════════════════════════════════════════════════════════════════
+   PRINT TEMPLATE - ÉDITION PREMIUM PDF
+   Styles pour le template d'impression caché qui génère le PDF
+   ═══════════════════════════════════════════════════════════════════ */
 
-.watermark-img {
-    position: absolute;
-    top: 55%;
-    left: 50%;
-    width: 70%;
-    transform: translate(-50%, -50%);
-    opacity: 0.04;
-    /* Requested 0.03, slightly higher for html2canvas visibility sometimes needed */
-    pointer-events: none;
-    z-index: 0;
-}
-
-.legal-line {
-    display: flex;
-    margin-bottom: 1mm;
-    position: relative;
-}
-
-.line-number {
-    width: 8mm;
-    color: #AAA;
-    font-size: 8pt;
-    text-align: right;
-    padding-right: 2mm;
-    user-select: none;
-    border-right: 1px solid #ddd;
-    margin-right: 3mm;
-    font-family: 'Inter', sans-serif;
-    padding-top: 1pt;
-}
-
-.line-content {
-    flex: 1;
-    text-align: justify;
-    font-size: 10.5pt;
-    line-height: 1.4;
-    font-family: 'Times New Roman', serif;
-}
-
-/* ========== REACT-TO-PRINT TEMPLATE ========== */
 .print-template {
-    width: 210mm;
-    min-height: 297mm;
-    background: #ffffff !important;
-    color: #1a1a1a !important;
-    font-family: 'Georgia', 'Times New Roman', serif;
-    font-size: 11pt;
-    line-height: 1.6;
-    padding: 20mm 30mm;
-    /* More padding on sides for centered text */
+    font-family: Georgia, 'Times New Roman', serif;
+    color: #1A1A1A;
+    background: #FFFFFF;
+    padding: 0;
     position: relative;
-    box-sizing: border-box;
+    min-height: 100%;
 }
 
+/* Filigrane central */
 .print-watermark {
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     width: 300px;
-    opacity: 0.03;
+    height: auto;
+    opacity: 0.04;
     pointer-events: none;
     z-index: 0;
 }
 
+/* En-tête du document */
 .print-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    border-bottom: 2px solid #047857;
-    padding-bottom: 10px;
+    padding-bottom: 20px;
     margin-bottom: 25px;
+    border-bottom: 3px double #047857;
 }
 
 .print-header-left h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 28px;
+    font-weight: 700;
     color: #047857;
     margin: 0;
-    font-size: 22px;
-    text-transform: uppercase;
-    font-family: 'Georgia', serif;
+    letter-spacing: 2px;
 }
 
 .print-header-left span {
-    font-size: 9px;
-    color: #666;
+    font-size: 11px;
+    color: #6B7280;
     text-transform: uppercase;
     letter-spacing: 1px;
 }
@@ -655,129 +895,270 @@
 }
 
 .print-header-right strong {
-    font-size: 11px;
-    text-transform: uppercase;
     display: block;
+    font-size: 12px;
+    color: #047857;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .print-header-right em {
-    font-size: 10px;
-    color: #555;
+    font-size: 11px;
+    color: #374151;
+    font-style: italic;
 }
 
+/* Titre de la décision */
 .print-title {
     text-align: center;
     margin-bottom: 30px;
+    padding: 20px 0;
+    border-top: 2px solid #047857;
+    border-bottom: 2px solid #047857;
+    background: linear-gradient(to bottom, transparent 0%, #f8faf9 50%, transparent 100%);
 }
 
 .print-title h2 {
-    color: #047857;
-    text-decoration: underline;
-    font-size: 16px;
-    margin-bottom: 8px;
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: #1A1A1A;
+    margin: 0 0 8px 0;
 }
 
 .print-subtitle {
-    font-size: 12px;
-    font-weight: bold;
+    font-size: 14px;
+    color: #047857;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
 }
 
 .print-chambre {
-    font-size: 12px;
-    margin-top: 3px;
+    font-size: 13px;
+    color: #374151;
+    font-style: italic;
 }
 
-/* PRINT SYNTHESE BLOCK */
+/* Bloc Synthèse Juridique */
 .print-synthese {
     background: #f8faf9;
-    border: 1px solid #e5e7eb;
+    border: 1px solid #E5E7EB;
     border-left: 4px solid #047857;
     padding: 15px 20px;
     margin-bottom: 25px;
+    border-radius: 4px;
 }
 
 .print-synthese-title {
     font-size: 11px;
-    font-weight: bold;
-    text-transform: uppercase;
+    font-weight: 700;
     color: #047857;
+    text-transform: uppercase;
     letter-spacing: 1px;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #E5E7EB;
 }
 
 .print-synthese-matiere {
     display: inline-block;
-    background: #ecfdf5;
-    color: #047857;
-    padding: 3px 10px;
-    border-radius: 12px;
+    background: #047857;
+    color: #FFFFFF;
     font-size: 10px;
     font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
     margin-bottom: 10px;
 }
 
 .print-synthese-resume {
-    font-style: italic;
-    color: #374151;
     font-size: 11px;
-    line-height: 1.5;
+    line-height: 1.6;
+    color: #374151;
+    font-style: italic;
     margin: 0;
 }
 
+/* Corps du texte */
 .print-body {
+    font-size: 11pt;
+    line-height: 1.7;
     text-align: justify;
     position: relative;
     z-index: 1;
 }
 
-.print-body p {
-    margin-bottom: 10px;
+.print-body .decision-header {
+    text-align: center;
+    margin-bottom: 25px;
+    padding: 15px 0;
+    border-bottom: 2px double #047857;
 }
 
-.print-body h4 {
+.print-body .republique {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: #047857;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 5px;
+}
+
+.print-body .devise {
+    font-size: 11px;
+    font-style: italic;
+    color: #374151;
+}
+
+.print-body .master-composition {
+    background: #f8faf9;
+    border: 1px solid #E5E7EB;
+    border-left: 4px solid #047857;
+    padding: 15px 20px;
+    margin: 20px 0 25px 0;
+    border-radius: 4px;
+}
+
+.print-body .composition-title {
+    font-size: 10px;
+    font-weight: 700;
+    color: #047857;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #047857;
+}
+
+.print-body .composition-item {
+    display: grid;
+    grid-template-columns: 100px 15px 1fr;
+    gap: 5px;
+    margin-bottom: 6px;
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+.print-body .composition-role {
+    font-weight: 600;
+    color: #047857;
+}
+
+.print-body .composition-sep {
+    color: #047857;
+    font-weight: 700;
+}
+
+.print-body .composition-name {
+    color: #1A1A1A;
+}
+
+.print-body .section-major {
+    font-size: 13px;
+    font-weight: 700;
     color: #047857;
     text-align: center;
-    margin-top: 20px;
-    margin-bottom: 10px;
-    font-size: 13px;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 5px;
+    margin: 25px 0 15px 0;
+    padding: 10px 0;
+    border-top: 2px solid #047857;
+    border-bottom: 2px solid #047857;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    background: linear-gradient(to bottom, transparent 0%, #f8faf9 50%, transparent 100%);
 }
 
+.print-body .section-intermediate {
+    font-size: 11px;
+    font-weight: 700;
+    color: #065f46;
+    margin: 20px 0 12px 0;
+    padding-left: 10px;
+    border-left: 3px solid #047857;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.print-body .decision-paragraph {
+    margin-bottom: 12px;
+    text-align: justify;
+}
+
+.print-body .formule-juridique {
+    font-weight: 700;
+    color: #065f46;
+}
+
+/* Pied de page */
 .print-footer {
-    margin-top: 40px;
-    border-top: 1px solid #ccc;
-    padding-top: 10px;
     display: flex;
     justify-content: space-between;
-    font-size: 8px;
-    color: #666;
+    align-items: flex-end;
+    margin-top: 40px;
+    padding-top: 15px;
+    border-top: 1px solid #E5E7EB;
+    font-size: 9px;
+    color: #6B7280;
 }
 
-/* ========== @MEDIA PRINT OVERRIDES ========== */
-@media print {
-    body * {
-        visibility: hidden;
-    }
+.print-footer div:first-child {
+    line-height: 1.5;
+}
 
-    .print-template,
-    .print-template * {
-        visibility: visible !important;
-    }
+.print-footer div:last-child {
+    font-weight: 600;
+    color: #047857;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
 
-    .print-template {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        background: white !important;
-        color: black !important;
-    }
+/* ═══════════════════════════════════════════════════════════════════
+   CONTRÔLE DES SAUTS DE PAGE (PRINT TEMPLATE)
+   ═══════════════════════════════════════════════════════════════════ */
 
-    .print-watermark {
-        position: fixed !important;
-        opacity: 0.03 !important;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-    }
+/* Éviter les coupures dans les éléments importants */
+.print-header,
+.print-title,
+.print-synthese {
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+.print-body .master-composition,
+.print-body .decision-header {
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+.print-body .section-major,
+.print-body .section-intermediate {
+    page-break-after: avoid;
+    break-after: avoid;
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+.print-body .decision-paragraph {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    orphans: 3;
+    widows: 3;
+}
+
+/* Garder le pied de page sur la dernière page */
+.print-footer {
+    page-break-before: auto;
+    break-before: auto;
+}
+
+/* Empêcher les sauts après les titres */
+.print-body h1,
+.print-body h2,
+.print-body h3 {
+    page-break-after: avoid;
+    break-after: avoid;
 }
