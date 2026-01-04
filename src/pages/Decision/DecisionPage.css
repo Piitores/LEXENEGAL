@@ -248,138 +248,226 @@
 
 @media print {
     @page {
-        margin: 22mm;
+        margin: 15mm;
         size: A4 portrait;
     }
 
-    /* ─────────────────────────────────────────────────────
-     FOND ET COULEURS POUR PDF
-     ───────────────────────────────────────────────────── */
-    * {
-        background: var(--blanc-pur) !important;
-    }
-
     body {
-        font-family: Georgia, serif !important;
-        background: var(--blanc-pur);
-        color: var(--noir-charbon);
+        background: white !important;
+        font-family: 'Times New Roman', Times, serif !important;
+        font-size: 12pt !important;
+        line-height: 1.5 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color: #000 !important;
     }
 
-    /* ─────────────────────────────────────────────────────
-     NUMÉROTATION DES LIGNES (TOUS LES 5)
-     Marge gauche comme dans les vrais documents officiels
-     ───────────────────────────────────────────────────── */
-    .decision-paragraph {
-        counter-increment: line-count;
-        position: relative;
-    }
-
-    .decision-paragraph:nth-child(5n)::before {
-        content: counter(line-count);
-        position: absolute;
-        left: -28mm;
-        color: #999;
-        font-size: 0.7rem;
-        font-family: 'Courier New', monospace;
-        font-weight: normal;
-    }
-
-    /* ─────────────────────────────────────────────────────
-     CONSERVER LES COULEURS ÉMERAUDE (IDENTITÉ LEXENEGAL)
-     ───────────────────────────────────────────────────── */
-    .republique,
-    .section-major,
-    .section-intermediate,
-    .formule-juridique,
-    .composition-role,
-    .composition-sep,
-    .numero-considerant,
-    .composition-title {
-        color: var(--emerald-prestige) !important;
-    }
-
-    .decision-header {
-        border-bottom-color: var(--emerald-prestige) !important;
-    }
-
-    .section-major {
-        border-top-color: var(--emerald-prestige) !important;
-        border-bottom-color: var(--emerald-prestige) !important;
-    }
-
-    .section-intermediate {
-        border-left-color: var(--emerald-prestige) !important;
-    }
-
-    .master-composition {
-        border-left-color: var(--emerald-prestige) !important;
-        border-color: var(--gris-clair) !important;
-    }
-
-    .composition-title {
-        border-bottom-color: var(--emerald-prestige) !important;
-    }
-
-    /* ─────────────────────────────────────────────────────
-     ÉVITER LES COUPURES DE PAGE MALHEUREUSES
-     ───────────────────────────────────────────────────── */
-    .decision-header,
-    .master-composition,
-    .section-major,
-    .section-intermediate {
-        page-break-after: avoid;
-        page-break-inside: avoid;
-    }
-
-    .decision-paragraph {
-        page-break-inside: avoid;
-    }
-
-    h1,
-    h2,
-    h3 {
-        page-break-after: avoid;
-    }
-
-    /* ─────────────────────────────────────────────────────
-     MASQUER LES ÉLÉMENTS NON PERTINENTS
-     ───────────────────────────────────────────────────── */
+    /* HIDE UI ELEMENTS - Ensure absolutely everything non-printable is hidden */
+    .elite-grid,
+    .breadcrumbs,
+    .loading-bar-container,
+    .sidebar-left,
+    .sidebar-right,
+    .certification-badge,
+    .nav-sticky,
+    .decisionPage>.elite-grid,
+    /* Specificity safeguard */
     nav,
-    .sidebar,
-    .search-bar,
-    button,
-    .navigation,
-    .header,
-    .footer,
-    .back-button,
-    .share-button,
-    .download-button,
-    .toolbar {
+    header,
+    footer,
+    .tools-sticky {
         display: none !important;
     }
 
-    /* ─────────────────────────────────────────────────────
-     OPTIMISER LA LISIBILITÉ POUR L'IMPRESSION
-     ───────────────────────────────────────────────────── */
-    .decision-body {
-        max-width: 100%;
-        padding: 0;
+    /* PRINT TEMPLATE STYLES */
+    .print-template {
+        display: block !important;
+        position: relative !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: white !important;
+        color: black !important;
     }
 
-    .decision-paragraph {
+    /* WATERMARK - Positioned absolutely in the center */
+    .print-watermark-container {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: -10;
+        opacity: 0.04;
+        width: 180mm;
+        /* Constrain width for clean look */
+        height: auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+    }
+
+    /* HEADER */
+    .print-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        /* Align bottom */
+        border-bottom: 3px double #047857 !important;
+        /* Emerald double border */
+        padding-bottom: 15px;
+        margin-bottom: 30px;
+    }
+
+    .print-header-left h1 {
+        font-family: 'Playfair Display', serif !important;
+        font-weight: 700;
+        font-size: 24pt;
+        color: #047857 !important;
+        /* Emerald Prestige */
+        margin: 0;
+        line-height: 1;
+        letter-spacing: 1px;
+    }
+
+    .print-header-left span {
+        font-family: 'Times New Roman', serif;
         font-size: 11pt;
-        line-height: 1.7;
-        margin-bottom: 12pt;
+        font-style: italic;
+        color: #444 !important;
+        display: block;
+        margin-top: 5px;
     }
 
-    .section-major {
-        font-size: 14pt;
-        margin: 24pt 0 18pt 0;
+    .print-header-right {
+        text-align: right;
+        color: #000 !important;
     }
 
-    .section-intermediate {
+    .print-header-right strong {
+        font-family: 'Playfair Display', serif;
         font-size: 12pt;
-        margin: 18pt 0 12pt 0;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        display: block;
+    }
+
+    .print-header-right em {
+        font-family: 'Times New Roman', serif;
+        font-size: 10pt;
+        margin-top: 4px;
+        display: block;
+    }
+
+    /* TITLE SECTION */
+    .print-title {
+        text-align: center;
+        margin-bottom: 35px;
+    }
+
+    .print-title h2 {
+        font-family: 'Playfair Display', serif !important;
+        font-size: 20pt;
+        font-weight: 700;
+        margin: 0 0 10px 0;
+        color: #000 !important;
+        line-height: 1.2;
+    }
+
+    .print-subtitle {
+        font-family: 'Playfair Display', serif;
+        font-size: 14pt;
+        font-weight: bold;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+        color: #047857 !important;
+        /* Emerald */
+    }
+
+    .print-chambre {
+        font-size: 12pt;
+        font-style: italic;
+        color: #333 !important;
+    }
+
+    /* SYNTHESE */
+    .print-synthese {
+        border: 1px solid #ddd !important;
+        border-left: 5px solid #047857 !important;
+        /* Emerald border */
+        background-color: #fcfcfc !important;
+        /* Very light grey */
+        padding: 20px;
+        margin-bottom: 35px;
+        page-break-inside: avoid;
+        border-radius: 4px;
+    }
+
+    .print-synthese-title {
+        font-family: 'Playfair Display', serif;
+        font-weight: bold;
+        text-transform: uppercase;
+        color: #047857 !important;
+        font-size: 10pt;
+        margin-bottom: 12px;
+        letter-spacing: 1px;
+    }
+
+    .print-synthese-matiere {
+        font-weight: bold;
+        margin-bottom: 8px;
+        font-size: 11pt;
+    }
+
+    .print-synthese-resume {
+        font-style: italic;
+        text-align: justify;
+        font-size: 11pt;
+        margin: 0;
+        line-height: 1.5;
+    }
+
+    /* BODY CONTENT */
+    .print-body {
+        font-family: 'Times New Roman', serif !important;
+        font-size: 12pt !important;
+        line-height: 1.6;
+        text-align: justify;
+    }
+
+    .print-body p {
+        margin-bottom: 15px;
+        text-align: justify;
+    }
+
+    .print-body h1,
+    .print-body h2,
+    .print-body h3 {
+        color: #000 !important;
+        page-break-after: avoid;
+    }
+
+    /* FOOTER - Fixed at bottom of every page */
+    .print-footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        border-top: 1px solid #ccc !important;
+        padding-top: 10px;
+        font-size: 9pt;
+        font-family: 'Arial', sans-serif;
+        color: #666 !important;
+        display: flex;
+        justify-content: space-between;
+        background: white !important;
+    }
+
+    /* UTILS */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
     }
 }
 
@@ -664,16 +752,67 @@
     align-items: center;
 }
 
-.keyword-badge {
-    display: inline-block;
-    padding: 0.4rem 0.8rem;
-    background: var(--emerald-prestige);
-    color: var(--blanc-pur);
+/* Intelligence Juridique : Mots-clés */
+.tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+}
+
+.tag-elite {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.85rem;
+    background: rgba(4, 120, 87, 0.08);
+    color: var(--emerald-dark);
     font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    border-radius: 4px;
+    border-radius: 6px;
+    border: 1px solid rgba(4, 120, 87, 0.15);
+    transition: all 0.2s;
+}
+
+.tag-elite:hover {
+    background: var(--emerald-prestige);
+    color: var(--blanc-pur);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(4, 120, 87, 0.15);
+}
+
+/* Intelligence Juridique : Textes Cités */
+.laws-container {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--gris-clair);
+}
+
+.laws-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--gris-texte);
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.law-citation {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--noir-charbon);
+    margin-bottom: 0.5rem;
+    font-family: Georgia, serif;
+}
+
+.law-icon {
+    color: var(--emerald-prestige);
+    font-size: 0.8rem;
 }
 
 /* Legal Content Wrapper (with Watermark) */

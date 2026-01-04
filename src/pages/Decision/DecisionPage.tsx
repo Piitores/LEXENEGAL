@@ -9,7 +9,6 @@ import SEO from '../../components/SEO/SEO';
 import './DecisionPage.css';
 
 // --- CONFIG ---
-// --- CONFIG ---
 const client = new MeiliSearch({
     host: 'https://ms-9c13e7ae24b5-37398.fra.meilisearch.io',
     apiKey: 'eabe07740906b7bad2b7dcbe72ab6c010888bc827d3e7ec28b365810a5cad73a',
@@ -21,6 +20,9 @@ const DecisionPage: React.FC = () => {
     const navigate = useNavigate();
     const [decision, setDecision] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
+
+    // State for Certified Edition Toggle
+    const [isCertified, setIsCertified] = useState(true);
 
     // Ref for printable content
     const printRef = useRef<HTMLDivElement>(null);
@@ -196,16 +198,41 @@ const DecisionPage: React.FC = () => {
 
                     {/* EXPERT BLOCK */}
                     <div id="expert-block" className="expert-box">
-                        <div className="expert-title"><BookOpen size={14} style={{ display: 'inline', marginRight: '8px' }} /> Synthèse Juridique</div>
-
-                        <div style={{ marginBottom: '1rem' }}>
-                            {decision.matiere_principale && <span className="keyword-badge">{decision.matiere_principale}</span>}
+                        <div className="expert-title">
+                            <BookOpen size={14} style={{ display: 'inline', marginRight: '8px' }} /> Synthèse Juridique
                         </div>
 
+                        {/* Matière & Mots-clés */}
+                        <div className="tags-container">
+                            {decision.matiere_principale && (
+                                <span className="tag-elite" style={{ background: 'var(--emerald-prestige)', color: '#FFF' }}>
+                                    {decision.matiere_principale}
+                                </span>
+                            )}
+                            {decision.mots_cles && Array.isArray(decision.mots_cles) && decision.mots_cles.map((kw: string, i: number) => (
+                                <span key={i} className="tag-elite">{kw}</span>
+                            ))}
+                        </div>
+
+                        {/* Résumé */}
                         {decision.resume && (
-                            <p style={{ fontStyle: 'italic', color: '#374151', lineHeight: '1.6' }}>
+                            <p style={{ fontStyle: 'italic', color: '#374151', lineHeight: '1.6', marginBottom: '1.5rem' }}>
                                 {decision.resume}
                             </p>
+                        )}
+
+                        {/* Articles Cités */}
+                        {decision.articles_loi_cites && Array.isArray(decision.articles_loi_cites) && decision.articles_loi_cites.length > 0 && (
+                            <div className="laws-container">
+                                <div className="laws-title">
+                                    <Scale size={12} /> Références Légales
+                                </div>
+                                {decision.articles_loi_cites.map((art: string, i: number) => (
+                                    <div key={i} className="law-citation">
+                                        <span className="law-icon">§</span> {art}
+                                    </div>
+                                ))}
+                            </div>
                         )}
                     </div>
 
@@ -223,6 +250,21 @@ const DecisionPage: React.FC = () => {
                 {/* 3. RIGHT SIDEBAR */}
                 <aside className="sidebar-right">
                     <div className="tools-sticky">
+                        {/* Certified Toggle */}
+                        <div style={{ marginBottom: '1rem', padding: '0.75rem', background: '#FFFFFF', border: '1px solid #E5E7EB', borderRadius: '8px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.75rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+                            <input
+                                type="checkbox"
+                                id="cert-toggle"
+                                checked={isCertified}
+                                onChange={(e) => setIsCertified(e.target.checked)}
+                                style={{ accentColor: '#047857', width: '16px', height: '16px', cursor: 'pointer' }}
+                            />
+                            <label htmlFor="cert-toggle" style={{ cursor: 'pointer', color: '#374151', lineHeight: '1.3' }}>
+                                <strong>Édition Certifiée</strong><br />
+                                <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>Masquer la date</span>
+                            </label>
+                        </div>
+
                         <button className="btn-elite-primary" onClick={() => handlePrint()}>
                             <Printer size={18} />
                             Imprimer / PDF
@@ -245,11 +287,9 @@ const DecisionPage: React.FC = () => {
             }}>
                 <div ref={printRef} className="print-template">
                     {/* WATERMARK */}
-                    <img
-                        src="/watermark-logo.jpg"
-                        alt=""
-                        className="print-watermark"
-                    />
+                    <div className="print-watermark-container">
+                        <LexenegalSymbol size={600} opacity={0.04} />
+                    </div>
 
                     {/* HEADER */}
                     <div className="print-header">
@@ -290,7 +330,9 @@ const DecisionPage: React.FC = () => {
                     <div className="print-footer">
                         <div>
                             Source Certifiée : www.lexenegal.sn<br />
-                            Généré le {new Date().toLocaleDateString('fr-FR')}
+                            {!isCertified && (
+                                <span>Généré le {new Date().toLocaleDateString('fr-FR')}</span>
+                            )}
                         </div>
                         <div>Édition certifiée Lexenegal.sn</div>
                     </div>
