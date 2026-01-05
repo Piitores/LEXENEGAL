@@ -154,6 +154,15 @@ const SearchPage: React.FC = () => {
                 setResults(prev => [...prev, ...searchResponse.hits as unknown as Decision[]]);
             } else {
                 setResults(searchResponse.hits as unknown as Decision[]);
+
+                // 📊 Google Analytics 4 - Track search queries
+                if (query && query.trim().length > 0 && typeof window !== 'undefined' && (window as any).gtag) {
+                    (window as any).gtag('event', 'search', {
+                        search_term: query.trim(),
+                        results_count: searchResponse.estimatedTotalHits,
+                        filters_applied: filterParts.length > 0 ? filterParts.join(', ') : 'none'
+                    });
+                }
             }
 
             setTotalHits(searchResponse.estimatedTotalHits);
@@ -334,8 +343,8 @@ const SearchPage: React.FC = () => {
                             <motion.button
                                 key={pill.label}
                                 className={`pill ${(pill.value === null && selectedMatiere.length === 0) || (pill.value && selectedMatiere.includes(pill.value))
-                                        ? 'active'
-                                        : ''
+                                    ? 'active'
+                                    : ''
                                     }`}
                                 onClick={() => handlePillClick(pill.value)}
                                 whileHover={{ scale: 1.05 }}

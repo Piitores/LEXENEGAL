@@ -144,12 +144,15 @@ const DecisionPage: React.FC = () => {
         <div className="decisionPage">
             {/* DYNAMIC SEO */}
             <SEO
-                juridiction={decision.chambre || 'Cour Suprême'}
+                juridiction={decision.juridiction || 'Cour Suprême du Sénégal'}
                 reference={decision.reference}
                 matiere={decision.matiere_principale}
                 date={formattedDate}
                 type="article"
                 url={`https://lexenegal.sn/decision/${slug}`}
+                chambre={decision.chambre}
+                resume={decision.resume}
+                motsCles={decision.mots_cles}
             />
 
             {/* BREADCRUMBS (Schema.org) */}
