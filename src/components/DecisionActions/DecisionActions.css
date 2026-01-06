@@ -1,0 +1,132 @@
+/* DECISION ACTIONS - Favorite & Folder buttons */
+
+.decision-actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 1rem;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 14px;
+    background: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.action-btn:hover {
+    background: #F3F4F6;
+    border-color: #D1D5DB;
+}
+
+.action-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Favorite Active */
+.action-favorite.is-favorite {
+    background: #FFFBEB;
+    border-color: #FCD34D;
+    color: #B45309;
+}
+
+.action-favorite.is-favorite:hover {
+    background: #FEF3C7;
+}
+
+.action-favorite svg {
+    color: #9CA3AF;
+}
+
+.action-favorite.is-favorite svg {
+    color: #F59E0B;
+}
+
+/* Spinner */
+.spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Folder Dropdown */
+.folder-dropdown {
+    position: relative;
+}
+
+.folder-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    min-width: 200px;
+    background: white;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+    overflow: hidden;
+}
+
+.folder-menu-title {
+    padding: 10px 14px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6B7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid #E5E7EB;
+    background: #F9FAFB;
+}
+
+.folder-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 12px 14px;
+    border: none;
+    background: white;
+    color: #374151;
+    font-size: 0.9rem;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.folder-option:hover {
+    background: #F9FAFB;
+}
+
+.folder-option.in-folder {
+    color: #047857;
+    font-weight: 500;
+}
+
+.folder-option.in-folder svg {
+    color: #10B981;
+}
+
+.folder-empty {
+    padding: 16px;
+    font-size: 0.85rem;
+    color: #6B7280;
+    text-align: center;
+}
+
+.folder-empty a {
+    color: #047857;
+    font-weight: 500;
+    text-decoration: underline;
+}

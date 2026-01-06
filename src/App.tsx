@@ -10,6 +10,7 @@ import SolutionsPage from './pages/Solutions/SolutionsPage';
 import ProPage from './pages/Pro/ProPage';
 import AuthPage from './pages/Auth/AuthPage';
 import AuthCallback from './pages/Auth/AuthCallback';
+import CabinetPage from './pages/Cabinet/CabinetPage';
 import SEO from './components/SEO/SEO';
 import './App.css';
 
@@ -49,6 +50,7 @@ function App() {
             <Route path="/espace-professionnel" element={<ProPage />} />
             <Route path="/login" element={<AuthPage />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/cabinet" element={<CabinetPage />} />
           </Routes>
           <Footer />
         </div>

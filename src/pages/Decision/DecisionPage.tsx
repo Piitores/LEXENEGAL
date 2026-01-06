@@ -5,6 +5,8 @@ import { Download, ArrowLeft, Copy, Scale, BookOpen, Printer } from 'lucide-reac
 import { useReactToPrint } from 'react-to-print';
 import LexenegalSymbol from '../../components/LexenegalSymbol/LexenegalSymbol';
 import SEO from '../../components/SEO/SEO';
+import DecisionActions from '../../components/DecisionActions/DecisionActions';
+import ConversionModal from '../../components/ConversionModal/ConversionModal';
 
 import './DecisionPage.css';
 
@@ -23,6 +25,9 @@ const DecisionPage: React.FC = () => {
 
     // State for Certified Edition Toggle
     const [isCertified, setIsCertified] = useState(true);
+
+    // State for Conversion Modal
+    const [showConversionModal, setShowConversionModal] = useState(false);
 
     // Ref for printable content
     const printRef = useRef<HTMLDivElement>(null);
@@ -253,6 +258,14 @@ const DecisionPage: React.FC = () => {
                 {/* 3. RIGHT SIDEBAR */}
                 <aside className="sidebar-right">
                     <div className="tools-sticky">
+                        {/* Decision Actions (Favorites & Folders) */}
+                        {decision.id && (
+                            <DecisionActions
+                                decisionId={decision.id}
+                                onNeedUpgrade={() => setShowConversionModal(true)}
+                            />
+                        )}
+
                         {/* Certified Toggle */}
                         <div style={{ marginBottom: '1rem', padding: '0.75rem', background: '#FFFFFF', border: '1px solid #E5E7EB', borderRadius: '8px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.75rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
                             <input
@@ -341,6 +354,16 @@ const DecisionPage: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            {/* CONVERSION MODAL */}
+            <ConversionModal
+                isOpen={showConversionModal}
+                onClose={() => setShowConversionModal(false)}
+                onRequestAccess={() => {
+                    setShowConversionModal(false);
+                    navigate('/espace-professionnel#contact');
+                }}
+            />
         </div>
     );
 };
