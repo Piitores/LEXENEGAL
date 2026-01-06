@@ -8,6 +8,8 @@ import SearchPage from './pages/Search/SearchPage';
 import DecisionPage from './pages/Decision/DecisionPage';
 import SolutionsPage from './pages/Solutions/SolutionsPage';
 import ProPage from './pages/Pro/ProPage';
+import AuthPage from './pages/Auth/AuthPage';
+import AuthCallback from './pages/Auth/AuthCallback';
 import SEO from './components/SEO/SEO';
 import './App.css';
 
@@ -45,6 +47,8 @@ function App() {
             <Route path="/decision/:slug" element={<DecisionPage />} />
             <Route path="/solutions" element={<SolutionsPage />} />
             <Route path="/espace-professionnel" element={<ProPage />} />
+            <Route path="/login" element={<AuthPage />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
           </Routes>
           <Footer />
         </div>
