@@ -1,0 +1,302 @@
+/* =========================================
+   ARTICLE PAGE - Article Detail + Diff
+   ========================================= */
+
+.article-page {
+    min-height: 100vh;
+    background: #F9FAFB;
+    padding: 100px 0 60px;
+}
+
+.article-loading,
+.article-not-found {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    color: #6B7280;
+}
+
+.article-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+/* Breadcrumb */
+.article-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: #9CA3AF;
+    margin-bottom: 32px;
+}
+
+.article-breadcrumb a {
+    color: #6B7280;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.article-breadcrumb a:hover {
+    color: #047857;
+}
+
+.article-breadcrumb span {
+    color: #111827;
+}
+
+/* Header */
+.article-header {
+    margin-bottom: 32px;
+}
+
+.article-meta {
+    margin-bottom: 12px;
+}
+
+.article-chapter {
+    display: inline-block;
+    padding: 6px 14px;
+    background: rgba(16, 185, 129, 0.1);
+    color: #047857;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-radius: 20px;
+}
+
+.article-header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.5rem;
+    color: #111827;
+    margin-bottom: 16px;
+}
+
+.version-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    color: #6B7280;
+}
+
+.version-info svg {
+    color: #9CA3AF;
+}
+
+.version-note {
+    color: #047857;
+    font-style: italic;
+}
+
+/* Actions */
+.article-actions {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.btn-compare {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: white;
+    border: 1.5px solid #E5E7EB;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-compare:hover {
+    border-color: #10B981;
+    color: #047857;
+}
+
+.btn-compare.active {
+    background: #ECFDF5;
+    border-color: #10B981;
+    color: #047857;
+}
+
+.pro-lock {
+    color: #F59E0B;
+    margin-left: 4px;
+}
+
+/* Comparison Panel */
+.comparison-panel {
+    background: white;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+    overflow: hidden;
+}
+
+.version-selector {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.version-selector label {
+    font-size: 0.9rem;
+    color: #374151;
+    font-weight: 500;
+}
+
+.version-selector select {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1.5px solid #E5E7EB;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: #111827;
+    cursor: pointer;
+}
+
+.version-selector select:focus {
+    outline: none;
+    border-color: #10B981;
+}
+
+/* Content Wrapper */
+.article-content-wrapper {
+    background: white;
+    border: 1px solid #E5E7EB;
+    border-radius: 16px;
+    padding: 40px;
+    margin-bottom: 32px;
+}
+
+.article-content-wrapper.side-by-side {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+/* Article Text */
+.article-text {
+    font-family: 'Georgia', serif;
+    font-size: 1.05rem;
+    line-height: 1.8;
+    color: #1F2937;
+}
+
+.article-text p {
+    margin-bottom: 1rem;
+}
+
+/* Version Columns */
+.version-column {
+    padding: 32px;
+}
+
+.version-column-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #6B7280;
+    padding-bottom: 16px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.version-column-header.current {
+    color: #047857;
+}
+
+.version-old {
+    background: #FEF2F2;
+    border-right: 1px solid #E5E7EB;
+}
+
+.version-current {
+    background: #F0FDF4;
+}
+
+/* Diff Highlighting */
+.diff-added {
+    background: rgba(16, 185, 129, 0.15);
+    color: #047857;
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+
+.diff-removed {
+    background: rgba(239, 68, 68, 0.15);
+    color: #DC2626;
+    text-decoration: line-through;
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+
+/* Navigation */
+.article-nav {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 40px;
+}
+
+.btn-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: white;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-nav:hover {
+    border-color: #10B981;
+    color: #047857;
+}
+
+/* Signature */
+.article-signature {
+    text-align: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 0.9rem;
+    font-style: italic;
+    color: #9CA3AF;
+    padding-top: 32px;
+    border-top: 1px solid #E5E7EB;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .article-content-wrapper.side-by-side {
+        grid-template-columns: 1fr;
+    }
+
+    .version-old {
+        border-right: none;
+        border-bottom: 1px solid #E5E7EB;
+    }
+
+    .article-header h1 {
+        font-size: 1.8rem;
+    }
+
+    .article-nav {
+        flex-direction: column;
+    }
+}

@@ -11,6 +11,8 @@ import ProPage from './pages/Pro/ProPage';
 import AuthPage from './pages/Auth/AuthPage';
 import AuthCallback from './pages/Auth/AuthCallback';
 import CabinetPage from './pages/Cabinet/CabinetPage';
+import CodePage from './pages/Code/CodePage';
+import ArticlePage from './pages/Code/ArticlePage';
 import SEO from './components/SEO/SEO';
 import './App.css';
 
@@ -51,6 +53,8 @@ function App() {
             <Route path="/login" element={<AuthPage />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/cabinet" element={<CabinetPage />} />
+            <Route path="/code/:slug" element={<CodePage />} />
+            <Route path="/code/:codeSlug/:articleSlug" element={<ArticlePage />} />
           </Routes>
           <Footer />
         </div>
