@@ -17,7 +17,7 @@ import './DecisionPage.css';
 // --- CONFIG ---
 const client = new MeiliSearch({
     host: 'https://ms-9c13e7ae24b5-37398.fra.meilisearch.io',
-    apiKey: 'eabe07740906b7bad2b7dcbe72ab6c010888bc827d3e7ec28b365810a5cad73a',
+    apiKey: '8ce0415a927b3362022e014993879f8986a7f941',
 });
 const index = client.index('decisions');
 
