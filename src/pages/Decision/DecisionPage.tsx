@@ -3,10 +3,14 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { MeiliSearch } from 'meilisearch';
 import { Download, ArrowLeft, Copy, Scale, BookOpen, Printer } from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
+import { createClient } from '@supabase/supabase-js';
 import LexenegalSymbol from '../../components/LexenegalSymbol/LexenegalSymbol';
 import SEO from '../../components/SEO/SEO';
 import DecisionActions from '../../components/DecisionActions/DecisionActions';
 import ConversionModal from '../../components/ConversionModal/ConversionModal';
+import { textToHtmlWithLinks } from '../../utils/articleLinkRenderer';
+import { getDecisionHtml, isNewFormat } from '../../utils/decisionTextFormatter';
+import { logViewDecision, logDownloadPdf } from '../../utils/auditLogger';
 
 import './DecisionPage.css';
 
@@ -17,11 +21,26 @@ const client = new MeiliSearch({
 });
 const index = client.index('decisions');
 
+// Supabase client for articles
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://lphmualoyxetsgldccrw.supabase.co';
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+interface ArticleInfo {
+    id: string;
+    article_number: string;
+    slug: string;
+    code_slug: string;
+    code_name: string;
+}
+
 const DecisionPage: React.FC = () => {
     const { slug } = useParams();
     const navigate = useNavigate();
     const [decision, setDecision] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
+    const [articles, setArticles] = useState<ArticleInfo[]>([]);
+    const [userId, setUserId] = useState<string>('Anonymous');
 
     // State for Certified Edition Toggle
     const [isCertified, setIsCertified] = useState(true);
@@ -32,9 +51,21 @@ const DecisionPage: React.FC = () => {
     // Ref for printable content
     const printRef = useRef<HTMLDivElement>(null);
 
+    // Fetch user session for fingerprinting
+    useEffect(() => {
+        const getUser = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+                setUserId(session.user.id.substring(0, 8));
+            }
+        };
+        getUser();
+    }, []);
+
     useEffect(() => {
         if (!slug) return;
         fetchDecision();
+        fetchArticles();
     }, [slug]);
 
     const fetchDecision = async () => {
@@ -47,11 +78,47 @@ const DecisionPage: React.FC = () => {
             });
             if (searchResponse.hits.length > 0) {
                 setDecision(searchResponse.hits[0]);
+                // Log view for audit trail
+                logViewDecision(slug || '');
             }
         } catch (error) {
             console.error(error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    // Fetch articles from Supabase for hyperlinking
+    const fetchArticles = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('articles')
+                .select(`
+                    id,
+                    article_number,
+                    slug,
+                    laws_and_codes!inner(slug, short_title)
+                `)
+                .order('display_order');
+
+            if (error) {
+                console.error('Error fetching articles:', error);
+                return;
+            }
+
+            if (data) {
+                const formattedArticles: ArticleInfo[] = data.map((art: any) => ({
+                    id: art.id,
+                    article_number: art.article_number,
+                    slug: art.slug,
+                    code_slug: art.laws_and_codes?.slug || 'code-travail',
+                    code_name: art.laws_and_codes?.short_title || 'Code du Travail'
+                }));
+                setArticles(formattedArticles);
+                console.log(`📚 Loaded ${formattedArticles.length} articles for hyperlinking`);
+            }
+        } catch (error) {
+            console.error('Error in fetchArticles:', error);
         }
     };
 
@@ -138,7 +205,13 @@ const DecisionPage: React.FC = () => {
         </div>
     );
 
-    const rawText = decision.texte_integral || "Texte intégral non disponible.";
+    // Get the HTML content - handles both old (texte_integral) and new (texte_brut) formats
+    const rawText = getDecisionHtml(decision);
+
+    // Transform article citations to clickable links
+    const enrichedText = articles.length > 0
+        ? textToHtmlWithLinks(rawText, articles, 'code-travail')
+        : rawText;
 
     // Format date for SEO
     const formattedDate = decision.date_decision
@@ -250,7 +323,7 @@ const DecisionPage: React.FC = () => {
                             <LexenegalSymbol size={400} opacity={0.03} />
                         </div>
                         <div className="legal-content" id="texte-integral">
-                            <div dangerouslySetInnerHTML={{ __html: rawText }} />
+                            <div dangerouslySetInnerHTML={{ __html: enrichedText }} />
                         </div>
                     </div>
                 </main>
@@ -341,6 +414,11 @@ const DecisionPage: React.FC = () => {
 
                     {/* CONTENT */}
                     <div className="print-body" dangerouslySetInnerHTML={{ __html: rawText }} />
+
+                    {/* FINGERPRINT WATERMARK - Invisible traceability */}
+                    <div className="print-fingerprint">
+                        Édition Certifiée pour : {userId} - {new Date().toISOString().split('T')[0]}
+                    </div>
 
                     {/* FOOTER */}
                     <div className="print-footer">

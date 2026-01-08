@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     ArrowLeft, ChevronLeft, ChevronRight,
-    GitCompare, Clock, Scale, Lock, FileText
+    GitCompare, Clock, Scale, Lock, FileText, Gavel
 } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import SEO from '../../components/SEO/SEO';
@@ -38,6 +38,15 @@ interface Law {
     slug: string;
 }
 
+interface CitingDecision {
+    id: string;
+    titre: string;
+    slug: string;
+    date_decision: string;
+    chambre: string;
+    citation_text: string;
+}
+
 const ArticlePage: React.FC = () => {
     const { codeSlug, articleSlug } = useParams();
     const navigate = useNavigate();
@@ -48,11 +57,20 @@ const ArticlePage: React.FC = () => {
     const [currentVersion, setCurrentVersion] = useState<ArticleVersion | null>(null);
     const [loading, setLoading] = useState(true);
 
+    // Navigation - previous/next articles
+    const [prevArticle, setPrevArticle] = useState<{ slug: string; number: string } | null>(null);
+    const [nextArticle, setNextArticle] = useState<{ slug: string; number: string } | null>(null);
+
     // Comparison mode
     const [showComparison, setShowComparison] = useState(false);
     const [compareVersion, setCompareVersion] = useState<ArticleVersion | null>(null);
     const [isPro, setIsPro] = useState(false);
     const [showConversionModal, setShowConversionModal] = useState(false);
+
+    // Citing decisions
+    const [citingDecisions, setCitingDecisions] = useState<CitingDecision[]>([]);
+    const [loadingDecisions, setLoadingDecisions] = useState(false);
+
 
     useEffect(() => {
         if (codeSlug && articleSlug) {
@@ -79,6 +97,9 @@ const ArticlePage: React.FC = () => {
 
     const fetchArticleData = async () => {
         setLoading(true);
+        setPrevArticle(null);
+        setNextArticle(null);
+
         try {
             // Get law info
             const { data: lawData } = await supabase
@@ -113,6 +134,37 @@ const ArticlePage: React.FC = () => {
                         const current = versionsData.find(v => v.is_current);
                         setCurrentVersion(current || versionsData[0]);
                     }
+
+                    // Get previous article (lower display_order)
+                    const { data: prevData } = await supabase
+                        .from('articles')
+                        .select('slug, article_number')
+                        .eq('code_id', lawData.id)
+                        .lt('display_order', articleData.display_order)
+                        .order('display_order', { ascending: false })
+                        .limit(1)
+                        .single();
+
+                    if (prevData) {
+                        setPrevArticle({ slug: prevData.slug, number: prevData.article_number });
+                    }
+
+                    // Get next article (higher display_order)
+                    const { data: nextData } = await supabase
+                        .from('articles')
+                        .select('slug, article_number')
+                        .eq('code_id', lawData.id)
+                        .gt('display_order', articleData.display_order)
+                        .order('display_order', { ascending: true })
+                        .limit(1)
+                        .single();
+
+                    if (nextData) {
+                        setNextArticle({ slug: nextData.slug, number: nextData.article_number });
+                    }
+
+                    // Fetch citing decisions
+                    fetchCitingDecisions(articleData.id);
                 }
             }
         } catch (error) {
@@ -121,6 +173,46 @@ const ArticlePage: React.FC = () => {
             setLoading(false);
         }
     };
+
+    const fetchCitingDecisions = async (articleId: string) => {
+        setLoadingDecisions(true);
+        try {
+            const { data: links, error } = await supabase
+                .from('decision_article_links')
+                .select(`
+                    citation_text,
+                    decision:decisions(
+                        id,
+                        reference,
+                        slug,
+                        date_decision,
+                        chambre
+                    )
+                `)
+                .eq('article_id', articleId)
+                .limit(10);
+
+            if (error) throw error;
+
+            const decisions: CitingDecision[] = (links || [])
+                .filter((l: any) => l.decision)
+                .map((l: any) => ({
+                    id: l.decision.id,
+                    titre: l.decision.reference,
+                    slug: l.decision.slug,
+                    date_decision: l.decision.date_decision,
+                    chambre: l.decision.chambre,
+                    citation_text: l.citation_text
+                }));
+
+            setCitingDecisions(decisions);
+        } catch (error) {
+            console.error('Error fetching citing decisions:', error);
+        } finally {
+            setLoadingDecisions(false);
+        }
+    };
+
 
     const handleCompareClick = () => {
         if (!isPro) {
@@ -299,16 +391,67 @@ const ArticlePage: React.FC = () => {
                     )}
                 </div>
 
+                {/* CITING DECISIONS */}
+                <section className="citing-decisions">
+                    <h2>
+                        <Gavel size={20} />
+                        Décisions citant cet article
+                    </h2>
+                    {loadingDecisions ? (
+                        <p className="citing-loading">Chargement...</p>
+                    ) : citingDecisions.length === 0 ? (
+                        <p className="citing-empty">
+                            Aucune décision ne cite cet article pour le moment.
+                        </p>
+                    ) : (
+                        <div className="citing-list">
+                            {citingDecisions.map(decision => (
+                                <Link
+                                    key={decision.id}
+                                    to={`/decision/${decision.slug}`}
+                                    className="citing-card"
+                                >
+                                    <div className="citing-card__icon">
+                                        <Scale size={16} />
+                                    </div>
+                                    <div className="citing-card__content">
+                                        <h3>{decision.titre}</h3>
+                                        <p className="citing-card__meta">
+                                            {decision.chambre} · {new Date(decision.date_decision).toLocaleDateString('fr-FR')}
+                                        </p>
+                                        {decision.citation_text && (
+                                            <p className="citing-card__excerpt">
+                                                "...{decision.citation_text}..."
+                                            </p>
+                                        )}
+                                    </div>
+                                    <ChevronRight size={16} className="citing-card__arrow" />
+                                </Link>
+                            ))}
+                        </div>
+                    )}
+                </section>
+
                 {/* NAVIGATION */}
                 <div className="article-nav">
-                    <button className="btn-nav" onClick={() => navigate(-1)}>
-                        <ChevronLeft size={16} /> Article précédent
+                    <button
+                        className={`btn-nav ${!prevArticle ? 'disabled' : ''}`}
+                        onClick={() => prevArticle && navigate(`/code/${codeSlug}/${prevArticle.slug}`)}
+                        disabled={!prevArticle}
+                    >
+                        <ChevronLeft size={16} />
+                        {prevArticle ? `Art. ${prevArticle.number}` : 'Premier article'}
                     </button>
-                    <button className="btn-nav" onClick={() => navigate(`/code/${codeSlug}`)}>
+                    <button className="btn-nav btn-nav-center" onClick={() => navigate(`/code/${codeSlug}`)}>
                         Retour au sommaire
                     </button>
-                    <button className="btn-nav">
-                        Article suivant <ChevronRight size={16} />
+                    <button
+                        className={`btn-nav ${!nextArticle ? 'disabled' : ''}`}
+                        onClick={() => nextArticle && navigate(`/code/${codeSlug}/${nextArticle.slug}`)}
+                        disabled={!nextArticle}
+                    >
+                        {nextArticle ? `Art. ${nextArticle.number}` : 'Dernier article'}
+                        <ChevronRight size={16} />
                     </button>
                 </div>
 

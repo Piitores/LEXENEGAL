@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ChevronRight, ChevronDown, BookOpen, Scale, FileText } from 'lucide-react';
+import { ArrowLeft, ChevronRight, ChevronDown, BookOpen, Search, FileText } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import SEO from '../../components/SEO/SEO';
 import './CodePage.css';
@@ -28,14 +28,14 @@ interface Article {
     section_name: string;
     article_number: string;
     slug: string;
+    display_order: number;
 }
 
-interface TOCItem {
-    level: 'part' | 'title' | 'chapter' | 'section' | 'article';
+interface HierarchyNode {
     name: string;
-    slug?: string;
-    children?: TOCItem[];
-    isOpen?: boolean;
+    type: 'part' | 'title' | 'chapter' | 'section';
+    articles: Article[];
+    children: HierarchyNode[];
 }
 
 const CodePage: React.FC = () => {
@@ -44,9 +44,10 @@ const CodePage: React.FC = () => {
 
     const [law, setLaw] = useState<Law | null>(null);
     const [articles, setArticles] = useState<Article[]>([]);
-    const [toc, setToc] = useState<TOCItem[]>([]);
+    const [hierarchy, setHierarchy] = useState<HierarchyNode[]>([]);
     const [loading, setLoading] = useState(true);
-    const [openSections, setOpenSections] = useState<Set<string>>(new Set());
+    const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+    const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
         if (slug) fetchCodeData();
@@ -65,7 +66,7 @@ const CodePage: React.FC = () => {
             if (lawData) {
                 setLaw(lawData);
 
-                // Fetch articles
+                // Fetch all articles
                 const { data: articlesData } = await supabase
                     .from('articles')
                     .select('*')
@@ -74,7 +75,7 @@ const CodePage: React.FC = () => {
 
                 if (articlesData) {
                     setArticles(articlesData);
-                    buildTOC(articlesData);
+                    buildHierarchy(articlesData);
                 }
             }
         } catch (error) {
@@ -84,103 +85,144 @@ const CodePage: React.FC = () => {
         }
     };
 
-    const buildTOC = (articlesData: Article[]) => {
-        // Build hierarchical TOC from flat articles list
-        const tocMap = new Map<string, TOCItem>();
+    const buildHierarchy = (articlesData: Article[]) => {
+        const root: HierarchyNode[] = [];
 
         articlesData.forEach(article => {
-            // Create hierarchy: Part > Title > Chapter > Section > Article
-            const partKey = article.part_title || 'Dispositions';
-            if (!tocMap.has(partKey)) {
-                tocMap.set(partKey, { level: 'part', name: partKey, children: [] });
+            // Find or create part node
+            let partNode = root.find(n => n.name === (article.part_title || 'Dispositions'));
+            if (!partNode) {
+                partNode = {
+                    name: article.part_title || 'Dispositions',
+                    type: 'part',
+                    articles: [],
+                    children: []
+                };
+                root.push(partNode);
             }
 
-            const part = tocMap.get(partKey)!;
+            // Find or create title node
+            if (article.title_name) {
+                let titleNode = partNode.children.find(n => n.name === article.title_name);
+                if (!titleNode) {
+                    titleNode = {
+                        name: article.title_name,
+                        type: 'title',
+                        articles: [],
+                        children: []
+                    };
+                    partNode.children.push(titleNode);
+                }
 
-            // Find or create title
-            let titleItem = part.children?.find(c => c.name === article.title_name);
-            if (!titleItem && article.title_name) {
-                titleItem = { level: 'title', name: article.title_name, children: [] };
-                part.children?.push(titleItem);
+                // Find or create chapter node
+                if (article.chapter_name) {
+                    let chapterNode = titleNode.children.find(n => n.name === article.chapter_name);
+                    if (!chapterNode) {
+                        chapterNode = {
+                            name: article.chapter_name,
+                            type: 'chapter',
+                            articles: [],
+                            children: []
+                        };
+                        titleNode.children.push(chapterNode);
+                    }
+                    chapterNode.articles.push(article);
+                } else {
+                    titleNode.articles.push(article);
+                }
+            } else {
+                partNode.articles.push(article);
             }
-
-            // Find or create chapter
-            const targetParent = titleItem || part;
-            let chapterItem = targetParent.children?.find(c => c.name === article.chapter_name);
-            if (!chapterItem && article.chapter_name) {
-                chapterItem = { level: 'chapter', name: article.chapter_name, children: [] };
-                targetParent.children?.push(chapterItem);
-            }
-
-            // Add article
-            const articleParent = chapterItem || titleItem || part;
-            articleParent.children?.push({
-                level: 'article',
-                name: `Art. ${article.article_number}`,
-                slug: article.slug
-            });
         });
 
-        setToc(Array.from(tocMap.values()));
+        setHierarchy(root);
+        // Auto-expand first level
+        if (root.length > 0) {
+            setExpandedNodes(new Set([root[0].name]));
+        }
     };
 
-    const toggleSection = (sectionName: string) => {
-        setOpenSections(prev => {
+    const toggleNode = (nodeName: string) => {
+        setExpandedNodes(prev => {
             const next = new Set(prev);
-            if (next.has(sectionName)) {
-                next.delete(sectionName);
+            if (next.has(nodeName)) {
+                next.delete(nodeName);
             } else {
-                next.add(sectionName);
+                next.add(nodeName);
             }
             return next;
         });
     };
 
-    const renderTOCItem = (item: TOCItem, depth: number = 0): React.ReactNode => {
-        const hasChildren = item.children && item.children.length > 0;
-        const isOpen = openSections.has(item.name);
+    const countArticles = (node: HierarchyNode): number => {
+        let count = node.articles.length;
+        node.children.forEach(child => {
+            count += countArticles(child);
+        });
+        return count;
+    };
+
+    // Filter articles by search
+    const filteredArticles = searchQuery.length >= 2
+        ? articles.filter(a =>
+            a.article_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            a.chapter_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            a.title_name?.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+        : null;
+
+    const renderNode = (node: HierarchyNode, depth: number = 0): React.ReactNode => {
+        const isExpanded = expandedNodes.has(node.name);
+        const hasChildren = node.children.length > 0 || node.articles.length > 0;
+        const articleCount = countArticles(node);
 
         return (
-            <div key={item.name} className={`toc-item toc-item--${item.level}`}>
-                {item.level === 'article' ? (
-                    <Link
-                        to={`/code/${slug}/${item.slug}`}
-                        className="toc-link toc-article"
+            <div key={node.name} className={`hierarchy-node hierarchy-node--${node.type}`}>
+                <button
+                    className={`hierarchy-header ${isExpanded ? 'is-expanded' : ''}`}
+                    onClick={() => toggleNode(node.name)}
+                >
+                    <motion.span
+                        className="hierarchy-chevron"
+                        animate={{ rotate: isExpanded ? 90 : 0 }}
+                        transition={{ duration: 0.2 }}
                     >
-                        {item.name}
-                    </Link>
-                ) : (
-                    <>
-                        <button
-                            className={`toc-toggle ${isOpen ? 'open' : ''}`}
-                            onClick={() => toggleSection(item.name)}
-                        >
-                            {hasChildren && (
-                                <motion.span
-                                    animate={{ rotate: isOpen ? 90 : 0 }}
-                                    transition={{ duration: 0.2 }}
-                                >
-                                    <ChevronRight size={14} />
-                                </motion.span>
-                            )}
-                            <span className="toc-name">{item.name}</span>
-                        </button>
+                        <ChevronRight size={16} />
+                    </motion.span>
+                    <span className="hierarchy-name">{node.name}</span>
+                    <span className="hierarchy-count">{articleCount} art.</span>
+                </button>
 
-                        <AnimatePresence>
-                            {isOpen && hasChildren && (
-                                <motion.div
-                                    className="toc-children"
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: 'auto', opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                                >
-                                    {item.children?.map(child => renderTOCItem(child, depth + 1))}
-                                </motion.div>
+                <AnimatePresence>
+                    {isExpanded && hasChildren && (
+                        <motion.div
+                            className="hierarchy-content"
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                        >
+                            {/* Render children first */}
+                            {node.children.map(child => renderNode(child, depth + 1))}
+
+                            {/* Then render direct articles */}
+                            {node.articles.length > 0 && (
+                                <div className="hierarchy-articles">
+                                    {node.articles.map(article => (
+                                        <Link
+                                            key={article.id}
+                                            to={`/code/${slug}/${article.slug}`}
+                                            className="article-link"
+                                        >
+                                            <FileText size={14} />
+                                            <span>Art. {article.article_number}</span>
+                                        </Link>
+                                    ))}
+                                </div>
                             )}
-                        </AnimatePresence>
-                    </>
-                )}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
         );
     };
@@ -211,20 +253,39 @@ const CodePage: React.FC = () => {
             />
 
             <div className="code-layout">
-                {/* SIDEBAR - Table of Contents */}
+                {/* SIDEBAR - Navigation rapide */}
                 <aside className="code-sidebar">
                     <div className="sidebar-sticky">
                         <button className="btn-back" onClick={() => navigate('/codes')}>
                             <ArrowLeft size={16} /> Tous les codes
                         </button>
 
+                        <div className="sidebar-search">
+                            <Search size={16} />
+                            <input
+                                type="text"
+                                placeholder="Rechercher un article..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                        </div>
+
                         <div className="toc-header">
                             <BookOpen size={18} />
-                            <span>Sommaire</span>
+                            <span>Structure</span>
                         </div>
 
                         <nav className="toc-nav">
-                            {toc.map(item => renderTOCItem(item))}
+                            {hierarchy.map((part, i) => (
+                                <button
+                                    key={i}
+                                    className={`toc-part ${expandedNodes.has(part.name) ? 'active' : ''}`}
+                                    onClick={() => toggleNode(part.name)}
+                                >
+                                    {part.name}
+                                    <span className="toc-count">{countArticles(part)}</span>
+                                </button>
+                            ))}
                         </nav>
                     </div>
                 </aside>
@@ -233,36 +294,37 @@ const CodePage: React.FC = () => {
                 <main className="code-main">
                     {/* HEADER */}
                     <header className="code-header">
-                        <span className="code-category">{law.category}</span>
+                        <span className="code-category">{law.category || 'CODE'}</span>
                         <h1>{law.title}</h1>
                         {law.reference && (
                             <p className="code-reference">{law.reference}</p>
                         )}
+                        <p className="code-stats">
+                            {articles.length} articles · Version en vigueur
+                        </p>
                     </header>
 
-                    {/* ARTICLES LIST */}
-                    <div className="articles-grid">
-                        {articles.slice(0, 20).map(article => (
-                            <Link
-                                key={article.id}
-                                to={`/code/${slug}/${article.slug}`}
-                                className="article-card"
-                            >
-                                <div className="article-card__number">
-                                    Art. {article.article_number}
-                                </div>
-                                <div className="article-card__meta">
-                                    {article.chapter_name || article.title_name || 'Dispositions générales'}
-                                </div>
-                                <ChevronRight size={16} className="article-card__arrow" />
-                            </Link>
-                        ))}
-                    </div>
-
-                    {articles.length > 20 && (
-                        <p className="articles-more">
-                            Et {articles.length - 20} autres articles...
-                        </p>
+                    {/* SEARCH RESULTS or HIERARCHY */}
+                    {filteredArticles ? (
+                        <div className="search-results">
+                            <h2>{filteredArticles.length} résultat{filteredArticles.length > 1 ? 's' : ''} pour "{searchQuery}"</h2>
+                            <div className="search-results-list">
+                                {filteredArticles.slice(0, 50).map(article => (
+                                    <Link
+                                        key={article.id}
+                                        to={`/code/${slug}/${article.slug}`}
+                                        className="search-result-item"
+                                    >
+                                        <strong>Art. {article.article_number}</strong>
+                                        <span>{article.chapter_name || article.title_name || ''}</span>
+                                    </Link>
+                                ))}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="code-hierarchy">
+                            {hierarchy.map(part => renderNode(part))}
+                        </div>
                     )}
                 </main>
             </div>

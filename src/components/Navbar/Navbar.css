@@ -43,6 +43,9 @@
  }
 
  .navbar__link {
+   display: flex;
+   align-items: center;
+   gap: 6px;
    font-size: 0.95rem;
    font-weight: 500;
    color: var(--color-text-main);
@@ -52,6 +55,11 @@
 
  .navbar__link:hover {
    color: var(--color-accent);
+ }
+
+ .navbar__link--highlight {
+   color: var(--color-accent);
+   font-weight: 600;
  }
 
  .navbar__link::after {
@@ -106,16 +114,23 @@
  @media (max-width: 768px) {
    .navbar__menu {
      position: fixed;
-     top: 70px;
+     top: 0;
      left: 0;
+     right: 0;
+     bottom: 0;
      width: 100%;
-     background: var(--color-white);
+     height: 100vh;
+     background: rgba(255, 255, 255, 0.98);
+     backdrop-filter: blur(20px);
      flex-direction: column;
      justify-content: center;
-     gap: 40px;
+     align-items: center;
+     gap: 2rem;
+     padding: 2rem;
      opacity: 0;
      visibility: hidden;
      transition: all 0.3s ease;
+     z-index: 999;
    }
 
    .navbar__menu--open {
@@ -130,5 +145,89 @@
 
    .navbar__link {
      font-size: 1.5rem;
+     font-family: 'Playfair Display', serif;
    }
+
+   .navbar__toggle {
+     display: flex;
+     z-index: 1001;
+   }
+
+   .navbar__search-icon {
+     display: none;
+   }
+
+   .navbar__user-menu {
+     flex-direction: column;
+     padding: 1rem;
+   }
+
+   .navbar__cta {
+     width: 100%;
+     text-align: center;
+   }
+ }
+
+ /* Search Icon */
+ .navbar__search-icon {
+   margin-left: auto;
+   margin-right: 1.5rem;
+   cursor: pointer;
+   padding: 8px;
+   border-radius: 50%;
+   transition: all 0.2s ease;
+   color: #111827;
+ }
+
+ .navbar__search-icon:hover {
+   background: rgba(4, 120, 87, 0.1);
+   color: #047857;
+ }
+
+ /* Admin Link */
+ .navbar__link--admin {
+   color: #D97706;
+   font-weight: 600;
+ }
+
+ .navbar__link--admin:hover {
+   color: #B45309;
+ }
+
+ /* User Menu */
+ .navbar__user-menu {
+   display: flex;
+   align-items: center;
+   gap: 0.75rem;
+   padding: 0.5rem 1rem;
+   background: #F9FAFB;
+   border-radius: 50px;
+   border: 1px solid #E5E7EB;
+ }
+
+ .navbar__user-name {
+   display: flex;
+   align-items: center;
+   gap: 0.5rem;
+   font-size: 0.85rem;
+   font-weight: 500;
+   color: #374151;
+ }
+
+ .navbar__logout {
+   background: none;
+   border: none;
+   color: #9CA3AF;
+   cursor: pointer;
+   padding: 4px;
+   border-radius: 50%;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   transition: all 0.2s ease;
+ }
+
+ .navbar__logout:hover {
+   background: #FEE2E2;
+   color: #DC2626;
  }

@@ -82,7 +82,7 @@ const ArticleHoverPreview: React.FC<ArticleHoverPreviewProps> = ({
         <>
             <span
                 ref={triggerRef}
-                className="article-link-trigger"
+                className="article-preview-trigger"
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
             >

@@ -85,6 +85,14 @@
   letter-spacing: 1px;
 }
 
+.footer__signature {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.3);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-top: 1rem;
+}
+
 @media (max-width: 968px) {
   .footer__content {
     grid-template-columns: 1fr;

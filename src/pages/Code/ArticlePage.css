@@ -243,31 +243,216 @@
     border-radius: 4px;
 }
 
-/* Navigation */
+/* ─────────────────────────────────────────────────────
+   Navigation Précédent / Suivant - Style Premium
+   ───────────────────────────────────────────────────── */
 .article-nav {
     display: flex;
     justify-content: space-between;
-    gap: 16px;
+    align-items: stretch;
+    gap: 12px;
     margin-bottom: 40px;
+    padding: 0 4px;
 }
 
 .btn-nav {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 12px 20px;
-    background: white;
-    border: 1px solid #E5E7EB;
-    border-radius: 10px;
-    font-size: 0.9rem;
+    gap: 10px;
+    padding: 14px 22px;
+    background: linear-gradient(135deg, #FFFFFF 0%, #FAFBFC 100%);
+    border: 1.5px solid #E5E7EB;
+    border-radius: 14px;
+    font-family: 'Georgia', serif;
+    font-size: 0.92rem;
+    font-weight: 500;
     color: #374151;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    min-width: 160px;
 }
 
-.btn-nav:hover {
-    border-color: #10B981;
+.btn-nav:first-child {
+    justify-content: flex-start;
+}
+
+.btn-nav:last-child {
+    justify-content: flex-end;
+}
+
+.btn-nav svg {
     color: #047857;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-nav:hover:not(:disabled) {
+    border-color: #047857;
+    color: #047857;
+    background: linear-gradient(135deg, #F0FDF4 0%, #ECFDF5 100%);
+    box-shadow: 0 4px 16px rgba(4, 120, 87, 0.12);
+    transform: translateY(-2px);
+}
+
+.btn-nav:first-child:hover:not(:disabled) svg {
+    transform: translateX(-4px);
+}
+
+.btn-nav:last-child:hover:not(:disabled) svg {
+    transform: translateX(4px);
+}
+
+.btn-nav:disabled,
+.btn-nav.disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    background: #F9FAFB;
+    border-color: #E5E7EB;
+    box-shadow: none;
+    transform: none;
+}
+
+.btn-nav.disabled svg {
+    color: #9CA3AF;
+}
+
+/* Center button - Return to TOC */
+.btn-nav-center {
+    flex: 1;
+    max-width: 220px;
+    justify-content: center;
+    background: linear-gradient(135deg, #047857 0%, #065F46 100%);
+    border: none;
+    color: white;
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    box-shadow: 0 4px 12px rgba(4, 120, 87, 0.25);
+}
+
+.btn-nav-center svg {
+    color: white;
+}
+
+.btn-nav-center:hover:not(:disabled) {
+    background: linear-gradient(135deg, #065F46 0%, #064E3B 100%);
+    color: white;
+    box-shadow: 0 6px 20px rgba(4, 120, 87, 0.35);
+}
+
+/* ─────────────────────────────────────────────────────
+   Citing Decisions Section
+   ───────────────────────────────────────────────────── */
+
+.citing-decisions {
+    margin-top: 48px;
+    padding-top: 40px;
+    border-top: 1px solid #E5E7EB;
+}
+
+.citing-decisions h2 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 24px;
+}
+
+.citing-decisions h2 svg {
+    color: #047857;
+}
+
+.citing-loading,
+.citing-empty {
+    padding: 32px;
+    text-align: center;
+    color: #9CA3AF;
+    font-size: 0.95rem;
+    background: #FFFFFF;
+    border: 1px dashed #E5E7EB;
+    border-radius: 12px;
+}
+
+.citing-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.citing-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px;
+    background: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 14px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.citing-card:hover {
+    border-color: #047857;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+    transform: translateX(4px);
+}
+
+.citing-card__icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(4, 120, 87, 0.1);
+    border-radius: 10px;
+    color: #047857;
+    flex-shrink: 0;
+}
+
+.citing-card__content {
+    flex: 1;
+    min-width: 0;
+}
+
+.citing-card__content h3 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 4px;
+    line-height: 1.4;
+}
+
+.citing-card__meta {
+    font-size: 0.8rem;
+    color: #6B7280;
+    margin-bottom: 8px;
+}
+
+.citing-card__excerpt {
+    font-size: 0.85rem;
+    font-style: italic;
+    color: #9CA3AF;
+    line-height: 1.5;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.citing-card__arrow {
+    color: #D1D5DB;
+    margin-top: 12px;
+    transition: all 0.3s;
+}
+
+.citing-card:hover .citing-card__arrow {
+    color: #047857;
+    transform: translateX(4px);
 }
 
 /* Signature */

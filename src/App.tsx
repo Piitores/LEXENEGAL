@@ -3,16 +3,17 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { HelmetProvider } from 'react-helmet-async';
 import Navbar from './components/Navbar/Navbar';
 import Footer from './components/Footer/Footer';
+import BotBlocker from './components/BotBlocker/BotBlocker';
 import Home from './pages/Home/Home';
 import SearchPage from './pages/Search/SearchPage';
 import DecisionPage from './pages/Decision/DecisionPage';
-import SolutionsPage from './pages/Solutions/SolutionsPage';
-import ProPage from './pages/Pro/ProPage';
 import AuthPage from './pages/Auth/AuthPage';
 import AuthCallback from './pages/Auth/AuthCallback';
 import CabinetPage from './pages/Cabinet/CabinetPage';
+import CodesListPage from './pages/Codes/CodesListPage';
 import CodePage from './pages/Code/CodePage';
 import ArticlePage from './pages/Code/ArticlePage';
+import AdminPage from './pages/Admin/AdminPage';
 import SEO from './components/SEO/SEO';
 import './App.css';
 
@@ -40,28 +41,39 @@ function App() {
   return (
     <HelmetProvider>
       <Router>
-        <ScrollToTop />
-        <SEO />
-        <div className="app">
-          <Navbar scrolled={scrolled} />
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/search" element={<SearchPage />} />
-            <Route path="/decision/:slug" element={<DecisionPage />} />
-            <Route path="/solutions" element={<SolutionsPage />} />
-            <Route path="/espace-professionnel" element={<ProPage />} />
-            <Route path="/login" element={<AuthPage />} />
-            <Route path="/auth/callback" element={<AuthCallback />} />
-            <Route path="/cabinet" element={<CabinetPage />} />
-            <Route path="/code/:slug" element={<CodePage />} />
-            <Route path="/code/:codeSlug/:articleSlug" element={<ArticlePage />} />
-          </Routes>
-          <Footer />
-        </div>
+        <BotBlocker>
+          <ScrollToTop />
+          <SEO />
+          <div className="app">
+            <Navbar scrolled={scrolled} />
+            <Routes>
+              {/* Landing Page Unique */}
+              <Route path="/" element={<Home />} />
+
+              {/* Jurisprudence */}
+              <Route path="/search" element={<SearchPage />} />
+              <Route path="/decision/:slug" element={<DecisionPage />} />
+
+              {/* Codes & Lois - Pilier */}
+              <Route path="/codes" element={<CodesListPage />} />
+              <Route path="/code/:slug" element={<CodePage />} />
+              <Route path="/code/:codeSlug/:articleSlug" element={<ArticlePage />} />
+
+              {/* Espace Pro */}
+              <Route path="/login" element={<AuthPage />} />
+              <Route path="/signup" element={<AuthPage />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
+              <Route path="/cabinet" element={<CabinetPage />} />
+
+              {/* Admin Command Center */}
+              <Route path="/admin" element={<AdminPage />} />
+            </Routes>
+            <Footer />
+          </div>
+        </BotBlocker>
       </Router>
     </HelmetProvider>
   );
 }
 
 export default App;
-

@@ -1,0 +1,527 @@
+/**
+ * LEXENEGAL - Admin Command Center Styles
+ * Design: Blanc Perle & Émeraude
+ */
+
+.admin-page {
+    min-height: 100vh;
+    background: #F9FAFB;
+    padding: 2rem;
+    padding-top: 100px;
+}
+
+.admin-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    color: #6B7280;
+}
+
+.admin-loading .spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* HEADER */
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid #E5E7EB;
+}
+
+.admin-header__left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #047857;
+}
+
+.admin-header__left h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+}
+
+.admin-header__right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.admin-user {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: #6B7280;
+    padding: 0.5rem 1rem;
+    background: #FFFFFF;
+    border-radius: 8px;
+    border: 1px solid #E5E7EB;
+}
+
+.admin-user svg {
+    color: #D97706;
+}
+
+.admin-logout {
+    padding: 0.5rem;
+    background: transparent;
+    border: none;
+    color: #6B7280;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.admin-logout:hover {
+    background: #FEE2E2;
+    color: #DC2626;
+}
+
+/* STATS CARDS */
+.admin-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: #FFFFFF;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid #E5E7EB;
+    transition: all 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.stat-card--primary {
+    background: linear-gradient(135deg, #047857 0%, #059669 100%);
+    color: white;
+    border: none;
+}
+
+.stat-card--primary .stat-icon,
+.stat-card--primary .stat-label {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.stat-card--primary .stat-value {
+    color: white;
+}
+
+.stat-card--secondary {
+    background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%);
+    color: white;
+    border: none;
+}
+
+.stat-card--secondary .stat-icon,
+.stat-card--secondary .stat-label {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.stat-card--secondary .stat-value {
+    color: white;
+}
+
+.stat-icon {
+    color: #047857;
+    margin-bottom: 0.75rem;
+}
+
+.stat-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 0.25rem;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: #6B7280;
+}
+
+/* ALERT SECTION */
+.admin-alert {
+    background: #FEF3C7;
+    border: 1px solid #F59E0B;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.alert-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #D97706;
+    margin-bottom: 1rem;
+}
+
+.alert-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+/* SECTIONS */
+.admin-section {
+    background: #FFFFFF;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid #E5E7EB;
+    margin-bottom: 2rem;
+}
+
+.admin-section h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #111827;
+    margin: 0 0 1.5rem 0;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.admin-section h2 svg {
+    color: #047857;
+}
+
+/* TABLE */
+.admin-table-wrapper {
+    overflow-x: auto;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.admin-table th {
+    text-align: left;
+    padding: 0.75rem 1rem;
+    background: #F9FAFB;
+    font-weight: 600;
+    color: #374151;
+    border-bottom: 2px solid #E5E7EB;
+}
+
+.admin-table td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #E5E7EB;
+    color: #374151;
+}
+
+.admin-table tr:hover td {
+    background: #F9FAFB;
+}
+
+.admin-table code {
+    font-family: 'SF Mono', monospace;
+    font-size: 0.8rem;
+    background: #F3F4F6;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+}
+
+.text-danger {
+    color: #DC2626;
+    font-weight: 600;
+}
+
+.text-center {
+    text-align: center;
+    color: #9CA3AF;
+    font-style: italic;
+}
+
+/* ROLE BADGES */
+.role-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.role-badge--user {
+    background: #E5E7EB;
+    color: #374151;
+}
+
+.role-badge--pro {
+    background: #D1FAE5;
+    color: #047857;
+}
+
+.role-badge--admin {
+    background: #FEF3C7;
+    color: #D97706;
+}
+
+/* TOGGLE ROLE BUTTON */
+.btn-toggle-role {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background: #047857;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-toggle-role:hover {
+    background: #065F46;
+    transform: translateY(-1px);
+}
+
+/* CLICKABLE STAT CARDS */
+.stat-card--clickable {
+    cursor: pointer;
+}
+
+.stat-card--clickable:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* ACTION BUTTONS */
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.btn-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.35rem 0.6rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+}
+
+.btn-action--pro {
+    background: linear-gradient(135deg, #047857 0%, #10B981 100%);
+    color: white;
+}
+
+.btn-action--pro:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(4, 120, 87, 0.3);
+}
+
+.btn-action--journal {
+    background: #F3F4F6;
+    color: #374151;
+    border: 1px solid #E5E7EB;
+}
+
+.btn-action--journal:hover {
+    background: #E5E7EB;
+}
+
+/* JOURNAL MODAL */
+.journal-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 9998;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.journal-modal {
+    background: #FFFFFF;
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 600px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+}
+
+.journal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    color: #9CA3AF;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    transition: all 0.2s;
+}
+
+.journal-close:hover {
+    background: #F3F4F6;
+    color: #374151;
+}
+
+.journal-modal h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #111827;
+    margin: 0 0 1.5rem 0;
+}
+
+.journal-modal h3 svg {
+    color: #047857;
+}
+
+.journal-loading {
+    display: flex;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.journal-empty {
+    text-align: center;
+    color: #9CA3AF;
+    font-style: italic;
+    padding: 2rem;
+}
+
+.journal-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.journal-list li {
+    display: grid;
+    grid-template-columns: 100px 1fr auto;
+    gap: 1rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #F3F4F6;
+    align-items: center;
+}
+
+.journal-list li:last-child {
+    border-bottom: none;
+}
+
+.journal-action {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.journal-action--view_decision {
+    background: #DBEAFE;
+    color: #1E40AF;
+}
+
+.journal-action--download_pdf {
+    background: #D1FAE5;
+    color: #047857;
+}
+
+.journal-action--search {
+    background: #FEF3C7;
+    color: #D97706;
+}
+
+.journal-resource {
+    font-size: 0.85rem;
+    color: #374151;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.journal-time {
+    font-size: 0.75rem;
+    color: #9CA3AF;
+}
+
+/* FOOTER */
+.admin-footer {
+    text-align: center;
+    padding: 2rem;
+    font-size: 0.8rem;
+    color: #9CA3AF;
+    border-top: 1px solid #E5E7EB;
+    margin-top: 2rem;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1024px) {
+    .admin-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-page {
+        padding: 1rem;
+        padding-top: 80px;
+    }
+
+    .admin-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+
+    .admin-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .journal-list li {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+    }
+}

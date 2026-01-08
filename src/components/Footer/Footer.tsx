@@ -36,6 +36,7 @@ function Footer() {
 
         <div className="footer__bottom">
           <p>© {currentYear} LEXENEGAL. Tous droits réservés.</p>
+          <p className="footer__signature">Source Certifiée: LEXENEGAL.SN</p>
         </div>
       </div>
     </footer>

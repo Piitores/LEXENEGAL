@@ -221,7 +221,8 @@
 /* ─────────────────────────────────────────────────────
    VISAS (Vu la loi, Vu le décret, etc.)
    ───────────────────────────────────────────────────── */
-.decision-paragraph.visa {
+.decision-paragraph.visa,
+.legal-content p.visa {
     border-left: 4px solid var(--gris-clair);
     padding: 0.75rem 1.25rem;
     margin: 1rem 0;
@@ -230,6 +231,42 @@
     color: var(--gris-texte);
     font-style: italic;
     border-radius: 2px;
+}
+
+/* ─────────────────────────────────────────────────────
+   ATTENDUS ET CONSIDÉRANTS (nouvelle structuration)
+   ───────────────────────────────────────────────────── */
+.legal-content p.attendu,
+.legal-content p.considerant {
+    text-indent: 0;
+    padding-left: 1.5rem;
+    margin: 1rem 0;
+    line-height: 1.8;
+}
+
+.legal-content p.attendu strong,
+.legal-content p.considerant strong {
+    font-weight: 700;
+    color: var(--emerald-dark);
+}
+
+.legal-content p.considerant .numero {
+    font-weight: 600;
+    color: var(--gris-texte);
+    margin-right: 0.25rem;
+}
+
+/* ─────────────────────────────────────────────────────
+   DISPOSITIF (PAR CES MOTIFS, DÉCIDE, etc.)
+   ───────────────────────────────────────────────────── */
+.legal-content p.dispositif {
+    margin-top: 2rem;
+    padding: 1rem 1.5rem;
+    background: linear-gradient(135deg, rgba(4, 120, 87, 0.03) 0%, rgba(4, 120, 87, 0.08) 100%);
+    border-left: 4px solid var(--emerald-prestige);
+    border-radius: 4px;
+    font-weight: 600;
+    color: var(--noir-charbon);
 }
 
 /* ─────────────────────────────────────────────────────
@@ -462,6 +499,24 @@
         display: flex;
         justify-content: space-between;
         background: white !important;
+    }
+
+    /* FINGERPRINT WATERMARK - Invisible traceability (2% opacity) */
+    .print-fingerprint {
+        position: fixed;
+        bottom: 50%;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-size: 14pt;
+        font-family: 'Arial', sans-serif;
+        color: rgba(0, 0, 0, 0.02) !important;
+        /* 2% opacity - nearly invisible */
+        letter-spacing: 2px;
+        transform: rotate(-45deg);
+        pointer-events: none;
+        z-index: -5;
+        white-space: nowrap;
     }
 
     /* UTILS */
@@ -1300,4 +1355,152 @@
 .print-body h3 {
     page-break-after: avoid;
     break-after: avoid;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   ARTICLE LINKS - Hyperlinking vers les articles de loi
+   Style: Émeraude (#047857) + Police Serif + Glassmorphism hover
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Article links in decision text - Default State */
+.legal-content .article-link,
+.legal-content a[data-article-id] {
+    color: var(--emerald-prestige);
+    text-decoration: none;
+    font-family: Georgia, serif;
+    font-weight: 600;
+    position: relative;
+    padding: 2px 6px;
+    margin: 0 1px;
+    border-radius: 4px;
+    /* Subtle underline effect using gradient */
+    background: linear-gradient(to bottom,
+            transparent 0%,
+            transparent 85%,
+            rgba(4, 120, 87, 0.35) 85%,
+            rgba(4, 120, 87, 0.35) 100%);
+    transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+}
+
+/* Hover State - Glassmorphism effect */
+.legal-content .article-link:hover,
+.legal-content a[data-article-id]:hover {
+    color: var(--emerald-dark);
+    background: linear-gradient(135deg,
+            rgba(16, 185, 129, 0.18) 0%,
+            rgba(4, 120, 87, 0.12) 100%);
+    box-shadow:
+        0 2px 10px rgba(4, 120, 87, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    transform: translateY(-1px);
+}
+
+/* Link arrow indicator */
+.legal-content .article-link::after,
+.legal-content a[data-article-id]::after {
+    content: '§';
+    font-size: 0.75em;
+    margin-left: 3px;
+    opacity: 0.5;
+    color: var(--emerald-prestige);
+    transition: all 0.25s;
+}
+
+.legal-content .article-link:hover::after,
+.legal-content a[data-article-id]:hover::after {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+/* Article reference badge in expert box */
+.law-citation .article-link {
+    color: var(--emerald-prestige);
+    font-family: Georgia, serif;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 2px 4px;
+    border-radius: 3px;
+    background: rgba(4, 120, 87, 0.08);
+    transition: all 0.2s;
+}
+
+.law-citation .article-link:hover {
+    color: var(--emerald-dark);
+    background: rgba(4, 120, 87, 0.14);
+}
+
+/* Unknown article references (not in database) */
+.article-ref-unknown {
+    color: #6B7280;
+    font-family: Georgia, serif;
+    font-weight: 500;
+    font-style: italic;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   ARTICLE LINKS CONTAINER (React-based hover previews)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.article-links-container {
+    position: relative;
+}
+
+.legal-text-content {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 1.05rem;
+    line-height: 1.85;
+    color: var(--noir-charbon);
+    text-align: justify;
+    white-space: pre-wrap;
+}
+
+/* Article preview trigger links */
+.legal-text-content .article-preview-trigger {
+    color: var(--emerald-prestige);
+    font-family: Georgia, serif;
+    font-weight: 600;
+    text-decoration: none;
+    background: linear-gradient(135deg, rgba(4, 120, 87, 0.08) 0%, rgba(4, 120, 87, 0.04) 100%);
+    padding: 2px 6px;
+    border-radius: 4px;
+    border-bottom: 2px solid rgba(4, 120, 87, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    position: relative;
+}
+
+.legal-text-content .article-preview-trigger:hover {
+    color: var(--emerald-dark);
+    background: linear-gradient(135deg, rgba(4, 120, 87, 0.15) 0%, rgba(4, 120, 87, 0.08) 100%);
+    border-bottom-color: var(--emerald-prestige);
+    box-shadow: 0 2px 8px rgba(4, 120, 87, 0.15);
+    transform: translateY(-1px);
+}
+
+/* Direct links inside preview trigger */
+.legal-text-content .article-preview-trigger a {
+    color: inherit;
+    text-decoration: none;
+    font-family: inherit;
+    font-weight: inherit;
+}
+
+.legal-text-content .article-preview-trigger a:hover {
+    color: var(--emerald-dark);
+}
+
+/* Article hover preview link icon */
+.legal-text-content .article-preview-trigger::after {
+    content: '§';
+    font-size: 0.7em;
+    margin-left: 3px;
+    opacity: 0.6;
+    color: var(--emerald-prestige);
+    transition: all 0.2s ease;
+}
+
+.legal-text-content .article-preview-trigger:hover::after {
+    opacity: 1;
+    transform: scale(1.1);
 }

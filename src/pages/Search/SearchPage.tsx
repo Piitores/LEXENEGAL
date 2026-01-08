@@ -293,17 +293,19 @@ const SearchPage: React.FC = () => {
                 {/* JURIDICTION */}
                 <FilterAccordion id="juridiction" title="Juridiction" isOpen={openSections.juridiction} toggle={() => toggleSection('juridiction')}>
                     <ul className="filterList">
-                        {facets?.chambre && Object.keys(facets.chambre).map(chambre => (
-                            <li key={chambre} className="filterItem" onClick={() => toggleFilter('chambre', chambre)}>
-                                <div className="checkbox-wrapper">
-                                    <div className={`custom-checkbox ${selectedChambre.includes(chambre) ? 'checked' : ''}`}>
-                                        {selectedChambre.includes(chambre) && <span className="checkmark">✔</span>}
+                        {facets?.chambre && Object.entries(facets.chambre)
+                            .sort((a: any, b: any) => b[1] - a[1]) // Sort by count descending
+                            .map(([chambre, count]: [string, any]) => (
+                                <li key={chambre} className="filterItem" onClick={() => toggleFilter('chambre', chambre)}>
+                                    <div className="checkbox-wrapper">
+                                        <div className={`custom-checkbox ${selectedChambre.includes(chambre) ? 'checked' : ''}`}>
+                                            {selectedChambre.includes(chambre) && <span className="checkmark">✔</span>}
+                                        </div>
+                                        <span className="filterLabel">{chambre.replace(/_/g, ' ')}</span>
                                     </div>
-                                    <span className="filterLabel">{chambre}</span>
-                                </div>
-                                <span className="filterCount">({facets.chambre[chambre]})</span>
-                            </li>
-                        ))}
+                                    <span className="filterCount">({count})</span>
+                                </li>
+                            ))}
                     </ul>
                 </FilterAccordion>
 

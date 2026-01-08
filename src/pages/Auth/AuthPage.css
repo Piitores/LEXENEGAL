@@ -283,6 +283,52 @@
     letter-spacing: 0.05em;
 }
 
+/* Google OAuth */
+.auth-divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 0.5rem 0;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #E5E7EB;
+}
+
+.auth-divider span {
+    font-size: 0.8rem;
+    color: #9CA3AF;
+    font-weight: 500;
+}
+
+.auth-btn-google {
+    width: 100%;
+    padding: 0.875rem 1.5rem;
+    background: #FFFFFF;
+    border: 1.5px solid #E5E7EB;
+    border-radius: 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #374151;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    transition: all 0.2s ease;
+}
+
+.auth-btn-google:hover {
+    background: #F9FAFB;
+    border-color: #D1D5DB;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
 /* Mobile */
 @media (max-width: 480px) {
     .auth-card {

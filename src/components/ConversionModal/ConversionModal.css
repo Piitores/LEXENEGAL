@@ -32,6 +32,8 @@
     padding: 3rem 2.5rem;
     max-width: 480px;
     width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
     text-align: center;
 }
 
