@@ -4,7 +4,6 @@
 }
 
 .manifeste__divider {
-    width: 60px;
     height: 2px;
     background: linear-gradient(90deg, #047857, #059669);
     margin: 0 auto 30px;
@@ -31,8 +30,14 @@
     padding: 0 2rem;
 }
 
-.manifeste__text strong {
+.manifeste__paragraph {
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.manifeste__paragraph--strong {
     font-style: normal;
+    font-weight: 600;
     color: #111827;
 }
 

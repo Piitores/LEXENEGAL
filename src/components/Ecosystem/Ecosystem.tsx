@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Ecosystem.css';
 
 // Minimalist SVG Icons
@@ -17,6 +18,7 @@ const DiamondIcon = () => (
 function Ecosystem() {
     const sectionRef = useRef<HTMLElement>(null);
     const [isVisible, setIsVisible] = useState(false);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -57,7 +59,12 @@ function Ecosystem() {
                             <li><CheckIcon /> Moteur de recherche complet</li>
                             <li><CheckIcon /> Accès illimité à la jurisprudence</li>
                         </ul>
-                        <button className="ecosystem__btn ecosystem__btn--outline">S'inscrire (Gratuit)</button>
+                        <button
+                            className="ecosystem__btn ecosystem__btn--outline"
+                            onClick={() => navigate('/signup')}
+                        >
+                            S'inscrire (Gratuit)
+                        </button>
                     </div>
 
                     {/* Card Pro */}
@@ -72,7 +79,17 @@ function Ecosystem() {
                             <li><DiamondIcon /> Analyse Jurimétrique (Trends)</li>
                             <li><DiamondIcon /> Export dossiers & API</li>
                         </ul>
-                        <button className="ecosystem__btn ecosystem__btn--primary">Demander une démo</button>
+                        <button
+                            className="ecosystem__btn ecosystem__btn--primary"
+                            onClick={() => {
+                                const contactEl = document.getElementById('contact');
+                                if (contactEl) {
+                                    contactEl.scrollIntoView({ behavior: 'smooth' });
+                                }
+                            }}
+                        >
+                            Solliciter un Accès Privilégié
+                        </button>
                     </div>
                 </div>
             </div>
@@ -81,5 +98,6 @@ function Ecosystem() {
 }
 
 export default Ecosystem;
+
 
 

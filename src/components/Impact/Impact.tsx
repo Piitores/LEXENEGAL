@@ -3,10 +3,10 @@ import './Impact.css';
 
 function Impact() {
     const stats = [
-        { value: '15,000+', label: 'Décisions Indexées' },
-        { value: '100%', label: 'Juridictions Couvertes' },
-        { value: '-70%', label: 'Temps de Recherche' },
-        { value: '24/7', label: 'Disponibilité' },
+        { value: '1,300+', label: 'Décisions de la Cour Suprême' },
+        { value: '10+', label: 'Codes & Textes de Loi' },
+        { value: '4,400+', label: 'Articles Indexés' },
+        { value: '24/7', label: 'Accès Gratuit' },
     ];
 
     return (
