@@ -114,6 +114,9 @@ const SEO: React.FC<SEOProps> = ({
             <meta name="description" content={pageDescription} />
             <meta name="keywords" content={pageKeywords} />
 
+            {/* Canonical URL - Prevent duplicate content */}
+            <link rel="canonical" href={url} />
+
             {/* Geo Targeting */}
             <meta name="geo.region" content="SN" />
             <meta name="geo.placename" content="Dakar, Sénégal" />
