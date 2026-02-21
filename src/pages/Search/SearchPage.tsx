@@ -1,15 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { MeiliSearch } from 'meilisearch';
+import { createClient } from '@supabase/supabase-js';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import './SearchPage.css';
 
-// --- CONFIG MEILISEARCH CLOUD ---
-const client = new MeiliSearch({
-    host: 'https://ms-9c13e7ae24b5-37398.fra.meilisearch.io',
-    apiKey: '8ce0415a927b3362022e014993879f8986a7f941',
-});
-const index = client.index('decisions');
+// --- CONFIG SUPABASE FTS ---
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // --- TYPES ---
 interface Decision {
@@ -99,77 +97,152 @@ const SearchPage: React.FC = () => {
         if (offset > 0) performSearch(true);
     }, [offset]);
 
+    // Load facets once on mount (static counts for all decisions)
+    useEffect(() => {
+        const loadFacets = async () => {
+            try {
+                // Get distinct matières with counts
+                const { data: allDecisions } = await supabase
+                    .from('decisions')
+                    .select('matiere_principale, chambre');
+
+                if (allDecisions) {
+                    const matiereCount: Record<string, number> = {};
+                    const chambreCount: Record<string, number> = {};
+
+                    allDecisions.forEach((d: any) => {
+                        if (d.matiere_principale) {
+                            matiereCount[d.matiere_principale] = (matiereCount[d.matiere_principale] || 0) + 1;
+                        }
+                        if (d.chambre) {
+                            chambreCount[d.chambre] = (chambreCount[d.chambre] || 0) + 1;
+                        }
+                    });
+
+                    setFacets({
+                        matiere_principale: matiereCount,
+                        chambre: chambreCount
+                    });
+                }
+            } catch (e) {
+                console.warn('Error loading facets:', e);
+            }
+        };
+        loadFacets();
+    }, []);
+
     const performSearch = async (append: boolean) => {
         setLoading(true);
         setError(null);
         try {
-            const filterParts: string[] = [];
-            const wrap = (val: string) => `"${val.replace(/"/g, '\\"')}"`;
+            const searchTerm = query?.trim() || '';
+            const currentOffset = append ? offset : 0;
+            const pageSize = 20;
 
-            // 1. Facets
-            if (selectedMatiere.length > 0) {
-                filterParts.push(`matiere_principale IN [${selectedMatiere.map(wrap).join(', ')}]`);
-            }
-            if (selectedChambre.length > 0) {
-                filterParts.push(`chambre IN [${selectedChambre.map(wrap).join(', ')}]`);
-            }
+            // Prepare filter arrays (null if empty)
+            const matiereFilter = selectedMatiere.length > 0 ? selectedMatiere : null;
+            const chambreFilter = selectedChambre.length > 0 ? selectedChambre : null;
 
-            // 2. Date Logic
-            const now = new Date();
-            const currentYear = now.getFullYear();
+            // Date filters
+            const currentYear = new Date().getFullYear();
+            let dateFrom: string | null = null;
+            let dateTo: string | null = null;
 
             if (datePreset === '3y') {
-                const cutoff = `${currentYear - 3}-01-01`;
-                filterParts.push(`date_decision >= ${cutoff}`);
+                dateFrom = `${currentYear - 3}-01-01`;
             } else if (datePreset === '5y') {
-                const cutoff = `${currentYear - 5}-01-01`;
-                filterParts.push(`date_decision >= ${cutoff}`);
+                dateFrom = `${currentYear - 5}-01-01`;
             } else if (datePreset === 'custom') {
                 if (customYearStart && /^\d{4}$/.test(customYearStart)) {
-                    filterParts.push(`date_decision >= ${customYearStart}-01-01`);
+                    dateFrom = `${customYearStart}-01-01`;
                 }
                 if (customYearEnd && /^\d{4}$/.test(customYearEnd)) {
-                    filterParts.push(`date_decision <= ${customYearEnd}-12-31`);
+                    dateTo = `${customYearEnd}-12-31`;
                 }
             }
 
-            const filterExpression = filterParts.length > 0 ? filterParts.join(' AND ') : undefined;
+            let decisions: Decision[] = [];
+            let totalCount = 0;
 
-            // Sort
-            let sortConfig: string[] | undefined;
-            if (sortOption === 'date_desc') sortConfig = ['date_decision:desc'];
-            else if (sortOption === 'date_asc') sortConfig = ['date_decision:asc'];
+            if (searchTerm.length > 0) {
+                // Use FTS RPC for text search
+                const { data, error: rpcError } = await supabase.rpc('search_decisions_fts', {
+                    search_query: searchTerm,
+                    matiere_filter: matiereFilter,
+                    chambre_filter: chambreFilter,
+                    date_from: dateFrom,
+                    date_to: dateTo,
+                    sort_by: sortOption === 'relevance' ? 'relevance' : sortOption === 'date_asc' ? 'date_asc' : 'date_desc',
+                    result_limit: pageSize,
+                    result_offset: currentOffset
+                });
 
-            const searchResponse = await index.search(query, {
-                limit: 20,
-                offset: append ? offset : 0,
-                attributesToCrop: ['texte_integral'],
-                cropLength: 50,
-                filter: filterExpression,
-                sort: sortConfig,
-                facets: ['matiere_principale', 'chambre']
-            });
+                if (rpcError) throw rpcError;
+
+                decisions = (data || []).map((d: any) => ({
+                    id: d.id,
+                    reference: d.reference || 'Décision',
+                    date_decision: d.date_decision,
+                    matiere_principale: d.matiere_principale,
+                    chambre: d.chambre,
+                    resume: d.resume,
+                    slug: d.slug || d.id,
+                    mots_cles: d.mots_cles || []
+                }));
+
+                // Get total count (FTS doesn't return count, so estimate)
+                totalCount = data?.length === pageSize ? currentOffset + pageSize + 1 : currentOffset + (data?.length || 0);
+
+            } else {
+                // No search term - use direct query for browsing
+                let queryBuilder = supabase
+                    .from('decisions')
+                    .select('id, reference, slug, date_decision, matiere_principale, chambre, resume, mots_cles, juridiction', { count: 'exact' });
+
+                if (matiereFilter) queryBuilder = queryBuilder.in('matiere_principale', matiereFilter);
+                if (chambreFilter) queryBuilder = queryBuilder.in('chambre', chambreFilter);
+                if (dateFrom) queryBuilder = queryBuilder.gte('date_decision', dateFrom);
+                if (dateTo) queryBuilder = queryBuilder.lte('date_decision', dateTo);
+
+                queryBuilder = queryBuilder.order('date_decision', { ascending: sortOption === 'date_asc', nullsFirst: false });
+                queryBuilder = queryBuilder.range(currentOffset, currentOffset + pageSize - 1);
+
+                const { data, error: queryError, count } = await queryBuilder;
+                if (queryError) throw queryError;
+
+                decisions = (data || []).map((d: any) => ({
+                    id: d.id,
+                    reference: d.reference || 'Décision',
+                    date_decision: d.date_decision,
+                    matiere_principale: d.matiere_principale,
+                    chambre: d.chambre,
+                    resume: d.resume,
+                    slug: d.slug || d.id,
+                    mots_cles: d.mots_cles || []
+                }));
+
+                totalCount = count || 0;
+            }
 
             if (append) {
-                setResults(prev => [...prev, ...searchResponse.hits as unknown as Decision[]]);
+                setResults(prev => [...prev, ...decisions]);
             } else {
-                setResults(searchResponse.hits as unknown as Decision[]);
+                setResults(decisions);
 
                 // 📊 Google Analytics 4 - Track search queries
-                if (query && query.trim().length > 0 && typeof window !== 'undefined' && (window as any).gtag) {
+                if (searchTerm.length > 0 && typeof window !== 'undefined' && (window as any).gtag) {
                     (window as any).gtag('event', 'search', {
-                        search_term: query.trim(),
-                        results_count: searchResponse.estimatedTotalHits,
-                        filters_applied: filterParts.length > 0 ? filterParts.join(', ') : 'none'
+                        search_term: searchTerm,
+                        results_count: totalCount,
+                        filters_applied: (selectedMatiere.length + selectedChambre.length) > 0 ? 'yes' : 'none'
                     });
                 }
             }
 
-            setTotalHits(searchResponse.estimatedTotalHits);
-            if (!append) setFacets(searchResponse.facetDistribution);
+            setTotalHits(totalCount);
 
         } catch (err: any) {
-            console.error("Meilisearch Error:", err);
+            console.error("Search Error:", err);
             setError(err.message);
         } finally {
             setLoading(false);

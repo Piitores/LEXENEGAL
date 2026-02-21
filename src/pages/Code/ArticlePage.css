@@ -466,7 +466,244 @@
     border-top: 1px solid #E5E7EB;
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   STYLES PREMIUM POUR LE CONTENU HTML DES ARTICLES DE CODE
+   Identité visuelle Lexenegal - Mémoire Juridique
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Variables Lexenegal */
+.article-text {
+    --emerald-prestige: #047857;
+    --emerald-dark: #065f46;
+    --emerald-light: #10B981;
+    --noir-charbon: #1A1A1A;
+    --gris-texte: #374151;
+    --gris-clair: #E5E7EB;
+    --gris-elegant: #F8F9FA;
+}
+
+/* ─────────────────────────────────────────────────────
+   ALINÉAS - Paragraphes avec respiration élégante
+   ───────────────────────────────────────────────────── */
+.article-text .alinea,
+.article-text p.alinea {
+    margin: 0 0 1.25rem 0;
+    text-align: justify;
+    text-indent: 1.5rem;
+    hyphens: auto;
+    orphans: 3;
+    widows: 3;
+    line-height: 1.9;
+}
+
+.article-text .alinea:first-of-type {
+    text-indent: 0;
+}
+
+.article-text .alinea:last-child {
+    margin-bottom: 0;
+}
+
+/* ─────────────────────────────────────────────────────
+   LISTES À TIRETS - Énumérations légales
+   Style premium avec icônes émeraude
+   ───────────────────────────────────────────────────── */
+.article-text .enum-dash,
+.article-text ul.enum-dash {
+    list-style: none;
+    margin: 1.5rem 0;
+    padding: 0;
+    padding-left: 0.5rem;
+}
+
+.article-text .enum-dash li {
+    position: relative;
+    padding-left: 2rem;
+    margin-bottom: 0.875rem;
+    line-height: 1.75;
+    text-align: justify;
+}
+
+.article-text .enum-dash li::before {
+    content: '—';
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: var(--emerald-prestige);
+    font-weight: 600;
+    font-size: 1.1em;
+}
+
+/* Variante avec tirets subtils pour les sous-listes */
+.article-text .enum-dash .enum-dash li::before {
+    content: '–';
+    color: var(--gris-texte);
+}
+
+/* ─────────────────────────────────────────────────────
+   TABLEAUX BARÈMES - Style premium pour les annexes
+   Inspiration : registres juridiques anciens
+   ───────────────────────────────────────────────────── */
+.article-text .bareme-table,
+.article-text table.bareme-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 2rem 0;
+    font-family: Georgia, serif;
+    font-size: 0.95rem;
+    background: linear-gradient(135deg, #FAFBFC 0%, #FFFFFF 100%);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(4, 120, 87, 0.06);
+}
+
+.article-text .bareme-table thead {
+    background: linear-gradient(135deg, var(--emerald-prestige) 0%, var(--emerald-dark) 100%);
+}
+
+.article-text .bareme-table thead th {
+    padding: 1rem 1.25rem;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #FFFFFF;
+    text-align: left;
+    border: none;
+}
+
+.article-text .bareme-table tbody tr {
+    transition: background 0.2s ease;
+}
+
+.article-text .bareme-table tbody tr:nth-child(odd) {
+    background: rgba(4, 120, 87, 0.02);
+}
+
+.article-text .bareme-table tbody tr:hover {
+    background: rgba(4, 120, 87, 0.06);
+}
+
+.article-text .bareme-table td {
+    padding: 0.875rem 1.25rem;
+    border-bottom: 1px solid var(--gris-clair);
+    color: var(--noir-charbon);
+}
+
+.article-text .bareme-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Première colonne (Âge) avec style accentué */
+.article-text .bareme-table td:first-child {
+    font-weight: 500;
+    color: var(--emerald-dark);
+}
+
+/* Deuxième colonne (Prix) alignée à droite */
+.article-text .bareme-table td:last-child {
+    text-align: right;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+}
+
+/* ─────────────────────────────────────────────────────
+   NOTES DE BAS - N.B., Remarques
+   ───────────────────────────────────────────────────── */
+.article-text .note,
+.article-text p.note {
+    margin: 1.5rem 0;
+    padding: 1rem 1.5rem;
+    background: linear-gradient(135deg, rgba(4, 120, 87, 0.04) 0%, rgba(4, 120, 87, 0.08) 100%);
+    border-left: 4px solid var(--emerald-prestige);
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-style: italic;
+    color: var(--gris-texte);
+    line-height: 1.7;
+}
+
+.article-text .note strong {
+    color: var(--emerald-dark);
+    font-style: normal;
+    font-weight: 600;
+}
+
+/* ─────────────────────────────────────────────────────
+   TITRES DANS LES ANNEXES (h2, h3, h4)
+   ───────────────────────────────────────────────────── */
+.article-text h2 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--emerald-prestige);
+    text-align: center;
+    margin: 2.5rem 0 1.5rem 0;
+    padding: 1rem 0;
+    border-top: 2px solid var(--emerald-prestige);
+    border-bottom: 2px solid var(--emerald-prestige);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.article-text h3 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--emerald-dark);
+    margin: 2rem 0 1rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--gris-clair);
+}
+
+.article-text h4 {
+    font-family: Georgia, serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--noir-charbon);
+    margin: 1.5rem 0 1rem 0;
+    padding-left: 1rem;
+    border-left: 4px solid var(--emerald-prestige);
+}
+
+/* ─────────────────────────────────────────────────────
+   EMPHASES ET ACCENTUATIONS
+   ───────────────────────────────────────────────────── */
+.article-text strong {
+    font-weight: 600;
+    color: var(--noir-charbon);
+}
+
+.article-text em {
+    font-style: italic;
+    color: var(--gris-texte);
+}
+
+/* ─────────────────────────────────────────────────────
+   INDICATEUR DE MODIFICATION (Loi modificative)
+   ───────────────────────────────────────────────────── */
+.article-modification-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    background: rgba(212, 175, 55, 0.1);
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #B8860B;
+    margin-left: 12px;
+}
+
+.article-modification-indicator::before {
+    content: '✦';
+    font-size: 0.65rem;
+}
+
 /* Responsive */
+
 @media (max-width: 768px) {
     .article-content-wrapper.side-by-side {
         grid-template-columns: 1fr;
@@ -483,5 +720,43 @@
 
     .article-nav {
         flex-direction: column;
+    }
+
+    /* Contenu des articles responsive */
+    .article-text .alinea,
+    .article-text p.alinea {
+        text-indent: 0;
+        text-align: left;
+    }
+
+    .article-text .enum-dash li {
+        padding-left: 1.5rem;
+    }
+
+    /* Tableaux barèmes scrollables sur mobile */
+    .article-text .bareme-table {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        font-size: 0.85rem;
+    }
+
+    .article-text .bareme-table thead th,
+    .article-text .bareme-table td {
+        padding: 0.75rem 1rem;
+        white-space: nowrap;
+    }
+
+    .article-text h2 {
+        font-size: 1.25rem;
+        letter-spacing: 1px;
+    }
+
+    .article-text h3 {
+        font-size: 1rem;
+    }
+
+    .article-text .note {
+        padding: 0.875rem 1rem;
     }
 }

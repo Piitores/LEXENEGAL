@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Search, Scale, BookOpen, ArrowRight, Loader2 } from 'lucide-react';
-import MeiliSearch from 'meilisearch';
+import { createClient } from '@supabase/supabase-js';
 import './Hero.css';
 
-const meiliHost = import.meta.env.VITE_MEILISEARCH_HOST || '';
-const meiliKey = import.meta.env.VITE_MEILISEARCH_API_KEY || '';
-const meiliClient = meiliHost ? new MeiliSearch({ host: meiliHost, apiKey: meiliKey }) : null;
+// Supabase client for Full-Text Search
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const supabase = supabaseUrl ? createClient(supabaseUrl, supabaseAnonKey) : null;
 
 interface SearchResult {
   type: 'decision' | 'article';
@@ -51,48 +52,54 @@ function Hero() {
     const mixedResults: SearchResult[] = [];
 
     try {
-      // 1. Search Decisions (MeiliSearch)
-      if (meiliClient) {
+      // 1. Search Decisions (Supabase FTS)
+      if (supabase) {
         try {
-          const meiliResults = await meiliClient.index('decisions').search(searchQuery, {
-            limit: 4,
-            attributesToRetrieve: ['id', 'titre', 'slug', 'chambre', 'date_decision']
-          });
-
-          meiliResults.hits.forEach((hit: any) => {
-            mixedResults.push({
-              type: 'decision',
-              id: hit.id,
-              title: hit.titre,
-              subtitle: `${hit.chambre || 'Cour Suprême'} · ${hit.date_decision ? new Date(hit.date_decision).getFullYear() : ''}`,
-              slug: hit.slug
+          const { data: decisions, error } = await supabase
+            .rpc('search_decisions', {
+              search_query: searchQuery,
+              result_limit: 4
             });
-          });
+
+          if (!error && decisions) {
+            decisions.forEach((hit: any) => {
+              mixedResults.push({
+                type: 'decision',
+                id: hit.id,
+                title: hit.reference || 'Décision',
+                subtitle: `${hit.chambre || hit.juridiction || 'Juridiction'} · ${hit.date ? new Date(hit.date).getFullYear() : ''}`,
+                slug: hit.id // Use ID as slug for decisions
+              });
+            });
+          }
         } catch (e) {
-          console.warn('MeiliSearch error:', e);
+          console.warn('Supabase decisions search error:', e);
         }
       }
 
-      // 2. Search Articles (MeiliSearch)
-      if (meiliClient) {
+      // 2. Search Articles (Supabase FTS)
+      if (supabase) {
         try {
-          const articlesResults = await meiliClient.index('articles').search(searchQuery, {
-            limit: 4,
-            attributesToRetrieve: ['id', 'article_number', 'slug', 'chapter_name', 'code_slug', 'code_name']
-          });
-
-          articlesResults.hits.forEach((hit: any) => {
-            mixedResults.push({
-              type: 'article',
-              id: hit.id,
-              title: `Article ${hit.article_number}`,
-              subtitle: hit.code_name || 'Code du Travail',
-              slug: hit.slug,
-              codeSlug: hit.code_slug || 'code-travail'
+          const { data: articles, error } = await supabase
+            .rpc('search_articles', {
+              search_query: searchQuery,
+              result_limit: 4
             });
-          });
+
+          if (!error && articles) {
+            articles.forEach((hit: any) => {
+              mixedResults.push({
+                type: 'article',
+                id: hit.id,
+                title: `Article ${hit.article_number}`,
+                subtitle: hit.code_title || 'Code',
+                slug: hit.slug,
+                codeSlug: hit.code_slug || 'code-travail'
+              });
+            });
+          }
         } catch (e) {
-          console.warn('MeiliSearch articles error:', e);
+          console.warn('Supabase articles search error:', e);
         }
       }
 

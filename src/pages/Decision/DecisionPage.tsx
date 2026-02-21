@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { MeiliSearch } from 'meilisearch';
+// MeiliSearch removed - using Supabase for decisions
 import { Download, ArrowLeft, Copy, Scale, BookOpen, Printer } from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
 import { createClient } from '@supabase/supabase-js';
@@ -15,11 +15,7 @@ import { logViewDecision, logDownloadPdf } from '../../utils/auditLogger';
 import './DecisionPage.css';
 
 // --- CONFIG ---
-const client = new MeiliSearch({
-    host: 'https://ms-9c13e7ae24b5-37398.fra.meilisearch.io',
-    apiKey: '8ce0415a927b3362022e014993879f8986a7f941',
-});
-const index = client.index('decisions');
+// MeiliSearch removed - using Supabase for all decision data
 
 // Supabase client for articles
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://lphmualoyxetsgldccrw.supabase.co';
@@ -70,14 +66,18 @@ const DecisionPage: React.FC = () => {
 
     const fetchDecision = async () => {
         setLoading(true);
-        console.log("🔍 Fetching decision for slug:", slug);
+        console.log("🔍 Fetching decision from Supabase for slug:", slug);
         try {
-            const searchResponse = await index.search('', {
-                filter: `slug = "${slug}"`,
-                limit: 1
-            });
-            if (searchResponse.hits.length > 0) {
-                setDecision(searchResponse.hits[0]);
+            const { data, error } = await supabase
+                .from('decisions')
+                .select('*')
+                .eq('slug', slug)
+                .single();
+
+            if (error) {
+                console.error('Supabase error:', error);
+            } else if (data) {
+                setDecision(data);
                 // Log view for audit trail
                 logViewDecision(slug || '');
             }
@@ -197,8 +197,7 @@ const DecisionPage: React.FC = () => {
             <h2>Décision introuvable</h2>
             <div style={{ background: '#F3F4F6', padding: '2rem', borderRadius: '8px', textAlign: 'left', fontFamily: 'monospace' }}>
                 <p><strong>Slug demandé :</strong> {slug}</p>
-                <p><strong>URL API :</strong> {client.config.host}</p>
-                <p><strong>Index :</strong> decisions</p>
+                <p><strong>Base de données :</strong> Supabase</p>
                 <p><strong>Debug Status :</strong> {loading ? 'Loading' : 'Finished'}</p>
                 <button onClick={fetchDecision} style={{ padding: '0.5rem 1rem', marginTop: '1rem', cursor: 'pointer' }}>Réessayer</button>
             </div>

@@ -358,13 +358,10 @@ const ArticlePage: React.FC = () => {
                                     <FileText size={14} />
                                     Version du {new Date(compareVersion.effective_date).toLocaleDateString('fr-FR')}
                                 </div>
-                                <div className="article-text">
-                                    {compareVersion.content.split('\n').map((p, i) => (
-                                        <p key={i} className={!currentVersion.content.includes(p) ? 'diff-removed' : ''}>
-                                            {p || '\u00A0'}
-                                        </p>
-                                    ))}
-                                </div>
+                                <div
+                                    className="article-text"
+                                    dangerouslySetInnerHTML={{ __html: compareVersion.content }}
+                                />
                             </div>
 
                             {/* CURRENT VERSION */}
@@ -373,21 +370,17 @@ const ArticlePage: React.FC = () => {
                                     <FileText size={14} />
                                     Version actuelle
                                 </div>
-                                <div className="article-text">
-                                    {currentVersion.content.split('\n').map((p, i) => (
-                                        <p key={i} className={!compareVersion.content.includes(p) ? 'diff-added' : ''}>
-                                            {p || '\u00A0'}
-                                        </p>
-                                    ))}
-                                </div>
+                                <div
+                                    className="article-text"
+                                    dangerouslySetInnerHTML={{ __html: currentVersion.content }}
+                                />
                             </div>
                         </>
                     ) : (
-                        <div className="article-text">
-                            {currentVersion.content.split('\n').map((paragraph, i) => (
-                                <p key={i}>{paragraph || '\u00A0'}</p>
-                            ))}
-                        </div>
+                        <div
+                            className="article-text"
+                            dangerouslySetInnerHTML={{ __html: currentVersion.content }}
+                        />
                     )}
                 </div>
 
