@@ -6,14 +6,14 @@
 
 .impact__grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 40px;
     text-align: center;
 }
 
 .impact__value {
     font-family: var(--font-serif);
-    font-size: 3rem;
+    font-size: clamp(1.75rem, 4vw, 3rem);
     font-weight: 700;
     margin-bottom: 8px;
 }
@@ -26,9 +26,32 @@
     font-weight: 600;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
+    .impact__grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 28px;
+    }
+}
+
+@media (max-width: 600px) {
+    .impact {
+        padding: 56px 0;
+    }
+
     .impact__grid {
         grid-template-columns: 1fr 1fr;
-        gap: 40px;
+        gap: 24px;
+    }
+
+    .impact__label {
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+    }
+}
+
+@media (max-width: 380px) {
+    .impact__grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
     }
 }

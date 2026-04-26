@@ -1,5 +1,6 @@
 import React from 'react';
 import Hero from '../../components/Hero/Hero';
+import ScrollReveal from '../../components/ScrollReveal/ScrollReveal';
 import MemoireSection from '../../components/MemoireSection/MemoireSection';
 import ArsenalSection from '../../components/ArsenalSection/ArsenalSection';
 import SecurityStandards from '../../components/Trust/SecurityStandards';
@@ -12,6 +13,7 @@ import Impact from '../../components/Impact/Impact';
  * 
  * Structure:
  * 1. Hero Authority - Recherche centrale
+ * 1.5 ScrollReveal - Transition cinématique 3D
  * 2. MemoireSection - "La Mémoire Organisée" (ex-SolutionsPage)
  * 3. ArsenalSection - "L'Arsenal Pro" + CTA (ex-ProPage)
  * 4. SecurityStandards - Badges de confiance
@@ -24,6 +26,9 @@ const Home: React.FC = () => {
         <main>
             {/* 1. HERO AUTHORITY */}
             <Hero />
+
+            {/* 1.5 SCROLL REVEAL — Transition cinématique */}
+            <ScrollReveal />
 
             {/* 2. LA MÉMOIRE ORGANISÉE - Storytelling IA */}
             <MemoireSection />

@@ -13,6 +13,43 @@
   background: linear-gradient(180deg, #FFFFFF 0%, #F9FAFB 100%);
 }
 
+/* ─── Animated SVG Grid ─── */
+.hero__grid-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero__grid-line {
+  stroke: rgba(4, 120, 87, 0.25);
+  stroke-width: 1;
+  opacity: 0;
+  stroke-dasharray: 8 8;
+  stroke-dashoffset: 1000;
+  animation: heroGridDraw 2.5s ease-out forwards;
+}
+
+.hero__grid-dot {
+  fill: rgba(4, 120, 87, 0.5);
+  opacity: 0;
+  animation: heroGridPulse 3.5s ease-in-out infinite;
+}
+
+@keyframes heroGridDraw {
+  0% { stroke-dashoffset: 1000; opacity: 0; }
+  40% { opacity: 0.25; }
+  100% { stroke-dashoffset: 0; opacity: 0.3; }
+}
+
+@keyframes heroGridPulse {
+  0%, 100% { opacity: 0.15; transform: scale(1); }
+  50% { opacity: 0.55; transform: scale(1.5); }
+}
+
+
 .hero__bg-abstract {
   position: absolute;
   top: 0;
@@ -323,6 +360,11 @@
     font-size: 2.2rem;
   }
 
+  .hero__subtitle {
+    font-size: 1rem;
+    margin-bottom: 36px;
+  }
+
   .hero__bg-abstract {
     width: 100%;
     opacity: 0.3;
@@ -347,5 +389,36 @@
     left: -24px;
     right: -24px;
     border-radius: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero {
+    padding: 80px 16px 48px;
+  }
+
+  .hero__subtitle {
+    font-size: 0.925rem;
+    margin-bottom: 28px;
+  }
+
+  .hero__suggestions {
+    gap: 8px;
+    font-size: 0.8rem;
+  }
+
+  .hero__suggestion-tag {
+    padding: 6px 12px;
+    font-size: 0.78rem;
+  }
+
+  .spotlight__input {
+    font-size: 0.9rem;
+  }
+
+  .spotlight__btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 11px;
   }
 }

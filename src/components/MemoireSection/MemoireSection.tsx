@@ -1,11 +1,19 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { Scan, Layers, Shield, Sparkles } from 'lucide-react';
 import './MemoireSection.css';
+
+const HIERARCHY_NODES = [
+    { level: 'root', label: 'Code du Travail' },
+    { level: 'title', label: 'Titre II — Contrat de travail' },
+    { level: 'chapter', label: 'Chapitre 3 — Rupture' },
+    { level: 'article', label: 'Art. L.52' },
+];
 
 const MemoireSection: React.FC = () => {
     const sectionRef = useRef<HTMLElement>(null);
     const [isVisible, setIsVisible] = useState(false);
+    const [archTab, setArchTab] = useState<'arret' | 'code'>('arret');
 
     const { scrollYProgress } = useScroll({
         target: sectionRef,
@@ -169,7 +177,7 @@ const MemoireSection: React.FC = () => {
                                     </motion.div>
                                 </div>
 
-                                <p>Notre IA scanne les bulletins multi-arrêts et isole chaque décision avec une précision chirurgicale.</p>
+                                <p>Notre IA scanne les bulletins multi-arrêts et isole chaque décision et chaque article de loi avec une précision chirurgicale.</p>
                             </div>
                             <div className="memoire__visual">
                                 <div className="visual-glow visual-glow--green"></div>
@@ -195,27 +203,71 @@ const MemoireSection: React.FC = () => {
                                     <Layers size={32} strokeWidth={1.5} />
                                 </motion.div>
                                 <h3>L'Architecture</h3>
-                                <span className="memoire__label">Segmentation & Chambres</span>
+                                <span className="memoire__label">Segmentation & Structuration</span>
 
-                                <div className="memoire__demo memoire__demo--architecture">
-                                    {['faits', 'motifs', 'dispositif'].map((type, i) => (
-                                        <motion.div
-                                            key={type}
-                                            className={`arch-block arch-block--${type}`}
-                                            initial={{ opacity: 0, x: -20 }}
-                                            animate={isVisible ? { opacity: 1, x: 0 } : {}}
-                                            transition={{ delay: 0.8 + i * 0.15 }}
-                                            whileHover={{ x: 8, backgroundColor: '#F9FAFB' }}
-                                        >
-                                            <span>{type.toUpperCase()}</span>
-                                            <p>{type === 'faits' ? 'Le demandeur a été licencié...' :
-                                                type === 'motifs' ? 'Attendu que l\'article 52...' :
-                                                    'PAR CES MOTIFS, casse...'}</p>
-                                        </motion.div>
-                                    ))}
+                                <div className="arch-tabs">
+                                    <button
+                                        className={`arch-tab ${archTab === 'arret' ? 'arch-tab--active' : ''}`}
+                                        onClick={() => setArchTab('arret')}
+                                    >Arrêt</button>
+                                    <button
+                                        className={`arch-tab ${archTab === 'code' ? 'arch-tab--active' : ''}`}
+                                        onClick={() => setArchTab('code')}
+                                    >Code</button>
                                 </div>
 
-                                <p className="chambre-label">2ème Chambre Civile et Commerciale</p>
+                                <AnimatePresence mode="wait">
+                                    {archTab === 'arret' ? (
+                                        <motion.div
+                                            key="arret"
+                                            className="memoire__demo memoire__demo--architecture"
+                                            initial={{ opacity: 0, y: 8 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -8 }}
+                                            transition={{ duration: 0.22 }}
+                                        >
+                                            {['faits', 'motifs', 'dispositif'].map((type, i) => (
+                                                <motion.div
+                                                    key={type}
+                                                    className={`arch-block arch-block--${type}`}
+                                                    initial={{ opacity: 0, x: -20 }}
+                                                    animate={isVisible ? { opacity: 1, x: 0 } : {}}
+                                                    transition={{ delay: 0.4 + i * 0.1 }}
+                                                    whileHover={{ x: 8, backgroundColor: '#F9FAFB' }}
+                                                >
+                                                    <span>{type.toUpperCase()}</span>
+                                                    <p>{type === 'faits' ? 'Le demandeur a été licencié...' :
+                                                        type === 'motifs' ? 'Attendu que l\'article 52...' :
+                                                            'PAR CES MOTIFS, casse...'}</p>
+                                                </motion.div>
+                                            ))}
+                                        </motion.div>
+                                    ) : (
+                                        <motion.div
+                                            key="code"
+                                            className="memoire__demo memoire__demo--code-hierarchy"
+                                            initial={{ opacity: 0, y: 8 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -8 }}
+                                            transition={{ duration: 0.22 }}
+                                        >
+                                            {HIERARCHY_NODES.map((node, i) => (
+                                                <motion.div
+                                                    key={node.level}
+                                                    className={`arch-block arch-block--${node.level}`}
+                                                    initial={{ opacity: 0, x: -20 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    transition={{ delay: i * 0.1 }}
+                                                    whileHover={{ x: 8 }}
+                                                >
+                                                    <span>{node.label}</span>
+                                                </motion.div>
+                                            ))}
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+
+                                <p className="chambre-label">Décisions par chambre — Codes par Titre, Chapitre, Article</p>
                             </div>
                             <div className="memoire__visual">
                                 <div className="visual-glow visual-glow--amber"></div>

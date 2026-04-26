@@ -84,9 +84,11 @@
     border: 1px solid #E5E7EB;
     border-radius: 20px;
     padding: 32px;
-    transition: all 0.4s ease;
+    transition: box-shadow 0.4s ease, border-color 0.4s ease;
     opacity: 0;
     transform: translateY(30px);
+    transform-style: preserve-3d;
+    will-change: transform;
 }
 
 .arsenal-section.visible .bento-card {
@@ -119,9 +121,8 @@
 }
 
 .bento-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
-    border-color: rgba(4, 120, 87, 0.3);
+    box-shadow: 0 16px 48px rgba(4, 120, 87, 0.12);
+    border-color: rgba(4, 120, 87, 0.35);
 }
 
 .bento-card--large {
@@ -262,6 +263,51 @@
 
 .chart-bar--highlight {
     background: linear-gradient(180deg, #047857, #10B981);
+}
+
+/* Code Tree Demo */
+.code-tree-demo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 20px;
+    font-family: 'Georgia', serif;
+    font-size: 0.8rem;
+}
+
+.code-tree__node {
+    padding: 7px 12px;
+    border-left: 3px solid #E5E7EB;
+    background: #F9FAFB;
+    border-radius: 0 6px 6px 0;
+    color: #6B7280;
+    transition: all 0.3s;
+}
+
+.code-tree__node--root {
+    border-left-color: #047857;
+    color: #047857;
+    font-weight: 600;
+    background: rgba(4, 120, 87, 0.05);
+}
+
+.code-tree__node--title {
+    border-left-color: #D97706;
+    margin-left: 14px;
+    color: #92400E;
+}
+
+.code-tree__node--chapter {
+    border-left-color: #3B82F6;
+    margin-left: 28px;
+    color: #1E40AF;
+}
+
+.code-tree__node--article {
+    border-left-color: #10B981;
+    margin-left: 42px;
+    color: #047857;
+    font-weight: 600;
 }
 
 /* ─────────────────────────────────────────────────────
@@ -437,6 +483,10 @@
    ───────────────────────────────────────────────────── */
 
 @media (max-width: 900px) {
+    .arsenal-section {
+        padding: 80px 0;
+    }
+
     .bento-grid {
         grid-template-columns: 1fr 1fr;
     }
@@ -444,6 +494,25 @@
     .bento-card--large {
         grid-column: span 2;
         grid-row: span 1;
+    }
+}
+
+@media (max-width: 640px) {
+    .arsenal-section {
+        padding: 64px 0;
+    }
+
+    .bento-grid {
+        gap: 14px;
+        margin-bottom: 48px;
+    }
+
+    .bento-card {
+        padding: 24px;
+    }
+
+    .bento-card--large {
+        padding: 28px;
     }
 }
 
@@ -467,6 +536,6 @@
     }
 
     .arsenal__cta {
-        padding: 32px 24px;
+        padding: 28px 20px;
     }
 }

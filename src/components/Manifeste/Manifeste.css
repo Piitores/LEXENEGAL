@@ -49,3 +49,99 @@
     color: #047857;
     letter-spacing: 1px;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   MAGIC WORD — Scroll-driven word reveal
+   ═══════════════════════════════════════════════════════════════ */
+
+.manifeste__magic-p {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0;
+    line-height: 1.1;
+}
+
+.magic-word {
+    position: relative;
+    display: inline-block;
+    margin-right: 0.3em;
+    margin-top: 0.55em;
+    font-family: 'Georgia', serif;
+    font-size: 1.2rem;
+    font-style: italic;
+}
+
+.magic-word--strong {
+    font-style: normal;
+    font-weight: 600;
+}
+
+.magic-word__ghost {
+    opacity: 0.12;
+    color: #374151;
+}
+
+.magic-word--strong .magic-word__ghost {
+    color: #111827;
+}
+
+.magic-word__reveal {
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: #374151;
+}
+
+.magic-word--strong .magic-word__reveal {
+    color: #111827;
+}
+
+/* ─── Responsive ─── */
+
+@media (max-width: 768px) {
+    .manifeste {
+        padding: 64px 0;
+    }
+
+    .manifeste__tagline {
+        font-size: 1.15rem;
+    }
+
+    .manifeste__text {
+        font-size: 1rem;
+        line-height: 1.9;
+        padding: 0 1rem;
+    }
+
+    .magic-word {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .manifeste {
+        padding: 48px 0;
+    }
+
+    .manifeste__tagline {
+        font-size: 1rem;
+        margin-bottom: 20px;
+    }
+
+    .manifeste__text {
+        font-size: 0.9rem;
+        line-height: 1.8;
+        padding: 0 0.5rem;
+    }
+
+    .magic-word {
+        font-size: 0.9rem;
+        margin-right: 0.25em;
+    }
+
+    .manifeste__signature {
+        font-size: 0.8rem;
+        margin-top: 28px;
+    }
+}

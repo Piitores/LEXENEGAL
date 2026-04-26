@@ -1,14 +1,33 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
-    Printer, Search, BarChart3, Bell, FileText, Lock,
-    Send, Loader2, Check
+    Printer, Search, BarChart3, Bell, FileText,
+    Send, Loader2, Check, BookOpen
 } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
+import { useTiltEffect } from '../../hooks/useTiltEffect';
 import './ArsenalSection.css';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+/**
+ * TiltCard — Wrapper qui applique l'effet tilt 3D sur n'importe quelle card.
+ */
+const TiltCard: React.FC<{ className?: string; children: React.ReactNode }> = ({ className, children }) => {
+    const tilt = useTiltEffect(6, 1.03);
+    return (
+        <div
+            ref={tilt.ref as React.RefObject<HTMLDivElement>}
+            className={className}
+            style={tilt.style}
+            onMouseMove={tilt.onMouseMove}
+            onMouseLeave={tilt.onMouseLeave}
+        >
+            {children}
+        </div>
+    );
+};
 
 const FONCTIONS = [
     'Avocat',
@@ -88,7 +107,7 @@ const ArsenalSection: React.FC = () => {
                 {/* Bento Grid */}
                 <div className="bento-grid">
                     {/* LARGE BLOCK - PDF Master Edition */}
-                    <div className="bento-card bento-card--large">
+                    <TiltCard className="bento-card bento-card--large">
                         <div className="bento-card__icon">
                             <Printer size={32} strokeWidth={1.5} />
                         </div>
@@ -108,25 +127,25 @@ const ArsenalSection: React.FC = () => {
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </TiltCard>
 
                     {/* MEDIUM BLOCK - Recherche Fulgurante */}
-                    <div className="bento-card bento-card--medium">
+                    <TiltCard className="bento-card bento-card--medium">
                         <div className="bento-card__icon">
                             <Search size={28} strokeWidth={1.5} />
                         </div>
                         <h3>Recherche Fulgurante</h3>
-                        <p>Accès instantané à l'ensemble du corpus. Filtres par chambre, matière, date.</p>
+                        <p>Accès instantané à l'ensemble du corpus — jurisprudence et articles de loi. Filtres par chambre, matière, date, code.</p>
                         <div className="search-demo">
                             <div className="search-demo__bar">
                                 <span>abus de confiance...</span>
                             </div>
                             <div className="search-demo__result">52 décisions</div>
                         </div>
-                    </div>
+                    </TiltCard>
 
                     {/* MEDIUM BLOCK - Jurimétrie */}
-                    <div className="bento-card bento-card--medium">
+                    <TiltCard className="bento-card bento-card--medium">
                         <div className="bento-card__icon bento-card__icon--gold">
                             <BarChart3 size={28} strokeWidth={1.5} />
                         </div>
@@ -139,34 +158,41 @@ const ArsenalSection: React.FC = () => {
                             <div className="chart-bar chart-bar--highlight" style={{ height: '100%' }}></div>
                             <div className="chart-bar" style={{ height: '70%' }}></div>
                         </div>
-                    </div>
+                    </TiltCard>
 
                     {/* SMALL BLOCK - Veille */}
-                    <div className="bento-card bento-card--small">
+                    <TiltCard className="bento-card bento-card--small">
                         <div className="bento-card__icon">
                             <Bell size={24} strokeWidth={1.5} />
                         </div>
                         <h3>Veille Automatisée</h3>
                         <p>Alertes personnalisées sur vos thématiques.</p>
-                    </div>
+                    </TiltCard>
 
                     {/* SMALL BLOCK - Export */}
-                    <div className="bento-card bento-card--small">
+                    <TiltCard className="bento-card bento-card--small">
                         <div className="bento-card__icon">
                             <FileText size={24} strokeWidth={1.5} />
                         </div>
-                        <h3>Export Dossiers</h3>
-                        <p>Dossiers de jurisprudence en PDF.</p>
-                    </div>
+                        <h3>Export & API</h3>
+                        <p>Dossiers PDF prêts à l'emploi, et API sécurisée pour l'intégration dans vos outils internes.</p>
+                    </TiltCard>
 
-                    {/* SMALL BLOCK - API */}
-                    <div className="bento-card bento-card--small">
-                        <div className="bento-card__icon">
-                            <Lock size={24} strokeWidth={1.5} />
+                    {/* MEDIUM BLOCK - Navigateur de Codes */}
+                    <TiltCard className="bento-card bento-card--medium">
+                        <div className="bento-card__icon bento-card__icon--gold">
+                            <BookOpen size={28} strokeWidth={1.5} />
                         </div>
-                        <h3>API Sécurisée</h3>
-                        <p>Intégration dans vos outils internes.</p>
-                    </div>
+                        <h3>Navigateur de Codes</h3>
+                        <p>Parcourez l'arborescence complète des codes : du Titre jusqu'à l'article, avec les modifications intervenues.</p>
+                        <div className="code-tree-demo">
+                            <div className="code-tree__node code-tree__node--root">Code du Travail</div>
+                            <div className="code-tree__node code-tree__node--title">Titre II — Contrat de travail</div>
+                            <div className="code-tree__node code-tree__node--chapter">Chapitre 3 — Rupture</div>
+                            <div className="code-tree__node code-tree__node--article">Art. L.52</div>
+                        </div>
+                    </TiltCard>
+
                 </div>
 
                 {/* CTA - Contact Form */}

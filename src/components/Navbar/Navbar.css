@@ -125,8 +125,8 @@
      flex-direction: column;
      justify-content: center;
      align-items: center;
-     gap: 2rem;
-     padding: 2rem;
+     gap: 1.5rem;
+     padding: 1.5rem;
      opacity: 0;
      visibility: hidden;
      transition: all 0.3s ease;
@@ -140,11 +140,11 @@
 
    .navbar__links {
      flex-direction: column;
-     gap: 24px;
+     gap: 20px;
    }
 
    .navbar__link {
-     font-size: 1.5rem;
+     font-size: 1.1rem;
      font-family: 'Playfair Display', serif;
    }
 
@@ -159,11 +159,12 @@
 
    .navbar__user-menu {
      flex-direction: column;
-     padding: 1rem;
+     padding: 0.75rem 1rem;
    }
 
    .navbar__cta {
      width: 100%;
+     max-width: 280px;
      text-align: center;
    }
  }

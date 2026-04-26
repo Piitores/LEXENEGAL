@@ -3,9 +3,10 @@ import './Impact.css';
 
 function Impact() {
     const stats = [
-        { value: '1,300+', label: 'Décisions de la Cour Suprême' },
-        { value: '10+', label: 'Codes & Textes de Loi' },
-        { value: '4,400+', label: 'Articles Indexés' },
+        { value: '10 000+', label: 'Décisions de Jurisprudence' },
+        { value: '10+', label: 'Codes du Corpus National' },
+        { value: '4 400+', label: 'Articles de Loi Indexés' },
+        { value: '5', label: 'Juridictions Couvertes' },
         { value: '24/7', label: 'Accès Gratuit' },
     ];
 

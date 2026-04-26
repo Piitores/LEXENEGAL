@@ -412,11 +412,94 @@
     line-height: 1.5;
 }
 
+/* ─── Architecture Tabs ─── */
+
+.arch-tabs {
+    display: flex;
+    gap: 6px;
+    margin: 16px 0 0;
+    background: #F3F4F6;
+    border-radius: 10px;
+    padding: 4px;
+}
+
+.arch-tab {
+    flex: 1;
+    padding: 6px 12px;
+    border-radius: 7px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    background: transparent;
+    color: #9CA3AF;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.arch-tab--active {
+    background: #FFFFFF;
+    color: #047857;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
 /* Architecture Demo */
 .memoire__demo--architecture {
     display: flex;
     flex-direction: column;
     gap: 10px;
+}
+
+/* Code Hierarchy Demo */
+.memoire__demo--code-hierarchy {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%);
+    border-radius: 16px;
+    padding: 16px;
+    margin: 0;
+}
+
+.arch-block--root {
+    border-left-color: #047857;
+    background: rgba(4, 120, 87, 0.04);
+}
+
+.arch-block--root span {
+    color: #047857;
+    font-weight: 700;
+}
+
+.arch-block--title {
+    border-left-color: #D97706;
+    margin-left: 10px;
+}
+
+.arch-block--title span {
+    color: #92400E;
+}
+
+.arch-block--chapter {
+    border-left-color: #3B82F6;
+    margin-left: 20px;
+}
+
+.arch-block--chapter span {
+    color: #1E40AF;
+}
+
+.arch-block--article {
+    border-left-color: #10B981;
+    margin-left: 30px;
+    background: rgba(16, 185, 129, 0.04);
+}
+
+.arch-block--article span {
+    color: #047857;
+    font-weight: 700;
 }
 
 .arch-block {
@@ -547,15 +630,19 @@
 
 @media (max-width: 600px) {
     .memoire-section {
-        padding: 80px 0;
+        padding: 64px 0;
     }
 
     .memoire__header {
-        margin-bottom: 50px;
+        margin-bottom: 40px;
     }
 
     .memoire__blocks {
-        gap: 40px;
+        gap: 32px;
+    }
+
+    .memoire__subtitle {
+        font-size: 0.95rem;
     }
 
     .memoire__demo--capturation,
@@ -569,5 +656,35 @@
         font-size: 1rem;
         top: -12px;
         left: -12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .memoire-section {
+        padding: 48px 0;
+    }
+
+    .memoire__content {
+        padding: 24px 20px;
+    }
+
+    .memoire__content h3 {
+        font-size: 1.2rem;
+    }
+
+    .memoire__blocks {
+        gap: 24px;
+    }
+
+    .arch-block--title {
+        margin-left: 6px;
+    }
+
+    .arch-block--chapter {
+        margin-left: 12px;
+    }
+
+    .arch-block--article {
+        margin-left: 18px;
     }
 }

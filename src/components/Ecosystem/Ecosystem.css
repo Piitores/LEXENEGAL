@@ -9,7 +9,7 @@
 }
 
 .ecosystem__title {
-    font-size: 2.5rem;
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
     margin-bottom: 16px;
 }
 
@@ -173,7 +173,43 @@
 }
 
 @media (max-width: 768px) {
+    .ecosystem {
+        padding: 64px 0;
+    }
+
+    .ecosystem__header {
+        margin-bottom: 40px;
+    }
+
     .ecosystem__grid {
         grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .ecosystem__card {
+        padding: 28px 24px;
+    }
+
+    .ecosystem__subtitle {
+        font-size: 0.95rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .ecosystem {
+        padding: 48px 0;
+    }
+
+    .ecosystem__card {
+        padding: 24px 20px;
+    }
+
+    .ecosystem__card-title {
+        font-size: 1.15rem;
+    }
+
+    .ecosystem__list li {
+        font-size: 0.875rem;
+        gap: 8px;
     }
 }
