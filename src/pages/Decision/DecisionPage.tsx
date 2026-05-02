@@ -273,7 +273,7 @@ const DecisionPage: React.FC = () => {
                         <Scale size={14} /> Source Certifiée : Lexenegal.sn
                     </div>
 
-                    <h1 className="decision-title">{decision.chambre || 'Chambre'}</h1>
+                    <h1 className="decision-title">{decision.chambre || decision.juridiction || 'Chambre'}</h1>
                     <div className="decision-ref">{decision.reference} • {decision.date_decision ? new Date(decision.date_decision).toLocaleDateString('fr-FR', { dateStyle: 'long' }) : 'Date N/D'}</div>
 
                     {/* EXPERT BLOCK */}

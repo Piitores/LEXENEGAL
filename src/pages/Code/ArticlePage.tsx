@@ -296,11 +296,22 @@ const ArticlePage: React.FC = () => {
                     <h1>Article {article.article_number}</h1>
 
                     {/* VERSION INFO */}
-                    <div className="version-info">
-                        <Clock size={14} />
-                        En vigueur depuis le {new Date(currentVersion.effective_date).toLocaleDateString('fr-FR', { dateStyle: 'long' })}
-                        {currentVersion.version_note && (
-                            <span className="version-note"> · {currentVersion.version_note}</span>
+                    <div className="version-info-wrapper" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px', marginTop: '16px' }}>
+                        <div className="version-info" style={{ margin: 0 }}>
+                            <Clock size={14} />
+                            En vigueur depuis le {new Date(currentVersion.effective_date).toLocaleDateString('fr-FR', { dateStyle: 'long' })}
+                            {currentVersion.version_note && (
+                                <span className="version-note"> · {currentVersion.version_note}</span>
+                            )}
+                        </div>
+
+                        {/* MODIFICATIONS INFO (Légifrance Style) */}
+                        {article.modifications && article.modifications.length > 0 && (
+                            <div className="article-modifications" style={{ textAlign: 'right', fontSize: '0.85rem', color: '#2563EB' }}>
+                                <a href="#" style={{ textDecoration: 'underline', color: 'inherit' }}>
+                                    {article.modifications[article.modifications.length - 1]}
+                                </a>
+                            </div>
                         )}
                     </div>
                 </header>

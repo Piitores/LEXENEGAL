@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createClient } from '@supabase/supabase-js';
 import {
-    Scale, BookOpen, Users, Building, Briefcase,
+    Scale, BookOpen, Users, Building, Briefcase, Radio, Pickaxe,
     FileText, ChevronRight, Loader2, Gavel, Landmark,
-    Search
+    Search, Map, Vote
 } from 'lucide-react';
 import './CodesListPage.css';
 
@@ -34,46 +34,74 @@ const CODE_THEMES = {
         color: '#7C3AED',
         description: 'Mariage, filiation, succession, divorce'
     },
-    'Droit Civil': {
+    'Droit Civil et Commercial': {
         icon: Scale,
         color: '#2563EB',
-        description: 'Obligations, contrats, responsabilité'
+        description: 'Obligations, contrats, responsabilité, sociétés, commerce'
     },
     'Droit Pénal': {
         icon: Gavel,
         color: '#DC2626',
         description: 'Infractions, peines, procédure pénale'
     },
-    'Droit Commercial': {
-        icon: Building,
-        color: '#D97706',
-        description: 'Sociétés, commerce, faillite'
-    },
     'Droit Administratif': {
         icon: Landmark,
         color: '#0891B2',
         description: 'Administration, marchés publics, fonction publique'
     },
+    'Droit de la Communication': {
+        icon: Radio,
+        color: '#8B5CF6',
+        description: 'Presse écrite, audiovisuel, presse en ligne'
+    },
+    'Droit Minier': {
+        icon: Pickaxe,
+        color: '#B45309',
+        description: 'Mines, carrières, substances minérales'
+    },
     'Droit OHADA': {
         icon: BookOpen,
         color: '#059669',
         description: 'Droit des affaires harmonisé en Afrique'
+    },
+    'Droit Douanier et Fiscal': {
+        icon: FileText,
+        color: '#0369a1',
+        description: 'Douanes, impôts, fiscalité des entreprises, taxes'
+    },
+    'Droit Électoral': {
+        icon: Vote,
+        color: '#D946EF',
+        description: 'Élections, partis politiques, code électoral'
+    },
+    "Droit de l'Urbanisme": {
+        icon: Map,
+        color: '#F59E0B',
+        description: 'Aménagement, construction, cadastre, foncier'
     }
 };
 
 // Association slug -> thème
 const CODE_TO_THEME: Record<string, string> = {
     'code-travail': 'Droit du Travail',
-    'code-securite-sociale': 'Droit du Travail',  // Code de la Sécurité Sociale
+    'code-securite-sociale-senegal': 'Droit du Travail',  // Code de la Sécurité Sociale
     'code-famille': 'Droit de la Famille',  // Code de la Famille
-    'code-civil': 'Droit Civil',
-    'cocc': 'Droit Civil',  // Code des Obligations Civiles et Commerciales
-    'code-procedure-civile': 'Droit Civil',  // Code de Procédure Civile
+    'code-de-la-famille': 'Droit de la Famille', // Code de la Famille (nouveau slug)
+    'code-civil': 'Droit Civil et Commercial',
+    'code-des-obligations-civiles-et-commerciales': 'Droit Civil et Commercial',  // Code des Obligations Civiles et Commerciales
+    'code-procedure-civile': 'Droit Civil et Commercial',  // Code de Procédure Civile
+    'code-de-procedure-civile': 'Droit Civil et Commercial',  // Code de Procédure Civile (Vrai slug de la DB)
     'code-penal': 'Droit Pénal',  // Code Pénal
-    'code-procedure-penale': 'Droit Pénal',  // Code de Procédure Pénale
-    'code-commerce': 'Droit Commercial',
+    'code-de-procedure-penale': 'Droit Pénal',  // Code de Procédure Pénale
+    'code-commerce': 'Droit Civil et Commercial',
     'code-marches-publics': 'Droit Administratif',  // Code des Marchés Publics
     'code-administratif': 'Droit Administratif',
+    'code-des-obligations-de-ladministration': 'Droit Administratif',  // COA
+    'code-des-douanes': 'Droit Douanier et Fiscal', // Code des douanes
+    'code-de-la-presse': 'Droit de la Communication',  // Code de la Presse
+    'code-minier': 'Droit Minier',  // Code Minier
+    'code-electoral': 'Droit Électoral', // Code Électoral
+    'code-de-l-urbanisme': "Droit de l'Urbanisme", // Code de l'Urbanisme
     'au-suretes': 'Droit OHADA',  // Acte Uniforme Sûretés
     'au-commercial': 'Droit OHADA',  // Acte Uniforme Droit Commercial Général
     'au-recouvrement': 'Droit OHADA'  // Acte Uniforme Recouvrement (à venir)

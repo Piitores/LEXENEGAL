@@ -179,7 +179,7 @@
 
 .article-content-wrapper.side-by-side {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 0;
     padding: 0;
     overflow: hidden;
@@ -200,6 +200,7 @@
 /* Version Columns */
 .version-column {
     padding: 32px;
+    min-width: 0;
 }
 
 .version-column-header {

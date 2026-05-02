@@ -15,6 +15,7 @@ import CodePage from './pages/Code/CodePage';
 import ArticlePage from './pages/Code/ArticlePage';
 import AdminPage from './pages/Admin/AdminPage';
 import SEO from './components/SEO/SEO';
+import AmbientEffects from './components/AmbientEffects/AmbientEffects';
 import './App.css';
 
 // ScrollToTop component to reset scroll on route change
@@ -45,6 +46,7 @@ function App() {
           <ScrollToTop />
           <SEO />
           <div className="app">
+            <AmbientEffects />
             <Navbar scrolled={scrolled} />
             <Routes>
               {/* Landing Page Unique */}

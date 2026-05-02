@@ -109,6 +109,11 @@ function detectParagraphType(text: string): { type: StructuredParagraph['type'];
         return { type: 'attendu', cleanText: trimmed };
     }
 
+    // Section Intermédiaire
+    if (/^(EN LA FORME|AU FOND|SUR LE FOND|SUR LA COMP[EÉ]TENCE|SUR L'EXCEPTION|MOTIFS|DISCUSSION|FAITS ET PROC[EÉ]DURE)/i.test(trimmed) && trimmed.length < 100) {
+        return { type: 'section_intermediate', cleanText: trimmed };
+    }
+
     // Dispositif: "PAR CES MOTIFS", "DECIDE", etc.
     if (/^(PAR\s+CES\s+MOTIFS|D[EÉ]CIDE|ARR[EÊ]TE|DIT\s+ET\s+JUGE|STATUANT)/i.test(trimmed)) {
         return { type: 'dispositif', cleanText: trimmed };
@@ -146,6 +151,9 @@ function parseDecisionBody(text: string): string {
         switch (type) {
             case 'visa':
                 htmlParts.push(`<p class="visa"><em>${escapeHtml(cleanText)}</em></p>`);
+                break;
+            case 'section_intermediate':
+                htmlParts.push(`<h3 class="section-intermediate">${escapeHtml(cleanText)}</h3>`);
                 break;
             case 'dispositif':
                 htmlParts.push(`<blockquote class="dispositif"><p>${escapeHtml(cleanText)}</p></blockquote>`);

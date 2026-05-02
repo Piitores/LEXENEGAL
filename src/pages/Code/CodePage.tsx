@@ -1,7 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ChevronRight, ChevronDown, BookOpen, Search, FileText } from 'lucide-react';
+import {
+    ArrowLeft, ChevronRight, Search,
+    BookOpen, FileText, ChevronDown, ExternalLink
+} from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import SEO from '../../components/SEO/SEO';
 import './CodePage.css';
@@ -10,14 +13,14 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+// ── Types ──
+
 interface Law {
     id: string;
     title: string;
-    short_title: string;
-    category: string;
-    reference: string;
     slug: string;
-    description: string;
+    reference: string;
+    category: string;
 }
 
 interface Article {
@@ -29,14 +32,39 @@ interface Article {
     article_number: string;
     slug: string;
     display_order: number;
+    node_id: string | null;
+    num: string | null;
+    num_court: string | null;
+    content_raw: string | null;
+    content_html: string | null;
+    modifications: string[] | null;
+    tags: string[] | null;
+    created_at: string | null;
+    updated_at: string | null;
+}
+
+interface StructureNode {
+    id: string;
+    code_id: string;
+    type: string;
+    numero: string | null;
+    intitule: string | null;
+    label: string;
+    parent_id: string | null;
+    position: number;
 }
 
 interface HierarchyNode {
+    id: string;
     name: string;
-    type: 'part' | 'title' | 'chapter' | 'section';
+    type: string;
+    numero: string | null;
+    intitule: string | null;
     articles: Article[];
     children: HierarchyNode[];
 }
+
+// ── Composant principal ──
 
 const CodePage: React.FC = () => {
     const { slug } = useParams();
@@ -47,36 +75,74 @@ const CodePage: React.FC = () => {
     const [hierarchy, setHierarchy] = useState<HierarchyNode[]>([]);
     const [loading, setLoading] = useState(true);
     const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+    const [selectedNode, setSelectedNode] = useState<HierarchyNode | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [activeTab, setActiveTab] = useState<'articles' | 'structure'>('articles');
+
+    // Stats
+    const [totalArticles, setTotalArticles] = useState(0);
+    const [totalChapters, setTotalChapters] = useState(0);
 
     useEffect(() => {
         if (slug) fetchCodeData();
     }, [slug]);
 
+    // ── Data fetching ──
+
     const fetchCodeData = async () => {
         setLoading(true);
         try {
-            // Fetch law info
             const { data: lawData } = await supabase
                 .from('laws_and_codes')
                 .select('*')
                 .eq('slug', slug)
                 .single();
 
-            if (lawData) {
-                setLaw(lawData);
+            if (!lawData) { setLoading(false); return; }
+            setLaw(lawData);
 
-                // Fetch all articles
-                const { data: articlesData } = await supabase
-                    .from('articles')
-                    .select('*')
-                    .eq('code_id', lawData.id)
-                    .order('display_order');
+            // Fetch articles
+            const { data: articlesData } = await supabase
+                .from('articles')
+                .select('*')
+                .eq('code_id', lawData.id)
+                .order('display_order');
 
-                if (articlesData) {
-                    setArticles(articlesData);
-                    buildHierarchy(articlesData);
-                }
+            const allArticles = articlesData || [];
+            setArticles(allArticles);
+            setTotalArticles(allArticles.length);
+
+            // Fetch structure_nodes
+            const { data: nodesData } = await supabase
+                .from('structure_nodes')
+                .select('*')
+                .eq('code_id', lawData.id)
+                .order('position');
+
+            let tree: HierarchyNode[];
+            if (nodesData && nodesData.length > 0) {
+                tree = buildTreeFromNodes(nodesData, allArticles);
+            } else {
+                tree = buildTreeLegacy(allArticles);
+            }
+
+            setHierarchy(tree);
+
+            // Stats
+            let chapCount = 0;
+            const countChapters = (nodes: HierarchyNode[]) => {
+                nodes.forEach(n => {
+                    if (n.type === 'chapitre' || n.type === 'chapter') chapCount++;
+                    countChapters(n.children);
+                });
+            };
+            countChapters(tree);
+            setTotalChapters(chapCount);
+
+            // Auto-select first node
+            if (tree.length > 0) {
+                setSelectedNode(tree[0]);
+                setExpandedNodes(new Set([tree[0].id]));
             }
         } catch (error) {
             console.error('Error fetching code:', error);
@@ -85,137 +151,221 @@ const CodePage: React.FC = () => {
         }
     };
 
-    const buildHierarchy = (articlesData: Article[]) => {
+    // ── Build tree from structure_nodes ──
+
+    const buildTreeFromNodes = (nodes: StructureNode[], arts: Article[]): HierarchyNode[] => {
+        const map = new Map<string, HierarchyNode>();
         const root: HierarchyNode[] = [];
 
-        articlesData.forEach(article => {
-            // Find or create part node
-            let partNode = root.find(n => n.name === (article.part_title || 'Dispositions'));
+        for (const nd of nodes) {
+            map.set(nd.id, {
+                id: nd.id,
+                name: nd.label,
+                type: nd.type,
+                numero: nd.numero,
+                intitule: nd.intitule,
+                articles: [],
+                children: []
+            });
+        }
+
+        for (const nd of nodes) {
+            const hNode = map.get(nd.id)!;
+            if (nd.parent_id && map.has(nd.parent_id)) {
+                map.get(nd.parent_id)!.children.push(hNode);
+            } else {
+                root.push(hNode);
+            }
+        }
+
+        for (const art of arts) {
+            if (art.node_id && map.has(art.node_id)) {
+                map.get(art.node_id)!.articles.push(art);
+            }
+        }
+
+        return root;
+    };
+
+    // ── Fallback legacy ──
+
+    const buildTreeLegacy = (arts: Article[]): HierarchyNode[] => {
+        const root: HierarchyNode[] = [];
+
+        arts.forEach(art => {
+            const partName = art.part_title || 'Dispositions';
+            let partNode = root.find(n => n.name === partName);
             if (!partNode) {
-                partNode = {
-                    name: article.part_title || 'Dispositions',
-                    type: 'part',
-                    articles: [],
-                    children: []
-                };
+                partNode = { id: partName, name: partName, type: 'partie', numero: null, intitule: partName, articles: [], children: [] };
                 root.push(partNode);
             }
 
-            // Find or create title node
-            if (article.title_name) {
-                let titleNode = partNode.children.find(n => n.name === article.title_name);
+            if (art.title_name) {
+                let titleNode = partNode.children.find(n => n.name === art.title_name);
                 if (!titleNode) {
-                    titleNode = {
-                        name: article.title_name,
-                        type: 'title',
-                        articles: [],
-                        children: []
-                    };
+                    titleNode = { id: art.title_name, name: art.title_name, type: 'titre', numero: null, intitule: art.title_name, articles: [], children: [] };
                     partNode.children.push(titleNode);
                 }
 
-                // Find or create chapter node
-                if (article.chapter_name) {
-                    let chapterNode = titleNode.children.find(n => n.name === article.chapter_name);
-                    if (!chapterNode) {
-                        chapterNode = {
-                            name: article.chapter_name,
-                            type: 'chapter',
-                            articles: [],
-                            children: []
-                        };
-                        titleNode.children.push(chapterNode);
+                if (art.chapter_name) {
+                    let chNode = titleNode.children.find(n => n.name === art.chapter_name);
+                    if (!chNode) {
+                        chNode = { id: art.chapter_name, name: art.chapter_name, type: 'chapitre', numero: null, intitule: art.chapter_name, articles: [], children: [] };
+                        titleNode.children.push(chNode);
                     }
-                    chapterNode.articles.push(article);
+                    chNode.articles.push(art);
                 } else {
-                    titleNode.articles.push(article);
+                    titleNode.articles.push(art);
                 }
             } else {
-                partNode.articles.push(article);
+                partNode.articles.push(art);
             }
         });
 
-        setHierarchy(root);
-        // Auto-expand first level
-        if (root.length > 0) {
-            setExpandedNodes(new Set([root[0].name]));
-        }
+        return root;
     };
 
-    const toggleNode = (nodeName: string) => {
+    // ── Helpers ──
+
+    const countArticles = useCallback((node: HierarchyNode): number => {
+        let c = node.articles.length;
+        node.children.forEach(ch => { c += countArticles(ch); });
+        return c;
+    }, []);
+
+    const maxArticlesInLevel = useMemo(() => {
+        let max = 0;
+        const walk = (nodes: HierarchyNode[]) => {
+            nodes.forEach(n => {
+                const c = countArticles(n);
+                if (c > max) max = c;
+                walk(n.children);
+            });
+        };
+        walk(hierarchy);
+        return max || 1;
+    }, [hierarchy, countArticles]);
+
+    const getArticlesForNode = useCallback((node: HierarchyNode): Article[] => {
+        const result: Article[] = [...node.articles];
+        node.children.forEach(ch => result.push(...getArticlesForNode(ch)));
+        return result;
+    }, []);
+
+    const getBreadcrumb = useCallback((targetId: string, nodes: HierarchyNode[], path: HierarchyNode[] = []): HierarchyNode[] | null => {
+        for (const node of nodes) {
+            const newPath = [...path, node];
+            if (node.id === targetId) return newPath;
+            const found = getBreadcrumb(targetId, node.children, newPath);
+            if (found) return found;
+        }
+        return null;
+    }, []);
+
+    const collectAllNodeIds = useCallback((nodes: HierarchyNode[]): string[] => {
+        const ids: string[] = [];
+        nodes.forEach(n => { ids.push(n.id); ids.push(...collectAllNodeIds(n.children)); });
+        return ids;
+    }, []);
+
+    // ── Actions ──
+
+    const toggleNode = (nodeId: string) => {
         setExpandedNodes(prev => {
             const next = new Set(prev);
-            if (next.has(nodeName)) {
-                next.delete(nodeName);
-            } else {
-                next.add(nodeName);
-            }
+            if (next.has(nodeId)) next.delete(nodeId);
+            else next.add(nodeId);
             return next;
         });
     };
 
-    const countArticles = (node: HierarchyNode): number => {
-        let count = node.articles.length;
-        node.children.forEach(child => {
-            count += countArticles(child);
-        });
-        return count;
+    const selectNode = (node: HierarchyNode) => {
+        setSelectedNode(node);
+        setActiveTab('articles');
+        // Auto-expand the path to this node
+        const path = getBreadcrumb(node.id, hierarchy);
+        if (path) {
+            setExpandedNodes(prev => {
+                const next = new Set(prev);
+                path.forEach(p => next.add(p.id));
+                return next;
+            });
+        }
     };
 
-    // Filter articles by search
-    const filteredArticles = searchQuery.length >= 2
-        ? articles.filter(a =>
-            a.article_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            a.chapter_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            a.title_name?.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-        : null;
+    const expandAll = () => setExpandedNodes(new Set(collectAllNodeIds(hierarchy)));
+    const collapseAll = () => setExpandedNodes(new Set());
 
-    const renderNode = (node: HierarchyNode, depth: number = 0): React.ReactNode => {
-        const isExpanded = expandedNodes.has(node.name);
-        const hasChildren = node.children.length > 0 || node.articles.length > 0;
+    // ── Search ──
+
+    const filteredArticles = useMemo(() => {
+        if (searchQuery.length < 2) return null;
+        const q = searchQuery.toLowerCase();
+        return articles.filter(a =>
+            a.article_number?.toLowerCase().includes(q) ||
+            a.num?.toLowerCase().includes(q) ||
+            a.content_raw?.toLowerCase().includes(q) ||
+            a.chapter_name?.toLowerCase().includes(q) ||
+            a.title_name?.toLowerCase().includes(q)
+        );
+    }, [searchQuery, articles]);
+
+    // ── Render tree ──
+
+    const renderTreeNode = (node: HierarchyNode, depth: number = 0): React.ReactNode => {
+        const isExpanded = expandedNodes.has(node.id);
+        const isActive = selectedNode?.id === node.id;
+        const hasChildren = node.children.length > 0;
+        const hasArticles = node.articles.length > 0;
         const articleCount = countArticles(node);
+        const density = (articleCount / maxArticlesInLevel) * 100;
 
         return (
-            <div key={node.name} className={`hierarchy-node hierarchy-node--${node.type}`}>
+            <div key={node.id} className="tree-node">
                 <button
-                    className={`hierarchy-header ${isExpanded ? 'is-expanded' : ''}`}
-                    onClick={() => toggleNode(node.name)}
+                    className={`tree-node-header ${isActive ? 'is-active' : ''}`}
+                    onClick={() => { toggleNode(node.id); selectNode(node); }}
                 >
-                    <motion.span
-                        className="hierarchy-chevron"
-                        animate={{ rotate: isExpanded ? 90 : 0 }}
-                        transition={{ duration: 0.2 }}
-                    >
-                        <ChevronRight size={16} />
-                    </motion.span>
-                    <span className="hierarchy-name">{node.name}</span>
-                    <span className="hierarchy-count">{articleCount} art.</span>
+                    <span className={`tree-toggle ${hasChildren || hasArticles ? (isExpanded ? 'is-open' : '') : 'is-placeholder'}`}>
+                        {(hasChildren || hasArticles) && <ChevronRight size={14} />}
+                    </span>
+                    <span className="tree-node-label">
+                        <span className="node-type">{node.type}</span>
+                        <span className="node-name" title={node.name}>{node.name}</span>
+                    </span>
+                    <span className="tree-badge">{articleCount}</span>
                 </button>
 
+                {/* Density bar */}
+                <div className="tree-density-bar">
+                    <div className="tree-density-fill" style={{ width: `${density}%` }} />
+                </div>
+
                 <AnimatePresence>
-                    {isExpanded && hasChildren && (
+                    {isExpanded && (
                         <motion.div
-                            className="hierarchy-content"
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: 'auto', opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                            transition={{ duration: 0.2 }}
                         >
-                            {/* Render children first */}
-                            {node.children.map(child => renderNode(child, depth + 1))}
+                            {/* Children */}
+                            {hasChildren && (
+                                <div className="tree-children">
+                                    {node.children.map(ch => renderTreeNode(ch, depth + 1))}
+                                </div>
+                            )}
 
-                            {/* Then render direct articles */}
-                            {node.articles.length > 0 && (
-                                <div className="hierarchy-articles">
-                                    {node.articles.map(article => (
+                            {/* Article chips */}
+                            {hasArticles && (
+                                <div className="tree-articles">
+                                    {node.articles.map(art => (
                                         <Link
-                                            key={article.id}
-                                            to={`/code/${slug}/${article.slug}`}
-                                            className="article-link"
+                                            key={art.id}
+                                            to={`/code/${slug}/${art.slug}`}
+                                            className="tree-article-chip"
                                         >
-                                            <FileText size={14} />
-                                            <span>Art. {article.article_number}</span>
+                                            {art.num_court || `Art. ${art.article_number}`}
                                         </Link>
                                     ))}
                                 </div>
@@ -227,41 +377,64 @@ const CodePage: React.FC = () => {
         );
     };
 
+    // ── Render main panel articles ──
+
+    const selectedArticles = useMemo(() => {
+        if (!selectedNode) return [];
+        return getArticlesForNode(selectedNode);
+    }, [selectedNode, getArticlesForNode]);
+
+    const breadcrumbs = useMemo(() => {
+        if (!selectedNode) return [];
+        return getBreadcrumb(selectedNode.id, hierarchy) || [];
+    }, [selectedNode, hierarchy, getBreadcrumb]);
+
+    // ── Loading / Not found ──
+
     if (loading) {
         return (
-            <div className="code-page code-loading">
-                <div className="loading-spinner" />
-                <p>Chargement du code...</p>
+            <div className="code-page">
+                <SEO title="Chargement..." />
+                <div className="code-loading">
+                    <div className="loading-spinner" />
+                    <p>Chargement du code...</p>
+                </div>
             </div>
         );
     }
 
     if (!law) {
         return (
-            <div className="code-page code-not-found">
-                <h2>Code non trouvé</h2>
-                <button onClick={() => navigate('/codes')}>Retour aux codes</button>
+            <div className="code-page">
+                <SEO title="Code non trouvé" />
+                <div className="code-not-found">
+                    <BookOpen size={48} />
+                    <h2>Code non trouvé</h2>
+                    <button onClick={() => navigate('/codes')} className="btn-back">
+                        ← Retour aux codes
+                    </button>
+                </div>
             </div>
         );
     }
 
     return (
         <div className="code-page">
-            <SEO
-                title={`${law.title} | LEXENEGAL`}
-                description={law.description || `${law.title} - Texte intégral et historique des versions`}
-            />
+            <SEO title={law.title} description={`${law.title} — ${totalArticles} articles`} />
 
             <div className="code-layout">
-                {/* SIDEBAR - Navigation rapide */}
+                {/* ═══════ SIDEBAR ═══════ */}
                 <aside className="code-sidebar">
-                    <div className="sidebar-sticky">
-                        <button className="btn-back" onClick={() => navigate('/codes')}>
-                            <ArrowLeft size={16} /> Tous les codes
-                        </button>
+                    <div className="sidebar-inner">
+                        {/* Header */}
+                        <div className="sidebar-code-header">
+                            <div className="surtitre">Code sénégalais</div>
+                            <div className="code-title">{law.title}</div>
+                        </div>
 
+                        {/* Search */}
                         <div className="sidebar-search">
-                            <Search size={16} />
+                            <Search size={15} />
                             <input
                                 type="text"
                                 placeholder="Rechercher un article..."
@@ -270,68 +443,172 @@ const CodePage: React.FC = () => {
                             />
                         </div>
 
-                        <div className="toc-header">
-                            <BookOpen size={18} />
-                            <span>Structure</span>
+                        {/* Controls */}
+                        <div className="sidebar-controls">
+                            <button onClick={expandAll}>Tout déplier</button>
+                            <button onClick={collapseAll}>Tout replier</button>
                         </div>
 
-                        <nav className="toc-nav">
-                            {hierarchy.map((part, i) => (
-                                <button
-                                    key={i}
-                                    className={`toc-part ${expandedNodes.has(part.name) ? 'active' : ''}`}
-                                    onClick={() => toggleNode(part.name)}
-                                >
-                                    {part.name}
-                                    <span className="toc-count">{countArticles(part)}</span>
-                                </button>
-                            ))}
-                        </nav>
+                        {/* Tree */}
+                        <div className="tree-root">
+                            {hierarchy.map(node => renderTreeNode(node))}
+                        </div>
+
+                        {/* Footer stats */}
+                        <div className="sidebar-footer">
+                            <div className="sidebar-stat">
+                                <span className="stat-val">{totalArticles}</span>
+                                <span className="stat-lbl">Articles</span>
+                            </div>
+                            <div className="sidebar-stat">
+                                <span className="stat-val">{totalChapters}</span>
+                                <span className="stat-lbl">Chapitres</span>
+                            </div>
+
+                        </div>
                     </div>
                 </aside>
 
-                {/* MAIN CONTENT */}
+                {/* ═══════ MAIN ═══════ */}
                 <main className="code-main">
-                    {/* HEADER */}
-                    <header className="code-header">
-                        <span className="code-category">{law.category || 'CODE'}</span>
-                        <h1>{law.title}</h1>
-                        {law.reference && (
-                            <p className="code-reference">{law.reference}</p>
-                        )}
-                        <p className="code-stats">
-                            {articles.length} articles · Version en vigueur
-                        </p>
-                    </header>
-
-                    {/* SEARCH RESULTS or HIERARCHY */}
+                    {/* Search mode */}
                     {filteredArticles ? (
                         <div className="search-results">
-                            <h2>{filteredArticles.length} résultat{filteredArticles.length > 1 ? 's' : ''} pour "{searchQuery}"</h2>
+                            <h2>{filteredArticles.length} résultat{filteredArticles.length > 1 ? 's' : ''} pour « {searchQuery} »</h2>
                             <div className="search-results-list">
-                                {filteredArticles.slice(0, 50).map(article => (
-                                    <Link
-                                        key={article.id}
-                                        to={`/code/${slug}/${article.slug}`}
-                                        className="search-result-item"
-                                    >
-                                        <strong>Art. {article.article_number}</strong>
-                                        <span>{article.chapter_name || article.title_name || ''}</span>
+                                {filteredArticles.map(a => (
+                                    <Link key={a.id} to={`/code/${slug}/${a.slug}`} className="search-result-item">
+                                        <strong>{a.num || `Article ${a.article_number}`}</strong>
+                                        <span>{a.chapter_name || a.title_name || ''}</span>
                                     </Link>
                                 ))}
                             </div>
                         </div>
+                    ) : selectedNode ? (
+                        <>
+                            {/* Breadcrumb */}
+                            <div className="code-breadcrumb">
+                                {breadcrumbs.map((bc, i) => (
+                                    <React.Fragment key={bc.id}>
+                                        {i > 0 && <span className="breadcrumb-sep">›</span>}
+                                        {i < breadcrumbs.length - 1 ? (
+                                            <button className="breadcrumb-item" onClick={() => selectNode(bc)}>
+                                                {bc.name}
+                                            </button>
+                                        ) : (
+                                            <span className="breadcrumb-current">{bc.name}</span>
+                                        )}
+                                    </React.Fragment>
+                                ))}
+                                <span className="version-pill">Version en vigueur</span>
+                            </div>
+
+                            {/* Section header */}
+                            <div className="section-header">
+                                <h2>{selectedNode.name}</h2>
+                                <div className="section-meta">
+                                    {selectedArticles.length} article{selectedArticles.length > 1 ? 's' : ''} 
+                                    {selectedNode.children.length > 0 && ` · ${selectedNode.children.length} sous-section${selectedNode.children.length > 1 ? 's' : ''}`}
+                                </div>
+                            </div>
+
+                            {/* Tabs */}
+                            <div className="code-tabs">
+                                <button
+                                    className={`code-tab ${activeTab === 'articles' ? 'is-active' : ''}`}
+                                    onClick={() => setActiveTab('articles')}
+                                >
+                                    Articles ({selectedArticles.length})
+                                </button>
+                                {selectedNode.children.length > 0 && (
+                                    <button
+                                        className={`code-tab ${activeTab === 'structure' ? 'is-active' : ''}`}
+                                        onClick={() => setActiveTab('structure')}
+                                    >
+                                        Structure ({selectedNode.children.length})
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Tab: Articles */}
+                            {activeTab === 'articles' && (
+                                <div className="articles-list">
+                                    {selectedArticles.length === 0 ? (
+                                        <div className="empty-state">
+                                            <FileText size={40} />
+                                            <p>Sélectionnez une sous-section pour consulter les articles.</p>
+                                        </div>
+                                    ) : (
+                                        selectedArticles.map(art => (
+                                            <article key={art.id} className="article-card">
+                                                <div className="article-card-header">
+                                                    <span className="article-num">
+                                                        {art.num_court || `Art. ${art.article_number}`}
+                                                    </span>
+                                                    {art.modifications && art.modifications.length > 0 && (
+                                                        <span className="article-date">
+                                                            {art.modifications[art.modifications.length - 1]}
+                                                        </span>
+                                                    )}
+                                                </div>
+
+                                                <div className="article-body">
+                                                    {art.content_html ? (
+                                                        <div dangerouslySetInnerHTML={{ __html: art.content_html }} />
+                                                    ) : (
+                                                        art.content_raw || '(Contenu non disponible)'
+                                                    )}
+                                                </div>
+
+                                                {art.tags && art.tags.length > 0 && (
+                                                    <div className="article-tags">
+                                                        {art.tags.map((tag, ti) => (
+                                                            <span key={ti} className="article-tag">{tag}</span>
+                                                        ))}
+                                                    </div>
+                                                )}
+
+                                                <Link to={`/code/${slug}/${art.slug}`} className="article-link-btn">
+                                                    <ExternalLink size={13} />
+                                                    Voir l'article complet
+                                                </Link>
+                                            </article>
+                                        ))
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Tab: Structure */}
+                            {activeTab === 'structure' && (
+                                <div className="structure-grid">
+                                    {selectedNode.children.map(child => {
+                                        const childCount = countArticles(child);
+                                        const pct = (childCount / maxArticlesInLevel) * 100;
+                                        return (
+                                            <div
+                                                key={child.id}
+                                                className="structure-card"
+                                                onClick={() => selectNode(child)}
+                                            >
+                                                <div className="sc-type">{child.type}</div>
+                                                <div className="sc-name">{child.name}</div>
+                                                <div className="sc-bar">
+                                                    <div className="sc-bar-fill" style={{ width: `${pct}%` }} />
+                                                </div>
+                                                <div className="sc-count">{childCount} article{childCount > 1 ? 's' : ''}</div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </>
                     ) : (
-                        <div className="code-hierarchy">
-                            {hierarchy.map(part => renderNode(part))}
+                        <div className="empty-state">
+                            <BookOpen size={48} />
+                            <p>Sélectionnez une section dans l'arbre de navigation.</p>
                         </div>
                     )}
                 </main>
-            </div>
-
-            {/* SIGNATURE */}
-            <div className="code-signature">
-                LEXENEGAL n'est pas un outil. C'est la mémoire juridique organisée du Sénégal.
             </div>
         </div>
     );

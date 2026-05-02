@@ -12,12 +12,22 @@
     z-index: 9998;
 }
 
-.conversion-modal {
+.conversion-modal-wrapper {
     position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     z-index: 9999;
+    pointer-events: none; /* Allows clicks to pass through to backdrop */
+}
+
+.conversion-modal {
+    position: relative;
+    pointer-events: auto; /* Re-enable clicks inside modal */
 
     /* Glassmorphism */
     background: rgba(255, 255, 255, 0.95);

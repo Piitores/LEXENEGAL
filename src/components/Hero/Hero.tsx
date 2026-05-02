@@ -137,6 +137,27 @@ function Hero() {
 
   return (
     <section id="hero" className="hero">
+      {/* Animated SVG Grid Background */}
+      <svg className="hero__grid-svg" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <pattern id="heroGrid" width="60" height="60" patternUnits="userSpaceOnUse">
+            <path d="M 60 0 L 0 0 0 60" fill="none" stroke="rgba(4, 120, 87, 0.1)" strokeWidth="0.5"/>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#heroGrid)" />
+        {/* Structural guide lines */}
+        <line x1="0" y1="20%" x2="100%" y2="20%" className="hero__grid-line" style={{ animationDelay: '0.5s' }} />
+        <line x1="0" y1="80%" x2="100%" y2="80%" className="hero__grid-line" style={{ animationDelay: '1s' }} />
+        <line x1="25%" y1="0" x2="25%" y2="100%" className="hero__grid-line" style={{ animationDelay: '1.5s' }} />
+        <line x1="75%" y1="0" x2="75%" y2="100%" className="hero__grid-line" style={{ animationDelay: '2s' }} />
+        {/* Intersection dots */}
+        <circle cx="25%" cy="20%" r="1.5" className="hero__grid-dot" style={{ animationDelay: '2.5s' }} />
+        <circle cx="75%" cy="20%" r="1.5" className="hero__grid-dot" style={{ animationDelay: '2.7s' }} />
+        <circle cx="25%" cy="80%" r="1.5" className="hero__grid-dot" style={{ animationDelay: '2.9s' }} />
+        <circle cx="75%" cy="80%" r="1.5" className="hero__grid-dot" style={{ animationDelay: '3.1s' }} />
+        <circle cx="50%" cy="50%" r="1" className="hero__grid-dot" style={{ animationDelay: '3.5s' }} />
+      </svg>
+
       <div className="hero__bg-abstract"></div>
 
       <div className="hero__container container">
