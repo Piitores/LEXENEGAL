@@ -6,7 +6,7 @@
  */
 
 interface StructuredParagraph {
-    type: 'visa' | 'attendu' | 'considerant' | 'dispositif' | 'normal';
+    type: 'visa' | 'attendu' | 'considerant' | 'dispositif' | 'section_intermediate' | 'normal';
     text: string;
     numero?: string;
 }

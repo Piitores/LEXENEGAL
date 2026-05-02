@@ -22,6 +22,7 @@ interface Article {
     chapter_name: string;
     article_number: string;
     slug: string;
+    modifications?: string[];
 }
 
 interface ArticleVersion {

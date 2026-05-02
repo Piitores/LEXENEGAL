@@ -289,7 +289,7 @@ const CodesListPage: React.FC = () => {
 
 // Composant Card pour un code
 const CodeCard: React.FC<{ code: LawCode }> = ({ code }) => {
-    const theme = CODE_THEMES[code.category as keyof typeof CODE_THEMES] || CODE_THEMES['Droit Civil'];
+    const theme = CODE_THEMES[code.category as keyof typeof CODE_THEMES] || CODE_THEMES['Droit Civil et Commercial'];
     const IconComponent = theme.icon;
 
     return (
