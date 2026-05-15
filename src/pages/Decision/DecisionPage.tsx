@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 // MeiliSearch removed - using Supabase for decisions
-import { Download, ArrowLeft, Copy, Scale, BookOpen, Printer } from 'lucide-react';
+import { Download, ArrowLeft, Copy, Scale, BookOpen, Printer, AlertCircle } from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
 import { createClient } from '@supabase/supabase-js';
 import LexenegalSymbol from '../../components/LexenegalSymbol/LexenegalSymbol';
@@ -11,6 +11,7 @@ import ConversionModal from '../../components/ConversionModal/ConversionModal';
 import { textToHtmlWithLinks } from '../../utils/articleLinkRenderer';
 import { getDecisionHtml, isNewFormat } from '../../utils/decisionTextFormatter';
 import { logViewDecision, logDownloadPdf } from '../../utils/auditLogger';
+import ReportErrorModal from '../../components/ReportError/ReportErrorModal';
 
 import './DecisionPage.css';
 
@@ -43,6 +44,9 @@ const DecisionPage: React.FC = () => {
 
     // State for Conversion Modal
     const [showConversionModal, setShowConversionModal] = useState(false);
+
+    // State for Report Error Modal
+    const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
     // Ref for printable content
     const printRef = useRef<HTMLDivElement>(null);
@@ -362,6 +366,15 @@ const DecisionPage: React.FC = () => {
                             <Copy size={16} />
                             Copier Référence
                         </button>
+
+                        <button 
+                            className="inline-report-btn" 
+                            style={{ marginTop: '1rem', width: '100%', justifyContent: 'center' }}
+                            onClick={() => setIsReportModalOpen(true)}
+                        >
+                            <AlertCircle size={16} />
+                            Signaler une erreur
+                        </button>
                     </div>
                 </aside>
             </div>
@@ -440,6 +453,15 @@ const DecisionPage: React.FC = () => {
                     setShowConversionModal(false);
                     navigate('/espace-professionnel#contact');
                 }}
+            />
+
+            {/* REPORT ERROR MODAL */}
+            <ReportErrorModal
+                isOpen={isReportModalOpen}
+                onClose={() => setIsReportModalOpen(false)}
+                entityType="decision"
+                entityId={decision?.id}
+                url={window.location.href}
             />
         </div>
     );

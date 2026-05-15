@@ -14,6 +14,8 @@ import CodesListPage from './pages/Codes/CodesListPage';
 import CodePage from './pages/Code/CodePage';
 import ArticlePage from './pages/Code/ArticlePage';
 import AdminPage from './pages/Admin/AdminPage';
+import NotFoundPage from './pages/Error/NotFoundPage';
+import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
 import SEO from './components/SEO/SEO';
 import AmbientEffects from './components/AmbientEffects/AmbientEffects';
 import './App.css';
@@ -48,8 +50,9 @@ function App() {
           <div className="app">
             <AmbientEffects />
             <Navbar scrolled={scrolled} />
-            <Routes>
-              {/* Landing Page Unique */}
+            <ErrorBoundary>
+              <Routes>
+                {/* Landing Page Unique */}
               <Route path="/" element={<Home />} />
 
               {/* Jurisprudence */}
@@ -69,9 +72,13 @@ function App() {
 
               {/* Admin Command Center */}
               <Route path="/admin" element={<AdminPage />} />
+
+              {/* 404 Catch-all */}
+              <Route path="*" element={<NotFoundPage />} />
             </Routes>
-            <Footer />
-          </div>
+          </ErrorBoundary>
+          <Footer />
+        </div>
         </BotBlocker>
       </Router>
     </HelmetProvider>

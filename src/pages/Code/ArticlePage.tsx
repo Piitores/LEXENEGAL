@@ -3,11 +3,12 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     ArrowLeft, ChevronLeft, ChevronRight,
-    GitCompare, Clock, Scale, Lock, FileText, Gavel
+    GitCompare, Clock, Scale, Lock, FileText, Gavel, AlertCircle
 } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import SEO from '../../components/SEO/SEO';
 import ConversionModal from '../../components/ConversionModal/ConversionModal';
+import ReportErrorModal from '../../components/ReportError/ReportErrorModal';
 import './ArticlePage.css';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
@@ -71,6 +72,9 @@ const ArticlePage: React.FC = () => {
     // Citing decisions
     const [citingDecisions, setCitingDecisions] = useState<CitingDecision[]>([]);
     const [loadingDecisions, setLoadingDecisions] = useState(false);
+
+    // Report Error Modal
+    const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
 
     useEffect(() => {
@@ -327,6 +331,13 @@ const ArticlePage: React.FC = () => {
                         Comparer les versions
                         {!isPro && <Lock size={12} className="pro-lock" />}
                     </button>
+                    <button
+                        className="inline-report-btn"
+                        onClick={() => setIsReportModalOpen(true)}
+                    >
+                        <AlertCircle size={16} />
+                        Signaler une erreur
+                    </button>
                 </div>
 
                 {/* COMPARISON MODE */}
@@ -474,6 +485,15 @@ const ArticlePage: React.FC = () => {
                     setShowConversionModal(false);
                     navigate('/espace-professionnel#contact');
                 }}
+            />
+
+            {/* REPORT ERROR MODAL */}
+            <ReportErrorModal
+                isOpen={isReportModalOpen}
+                onClose={() => setIsReportModalOpen(false)}
+                entityType="article"
+                entityId={article?.id}
+                url={window.location.href}
             />
         </div>
     );
