@@ -82,18 +82,9 @@ const ReportErrorModal: React.FC<ReportErrorModalProps> = ({
     return (
         <AnimatePresence>
             {isOpen && (
-                <>
-                    {/* BACKDROP */}
+                <div className="report-modal-wrapper">
+                    {/* MODAL */}
                     <motion.div
-                        className="modal-backdrop"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        onClick={!isSubmitting ? onClose : undefined}
-                    />
-                    <div className="report-modal-wrapper">
-                        {/* MODAL */}
-                        <motion.div
                             className="report-modal"
                             initial={{ opacity: 0, scale: 0.9, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -168,8 +159,7 @@ const ReportErrorModal: React.FC<ReportErrorModalProps> = ({
                                 </>
                             )}
                         </motion.div>
-                    </div>
-                </>
+                </div>
             )}
         </AnimatePresence>
     );
