@@ -83,7 +83,7 @@ const AuthPage: React.FC = () => {
                 
                 // Redirect after success
                 setTimeout(() => {
-                    window.location.href = '/search';
+                    window.location.href = '/';
                 }, 1500);
             }
         } catch (err: any) {
@@ -128,7 +128,7 @@ const AuthPage: React.FC = () => {
                 setMode('success');
                 setMessage('Bienvenue dans l\'Arsenal Juridique.');
                 setTimeout(() => {
-                    window.location.href = '/search';
+                    window.location.href = '/';
                 }, 1000);
             } else {
                 setMode('verify');
@@ -156,7 +156,7 @@ const AuthPage: React.FC = () => {
             if (error) throw error;
 
             // Redirect to home or decision page
-            window.location.href = '/search';
+            window.location.href = '/';
         } catch (err: any) {
             setError(err.message || 'Identifiants incorrects');
         } finally {

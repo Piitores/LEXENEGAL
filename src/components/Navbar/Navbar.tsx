@@ -67,15 +67,15 @@ function Navbar({ scrolled }: { scrolled: boolean }) {
         </div>
 
         <div className={`navbar__menu ${menuOpen ? 'navbar__menu--open' : ''}`}>
-          <Link to="/search" className="navbar__link" onClick={() => setMenuOpen(false)}>
+          <Link to="/search" className={`navbar__link ${location.pathname === '/search' ? 'navbar__link--highlight' : ''}`} onClick={() => setMenuOpen(false)}>
             <Scale size={16} />
             Jurisprudence
           </Link>
-          <Link to="/codes" className="navbar__link navbar__link--highlight" onClick={() => setMenuOpen(false)}>
+          <Link to="/codes" className={`navbar__link ${location.pathname === '/codes' ? 'navbar__link--highlight' : ''}`} onClick={() => setMenuOpen(false)}>
             <BookOpen size={16} />
             Corpus National
           </Link>
-          <Link to="/cabinet" className="navbar__link" onClick={() => setMenuOpen(false)}>
+          <Link to="/cabinet" className={`navbar__link ${location.pathname === '/cabinet' ? 'navbar__link--highlight' : ''}`} onClick={() => setMenuOpen(false)}>
             <Briefcase size={16} />
             Mon Cabinet
           </Link>
