@@ -19,60 +19,71 @@ const AuthCallback: React.FC = () => {
     const [message, setMessage] = useState('Sécurisation de votre accès à la Mémoire Juridique...');
 
     useEffect(() => {
-        const handleCallback = async () => {
-            try {
-                // Get the session from URL hash
-                const { data, error } = await supabase.auth.getSession();
+        const hash = window.location.hash;
+        
+        // Si Supabase a détecté une erreur (ex: PKCE mismatch, token expiré), il le met dans l'URL
+        if (hash.includes('error=')) {
+            setStatus('error');
+            setMessage('Le lien est invalide ou a expiré. Si vous développez en local, assurez-vous de tester sur la même adresse (localhost).');
+            return;
+        }
 
-                if (error) {
-                    throw error;
-                }
+        let isMounted = true;
 
-                if (data.session) {
-                    // User is authenticated
-                    setStatus('success');
-                    setMessage('Votre email a été vérifié avec succès !');
+        const checkSession = async (session: any) => {
+            if (!isMounted) return;
+            if (session) {
+                setStatus('success');
+                setMessage('Votre email a été vérifié avec succès !');
 
-                    // Update profile email_verified
+                try {
                     await supabase.from('profiles').update({
                         email_verified: true
-                    }).eq('id', data.session.user.id);
-
-                    // Trigger welcome email (optional - via Edge Function)
-                    try {
-                        const profile = await supabase
-                            .from('profiles')
-                            .select('full_name')
-                            .eq('id', data.session.user.id)
-                            .single();
-
-                        await supabase.functions.invoke('send-welcome-email', {
-                            body: {
-                                email: data.session.user.email,
-                                fullName: profile.data?.full_name || 'Partenaire'
-                            }
-                        });
-                    } catch (emailError) {
-                        console.log('Welcome email skipped:', emailError);
-                    }
-
-                    // Redirect after 2 seconds
-                    setTimeout(() => {
-                        navigate('/search');
-                    }, 2000);
-                } else {
-                    setStatus('error');
-                    setMessage('La session a expiré. Veuillez vous reconnecter.');
+                    }).eq('id', session.user.id);
+                } catch (e) {
+                    console.log('Update profile error:', e);
                 }
-            } catch (err: any) {
-                console.error('Callback error:', err);
-                setStatus('error');
-                setMessage(err.message || 'Une erreur est survenue');
+
+                setTimeout(() => {
+                    if (isMounted) navigate('/search');
+                }, 2000);
             }
         };
 
-        handleCallback();
-    }, [navigate]);
+        // Écouter le changement d'état (quand Supabase finit d'échanger le token de l'URL)
+        const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+            if (event === 'SIGNED_IN' || event === 'PASSWORD_RECOVERY') {
+                checkSession(session);
+            }
+        });
+
+        // Vérification de secours au cas où la session est déjà prête
+        supabase.auth.getSession().then(({ data, error }) => {
+            if (error) {
+                if (isMounted) {
+                    setStatus('error');
+                    setMessage(error.message);
+                }
+                return;
+            }
+            if (data.session) {
+                checkSession(data.session);
+            } else {
+                // On attend quelques secondes avant de déclarer une erreur pour laisser le temps à onAuthStateChange de se déclencher
+                setTimeout(() => {
+                    if (isMounted && status === 'loading') {
+                        setStatus('error');
+                        setMessage('La session a expiré. Veuillez vous reconnecter.');
+                    }
+                }, 3000);
+            }
+        });
+
+        return () => {
+            isMounted = false;
+            authListener.subscription.unsubscribe();
+        };
+    }, [navigate, status]);
 
     return (
         <div className="auth-page">
