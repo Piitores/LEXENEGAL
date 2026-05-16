@@ -23,6 +23,8 @@ const AuthPage: React.FC = () => {
     const [fullName, setFullName] = useState('');
     const [phone, setPhone] = useState('');
 
+    const isRegistering = useRef(false);
+
     // OTP State
     const [otp, setOtp] = useState(['', '', '', '', '', '', '', '']);
     const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -93,6 +95,9 @@ const AuthPage: React.FC = () => {
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (isRegistering.current) return;
+        
+        isRegistering.current = true;
         setLoading(true);
         setError(null);
 
@@ -124,6 +129,7 @@ const AuthPage: React.FC = () => {
             setError(err.message || 'Erreur lors de l\'inscription');
         } finally {
             setLoading(false);
+            isRegistering.current = false;
         }
     };
 
