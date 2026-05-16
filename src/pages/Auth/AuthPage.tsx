@@ -51,8 +51,8 @@ const AuthPage: React.FC = () => {
 
     const handleVerifyOtp = async () => {
         const token = otp.join('');
-        if (token.length !== 8) {
-            setError('Veuillez saisir les 8 chiffres du code.');
+        if (token.length !== 6 && token.length !== 8) {
+            setError('Veuillez saisir le code complet.');
             setMessage(null);
             return;
         }
@@ -104,8 +104,7 @@ const AuthPage: React.FC = () => {
                     data: {
                         full_name: fullName,
                         phone: phone
-                    },
-                    emailRedirectTo: `${window.location.origin}/auth/callback`
+                    }
                 }
             });
 
@@ -179,7 +178,7 @@ const AuthPage: React.FC = () => {
                 <p className="auth-subtitle">
                     {mode === 'login' && 'Connectez-vous pour accéder à vos outils privilégiés'}
                     {mode === 'register' && 'Créez votre accès à la jurisprudence organisée du Sénégal'}
-                    {mode === 'verify' && 'Un code à 8 chiffres a été envoyé à votre adresse email.'}
+                    {mode === 'verify' && 'Un code de sécurité a été envoyé à votre adresse email.'}
                     {mode === 'success' && 'Votre accès a été validé avec succès'}
                 </p>
 
@@ -336,7 +335,7 @@ const AuthPage: React.FC = () => {
                         <button 
                             className="auth-btn-primary" 
                             onClick={handleVerifyOtp}
-                            disabled={loading || otp.join('').length !== 8}
+                            disabled={loading || (otp.join('').length !== 6 && otp.join('').length !== 8)}
                             style={{ marginTop: '1.5rem', width: '100%' }}
                         >
                             {loading ? <Loader2 size={20} className="spinner" /> : 'Valider le code'}
