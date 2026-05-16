@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, User, ArrowRight, Check, Loader2 } from 'lucide-react';
@@ -22,6 +22,72 @@ const AuthPage: React.FC = () => {
     const [password, setPassword] = useState('');
     const [fullName, setFullName] = useState('');
     const [phone, setPhone] = useState('');
+
+    // OTP State
+    const [otp, setOtp] = useState(['', '', '', '', '', '']);
+    const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+    const handleOtpChange = (index: number, value: string) => {
+        // Allow only numbers
+        if (!/^\d*$/.test(value)) return;
+
+        const newOtp = [...otp];
+        // Take only the last character in case of quick typing
+        newOtp[index] = value.slice(-1);
+        setOtp(newOtp);
+
+        // Move to next input if value is entered
+        if (value && index < 5) {
+            otpRefs.current[index + 1]?.focus();
+        }
+    };
+
+    const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Backspace' && !otp[index] && index > 0) {
+            // Move to previous input on backspace if current is empty
+            otpRefs.current[index - 1]?.focus();
+        }
+    };
+
+    const handleVerifyOtp = async () => {
+        const token = otp.join('');
+        if (token.length !== 6) {
+            setError('Veuillez saisir les 6 chiffres du code.');
+            return;
+        }
+
+        setLoading(true);
+        setError(null);
+
+        try {
+            const { data, error } = await supabase.auth.verifyOtp({
+                email,
+                token,
+                type: 'signup'
+            });
+
+            if (error) throw error;
+
+            if (data.session) {
+                // Update profile as verified
+                await supabase.from('profiles').update({
+                    email_verified: true
+                }).eq('id', data.session.user.id);
+
+                setMode('success');
+                setMessage('Votre compte a été vérifié avec succès !');
+                
+                // Redirect after success
+                setTimeout(() => {
+                    window.location.href = '/search';
+                }, 1500);
+            }
+        } catch (err: any) {
+            setError('Code de vérification invalide ou expiré.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -52,7 +118,7 @@ const AuthPage: React.FC = () => {
             }
 
             setMode('verify');
-            setMessage('Un email de confirmation vous a été envoyé. Pensez à vérifier vos courriels indésirables (spams).');
+            setMessage('Saisissez le code de sécurité reçu par e-mail.');
         } catch (err: any) {
             setError(err.message || 'Erreur lors de l\'inscription');
         } finally {
@@ -104,14 +170,14 @@ const AuthPage: React.FC = () => {
                 <h1 className="auth-title">
                     {mode === 'login' && 'Accédez à la Mémoire Juridique'}
                     {mode === 'register' && 'Rejoignez l\'Arsenal'}
-                    {mode === 'verify' && 'Vérification en cours'}
+                    {mode === 'verify' && 'Vérification de sécurité'}
                     {mode === 'success' && 'Bienvenue'}
                 </h1>
 
                 <p className="auth-subtitle">
                     {mode === 'login' && 'Connectez-vous pour accéder à vos outils privilégiés'}
                     {mode === 'register' && 'Créez votre accès à la jurisprudence organisée du Sénégal'}
-                    {mode === 'verify' && 'Sécurisation de votre accès à la Mémoire Juridique...'}
+                    {mode === 'verify' && 'Un code à 6 chiffres a été envoyé à votre adresse email.'}
                     {mode === 'success' && 'Votre accès a été validé avec succès'}
                 </p>
 
@@ -247,16 +313,42 @@ const AuthPage: React.FC = () => {
                 {/* VERIFY STATE */}
                 {mode === 'verify' && (
                     <div className="verify-state">
-                        <div className="verify-icon">
-                            <Mail size={32} />
+                        <div className="otp-container">
+                            {otp.map((digit, index) => (
+                                <input
+                                    key={index}
+                                    ref={el => otpRefs.current[index] = el}
+                                    type="text"
+                                    inputMode="numeric"
+                                    pattern="\d*"
+                                    maxLength={1}
+                                    className="otp-input"
+                                    value={digit}
+                                    onChange={e => handleOtpChange(index, e.target.value)}
+                                    onKeyDown={e => handleOtpKeyDown(index, e)}
+                                    autoFocus={index === 0}
+                                />
+                            ))}
                         </div>
-                        <p>Consultez votre boîte email <strong>(et vos courriels indésirables / spams)</strong> et cliquez sur le lien de confirmation.</p>
-                        <button
-                            className="auth-btn-secondary"
-                            onClick={() => setMode('login')}
+
+                        <button 
+                            className="auth-btn-primary" 
+                            onClick={handleVerifyOtp}
+                            disabled={loading || otp.join('').length !== 6}
+                            style={{ marginTop: '1.5rem', width: '100%' }}
                         >
-                            Retour à la connexion
+                            {loading ? <Loader2 size={20} className="spinner" /> : 'Valider le code'}
                         </button>
+                        
+                        <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                            <button
+                                className="auth-btn-secondary"
+                                onClick={() => setMode('login')}
+                                style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+                            >
+                                Annuler
+                            </button>
+                        </div>
                     </div>
                 )}
 

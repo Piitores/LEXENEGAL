@@ -245,6 +245,41 @@
     margin-bottom: 1.5rem;
 }
 
+/* OTP Input */
+.otp-container {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    margin: 1.5rem 0;
+}
+
+.otp-input {
+    width: 3rem;
+    height: 3.5rem;
+    border: 1.5px solid #E5E7EB;
+    border-radius: 12px;
+    background: #FAFAFA;
+    font-size: 1.5rem;
+    font-weight: 600;
+    text-align: center;
+    color: #111827;
+    transition: all 0.2s;
+    font-family: 'Inter', sans-serif;
+}
+
+.otp-input:focus {
+    outline: none;
+    border-color: #047857;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(4, 120, 87, 0.1);
+}
+
+.otp-input::-webkit-outer-spin-button,
+.otp-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 /* Toggle */
 .auth-toggle {
     margin-top: 2rem;
