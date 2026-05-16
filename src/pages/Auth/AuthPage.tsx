@@ -52,7 +52,7 @@ const AuthPage: React.FC = () => {
             }
 
             setMode('verify');
-            setMessage('Un email de confirmation vous a été envoyé.');
+            setMessage('Un email de confirmation vous a été envoyé. Pensez à vérifier vos courriels indésirables (spams).');
         } catch (err: any) {
             setError(err.message || 'Erreur lors de l\'inscription');
         } finally {
@@ -249,7 +249,7 @@ const AuthPage: React.FC = () => {
                         <div className="verify-icon">
                             <Mail size={32} />
                         </div>
-                        <p>Consultez votre boîte email et cliquez sur le lien de confirmation.</p>
+                        <p>Consultez votre boîte email <strong>(et vos courriels indésirables / spams)</strong> et cliquez sur le lien de confirmation.</p>
                         <button
                             className="auth-btn-secondary"
                             onClick={() => setMode('login')}
