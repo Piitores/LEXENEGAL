@@ -24,7 +24,7 @@ const AuthPage: React.FC = () => {
     const [phone, setPhone] = useState('');
 
     // OTP State
-    const [otp, setOtp] = useState(['', '', '', '', '', '']);
+    const [otp, setOtp] = useState(['', '', '', '', '', '', '', '']);
     const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
     const handleOtpChange = (index: number, value: string) => {
@@ -37,7 +37,7 @@ const AuthPage: React.FC = () => {
         setOtp(newOtp);
 
         // Move to next input if value is entered
-        if (value && index < 5) {
+        if (value && index < 7) {
             otpRefs.current[index + 1]?.focus();
         }
     };
@@ -51,8 +51,8 @@ const AuthPage: React.FC = () => {
 
     const handleVerifyOtp = async () => {
         const token = otp.join('');
-        if (token.length !== 6) {
-            setError('Veuillez saisir les 6 chiffres du code.');
+        if (token.length !== 8) {
+            setError('Veuillez saisir les 8 chiffres du code.');
             return;
         }
 
@@ -177,7 +177,7 @@ const AuthPage: React.FC = () => {
                 <p className="auth-subtitle">
                     {mode === 'login' && 'Connectez-vous pour accéder à vos outils privilégiés'}
                     {mode === 'register' && 'Créez votre accès à la jurisprudence organisée du Sénégal'}
-                    {mode === 'verify' && 'Un code à 6 chiffres a été envoyé à votre adresse email.'}
+                    {mode === 'verify' && 'Un code à 8 chiffres a été envoyé à votre adresse email.'}
                     {mode === 'success' && 'Votre accès a été validé avec succès'}
                 </p>
 
@@ -334,7 +334,7 @@ const AuthPage: React.FC = () => {
                         <button 
                             className="auth-btn-primary" 
                             onClick={handleVerifyOtp}
-                            disabled={loading || otp.join('').length !== 6}
+                            disabled={loading || otp.join('').length !== 8}
                             style={{ marginTop: '1.5rem', width: '100%' }}
                         >
                             {loading ? <Loader2 size={20} className="spinner" /> : 'Valider le code'}
