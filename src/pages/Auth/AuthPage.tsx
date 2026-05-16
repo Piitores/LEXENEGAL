@@ -171,7 +171,7 @@ const AuthPage: React.FC = () => {
                             )}
                         </button>
 
-                        {/* Google OAuth */}
+                        {/* Google OAuth Temporarily Hidden
                         <div className="auth-divider">
                             <span>ou</span>
                         </div>
@@ -195,6 +195,7 @@ const AuthPage: React.FC = () => {
                             </svg>
                             Continuer avec Google
                         </button>
+                        */}
                     </form>
                 )}
 
