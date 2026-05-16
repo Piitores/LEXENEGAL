@@ -53,11 +53,13 @@ const AuthPage: React.FC = () => {
         const token = otp.join('');
         if (token.length !== 8) {
             setError('Veuillez saisir les 8 chiffres du code.');
+            setMessage(null);
             return;
         }
 
         setLoading(true);
         setError(null);
+        setMessage(null); // Fix: clear the "Saisissez le code" message so we don't have a green and red box at the same time
 
         try {
             const { data, error } = await supabase.auth.verifyOtp({
