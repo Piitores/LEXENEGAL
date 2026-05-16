@@ -123,8 +123,17 @@ const AuthPage: React.FC = () => {
                 }).eq('id', data.user.id);
             }
 
-            setMode('verify');
-            setMessage('Saisissez le code de sécurité reçu par e-mail.');
+            if (data.session) {
+                // Si la confirmation par e-mail est désactivée, Supabase renvoie directement une session
+                setMode('success');
+                setMessage('Bienvenue dans l\'Arsenal Juridique.');
+                setTimeout(() => {
+                    window.location.href = '/search';
+                }, 1000);
+            } else {
+                setMode('verify');
+                setMessage('Saisissez le code de sécurité reçu par e-mail.');
+            }
         } catch (err: any) {
             setError(err.message || 'Erreur lors de l\'inscription');
         } finally {
