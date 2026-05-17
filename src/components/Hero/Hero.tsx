@@ -56,13 +56,13 @@ function Hero() {
       if (supabase) {
         try {
           const { data: decisions, error } = await supabase
-            .rpc('search_decisions', {
-              search_query: searchQuery,
-              result_limit: 4
+            .rpc('search_decisions_fts', {
+              query: searchQuery
             });
 
           if (!error && decisions) {
-            decisions.forEach((hit: any) => {
+            // Take top 4 decisions since the RPC returns 50 by default
+            decisions.slice(0, 4).forEach((hit: any) => {
               mixedResults.push({
                 type: 'decision',
                 id: hit.id,
