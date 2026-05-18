@@ -80,7 +80,7 @@ const ConversionModal: React.FC<ConversionModalProps> = ({
                                 className="modal-cta"
                                 onClick={() => {
                                     onClose();
-                                    window.location.href = '/espace-professionnel#contact';
+                                    window.location.href = '/solliciter-acces';
                                 }}
                             >
                                 Solliciter un Accès Privilégié

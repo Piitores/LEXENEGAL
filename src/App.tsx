@@ -13,6 +13,7 @@ import CabinetPage from './pages/Cabinet/CabinetPage';
 import CodesListPage from './pages/Codes/CodesListPage';
 import CodePage from './pages/Code/CodePage';
 import ArticlePage from './pages/Code/ArticlePage';
+import AccessRequestPage from './pages/AccessRequest/AccessRequestPage';
 import AdminPage from './pages/Admin/AdminPage';
 import NotFoundPage from './pages/Error/NotFoundPage';
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
@@ -69,6 +70,7 @@ function App() {
               <Route path="/signup" element={<AuthPage />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="/cabinet" element={<CabinetPage />} />
+              <Route path="/solliciter-acces" element={<AccessRequestPage />} />
 
               {/* Admin Command Center */}
               <Route path="/admin" element={<AdminPage />} />

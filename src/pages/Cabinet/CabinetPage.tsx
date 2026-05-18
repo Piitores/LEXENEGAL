@@ -42,6 +42,18 @@ interface SavedSearch {
     alert_enabled: boolean;
 }
 
+interface Annotation {
+    id: string;
+    decision_id: string;
+    section_type: string;
+    content: string;
+    updated_at: string;
+    decision?: {
+        reference: string;
+        slug: string;
+    };
+}
+
 const CabinetPage: React.FC = () => {
     const navigate = useNavigate();
 
@@ -54,6 +66,7 @@ const CabinetPage: React.FC = () => {
     const [folders, setFolders] = useState<Folder[]>([]);
     const [favorites, setFavorites] = useState<Favorite[]>([]);
     const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
+    const [annotations, setAnnotations] = useState<Annotation[]>([]);
 
     const [showNewFolderModal, setShowNewFolderModal] = useState(false);
     const [newFolderName, setNewFolderName] = useState('');
@@ -77,8 +90,7 @@ const CabinetPage: React.FC = () => {
                     .single();
 
                 if (profile?.subscription_tier !== 'pro') {
-                    setShowConversionModal(true);
-                    setLoading(false);
+                    navigate('/solliciter-acces');
                     return;
                 }
 
@@ -138,6 +150,24 @@ const CabinetPage: React.FC = () => {
         if (searchesData) {
             setSavedSearches(searchesData);
         }
+
+        // Load recent annotations
+        const { data: annotationsData } = await supabase
+            .from('user_annotations')
+            .select(`
+                id, decision_id, section_type, content, updated_at,
+                decisions:decision_id (reference, slug)
+            `)
+            .eq('user_id', userId)
+            .order('updated_at', { ascending: false })
+            .limit(5);
+
+        if (annotationsData) {
+            setAnnotations(annotationsData.map(a => ({
+                ...a,
+                decision: a.decisions as any
+            })));
+        }
     };
 
     const createFolder = async () => {
@@ -187,25 +217,9 @@ const CabinetPage: React.FC = () => {
         );
     }
 
-    // Non-PRO: Show conversion modal
+    // Non-PRO: Show conversion modal fallback (should be caught by useEffect redirect)
     if (!isPro) {
-        return (
-            <div className="cabinet-page cabinet-locked">
-                <ConversionModal
-                    isOpen={showConversionModal}
-                    onClose={() => navigate('/search')}
-                    onRequestAccess={() => navigate('/espace-professionnel#contact')}
-                />
-                <div className="locked-message">
-                    <AlertCircle size={48} />
-                    <h2>Accès Réservé</h2>
-                    <p>Le Cabinet Numérique est exclusivement réservé aux membres de l'Arsenal PRO.</p>
-                    <button onClick={() => setShowConversionModal(true)}>
-                        Découvrir l'Arsenal PRO
-                    </button>
-                </div>
-            </div>
-        );
+        return null;
     }
 
     return (
@@ -355,6 +369,48 @@ const CabinetPage: React.FC = () => {
                                     ))}
                                 </tbody>
                             </table>
+                        )}
+                    </motion.section>
+
+                    {/* BLOC 4: ANNOTATIONS RÉCENTES */}
+                    <motion.section
+                        className="bento-block bento-annotations"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4 }}
+                    >
+                        <div className="block-header">
+                            <h2><FileText size={20} /> Dernières Annotations</h2>
+                        </div>
+
+                        {annotations.length === 0 ? (
+                            <div className="empty-state">
+                                <FileText size={32} strokeWidth={1} />
+                                <p>Vous n'avez pas encore annoté de décision.</p>
+                            </div>
+                        ) : (
+                            <div className="annotations-list">
+                                {annotations.map(ann => (
+                                    <div 
+                                        key={ann.id} 
+                                        className="annotation-card"
+                                        onClick={() => navigate(`/decision/${ann.decision?.slug}#${ann.section_type}`)}
+                                    >
+                                        <div className="annotation-header">
+                                            <span className="annotation-ref">{ann.decision?.reference}</span>
+                                            <span className={`annotation-badge badge-${ann.section_type}`}>
+                                                {ann.section_type.charAt(0).toUpperCase() + ann.section_type.slice(1)}
+                                            </span>
+                                        </div>
+                                        <p className="annotation-content">
+                                            {ann.content.length > 80 ? `${ann.content.substring(0, 80)}...` : ann.content}
+                                        </p>
+                                        <span className="annotation-date">
+                                            {new Date(ann.updated_at).toLocaleDateString('fr-FR')}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
                         )}
                     </motion.section>
                 </div>

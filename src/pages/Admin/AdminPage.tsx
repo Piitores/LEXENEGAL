@@ -140,7 +140,10 @@ const AdminPage: React.FC = () => {
 
         const { error } = await supabase
             .from('profiles')
-            .update({ role: newRole })
+            .update({ 
+                role: newRole,
+                subscription_tier: newRole 
+            })
             .eq('id', userId);
 
         if (!error) {

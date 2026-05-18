@@ -130,7 +130,7 @@
 /* ===== BENTO GRID ===== */
 .cabinet-bento {
     display: grid;
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: repeat(3, 1fr);
     grid-template-rows: auto auto;
     gap: 24px;
     max-width: 1200px;
@@ -172,7 +172,7 @@
 
 /* ===== FOLDERS BLOCK ===== */
 .bento-folders {
-    grid-row: span 1;
+    grid-column: span 2;
 }
 
 .btn-new-folder {
@@ -259,7 +259,7 @@
 
 /* ===== FAVORITES BLOCK ===== */
 .bento-favorites {
-    grid-row: span 1;
+    grid-column: span 1;
 }
 
 .favorites-list {
@@ -316,7 +316,7 @@
 
 /* ===== SEARCHES BLOCK ===== */
 .bento-searches {
-    grid-column: span 2;
+    grid-column: span 1;
 }
 
 .searches-table {
@@ -376,6 +376,72 @@
 
 .toggle-alert.active:hover {
     background: #D1FAE5;
+}
+
+/* ===== ANNOTATIONS BLOCK ===== */
+.bento-annotations {
+    grid-column: span 2;
+}
+
+.annotations-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+}
+
+.annotation-card {
+    background: #F9FAFB;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.annotation-card:hover {
+    border-color: #10B981;
+    background: white;
+}
+
+.annotation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.annotation-ref {
+    font-family: 'Georgia', serif;
+    font-weight: 600;
+    color: #111827;
+    font-size: 0.95rem;
+}
+
+.annotation-badge {
+    font-size: 0.7rem;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.badge-faits { background: #E0E7FF; color: #4338CA; }
+.badge-motifs { background: #FEF3C7; color: #B45309; }
+.badge-dispositif { background: #D1FAE5; color: #047857; }
+.badge-general { background: #F3F4F6; color: #4B5563; }
+
+.annotation-content {
+    color: #4B5563;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: 8px;
+}
+
+.annotation-date {
+    display: block;
+    font-size: 0.75rem;
+    color: #9CA3AF;
+    text-align: right;
 }
 
 /* ===== EMPTY STATE ===== */
@@ -488,7 +554,10 @@
         grid-template-columns: 1fr;
     }
 
-    .bento-searches {
+    .bento-folders,
+    .bento-favorites,
+    .bento-searches,
+    .bento-annotations {
         grid-column: span 1;
     }
 }

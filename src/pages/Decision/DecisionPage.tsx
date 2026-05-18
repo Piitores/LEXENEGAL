@@ -12,6 +12,7 @@ import { textToHtmlWithLinks } from '../../utils/articleLinkRenderer';
 import { getDecisionHtml, isNewFormat } from '../../utils/decisionTextFormatter';
 import { logViewDecision, logDownloadPdf } from '../../utils/auditLogger';
 import ReportErrorModal from '../../components/ReportError/ReportErrorModal';
+import AnnotationPanel from '../../components/AnnotationPanel/AnnotationPanel';
 
 import './DecisionPage.css';
 
@@ -38,6 +39,11 @@ const DecisionPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [articles, setArticles] = useState<ArticleInfo[]>([]);
     const [userId, setUserId] = useState<string>('Anonymous');
+    const [isPro, setIsPro] = useState(false);
+
+    // State for Annotations
+    const [isAnnotationOpen, setIsAnnotationOpen] = useState(false);
+    const [annotations, setAnnotations] = useState<any[]>([]);
 
     // State for Certified Edition Toggle
     const [isCertified, setIsCertified] = useState(true);
@@ -51,12 +57,20 @@ const DecisionPage: React.FC = () => {
     // Ref for printable content
     const printRef = useRef<HTMLDivElement>(null);
 
-    // Fetch user session for fingerprinting
+    // Fetch user session for fingerprinting and PRO status
     useEffect(() => {
         const getUser = async () => {
             const { data: { session } } = await supabase.auth.getSession();
             if (session?.user) {
                 setUserId(session.user.id.substring(0, 8));
+                
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('subscription_tier')
+                    .eq('id', session.user.id)
+                    .single();
+                
+                setIsPro(profile?.subscription_tier === 'pro');
             }
         };
         getUser();
@@ -84,11 +98,65 @@ const DecisionPage: React.FC = () => {
                 setDecision(data);
                 // Log view for audit trail
                 logViewDecision(slug || '');
+
+                // Fetch annotations for this decision if user is logged in
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session?.user) {
+                    const { data: annotationsData } = await supabase
+                        .from('user_annotations')
+                        .select('*')
+                        .eq('decision_id', data.id)
+                        .eq('user_id', session.user.id);
+                    if (annotationsData) {
+                        setAnnotations(annotationsData);
+                    }
+                }
             }
         } catch (error) {
             console.error(error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleSaveAnnotation = async (annotation: any) => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user || !decision) return;
+
+        const payload = {
+            user_id: session.user.id,
+            decision_id: decision.id,
+            section_type: annotation.section_type,
+            content: annotation.content,
+            updated_at: new Date().toISOString()
+        };
+
+        // Check if exists
+        const existing = annotations.find(a => a.section_type === annotation.section_type);
+
+        if (existing) {
+            // Update
+            const { error } = await supabase
+                .from('user_annotations')
+                .update(payload)
+                .eq('id', existing.id);
+            if (!error) {
+                setAnnotations(annotations.map(a => a.id === existing.id ? { ...a, ...payload } : a));
+            } else {
+                throw error;
+            }
+        } else {
+            // Insert
+            const { data, error } = await supabase
+                .from('user_annotations')
+                .insert([payload])
+                .select()
+                .single();
+            if (!error && data) {
+                setAnnotations([...annotations, data]);
+            } else {
+                throw error;
+            }
         }
     };
 
@@ -368,6 +436,26 @@ const DecisionPage: React.FC = () => {
                         </button>
 
                         <button 
+                            className="btn-elite-secondary" 
+                            style={{ 
+                                marginTop: '1rem', 
+                                border: '1px solid #10B981', 
+                                color: '#047857',
+                                background: '#ECFDF5'
+                            }}
+                            onClick={() => {
+                                if (isPro) {
+                                    setIsAnnotationOpen(true);
+                                } else {
+                                    setShowConversionModal(true);
+                                }
+                            }}
+                        >
+                            <FileText size={16} />
+                            Mes Annotations
+                        </button>
+
+                        <button 
                             className="inline-report-btn" 
                             style={{ marginTop: '1rem', width: '100%', justifyContent: 'center' }}
                             onClick={() => setIsReportModalOpen(true)}
@@ -451,9 +539,20 @@ const DecisionPage: React.FC = () => {
                 onClose={() => setShowConversionModal(false)}
                 onRequestAccess={() => {
                     setShowConversionModal(false);
-                    navigate('/espace-professionnel#contact');
+                    navigate('/solliciter-acces');
                 }}
             />
+
+            {/* ANNOTATION PANEL */}
+            {decision && (
+                <AnnotationPanel
+                    isOpen={isAnnotationOpen}
+                    onClose={() => setIsAnnotationOpen(false)}
+                    decisionId={decision.id}
+                    existingAnnotations={annotations}
+                    onSave={handleSaveAnnotation}
+                />
+            )}
 
             {/* REPORT ERROR MODAL */}
             <ReportErrorModal
