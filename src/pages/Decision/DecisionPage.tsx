@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 // MeiliSearch removed - using Supabase for decisions
-import { Download, ArrowLeft, Copy, Scale, BookOpen, Printer, AlertCircle } from 'lucide-react';
+import { Download, ArrowLeft, Copy, Scale, BookOpen, Printer, AlertCircle, FileText } from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
 import { createClient } from '@supabase/supabase-js';
 import LexenegalSymbol from '../../components/LexenegalSymbol/LexenegalSymbol';
