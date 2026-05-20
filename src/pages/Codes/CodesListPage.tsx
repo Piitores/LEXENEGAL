@@ -134,7 +134,10 @@ const CodesListPage: React.FC = () => {
 
             if (error) throw error;
 
-            const transformedCodes: LawCode[] = (codesData || []).map((code: any) => ({
+            const allowedSlugs = ['code-travail', 'code-securite-sociale-senegal'];
+            const transformedCodes: LawCode[] = (codesData || [])
+                .filter((code: any) => allowedSlugs.includes(code.slug))
+                .map((code: any) => ({
                 id: code.id,
                 name: code.title,
                 slug: code.slug,

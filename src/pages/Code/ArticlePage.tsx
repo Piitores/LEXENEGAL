@@ -90,10 +90,10 @@ const ArticlePage: React.FC = () => {
             if (session) {
                 const { data: profile } = await supabase
                     .from('profiles')
-                    .select('subscription_tier')
+                    .select('subscription_tier, role')
                     .eq('id', session.user.id)
                     .single();
-                setIsPro(profile?.subscription_tier === 'pro');
+                setIsPro(profile?.subscription_tier === 'pro' || profile?.role === 'admin');
             }
         } catch (error) {
             console.error('Error checking PRO access:', error);
