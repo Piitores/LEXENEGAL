@@ -78,11 +78,6 @@ const CODE_THEMES = {
         icon: Map,
         color: '#F59E0B',
         description: 'Aménagement, construction, cadastre, foncier'
-    },
-    'Doctrine': {
-        icon: BookOpen,
-        color: '#047857',
-        description: 'Interprétations, circulaires, notes et lettres administratives'
     }
 };
 
@@ -152,17 +147,6 @@ const CodesListPage: React.FC = () => {
                 category: CODE_TO_THEME[code.slug] || 'Droit Civil',
                 articles_count: code.articles?.[0]?.count || 0
             }));
-
-            // Ajout statique de la Doctrine Fiscale
-            transformedCodes.push({
-                id: 'doctrine-fiscale-id',
-                name: 'Doctrine Fiscale (Lettres DGID)',
-                slug: 'doctrine-fiscale',
-                short_name: 'Doctrine Fiscale',
-                description: 'Circulaires, notes et correspondances fiscales de la DGID.',
-                category: 'Doctrine',
-                articles_count: 841
-            });
 
             setCodes(transformedCodes);
         } catch (err) {
