@@ -85,11 +85,11 @@ const CabinetPage: React.FC = () => {
 
                 const { data: profile } = await supabase
                     .from('profiles')
-                    .select('subscription_tier, full_name')
+                    .select('subscription_tier, full_name, role')
                     .eq('id', session.user.id)
                     .single();
 
-                if (profile?.subscription_tier !== 'pro') {
+                if (profile?.subscription_tier !== 'pro' && profile?.role !== 'admin') {
                     navigate('/solliciter-acces');
                     return;
                 }
@@ -391,8 +391,8 @@ const CabinetPage: React.FC = () => {
                         ) : (
                             <div className="annotations-list">
                                 {annotations.map(ann => (
-                                    <div 
-                                        key={ann.id} 
+                                    <div
+                                        key={ann.id}
                                         className="annotation-card"
                                         onClick={() => navigate(`/decision/${ann.decision?.slug}#${ann.section_type}`)}
                                     >

@@ -16,6 +16,7 @@ export interface UserProfile {
     id: string;
     email: string;
     full_name: string | null;
+    role?: string;
     subscription_tier: 'free' | 'trial' | 'pro';
     trial_started_at: string | null;
     trial_ends_at: string | null;
@@ -97,7 +98,7 @@ export function useSubscription() {
                 : 0;
 
             // Déterminer les droits
-            const isPro = profile.subscription_tier === 'pro';
+            const isPro = profile.subscription_tier === 'pro' || profile.role === 'admin';
             const isTrialActive = profile.subscription_tier === 'trial' && trialDaysRemaining > 0;
             const isTrialExpired = profile.subscription_tier === 'trial' && trialDaysRemaining <= 0;
 

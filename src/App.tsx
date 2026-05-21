@@ -13,6 +13,7 @@ import CabinetPage from './pages/Cabinet/CabinetPage';
 import CodesListPage from './pages/Codes/CodesListPage';
 import CodePage from './pages/Code/CodePage';
 import ArticlePage from './pages/Code/ArticlePage';
+import DoctrinePage from './pages/Doctrine/DoctrinePage';
 import AccessRequestPage from './pages/AccessRequest/AccessRequestPage';
 import AdminPage from './pages/Admin/AdminPage';
 import NotFoundPage from './pages/Error/NotFoundPage';
@@ -64,6 +65,7 @@ function App() {
               <Route path="/codes" element={<CodesListPage />} />
               <Route path="/code/:slug" element={<CodePage />} />
               <Route path="/code/:codeSlug/:articleSlug" element={<ArticlePage />} />
+              <Route path="/doctrine-fiscale" element={<DoctrinePage />} />
 
               {/* Espace Pro */}
               <Route path="/login" element={<AuthPage />} />

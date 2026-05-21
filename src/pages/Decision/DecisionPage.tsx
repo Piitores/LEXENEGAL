@@ -63,14 +63,14 @@ const DecisionPage: React.FC = () => {
             const { data: { session } } = await supabase.auth.getSession();
             if (session?.user) {
                 setUserId(session.user.id.substring(0, 8));
-                
+
                 const { data: profile } = await supabase
                     .from('profiles')
-                    .select('subscription_tier')
+                    .select('subscription_tier, role')
                     .eq('id', session.user.id)
                     .single();
-                
-                setIsPro(profile?.subscription_tier === 'pro');
+
+                setIsPro(profile?.subscription_tier === 'pro' || profile?.role === 'admin');
             }
         };
         getUser();
@@ -435,11 +435,11 @@ const DecisionPage: React.FC = () => {
                             Copier Référence
                         </button>
 
-                        <button 
-                            className="btn-elite-secondary" 
-                            style={{ 
-                                marginTop: '1rem', 
-                                border: '1px solid #10B981', 
+                        <button
+                            className="btn-elite-secondary"
+                            style={{
+                                marginTop: '1rem',
+                                border: '1px solid #10B981',
                                 color: '#047857',
                                 background: '#ECFDF5'
                             }}
@@ -455,8 +455,8 @@ const DecisionPage: React.FC = () => {
                             Mes Annotations
                         </button>
 
-                        <button 
-                            className="inline-report-btn" 
+                        <button
+                            className="inline-report-btn"
                             style={{ marginTop: '1rem', width: '100%', justifyContent: 'center' }}
                             onClick={() => setIsReportModalOpen(true)}
                         >

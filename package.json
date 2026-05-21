@@ -6,7 +6,8 @@
     "scripts": {
         "dev": "vite",
         "build": "tsc && vite build",
-        "preview": "vite preview"
+        "preview": "vite preview",
+        "sitemap": "node scripts/generate-sitemap-supabase.cjs"
     },
     "dependencies": {
         "@supabase/supabase-js": "^2.89.0",

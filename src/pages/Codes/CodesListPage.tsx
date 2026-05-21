@@ -78,6 +78,11 @@ const CODE_THEMES = {
         icon: Map,
         color: '#F59E0B',
         description: 'Aménagement, construction, cadastre, foncier'
+    },
+    'Doctrine': {
+        icon: BookOpen,
+        color: '#047857',
+        description: 'Interprétations, circulaires, notes et lettres administratives'
     }
 };
 
@@ -134,7 +139,7 @@ const CodesListPage: React.FC = () => {
 
             if (error) throw error;
 
-            const allowedSlugs = ['code-travail', 'code-securite-sociale-senegal'];
+            const allowedSlugs = ['code-travail', 'code-securite-sociale-senegal', 'code-general-impots'];
             const transformedCodes: LawCode[] = (codesData || [])
                 .filter((code: any) => allowedSlugs.includes(code.slug))
                 .map((code: any) => ({
@@ -147,6 +152,17 @@ const CodesListPage: React.FC = () => {
                 category: CODE_TO_THEME[code.slug] || 'Droit Civil',
                 articles_count: code.articles?.[0]?.count || 0
             }));
+
+            // Ajout statique de la Doctrine Fiscale
+            transformedCodes.push({
+                id: 'doctrine-fiscale-id',
+                name: 'Doctrine Fiscale (Lettres DGID)',
+                slug: 'doctrine-fiscale',
+                short_name: 'Doctrine Fiscale',
+                description: 'Circulaires, notes et correspondances fiscales de la DGID.',
+                category: 'Doctrine',
+                articles_count: 841
+            });
 
             setCodes(transformedCodes);
         } catch (err) {
@@ -242,7 +258,7 @@ const CodesListPage: React.FC = () => {
                                                 {themeCodes.map(code => (
                                                     <Link
                                                         key={code.id}
-                                                        to={`/code/${code.slug}`}
+                                                        to={code.slug === 'doctrine-fiscale' ? '/doctrine-fiscale' : `/code/${code.slug}`}
                                                         className="theme-code-link"
                                                     >
                                                         <FileText size={16} />
@@ -294,9 +310,10 @@ const CodesListPage: React.FC = () => {
 const CodeCard: React.FC<{ code: LawCode }> = ({ code }) => {
     const theme = CODE_THEMES[code.category as keyof typeof CODE_THEMES] || CODE_THEMES['Droit Civil et Commercial'];
     const IconComponent = theme.icon;
+    const linkPath = code.slug === 'doctrine-fiscale' ? '/doctrine-fiscale' : `/code/${code.slug}`;
 
     return (
-        <Link to={`/code/${code.slug}`} className="code-card-v2">
+        <Link to={linkPath} className="code-card-v2">
             <div className="code-card-v2__icon" style={{ background: `${theme.color}15`, color: theme.color }}>
                 <IconComponent size={24} />
             </div>

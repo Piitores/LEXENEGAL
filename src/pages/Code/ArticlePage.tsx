@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     ArrowLeft, ChevronLeft, ChevronRight,
-    GitCompare, Clock, Scale, Lock, FileText, Gavel, AlertCircle
+    GitCompare, Clock, Scale, Lock, FileText, Gavel, AlertCircle, X, ExternalLink, BookOpen
 } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import SEO from '../../components/SEO/SEO';
@@ -24,6 +24,7 @@ interface Article {
     article_number: string;
     slug: string;
     modifications?: string[];
+    content_raw?: string;
 }
 
 interface ArticleVersion {
@@ -47,6 +48,25 @@ interface CitingDecision {
     date_decision: string;
     chambre: string;
     citation_text: string;
+}
+
+interface ArticleAnnotation {
+    id: string;
+    type: string;
+    reference: string;
+    date: string | null;
+    title: string | null;
+    content_raw: string;
+}
+
+interface DoctrineLink {
+    doctrine_id: string;
+    doctrine: {
+        id: string;
+        reference_complete: string;
+        objet: string;
+        content_raw: string;
+    }
 }
 
 const ArticlePage: React.FC = () => {
@@ -73,6 +93,13 @@ const ArticlePage: React.FC = () => {
     const [citingDecisions, setCitingDecisions] = useState<CitingDecision[]>([]);
     const [loadingDecisions, setLoadingDecisions] = useState(false);
 
+    // CGI Annotations & Doctrine
+    const [annotations, setAnnotations] = useState<ArticleAnnotation[]>([]);
+    const [doctrineLinks, setDoctrineLinks] = useState<DoctrineLink[]>([]);
+    const [selectedDoctrine, setSelectedDoctrine] = useState<DoctrineLink['doctrine'] | null>(null);
+    const [showAuthModal, setShowAuthModal] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+
     // Report Error Modal
     const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
@@ -88,12 +115,15 @@ const ArticlePage: React.FC = () => {
         try {
             const { data: { session } } = await supabase.auth.getSession();
             if (session) {
+                setIsAuthenticated(true);
                 const { data: profile } = await supabase
                     .from('profiles')
                     .select('subscription_tier, role')
                     .eq('id', session.user.id)
                     .single();
                 setIsPro(profile?.subscription_tier === 'pro' || profile?.role === 'admin');
+            } else {
+                setIsAuthenticated(false);
             }
         } catch (error) {
             console.error('Error checking PRO access:', error);
@@ -134,10 +164,20 @@ const ArticlePage: React.FC = () => {
                         .eq('article_id', articleData.id)
                         .order('effective_date', { ascending: false });
 
-                    if (versionsData) {
+                    if (versionsData && versionsData.length > 0) {
                         setVersions(versionsData);
                         const current = versionsData.find(v => v.is_current);
                         setCurrentVersion(current || versionsData[0]);
+                    } else if (articleData.content_raw) {
+                        // Fallback for articles ingested directly without versions (like the CGI)
+                        setCurrentVersion({
+                            id: `raw-${articleData.id}`,
+                            content: articleData.content_raw,
+                            effective_date: new Date().toISOString(),
+                            expiration_date: null,
+                            version_note: null,
+                            is_current: true
+                        });
                     }
 
                     // Get previous article (lower display_order)
@@ -170,6 +210,24 @@ const ArticlePage: React.FC = () => {
 
                     // Fetch citing decisions
                     fetchCitingDecisions(articleData.id);
+
+                    // Fetch annotations
+                    const { data: annoData } = await supabase
+                        .from('article_annotations')
+                        .select('*')
+                        .eq('article_id', articleData.id)
+                        .order('created_at', { ascending: true });
+                    if (annoData) setAnnotations(annoData);
+
+                    // Fetch doctrine links
+                    const { data: doctrineData } = await supabase
+                        .from('article_doctrine_links')
+                        .select(`
+                            doctrine_id,
+                            doctrine:doctrine(id, reference_complete, objet, content_raw)
+                        `)
+                        .eq('article_id', articleData.id);
+                    if (doctrineData) setDoctrineLinks(doctrineData as unknown as DoctrineLink[]);
                 }
             }
         } catch (error) {
@@ -254,6 +312,14 @@ const ArticlePage: React.FC = () => {
                 })}
             </div>
         );
+    };
+
+    const handleDoctrineClick = (doctrine: DoctrineLink['doctrine']) => {
+        if (!isAuthenticated) {
+            setShowAuthModal(true);
+        } else {
+            setSelectedDoctrine(doctrine);
+        }
     };
 
     if (loading) {
@@ -405,7 +471,54 @@ const ArticlePage: React.FC = () => {
                             dangerouslySetInnerHTML={{ __html: currentVersion.content }}
                         />
                     )}
+
+                    {/* ANNOTATIONS (Pastilles grises du CGI) */}
+                    {annotations.length > 0 && !showComparison && (
+                        <div className="article-annotations-container">
+                            {annotations.map(anno => (
+                                <div key={anno.id} className="article-annotation">
+                                    {anno.title && <h4>{anno.title}</h4>}
+                                    <div 
+                                        className="annotation-content" 
+                                        dangerouslySetInnerHTML={{ __html: anno.content_raw }} 
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
+
+                {/* DOCTRINE FISCALE */}
+                {doctrineLinks.length > 0 && (
+                    <section className="citing-decisions doctrine-section">
+                        <h2>
+                            <BookOpen size={20} />
+                            Doctrine Fiscale liée
+                        </h2>
+                        <div className="citing-list">
+                            {doctrineLinks.map(link => (
+                                <button
+                                    key={link.doctrine_id}
+                                    onClick={() => handleDoctrineClick(link.doctrine)}
+                                    className="citing-card doctrine-card"
+                                >
+                                    <div className="citing-card__icon">
+                                        <FileText size={16} />
+                                    </div>
+                                    <div className="citing-card__content text-left">
+                                        <h3>{link.doctrine.reference_complete || 'Lettre de la DGID'}</h3>
+                                        {link.doctrine.objet && (
+                                            <p className="citing-card__meta">
+                                                Objet : {link.doctrine.objet}
+                                            </p>
+                                        )}
+                                    </div>
+                                    <ChevronRight size={16} className="citing-card__arrow" />
+                                </button>
+                            ))}
+                        </div>
+                    </section>
+                )}
 
                 {/* CITING DECISIONS */}
                 <section className="citing-decisions">
@@ -495,6 +608,93 @@ const ArticlePage: React.FC = () => {
                 entityId={article?.id}
                 url={window.location.href}
             />
+
+            {/* DOCTRINE SIDEBAR */}
+            <AnimatePresence>
+                {selectedDoctrine && (
+                    <>
+                        <motion.div 
+                            className="doctrine-sidebar-overlay"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setSelectedDoctrine(null)}
+                        />
+                        <motion.div
+                            className="doctrine-sidebar"
+                            initial={{ x: '100%' }}
+                            animate={{ x: 0 }}
+                            exit={{ x: '100%' }}
+                            transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+                        >
+                            <div className="doctrine-sidebar-header">
+                                <h3>Doctrine Fiscale</h3>
+                                <div className="doctrine-sidebar-actions">
+                                    <button 
+                                        className="doctrine-sidebar-btn" 
+                                        title="Ouvrir dans un nouvel onglet"
+                                        onClick={() => {
+                                            // Optional: Create a dedicated page for Doctrine later
+                                            // window.open(`/doctrine/${selectedDoctrine.id}`, '_blank');
+                                            alert("La page dédiée à la doctrine sera bientôt disponible !");
+                                        }}
+                                    >
+                                        <ExternalLink size={18} />
+                                    </button>
+                                    <button className="doctrine-sidebar-btn close" onClick={() => setSelectedDoctrine(null)}>
+                                        <X size={20} />
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="doctrine-sidebar-content">
+                                <h2 className="doctrine-title">{selectedDoctrine.reference_complete || 'Lettre de la DGID'}</h2>
+                                {selectedDoctrine.objet && (
+                                    <div className="doctrine-meta">
+                                        <strong>Objet :</strong> {selectedDoctrine.objet}
+                                    </div>
+                                )}
+                                <div 
+                                    className="doctrine-text" 
+                                    dangerouslySetInnerHTML={{ 
+                                        __html: selectedDoctrine.content_raw.replace(/\n/g, '<br />') 
+                                    }} 
+                                />
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
+
+            {/* AUTH REQUIRED MODAL */}
+            <AnimatePresence>
+                {showAuthModal && (
+                    <div className="modal-overlay auth-modal-overlay">
+                        <motion.div 
+                            className="modal-content auth-modal"
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                        >
+                            <button className="modal-close" onClick={() => setShowAuthModal(false)}>
+                                <X size={20} />
+                            </button>
+                            <div className="auth-modal-icon">
+                                <Lock size={32} />
+                            </div>
+                            <h2>Connexion Requise</h2>
+                            <p>
+                                La consultation de la Doctrine Fiscale intégrale est réservée aux utilisateurs Lexenegal.
+                                Créez un compte gratuitement ou connectez-vous pour y accéder.
+                            </p>
+                            <div className="auth-modal-actions">
+                                <button className="btn-primary" onClick={() => navigate('/login')}>
+                                    Se connecter / S'inscrire
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

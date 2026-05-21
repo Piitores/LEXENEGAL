@@ -41,13 +41,14 @@ const DecisionActions: React.FC<DecisionActionsProps> = ({ decisionId, onNeedUpg
 
             const { data: profile } = await supabase
                 .from('profiles')
-                .select('subscription_tier')
+                .select('subscription_tier, role')
                 .eq('id', session.user.id)
                 .single();
 
-            setIsPro(profile?.subscription_tier === 'pro');
+            const userIsPro = profile?.subscription_tier === 'pro' || profile?.role === 'admin';
+            setIsPro(userIsPro);
 
-            if (profile?.subscription_tier === 'pro') {
+            if (userIsPro) {
                 // Check if already favorite
                 const { data: favData } = await supabase
                     .from('favorites')

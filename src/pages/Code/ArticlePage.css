@@ -703,6 +703,252 @@
     font-size: 0.65rem;
 }
 
+/* ─────────────────────────────────────────────────────
+   ANNOTATIONS (Pastilles grises du CGI)
+   ───────────────────────────────────────────────────── */
+.article-annotations-container {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px dashed #E5E7EB;
+}
+
+.article-annotation {
+    background: #F3F4F6;
+    border-left: 4px solid #9CA3AF;
+    padding: 16px 20px;
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 16px;
+    font-size: 0.95rem;
+    color: #4B5563;
+}
+
+.article-annotation h4 {
+    margin: 0 0 8px 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #374151;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.annotation-content {
+    line-height: 1.6;
+}
+
+/* ─────────────────────────────────────────────────────
+   DOCTRINE FISCALE SECTION
+   ───────────────────────────────────────────────────── */
+.doctrine-section {
+    margin-top: 40px;
+    padding-top: 32px;
+}
+
+.doctrine-card {
+    background: linear-gradient(to right, #FFFFFF, #F8FAFC);
+    border-left: 3px solid #3B82F6;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+}
+
+.doctrine-card:hover {
+    border-color: #2563EB;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+}
+
+.doctrine-card .citing-card__icon {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3B82F6;
+}
+
+/* ─────────────────────────────────────────────────────
+   DOCTRINE SIDEBAR
+   ───────────────────────────────────────────────────── */
+.doctrine-sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(17, 24, 39, 0.4);
+    z-index: 999;
+    backdrop-filter: blur(4px);
+}
+
+.doctrine-sidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 100%;
+    max-width: 600px;
+    height: 100vh;
+    background: #FFFFFF;
+    z-index: 1000;
+    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.doctrine-sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #E5E7EB;
+    background: #F9FAFB;
+}
+
+.doctrine-sidebar-header h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #111827;
+    margin: 0;
+}
+
+.doctrine-sidebar-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.doctrine-sidebar-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: white;
+    border-radius: 8px;
+    color: #6B7280;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.doctrine-sidebar-btn:hover {
+    background: #F3F4F6;
+    color: #111827;
+}
+
+.doctrine-sidebar-btn.close:hover {
+    background: #FEE2E2;
+    color: #DC2626;
+}
+
+.doctrine-sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 32px 24px;
+}
+
+.doctrine-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    color: #111827;
+    margin-bottom: 16px;
+    line-height: 1.3;
+}
+
+.doctrine-meta {
+    font-size: 0.9rem;
+    color: #4B5563;
+    padding: 12px 16px;
+    background: #F3F4F6;
+    border-radius: 8px;
+    margin-bottom: 24px;
+}
+
+.doctrine-text {
+    font-family: 'Georgia', serif;
+    font-size: 1.05rem;
+    line-height: 1.8;
+    color: #374151;
+}
+
+/* ─────────────────────────────────────────────────────
+   AUTH MODAL
+   ───────────────────────────────────────────────────── */
+.auth-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(17, 24, 39, 0.6);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(8px);
+}
+
+.auth-modal {
+    background: white;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 480px;
+    padding: 40px;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.modal-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: none;
+    border: none;
+    color: #9CA3AF;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.modal-close:hover {
+    color: #111827;
+}
+
+.auth-modal-icon {
+    width: 64px;
+    height: 64px;
+    background: rgba(4, 120, 87, 0.1);
+    color: #047857;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+}
+
+.auth-modal h2 {
+    font-size: 1.5rem;
+    color: #111827;
+    margin-bottom: 12px;
+}
+
+.auth-modal p {
+    color: #6B7280;
+    line-height: 1.6;
+    margin-bottom: 32px;
+}
+
+.auth-modal-actions .btn-primary {
+    width: 100%;
+    padding: 14px 24px;
+    background: #047857;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.auth-modal-actions .btn-primary:hover {
+    background: #065F46;
+}
+
 /* Responsive */
 
 @media (max-width: 768px) {
