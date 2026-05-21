@@ -105,13 +105,17 @@ async function generateSitemap() {
     // 2. Add codes
     for (const code of codes) {
         if (!code.slug) continue;
-        const lastmod = code.updated_at 
-            ? new Date(code.updated_at).toISOString().split('T')[0]
-            : new Date().toISOString().split('T')[0];
+        
+        let lastmodTag = '';
+        if (code.updated_at) {
+            try {
+                const dateStr = new Date(code.updated_at).toISOString().split('T')[0];
+                lastmodTag = `\n    <lastmod>${dateStr}</lastmod>`;
+            } catch (e) {}
+        }
 
         xml += `  <url>
-    <loc>${BASE_URL}/code/${code.slug}</loc>
-    <lastmod>${lastmod}</lastmod>
+    <loc>${BASE_URL}/code/${code.slug}</loc>${lastmodTag}
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -122,13 +126,17 @@ async function generateSitemap() {
     for (const decision of decisions) {
         if (!decision.slug) continue;
 
-        const lastmod = decision.date_decision
-            ? new Date(decision.date_decision).toISOString().split('T')[0]
-            : new Date().toISOString().split('T')[0];
+        let lastmodTag = '';
+        // Ignore the dummy 1900 dates from the DB as Google Search Console considers them invalid
+        if (decision.date_decision && !decision.date_decision.startsWith('1900')) {
+            try {
+                const dateStr = new Date(decision.date_decision).toISOString().split('T')[0];
+                lastmodTag = `\n    <lastmod>${dateStr}</lastmod>`;
+            } catch (e) {}
+        }
 
         xml += `  <url>
-    <loc>${BASE_URL}/decision/${decision.slug}</loc>
-    <lastmod>${lastmod}</lastmod>
+    <loc>${BASE_URL}/decision/${decision.slug}</loc>${lastmodTag}
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>

@@ -16,11 +16,6 @@
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/doctrine-fiscale</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/solutions</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -65996,7 +65991,6 @@
   </url>
   <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-19000101-arret-cour-supreme</loc>
-    <lastmod>1900-01-01</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -71864,7 +71858,6 @@
   </url>
   <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-19000101-non-mentionnee</loc>
-    <lastmod>1900-01-01</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
