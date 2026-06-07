@@ -17,39 +17,12 @@ const LexenegalSymbol: React.FC<LexenegalSymbolProps> = ({
     opacity = 1
 }) => {
     return (
-        <svg
-            width={size}
-            height={size}
-            viewBox="0 0 100 100"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
+        <img 
+            src="/lexenegal_new_logo.svg" 
+            alt="Lexenegal Symbol" 
+            style={{ width: 'auto', height: size, opacity, objectFit: 'contain' }}
             className={className}
-            style={{ opacity }}
-            aria-label="Lexenegal"
-        >
-            {/* Circle border */}
-            <circle
-                cx="50"
-                cy="50"
-                r="48"
-                stroke="#047857"
-                strokeWidth="2"
-                fill="none"
-            />
-
-            {/* Elegant "L" in Playfair Display style (serif) */}
-            <text
-                x="50"
-                y="68"
-                textAnchor="middle"
-                fontFamily="'Playfair Display', Georgia, serif"
-                fontSize="52"
-                fontWeight="600"
-                fill="#047857"
-            >
-                L
-            </text>
-        </svg>
+        />
     );
 };
 
