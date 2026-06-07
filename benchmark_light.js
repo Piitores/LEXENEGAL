@@ -18,7 +18,7 @@ async function runBenchmarkLight() {
     for (const term of searchTerms) {
         const start = performance.now();
         // On demande juste l'ID via select() pour voir si la base répond vite sans le poids réseau
-        const { data, error } = await supabase.rpc('search_decisions_fts', { query: term }).select('id, reference');
+        const { data, error } = await supabase.rpc('search_decisions_fts', { search_query: term }).select('id, reference');
         const end = performance.now();
         const duration = (end - start).toFixed(2);
         

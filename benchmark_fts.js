@@ -18,7 +18,7 @@ async function runBenchmark() {
     
     for (const term of searchTerms) {
         const start = performance.now();
-        const { data, error } = await supabase.rpc('search_decisions_fts', { query: term });
+        const { data, error } = await supabase.rpc('search_decisions_fts', { search_query: term });
         const end = performance.now();
         const duration = (end - start).toFixed(2);
         

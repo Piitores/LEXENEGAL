@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-// MeiliSearch removed - using Supabase for decisions
 import { Download, ArrowLeft, Copy, Scale, BookOpen, Printer, AlertCircle, FileText } from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
 import { createClient } from '@supabase/supabase-js';
@@ -17,8 +16,6 @@ import AnnotationPanel from '../../components/AnnotationPanel/AnnotationPanel';
 import './DecisionPage.css';
 
 // --- CONFIG ---
-// MeiliSearch removed - using Supabase for all decision data
-
 // Supabase client for articles
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://lphmualoyxetsgldccrw.supabase.co';
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';

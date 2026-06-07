@@ -28,6 +28,7 @@ const SearchPage: React.FC = () => {
 
     const [results, setResults] = useState<Decision[]>([]);
     const [totalHits, setTotalHits] = useState(0);
+    const [suggestions, setSuggestions] = useState<Decision[]>([]);
     const [facets, setFacets] = useState<any>({});
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -42,13 +43,20 @@ const SearchPage: React.FC = () => {
         themes: true
     });
 
+    const [expandedJuridictions, setExpandedJuridictions] = useState<Record<string, boolean>>({});
+
     const toggleSection = (section: string) => {
         setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
+    };
+
+    const toggleJuridiction = (juri: string) => {
+        setExpandedJuridictions(prev => ({ ...prev, [juri]: !prev[juri] }));
     };
 
     // --- FILTERS STATE ---
     const [selectedMatiere, setSelectedMatiere] = useState<string[]>([]);
     const [selectedChambre, setSelectedChambre] = useState<string[]>([]);
+    const [selectedJuridiction, setSelectedJuridiction] = useState<string[]>([]);
     const [sortOption, setSortOption] = useState<'relevance' | 'date_desc' | 'date_asc'>('relevance');
 
     // DATE FILTERS
@@ -90,7 +98,7 @@ const SearchPage: React.FC = () => {
             performSearch(false);
         }, 300);
         return () => clearTimeout(timer);
-    }, [query, selectedMatiere, selectedChambre, sortOption, datePreset, customYearStart, customYearEnd]);
+    }, [query, selectedMatiere, selectedChambre, selectedJuridiction, sortOption, datePreset, customYearStart, customYearEnd]);
 
     // LOAD MORE
     useEffect(() => {
@@ -104,24 +112,52 @@ const SearchPage: React.FC = () => {
                 // Get distinct matières with counts
                 const { data: allDecisions } = await supabase
                     .from('decisions')
-                    .select('matiere_principale, chambre');
+                    .select('matiere_principale, chambre, juridiction');
 
                 if (allDecisions) {
                     const matiereCount: Record<string, number> = {};
-                    const chambreCount: Record<string, number> = {};
+                    
+                    const getParentCategory = (j: string) => {
+                        if (!j) return 'Autres';
+                        const lower = j.toLowerCase();
+                        if (lower.includes('cour de cassation')) return 'Cour de Cassation';
+                        if (lower.includes('cour suprême') || lower.includes('cour supreme') || lower === 'la cour') return 'Cour Suprême';
+                        if (lower.includes('ccja') || lower.includes('commune de justice')) return 'CCJA';
+                        if (lower.includes("cour d'appel") || lower.includes('cour d appel') || lower.includes('cour d’appel')) return "Cour d'Appel";
+                        if (lower.includes('tribunal') || lower.includes('tribunaux') || lower.includes('high court')) return 'Tribunaux';
+                        if (lower.includes("conseil d'état") || lower.includes('conseil d etat') || lower.includes('conseil d’état')) return "Conseil d'État";
+                        if (lower.includes('conseil constitutionnel')) return 'Conseil Constitutionnel';
+                        return 'Autres';
+                    };
+
+                    const juridictionTree: Record<string, { total: number, subJuridictions: Record<string, number>, chambres: Record<string, number> }> = {};
 
                     allDecisions.forEach((d: any) => {
                         if (d.matiere_principale) {
                             matiereCount[d.matiere_principale] = (matiereCount[d.matiere_principale] || 0) + 1;
                         }
+                        
+                        const jStr = d.juridiction || 'Non spécifié';
+                        const parent = getParentCategory(jStr);
+                        
+                        if (!juridictionTree[parent]) {
+                            juridictionTree[parent] = { total: 0, subJuridictions: {}, chambres: {} };
+                        }
+                        juridictionTree[parent].total += 1;
+                        
+                        // Si la juridiction exacte n'est pas le parent exact, on l'ajoute aux sous-juridictions
+                        if (jStr && jStr !== parent) {
+                            juridictionTree[parent].subJuridictions[jStr] = (juridictionTree[parent].subJuridictions[jStr] || 0) + 1;
+                        }
+                        
                         if (d.chambre) {
-                            chambreCount[d.chambre] = (chambreCount[d.chambre] || 0) + 1;
+                            juridictionTree[parent].chambres[d.chambre] = (juridictionTree[parent].chambres[d.chambre] || 0) + 1;
                         }
                     });
 
                     setFacets({
                         matiere_principale: matiereCount,
-                        chambre: chambreCount
+                        juridictionTree
                     });
                 }
             } catch (e) {
@@ -142,6 +178,19 @@ const SearchPage: React.FC = () => {
             // Prepare filter arrays (null if empty)
             const matiereFilter = selectedMatiere.length > 0 ? selectedMatiere : null;
             const chambreFilter = selectedChambre.length > 0 ? selectedChambre : null;
+            
+            let finalJuridictionFilter: string[] | null = null;
+            if (selectedJuridiction.length > 0) {
+                const expandedJuri = new Set<string>();
+                selectedJuridiction.forEach(j => {
+                    expandedJuri.add(j);
+                    // Si 'j' est une catégorie parente, on inclut toutes ses sous-juridictions
+                    if (facets?.juridictionTree && facets.juridictionTree[j]) {
+                        Object.keys(facets.juridictionTree[j].subJuridictions).forEach(subJ => expandedJuri.add(subJ));
+                    }
+                });
+                finalJuridictionFilter = Array.from(expandedJuri);
+            }
 
             // Date filters
             const currentYear = new Date().getFullYear();
@@ -170,6 +219,7 @@ const SearchPage: React.FC = () => {
                     search_query: searchTerm,
                     matiere_filter: matiereFilter,
                     chambre_filter: chambreFilter,
+                    juridiction_filter: finalJuridictionFilter,
                     date_from: dateFrom,
                     date_to: dateTo,
                     sort_by: sortOption === 'relevance' ? 'relevance' : sortOption === 'date_asc' ? 'date_asc' : 'date_desc',
@@ -201,6 +251,7 @@ const SearchPage: React.FC = () => {
 
                 if (matiereFilter) queryBuilder = queryBuilder.in('matiere_principale', matiereFilter);
                 if (chambreFilter) queryBuilder = queryBuilder.in('chambre', chambreFilter);
+                if (finalJuridictionFilter) queryBuilder = queryBuilder.in('juridiction', finalJuridictionFilter);
                 if (dateFrom) queryBuilder = queryBuilder.gte('date_decision', dateFrom);
                 if (dateTo) queryBuilder = queryBuilder.lte('date_decision', dateTo);
 
@@ -234,12 +285,32 @@ const SearchPage: React.FC = () => {
                     (window as any).gtag('event', 'search', {
                         search_term: searchTerm,
                         results_count: totalCount,
-                        filters_applied: (selectedMatiere.length + selectedChambre.length) > 0 ? 'yes' : 'none'
+                        filters_applied: (selectedMatiere.length + selectedChambre.length + selectedJuridiction.length) > 0 ? 'yes' : 'none'
                     });
                 }
             }
 
             setTotalHits(totalCount);
+
+            // 3.B — "Vouliez-vous dire" : si la recherche texte ne renvoie rien, proposer des décisions proches
+            if (!append && searchTerm.length > 0 && decisions.length === 0) {
+                const { data: sugg } = await supabase.rpc('search_decisions_suggest', {
+                    search_query: searchTerm,
+                    result_limit: 8
+                });
+                setSuggestions((sugg || []).map((d: any) => ({
+                    id: d.id,
+                    reference: d.reference || 'Décision',
+                    date_decision: d.date_decision,
+                    matiere_principale: '',
+                    chambre: d.chambre,
+                    resume: d.resume,
+                    slug: d.slug || d.id,
+                    mots_cles: []
+                })));
+            } else if (!append) {
+                setSuggestions([]);
+            }
 
         } catch (err: any) {
             console.error("Search Error:", err);
@@ -254,8 +325,8 @@ const SearchPage: React.FC = () => {
         setOffset(0);
     };
 
-    const toggleFilter = (type: 'matiere' | 'chambre', value: string) => {
-        const setter = type === 'matiere' ? setSelectedMatiere : setSelectedChambre;
+    const toggleFilter = (type: 'matiere' | 'chambre' | 'juridiction', value: string) => {
+        const setter = type === 'matiere' ? setSelectedMatiere : type === 'chambre' ? setSelectedChambre : setSelectedJuridiction;
         setter(prev => prev.includes(value) ? prev.filter(i => i !== value) : [...prev, value]);
         setOffset(0);
     };
@@ -276,6 +347,7 @@ const SearchPage: React.FC = () => {
     const clearFilters = () => {
         setSelectedMatiere([]);
         setSelectedChambre([]);
+        setSelectedJuridiction([]);
         setDatePreset(null);
         setCustomYearStart('');
         setCustomYearEnd('');
@@ -329,7 +401,7 @@ const SearchPage: React.FC = () => {
             <aside className="searchSidebar ghost-sidebar">
                 <div className="sidebarTop">
                     <h2 className="sidebarTitle">Filtres</h2>
-                    {(selectedMatiere.length > 0 || selectedChambre.length > 0 || datePreset) && (
+                    {(selectedMatiere.length > 0 || selectedChambre.length > 0 || selectedJuridiction.length > 0 || datePreset) && (
                         <motion.button
                             onClick={clearFilters}
                             className="clearFiltersBtn"
@@ -363,20 +435,93 @@ const SearchPage: React.FC = () => {
                     </div>
                 </FilterAccordion>
 
-                {/* JURIDICTION */}
-                <FilterAccordion id="juridiction" title="Juridiction" isOpen={openSections.juridiction} toggle={() => toggleSection('juridiction')}>
+                {/* JURIDICTION ET CHAMBRES */}
+                <FilterAccordion id="juridiction" title="Juridictions" isOpen={openSections.juridiction} toggle={() => toggleSection('juridiction')}>
                     <ul className="filterList">
-                        {facets?.chambre && Object.entries(facets.chambre)
-                            .sort((a: any, b: any) => b[1] - a[1]) // Sort by count descending
-                            .map(([chambre, count]: [string, any]) => (
-                                <li key={chambre} className="filterItem" onClick={() => toggleFilter('chambre', chambre)}>
-                                    <div className="checkbox-wrapper">
-                                        <div className={`custom-checkbox ${selectedChambre.includes(chambre) ? 'checked' : ''}`}>
-                                            {selectedChambre.includes(chambre) && <span className="checkmark">✔</span>}
+                        {facets?.juridictionTree && Object.entries(facets.juridictionTree)
+                            .sort((a: any, b: any) => b[1].total - a[1].total) // Sort by count descending
+                            .map(([juridiction, data]: [string, any]) => (
+                                <li key={juridiction} className="filterGroup">
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                                        <div className="filterItem juridictionItem" onClick={() => toggleFilter('juridiction', juridiction)} style={{ flex: 1, paddingRight: '8px' }}>
+                                            <div className="checkbox-wrapper">
+                                                <div className={`custom-checkbox ${selectedJuridiction.includes(juridiction) ? 'checked' : ''}`}>
+                                                    {selectedJuridiction.includes(juridiction) && <span className="checkmark">✔</span>}
+                                                </div>
+                                                <span className="filterLabel" style={{ fontWeight: 600 }}>{juridiction.replace(/_/g, ' ')}</span>
+                                            </div>
+                                            <span className="filterCount">({data.total})</span>
                                         </div>
-                                        <span className="filterLabel">{chambre.replace(/_/g, ' ')}</span>
+                                        {Object.keys(data.chambres).length > 0 && (
+                                            <button 
+                                                onClick={(e) => { e.stopPropagation(); toggleJuridiction(juridiction); }}
+                                                className="expandJuridictionBtn"
+                                                style={{ 
+                                                    background: 'none', border: 'none', cursor: 'pointer', 
+                                                    padding: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    color: 'var(--text-secondary)', transition: 'transform 0.2s'
+                                                }}
+                                            >
+                                                <svg 
+                                                    width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                                                    style={{ transform: expandedJuridictions[juridiction] ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                                                >
+                                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                                </svg>
+                                            </button>
+                                        )}
                                     </div>
-                                    <span className="filterCount">({count})</span>
+                                    
+                                    {/* Contenu dépliable : Sous-juridictions et chambres */}
+                                    {expandedJuridictions[juridiction] && (
+                                        <div style={{ paddingLeft: '1.5rem', marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                            
+                                            {/* Sous-juridictions (Tribunaux spécifiques, etc) */}
+                                            {Object.keys(data.subJuridictions).length > 0 && (
+                                                <div className="subJuridictionsSection">
+                                                    {Object.entries(data.subJuridictions)
+                                                        .sort((a: any, b: any) => b[1] - a[1])
+                                                        .map(([subJ, count]: [string, any]) => (
+                                                            <li key={subJ} className="filterItem" onClick={() => toggleFilter('juridiction', subJ)} style={{ padding: '0.2rem 0' }}>
+                                                                <div className="checkbox-wrapper">
+                                                                    <div className={`custom-checkbox ${selectedJuridiction.includes(subJ) ? 'checked' : ''}`} style={{ width: '16px', height: '16px' }}>
+                                                                        {selectedJuridiction.includes(subJ) && <span className="checkmark" style={{ fontSize: '10px' }}>✔</span>}
+                                                                    </div>
+                                                                    <span className="filterLabel" style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                                                                        {subJ.replace(/_/g, ' ')}
+                                                                    </span>
+                                                                </div>
+                                                                <span className="filterCount" style={{ fontSize: '0.8rem' }}>({count})</span>
+                                                            </li>
+                                                        ))}
+                                                </div>
+                                            )}
+
+                                            {/* Chambres */}
+                                            {Object.keys(data.chambres).length > 0 && (
+                                                <div className="chambresSection" style={{ marginTop: Object.keys(data.subJuridictions).length > 0 ? '0.5rem' : '0' }}>
+                                                    <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: '0.25rem' }}>Chambres</div>
+                                                    <ul className="subFilterList" style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                                                        {Object.entries(data.chambres)
+                                                            .sort((a: any, b: any) => b[1] - a[1])
+                                                            .map(([chambre, count]: [string, any]) => (
+                                                                <li key={chambre} className="filterItem" onClick={() => toggleFilter('chambre', chambre)} style={{ padding: '0.2rem 0' }}>
+                                                                    <div className="checkbox-wrapper">
+                                                                        <div className={`custom-checkbox ${selectedChambre.includes(chambre) ? 'checked' : ''}`} style={{ width: '16px', height: '16px' }}>
+                                                                            {selectedChambre.includes(chambre) && <span className="checkmark" style={{ fontSize: '10px' }}>✔</span>}
+                                                                        </div>
+                                                                        <span className="filterLabel" style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                                                                            {chambre.replace(/_/g, ' ')}
+                                                                        </span>
+                                                                    </div>
+                                                                    <span className="filterCount" style={{ fontSize: '0.8rem' }}>({count})</span>
+                                                                </li>
+                                                            ))}
+                                                    </ul>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </li>
                             ))}
                     </ul>
@@ -488,6 +633,23 @@ const SearchPage: React.FC = () => {
                 {!loading && !error && results.length === 0 && (
                     <div className="emptyState">
                         <p>Aucun résultat trouvé pour "{query}".</p>
+                        {suggestions.length > 0 && (
+                            <div className="suggestions">
+                                <p className="suggestionsTitle">Vouliez-vous dire l'une de ces décisions&nbsp;?</p>
+                                <div className="suggestionsList">
+                                    {suggestions.map(s => (
+                                        <div
+                                            key={s.id}
+                                            className="suggestionItem"
+                                            onClick={() => window.open(`/decision/${s.slug}`, '_blank')}
+                                        >
+                                            <span className="cardRef">{s.reference}</span>
+                                            {s.resume ? <span className="suggestionSnippet">{s.resume.slice(0, 120)}…</span> : null}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                         <button onClick={clearFilters}>Réinitialiser les filtres</button>
                     </div>
                 )}

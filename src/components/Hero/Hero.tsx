@@ -57,17 +57,18 @@ function Hero() {
         try {
           const { data: decisions, error } = await supabase
             .rpc('search_decisions_fts', {
-              query: searchQuery
+              search_query: searchQuery,
+              result_limit: 10
             });
 
           if (!error && decisions) {
-            // Take top 4 decisions since the RPC returns 50 by default
+            // Take top 4 decisions
             decisions.slice(0, 4).forEach((hit: any) => {
               mixedResults.push({
                 type: 'decision',
                 id: hit.id,
                 title: hit.reference || 'Décision',
-                subtitle: `${hit.chambre || hit.juridiction || 'Juridiction'} · ${hit.date ? new Date(hit.date).getFullYear() : ''}`,
+                subtitle: `${hit.chambre || hit.juridiction || 'Juridiction'} · ${hit.date_decision ? new Date(hit.date_decision).getFullYear() : ''}`,
                 slug: hit.id // Use ID as slug for decisions
               });
             });
