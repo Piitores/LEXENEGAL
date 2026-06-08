@@ -291,6 +291,11 @@ const CodePage: React.FC = () => {
                 return next;
             });
         }
+        // Évite de rester bloqué en bas de page (footer) lorsque le panneau de droite
+        // raccourcit en changeant de section : on ramène la vue en haut du contenu.
+        if (typeof window !== 'undefined') {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
     };
 
     const expandAll = () => setExpandedNodes(new Set(collectAllNodeIds(hierarchy)));
@@ -324,9 +329,12 @@ const CodePage: React.FC = () => {
             <div key={node.id} className="tree-node">
                 <button
                     className={`tree-node-header ${isActive ? 'is-active' : ''}`}
-                    onClick={() => { toggleNode(node.id); selectNode(node); }}
+                    onClick={() => selectNode(node)}
                 >
-                    <span className={`tree-toggle ${hasChildren || hasArticles ? (isExpanded ? 'is-open' : '') : 'is-placeholder'}`}>
+                    <span
+                        className={`tree-toggle ${hasChildren || hasArticles ? (isExpanded ? 'is-open' : '') : 'is-placeholder'}`}
+                        onClick={(e) => { e.stopPropagation(); toggleNode(node.id); }}
+                    >
                         {(hasChildren || hasArticles) && <ChevronRight size={14} />}
                     </span>
                     <span className="tree-node-label">
