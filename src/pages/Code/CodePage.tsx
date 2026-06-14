@@ -139,10 +139,31 @@ const CodePage: React.FC = () => {
             countChapters(tree);
             setTotalChapters(chapCount);
 
-            // Auto-select first node
+            // Auto-select : division passée en ?node=<nom> (depuis le fil d'Ariane
+            // d'un article), sinon le premier nœud.
             if (tree.length > 0) {
-                setSelectedNode(tree[0]);
-                setExpandedNodes(new Set([tree[0].id]));
+                const wanted = new URLSearchParams(window.location.search).get('node');
+                let target: HierarchyNode | null = null;
+                if (wanted) {
+                    const decoded = decodeURIComponent(wanted);
+                    const find = (nodes: HierarchyNode[]): HierarchyNode | null => {
+                        for (const n of nodes) {
+                            if (n.name === decoded || n.intitule === decoded) return n;
+                            const f = find(n.children);
+                            if (f) return f;
+                        }
+                        return null;
+                    };
+                    target = find(tree);
+                }
+                if (target) {
+                    setSelectedNode(target);
+                    const path = (getBreadcrumb(target.id, tree) || []).map(p => p.id);
+                    setExpandedNodes(new Set([tree[0].id, ...path]));
+                } else {
+                    setSelectedNode(tree[0]);
+                    setExpandedNodes(new Set([tree[0].id]));
+                }
             }
         } catch (error) {
             console.error('Error fetching code:', error);

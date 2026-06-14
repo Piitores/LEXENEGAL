@@ -26,7 +26,9 @@ const DoctrinePage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedDoctrine, setSelectedDoctrine] = useState<DoctrineItem | null>(null);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [expandedId, setExpandedId] = useState<string | null>(null);
+    // En dev local on débloque la consultation (import.meta.env.DEV = false en prod).
+    const [isAuthenticated, setIsAuthenticated] = useState(import.meta.env.DEV);
     const [showAuthModal, setShowAuthModal] = useState(false);
 
     useEffect(() => {
@@ -36,7 +38,7 @@ const DoctrinePage: React.FC = () => {
 
     const checkAuth = async () => {
         const { data: { session } } = await supabase.auth.getSession();
-        setIsAuthenticated(!!session);
+        setIsAuthenticated(!!session || import.meta.env.DEV);
     };
 
     const fetchDoctrines = async () => {
@@ -60,7 +62,8 @@ const DoctrinePage: React.FC = () => {
         if (!isAuthenticated) {
             setShowAuthModal(true);
         } else {
-            setSelectedDoctrine(doctrine);
+            // Accordéon : on déplie/replie la doctrine sous sa carte (repliée par défaut).
+            setExpandedId((prev) => (prev === doctrine.id ? null : doctrine.id));
         }
     };
 
@@ -74,13 +77,30 @@ const DoctrinePage: React.FC = () => {
         );
     }, [doctrines, searchQuery]);
 
-    const formatDate = (dateStr: string) => {
-        if (!dateStr) return 'Date inconnue';
-        return new Date(dateStr).toLocaleDateString('fr-FR', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
+    // La date est parfois absente du champ `date` mais TOUJOURS présente dans la
+    // référence (« … DU 18 SEPTEMBRE 2009 ») → on la récupère là en repli.
+    const MOIS_FR: Record<string, number> = {
+        janvier: 0, fevrier: 1, 'février': 1, mars: 2, avril: 3, mai: 4, juin: 5,
+        juillet: 6, aout: 7, 'août': 7, septembre: 8, octobre: 9, novembre: 10, decembre: 11, 'décembre': 11,
+    };
+    const formatDate = (dateStr?: string | null, ref?: string | null) => {
+        let d = dateStr ? new Date(dateStr) : null;
+        if ((!d || isNaN(d.getTime())) && ref) {
+            // Date dans la référence, après « le » ou « du ». Les extractions PDF
+            // ajoutent des césures (« 200 4 », « novembr e ») → on retire TOUS les
+            // espaces dans la zone date puis on découpe jour + mois + année.
+            const m = ref.match(/\b(?:le|du)\s+(\d[\s\dA-Za-zÀ-ÿ]{3,40})/i);
+            if (m) {
+                const compact = m[1].replace(/\s+/g, '');
+                const mm = compact.match(/^(\d{1,2})([A-Za-zÀ-ÿ]+?)(\d{4})/);
+                if (mm) {
+                    const mo = MOIS_FR[mm[2].toLowerCase()];
+                    if (mo != null) d = new Date(Number(mm[3]), mo, Number(mm[1]));
+                }
+            }
+        }
+        if (!d || isNaN(d.getTime())) return 'Date inconnue';
+        return d.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
     };
 
     return (
@@ -114,40 +134,47 @@ const DoctrinePage: React.FC = () => {
                 ) : (
                     <div className="doctrine-list">
                         {filteredDoctrines.map((item) => (
-                            <div 
-                                key={item.id} 
-                                className="doctrine-card"
-                                onClick={() => handleDoctrineClick(item)}
+                            <div
+                                key={item.id}
+                                className={`doctrine-card${expandedId === item.id ? ' open' : ''}`}
                             >
-                                <div className="doctrine-card__header">
-                                    <div className="doctrine-card__meta">
-                                        <span className="doctrine-card__date">
-                                            <Calendar size={14} />
-                                            {formatDate(item.date)}
-                                        </span>
-                                        <span>•</span>
-                                        <span className="doctrine-card__ref">
-                                            {item.reference_complete || `Lettre n° ${item.numero}`}
-                                        </span>
+                                <div className="doctrine-card__summary" onClick={() => handleDoctrineClick(item)}>
+                                    <div className="doctrine-card__header">
+                                        <div className="doctrine-card__meta">
+                                            <span className="doctrine-card__date">
+                                                <Calendar size={14} />
+                                                {formatDate(item.date, item.reference_complete)}
+                                            </span>
+                                            <span>•</span>
+                                            <span className="doctrine-card__ref">
+                                                {item.reference_complete || `Lettre n° ${item.numero}`}
+                                            </span>
+                                        </div>
                                     </div>
-                                </div>
-                                
-                                <div className="doctrine-card__body">
-                                    <h3>{item.objet || "Sans objet"}</h3>
-                                    <p className="doctrine-card__excerpt">
-                                        {item.content_raw.substring(0, 200)}...
-                                    </p>
+
+                                    <div className="doctrine-card__body">
+                                        <h3>{item.objet || "Sans objet"}</h3>
+                                    </div>
+
+                                    <div className="doctrine-card__footer">
+                                        <div className="doctrine-card__service">
+                                            <Building size={14} />
+                                            <span>{item.service_emetteur || "DGID"}</span>
+                                        </div>
+                                        <div className="doctrine-card__action">
+                                            {expandedId === item.id ? 'Replier' : 'Lire la lettre'}
+                                            <ChevronRight size={16} className="doctrine-card__chevron" />
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <div className="doctrine-card__footer">
-                                    <div className="doctrine-card__service">
-                                        <Building size={14} />
-                                        <span>{item.service_emetteur || "DGID"}</span>
+                                {expandedId === item.id && (
+                                    <div className="doctrine-card__content">
+                                        {item.content_raw.split('\n').map((paragraph, idx) => (
+                                            paragraph.trim() ? <p key={idx}>{paragraph}</p> : <br key={idx} />
+                                        ))}
                                     </div>
-                                    <div className="doctrine-card__action">
-                                        Lire la lettre <ChevronRight size={16} />
-                                    </div>
-                                </div>
+                                )}
                             </div>
                         ))}
                         

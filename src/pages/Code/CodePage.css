@@ -436,3 +436,41 @@
     .code-main { padding: 20px 16px; }
     .structure-grid { grid-template-columns: 1fr; }
 }
+/* ── Pastilles d'annotation INLINE dans la page code (cohérent avec ArticlePage) ── */
+.article-body .alinea.niv1 { margin-left: 1.4rem; }
+.article-body .alinea.niv2 { margin-left: 2.8rem; }
+.article-body .alinea.niv3 { margin-left: 4.2rem; }
+.article-body .alinea .marqueur { font-weight: 600; color: #166534; margin-right: 0.25rem; }
+.article-body .art-tableau { width: 100%; border-collapse: collapse; margin: 1rem 0; display: block; overflow-x: auto; font-size: 0.95rem; }
+.article-body .art-tableau th, .article-body .art-tableau td { border: 1px solid #e5e7eb; padding: 0.5rem 0.7rem; text-align: left; vertical-align: top; }
+.article-body .art-tableau th { background: #f0fdf4; font-weight: 600; }
+.article-body .abrogation-banner { background: #fef2f2; border: 1px solid #fca5a5; border-left: 4px solid #dc2626; color: #991b1b; padding: 0.7rem 1rem; border-radius: 8px; margin: 0 0 1rem; }
+.article-body .note-disclaimer { background: #eef2ff; border: 1px solid #c7d2fe; border-left: 4px solid #4f46e5; color: #3730a3; padding: 0.7rem 1rem; border-radius: 8px; margin: 0 0 1rem; font-size: 0.95rem; }
+
+.article-body .pastille {
+    margin: 0.85rem 0 1rem;
+    border: 1px solid #e5e7eb;
+    border-left: 3px solid #9ca3af;
+    border-radius: 8px;
+    background: #f8f9fb;
+    overflow: hidden;
+}
+.article-body .pastille > summary {
+    cursor: pointer;
+    list-style: none;
+    padding: 0.5rem 0.8rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #4b5563;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    user-select: none;
+}
+.article-body .pastille > summary::-webkit-details-marker { display: none; }
+.article-body .pastille > summary::after { content: '＋'; margin-left: auto; color: #9ca3af; font-weight: 400; }
+.article-body .pastille[open] > summary::after { content: '－'; }
+.article-body .pastille[open] > summary { border-bottom: 1px solid #e5e7eb; }
+.article-body .pastille .pastille-corps { padding: 0.7rem 0.9rem; font-size: 0.92rem; color: #374151; background: #fff; }
+.article-body .pastille .pastille-corps p { margin: 0 0 0.55rem; }
+.article-body .pastille .pastille-corps p:last-child { margin-bottom: 0; }

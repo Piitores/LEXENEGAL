@@ -21,10 +21,12 @@ interface Article {
     part_title: string;
     title_name: string;
     chapter_name: string;
+    section_name: string;
     article_number: string;
     slug: string;
     modifications?: string[];
     content_raw?: string;
+    notes?: string | null;
 }
 
 interface ArticleVersion {
@@ -39,6 +41,8 @@ interface ArticleVersion {
 interface Law {
     title: string;
     slug: string;
+    publication_date?: string | null;
+    reference?: string | null;
 }
 
 interface CitingDecision {
@@ -86,7 +90,9 @@ const ArticlePage: React.FC = () => {
     // Comparison mode
     const [showComparison, setShowComparison] = useState(false);
     const [compareVersion, setCompareVersion] = useState<ArticleVersion | null>(null);
-    const [isPro, setIsPro] = useState(false);
+    // En dev local (npm run dev) on débloque les fonctions PRO pour tester.
+    // import.meta.env.DEV est TOUJOURS false dans le build de production.
+    const [isPro, setIsPro] = useState(import.meta.env.DEV);
     const [showConversionModal, setShowConversionModal] = useState(false);
 
     // Citing decisions
@@ -98,6 +104,7 @@ const ArticlePage: React.FC = () => {
     const [doctrineLinks, setDoctrineLinks] = useState<DoctrineLink[]>([]);
     const [selectedDoctrine, setSelectedDoctrine] = useState<DoctrineLink['doctrine'] | null>(null);
     const [showAuthModal, setShowAuthModal] = useState(false);
+    const [doctrineOpen, setDoctrineOpen] = useState(true);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
     // Report Error Modal
@@ -121,7 +128,7 @@ const ArticlePage: React.FC = () => {
                     .select('subscription_tier, role')
                     .eq('id', session.user.id)
                     .single();
-                setIsPro(profile?.subscription_tier === 'pro' || profile?.role === 'admin');
+                setIsPro(import.meta.env.DEV || profile?.subscription_tier === 'pro' || profile?.role === 'admin');
             } else {
                 setIsAuthenticated(false);
             }
@@ -139,7 +146,7 @@ const ArticlePage: React.FC = () => {
             // Get law info
             const { data: lawData } = await supabase
                 .from('laws_and_codes')
-                .select('id, title, slug')
+                .select('id, title, slug, publication_date, reference')
                 .eq('slug', codeSlug)
                 .single();
 
@@ -169,11 +176,12 @@ const ArticlePage: React.FC = () => {
                         const current = versionsData.find(v => v.is_current);
                         setCurrentVersion(current || versionsData[0]);
                     } else if (articleData.content_raw) {
-                        // Fallback for articles ingested directly without versions (like the CGI)
+                        // Fallback (articles sans versions, ex. CGI) : « en vigueur depuis »
+                        // = date d'institution du code (publication_date), pas la date du jour.
                         setCurrentVersion({
                             id: `raw-${articleData.id}`,
                             content: articleData.content_raw,
-                            effective_date: new Date().toISOString(),
+                            effective_date: lawData.publication_date || new Date().toISOString(),
                             expiration_date: null,
                             version_note: null,
                             is_current: true
@@ -348,22 +356,31 @@ const ArticlePage: React.FC = () => {
             />
 
             <div className="article-container">
-                {/* BREADCRUMB */}
+                {/* BREADCRUMB — minimal et raffiné */}
                 <nav className="article-breadcrumb">
                     <Link to="/codes">Codes</Link>
-                    <ChevronRight size={14} />
+                    <ChevronRight size={13} />
                     <Link to={`/code/${codeSlug}`}>{law?.title}</Link>
-                    <ChevronRight size={14} />
-                    <span>Art. {article.article_number}</span>
+                    <ChevronRight size={13} />
+                    <span className="bc-current">Art. {article.article_number}</span>
                 </nav>
 
                 {/* HEADER */}
                 <header className="article-header">
-                    <div className="article-meta">
-                        {article.chapter_name && (
-                            <span className="article-chapter">{article.chapter_name}</span>
-                        )}
-                    </div>
+                    {/* Contexte hiérarchique complet (premium + imprimable) */}
+                    {(() => {
+                        const segs = [article.part_title, article.title_name, article.chapter_name, article.section_name].filter(Boolean);
+                        return segs.length ? (
+                            <div className="article-hierarchy" aria-label="Emplacement dans le code">
+                                {segs.map((seg, i) => (
+                                    <span className="ah-seg" key={i}>
+                                        <Link className="ah-link" to={`/code/${codeSlug}?node=${encodeURIComponent(String(seg))}`}>{seg}</Link>
+                                        {i < segs.length - 1 && <span className="ah-sep" aria-hidden="true">›</span>}
+                                    </span>
+                                ))}
+                            </div>
+                        ) : null;
+                    })()}
                     <h1>Article {article.article_number}</h1>
 
                     {/* VERSION INFO */}
@@ -491,10 +508,13 @@ const ArticlePage: React.FC = () => {
                 {/* DOCTRINE FISCALE */}
                 {doctrineLinks.length > 0 && (
                     <section className="citing-decisions doctrine-section">
-                        <h2>
+                        <h2 onClick={() => setDoctrineOpen(o => !o)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <BookOpen size={20} />
                             Doctrine Fiscale liée
+                            <span style={{ fontSize: '0.8rem', fontWeight: 400, color: '#6B7280' }}>({doctrineLinks.length})</span>
+                            <ChevronRight size={18} style={{ marginLeft: 'auto', transition: 'transform 0.2s', transform: doctrineOpen ? 'rotate(90deg)' : 'none' }} />
                         </h2>
+                        {doctrineOpen && (
                         <div className="citing-list">
                             {doctrineLinks.map(link => (
                                 <button
@@ -517,6 +537,7 @@ const ArticlePage: React.FC = () => {
                                 </button>
                             ))}
                         </div>
+                        )}
                     </section>
                 )}
 
@@ -633,11 +654,7 @@ const ArticlePage: React.FC = () => {
                                     <button 
                                         className="doctrine-sidebar-btn" 
                                         title="Ouvrir dans un nouvel onglet"
-                                        onClick={() => {
-                                            // Optional: Create a dedicated page for Doctrine later
-                                            // window.open(`/doctrine/${selectedDoctrine.id}`, '_blank');
-                                            alert("La page dédiée à la doctrine sera bientôt disponible !");
-                                        }}
+                                        onClick={() => window.open('/doctrine-fiscale', '_blank')}
                                     >
                                         <ExternalLink size={18} />
                                     </button>

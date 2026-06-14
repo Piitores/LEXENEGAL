@@ -491,7 +491,7 @@
     margin: 0 0 1.25rem 0;
     text-align: justify;
     text-indent: 1.5rem;
-    hyphens: auto;
+    hyphens: manual; /* plus de césures auto type « ins-truction » (retour propriétaire) */
     orphans: 3;
     widows: 3;
     line-height: 1.9;
@@ -1007,3 +1007,158 @@
         padding: 0.875rem 1rem;
     }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   CGI — fil d'Ariane complet, tableaux, abrogations, impression
+   (D1/D2/D4) — ajouté 2026-06-14
+   ═══════════════════════════════════════════════════════════ */
+
+/* D1 — fil d'Ariane minimal et raffiné + contexte hiérarchique premium */
+.article-breadcrumb {
+    font-size: 0.8rem;
+    gap: 6px;
+    letter-spacing: 0.01em;
+}
+.article-breadcrumb a:hover { color: #166534; }
+.article-breadcrumb .bc-current { color: #166534; font-weight: 600; }
+
+/* Bloc « emplacement dans le code » : Livre › Titre › Chapitre › Section */
+.article-hierarchy {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35rem 0;
+    margin: 0 0 1rem;
+    padding-left: 0.9rem;
+    border-left: 2px solid #166534;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    line-height: 1.6;
+    color: #8a8f98;
+    font-weight: 500;
+}
+.article-hierarchy .ah-seg { display: inline-flex; align-items: baseline; }
+.article-hierarchy .ah-sep { margin: 0 0.55rem; color: #c8a86b; font-weight: 400; }
+.article-hierarchy .ah-seg:last-child { color: #166534; font-weight: 600; }
+@media print {
+    .article-hierarchy { color: #000; border-left-color: #000; }
+    .article-hierarchy .ah-sep { color: #000; }
+}
+
+/* alinéas : indentation par niveau + marqueur (1. a) •) discret */
+.article-text .alinea.niv1 { margin-left: 1.5rem; }
+.article-text .alinea.niv2 { margin-left: 3rem; }
+.article-text .alinea.niv3 { margin-left: 4.5rem; }
+.article-text .alinea .marqueur {
+    font-weight: 600;
+    color: var(--cp-green, #166534);
+    margin-right: 0.25rem;
+}
+
+/* D2 — tableaux : lisibles, bordés, défilables horizontalement si étroit */
+.article-text .art-tableau {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.25rem 0;
+    font-size: 0.95rem;
+    display: block;
+    overflow-x: auto;
+}
+.article-text .art-tableau caption {
+    caption-side: top;
+    text-align: left;
+    font-weight: 600;
+    padding: 0 0 0.5rem;
+}
+.article-text .art-tableau th,
+.article-text .art-tableau td {
+    border: 1px solid var(--cp-border, #e5e7eb);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    vertical-align: top;
+}
+.article-text .art-tableau th { background: var(--cp-green-lighter, #f0fdf4); font-weight: 600; }
+
+/* D4 — bandeaux abrogation + note législative (rendus dans content_raw) */
+.article-text .abrogation-banner {
+    background: #fef2f2;
+    border: 1px solid #fca5a5;
+    border-left: 4px solid #dc2626;
+    color: #991b1b;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin: 0 0 1.25rem;
+    text-indent: 0;
+}
+.article-text .note-disclaimer {
+    background: #eef2ff;
+    border: 1px solid #c7d2fe;
+    border-left: 4px solid #4f46e5;
+    color: #3730a3;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin: 0 0 1.25rem;
+    text-indent: 0;
+    font-size: 0.95rem;
+}
+/* corps grisé quand l'article est abrogé */
+.article-text:has(.abrogation-banner) .alinea { color: #9ca3af; }
+.article-text .article-rubrique { text-indent: 0; font-size: 1.05rem; }
+
+/* Pastilles d'annotation INLINE (à leur alinéa cible) — encadré gris dépliable */
+.article-text .pastille {
+    margin: 0.9rem 0 1.1rem;
+    border: 1px solid #e5e7eb;
+    border-left: 3px solid #9ca3af;
+    border-radius: 8px;
+    background: #f8f9fb;
+    text-indent: 0;
+    overflow: hidden;
+}
+.article-text .pastille > summary {
+    cursor: pointer;
+    list-style: none;
+    padding: 0.55rem 0.85rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #4b5563;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    user-select: none;
+}
+.article-text .pastille > summary::-webkit-details-marker { display: none; }
+.article-text .pastille > summary::after {
+    content: '＋';
+    margin-left: auto;
+    color: #9ca3af;
+    font-weight: 400;
+}
+.article-text .pastille[open] > summary::after { content: '－'; }
+.article-text .pastille[open] > summary { border-bottom: 1px solid #e5e7eb; }
+.article-text .pastille .pastille-corps {
+    padding: 0.75rem 0.95rem;
+    font-size: 0.92rem;
+    color: #374151;
+    background: #fff;
+}
+.article-text .pastille .pastille-corps p { margin: 0 0 0.6rem; text-indent: 0; }
+.article-text .pastille .pastille-corps p:last-child { margin-bottom: 0; }
+@media print {
+    .article-text .pastille { border-color: #000; }
+    .article-text .pastille[open] .pastille-corps { display: block; }
+}
+
+/* Impression — fil d'Ariane complet visible, tableaux non coupés */
+@media print {
+    .article-breadcrumb { display: flex !important; flex-wrap: wrap; font-size: 11px; color: #000; }
+    .article-breadcrumb .bc-node, .article-breadcrumb .bc-current { color: #000 !important; }
+    .article-text .art-tableau { overflow: visible; display: table; page-break-inside: avoid; }
+    .article-text .alinea { page-break-inside: avoid; }
+    .abrogation-banner, .note-disclaimer { border: 1px solid #000 !important; color: #000 !important; }
+}
+/* Liens cliquables du fil d'Ariane « emplacement dans le code » */
+.article-hierarchy .ah-link { color: inherit; text-decoration: none; }
+.article-hierarchy .ah-link:hover { color: #166534; text-decoration: underline; }
+.article-hierarchy .ah-seg:last-child .ah-link { color: #166534; font-weight: 600; }

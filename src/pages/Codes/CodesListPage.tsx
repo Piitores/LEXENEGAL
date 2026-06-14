@@ -98,6 +98,7 @@ const CODE_TO_THEME: Record<string, string> = {
     'code-administratif': 'Droit Administratif',
     'code-des-obligations-de-ladministration': 'Droit Administratif',  // COA
     'code-des-douanes': 'Droit Douanier et Fiscal', // Code des douanes
+    'code-general-impots': 'Droit Douanier et Fiscal', // Code Général des Impôts (CGI)
     'code-de-la-presse': 'Droit de la Communication',  // Code de la Presse
     'code-minier': 'Droit Minier',  // Code Minier
     'code-electoral': 'Droit Électoral', // Code Électoral
