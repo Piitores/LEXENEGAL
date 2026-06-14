@@ -73,6 +73,35 @@ interface DoctrineLink {
     }
 }
 
+// --- Diff mot à mot, conscient des balises HTML (aucune dépendance) ----------
+// Tokenise : balises <...> (atomiques), mots, espaces. Compare par plus longue
+// sous-séquence commune (LCS) et surligne les écarts SANS jamais couper une balise.
+const tokenizeHtml = (html: string): string[] => html.match(/<[^>]+>|[^<\s]+|\s+/g) || [];
+const isWord = (t: string): boolean => t.length > 0 && t[0] !== '<' && /\S/.test(t);
+
+function diffVersions(oldHtml: string, newHtml: string): { oldHtml: string; newHtml: string } {
+    const a = tokenizeHtml(oldHtml);
+    const b = tokenizeHtml(newHtml);
+    const n = a.length, m = b.length;
+    // Garde-fou perf : sur un texte gigantesque, on ne tente pas le diff.
+    if (n * m > 4_000_000) return { oldHtml, newHtml };
+    const dp: number[][] = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
+    for (let i = n - 1; i >= 0; i--)
+        for (let j = m - 1; j >= 0; j--)
+            dp[i][j] = a[i] === b[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+    let oldOut = '', newOut = '', i = 0, j = 0;
+    const del = (t: string) => (isWord(t) ? `<mark class="diff-removed">${t}</mark>` : t);
+    const ins = (t: string) => (isWord(t) ? `<mark class="diff-added">${t}</mark>` : t);
+    while (i < n && j < m) {
+        if (a[i] === b[j]) { oldOut += a[i]; newOut += b[j]; i++; j++; }
+        else if (dp[i + 1][j] >= dp[i][j + 1]) { oldOut += del(a[i]); i++; }
+        else { newOut += ins(b[j]); j++; }
+    }
+    while (i < n) oldOut += del(a[i++]);
+    while (j < m) newOut += ins(b[j++]);
+    return { oldHtml: oldOut, newHtml: newOut };
+}
+
 const ArticlePage: React.FC = () => {
     const { codeSlug, articleSlug } = useParams();
     const navigate = useNavigate();
@@ -330,6 +359,14 @@ const ArticlePage: React.FC = () => {
         }
     };
 
+    // Diff surligné entre l'ancienne version sélectionnée et la version courante.
+    const diff = React.useMemo(
+        () => (showComparison && compareVersion && currentVersion)
+            ? diffVersions(compareVersion.content, currentVersion.content)
+            : null,
+        [showComparison, compareVersion, currentVersion]
+    );
+
     if (loading) {
         return (
             <div className="article-page article-loading">
@@ -466,7 +503,7 @@ const ArticlePage: React.FC = () => {
                                 </div>
                                 <div
                                     className="article-text"
-                                    dangerouslySetInnerHTML={{ __html: compareVersion.content }}
+                                    dangerouslySetInnerHTML={{ __html: diff ? diff.oldHtml : compareVersion.content }}
                                 />
                             </div>
 
@@ -478,7 +515,7 @@ const ArticlePage: React.FC = () => {
                                 </div>
                                 <div
                                     className="article-text"
-                                    dangerouslySetInnerHTML={{ __html: currentVersion.content }}
+                                    dangerouslySetInnerHTML={{ __html: diff ? diff.newHtml : currentVersion.content }}
                                 />
                             </div>
                         </>
