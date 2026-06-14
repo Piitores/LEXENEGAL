@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -83,9 +83,31 @@ const CodePage: React.FC = () => {
     const [totalArticles, setTotalArticles] = useState(0);
     const [totalChapters, setTotalChapters] = useState(0);
 
+    // Refs pour la gestion du scroll (corrige le « saut au footer »)
+    const sidebarRef = useRef<HTMLElement>(null);
+    const activeNodeRef = useRef<HTMLButtonElement>(null);
+
     useEffect(() => {
         if (slug) fetchCodeData();
     }, [slug]);
+
+    // À chaque changement de section : ramener la PAGE en haut APRÈS que le nouveau
+    // contenu (potentiellement plus court) soit posé dans le DOM, mais AVANT le rendu
+    // visuel — sinon la page raccourcit, le navigateur « clampe » le scroll vers le bas
+    // et on atterrit au footer. En instantané, donc aucune frame « footer » n'est peinte.
+    // On en profite pour amener le nœud actif dans la zone visible de l'arbre, SANS
+    // bouger la page (on ne touche qu'au scroll interne de la sidebar).
+    useLayoutEffect(() => {
+        window.scrollTo(0, 0);
+        const cont = sidebarRef.current;
+        const el = activeNodeRef.current;
+        if (cont && el) {
+            const c = cont.getBoundingClientRect();
+            const e = el.getBoundingClientRect();
+            if (e.top < c.top) cont.scrollTop += e.top - c.top - 12;
+            else if (e.bottom > c.bottom) cont.scrollTop += e.bottom - c.bottom + 12;
+        }
+    }, [selectedNode]);
 
     // ── Data fetching ──
 
@@ -302,21 +324,20 @@ const CodePage: React.FC = () => {
 
     const selectNode = (node: HierarchyNode) => {
         setSelectedNode(node);
-        setActiveTab('articles');
-        // Auto-expand the path to this node
-        const path = getBreadcrumb(node.id, hierarchy);
-        if (path) {
-            setExpandedNodes(prev => {
-                const next = new Set(prev);
-                path.forEach(p => next.add(p.id));
-                return next;
-            });
-        }
-        // Évite de rester bloqué en bas de page (footer) lorsque le panneau de droite
-        // raccourcit en changeant de section : on ramène la vue en haut du contenu.
-        if (typeof window !== 'undefined') {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+        // Onglet intelligent : si le nœud a des articles directs (ou est une feuille),
+        // on ouvre « Articles » ; s'il n'a que des sous-divisions, on ouvre « Structure »
+        // (évite un panneau « Articles » vide invitant à re-cliquer).
+        setActiveTab(node.articles.length > 0 || node.children.length === 0 ? 'articles' : 'structure');
+        // Déplie le chemin vers ce nœud ET le nœud lui-même (cliquer un titre l'ouvre).
+        // Pour replier, on utilise le chevron.
+        setExpandedNodes(prev => {
+            const next = new Set(prev);
+            const path = getBreadcrumb(node.id, hierarchy);
+            if (path) path.forEach(p => next.add(p.id));
+            if (node.children.length > 0) next.add(node.id);
+            return next;
+        });
+        // (scroll géré par le useLayoutEffect sur selectedNode — voir plus haut)
     };
 
     const expandAll = () => setExpandedNodes(new Set(collectAllNodeIds(hierarchy)));
@@ -349,6 +370,7 @@ const CodePage: React.FC = () => {
         return (
             <div key={node.id} className="tree-node">
                 <button
+                    ref={isActive ? activeNodeRef : null}
                     className={`tree-node-header ${isActive ? 'is-active' : ''}`}
                     onClick={() => selectNode(node)}
                 >
@@ -453,7 +475,7 @@ const CodePage: React.FC = () => {
 
             <div className="code-layout">
                 {/* ═══════ SIDEBAR ═══════ */}
-                <aside className="code-sidebar">
+                <aside className="code-sidebar" ref={sidebarRef}>
                     <div className="sidebar-inner">
                         {/* Header */}
                         <div className="sidebar-code-header">
