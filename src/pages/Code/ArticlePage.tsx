@@ -104,7 +104,7 @@ const ArticlePage: React.FC = () => {
     const [doctrineLinks, setDoctrineLinks] = useState<DoctrineLink[]>([]);
     const [selectedDoctrine, setSelectedDoctrine] = useState<DoctrineLink['doctrine'] | null>(null);
     const [showAuthModal, setShowAuthModal] = useState(false);
-    const [doctrineOpen, setDoctrineOpen] = useState(true);
+    const [doctrineOpen, setDoctrineOpen] = useState(false); // repliée par défaut
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
     // Report Error Modal
