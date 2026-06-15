@@ -2,7 +2,16 @@
     "framework": "vite",
     "buildCommand": "npm run build",
     "outputDirectory": "dist",
+    "functions": {
+        "api/render.js": {
+            "includeFiles": "dist/index.html"
+        }
+    },
     "rewrites": [
+        {
+            "source": "/decision/:slug",
+            "destination": "/api/render?slug=:slug"
+        },
         {
             "source": "/(.*)",
             "destination": "/index.html"
