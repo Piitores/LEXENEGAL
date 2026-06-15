@@ -16,8 +16,26 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '';
-const SUPABASE_KEY = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || '';
+// Config Supabase : process.env d'abord (si défini dans Vercel), sinon repli sur le
+// fichier .env versionné (les fonctions Vercel n'héritent pas des variables VITE_* à
+// l'exécution). La clé anon est publique par conception (déjà dans le bundle client).
+function loadEnv() {
+  let url = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '';
+  let key = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || '';
+  if (url && key) return { url, key };
+  const candidates = [path.join(process.cwd(), '.env'), path.join(__dirname, '..', '.env')];
+  for (const p of candidates) {
+    try {
+      const txt = fs.readFileSync(p, 'utf8');
+      const g = (k) => (txt.match(new RegExp('^' + k + '=(.*)$', 'm')) || [])[1] || '';
+      url = url || g('VITE_SUPABASE_URL').trim();
+      key = key || g('VITE_SUPABASE_ANON_KEY').trim();
+      if (url && key) break;
+    } catch (e) { /* next */ }
+  }
+  return { url, key };
+}
+const { url: SUPABASE_URL, key: SUPABASE_KEY } = loadEnv();
 const SITE = 'https://www.lexenegal.sn';
 const OG_IMAGE = SITE + '/og-image.svg';
 

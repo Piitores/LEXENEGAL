@@ -4,7 +4,7 @@
     "outputDirectory": "dist",
     "functions": {
         "api/render.js": {
-            "includeFiles": "dist/index.html"
+            "includeFiles": ".env"
         }
     },
     "rewrites": [
