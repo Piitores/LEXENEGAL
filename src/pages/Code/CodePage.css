@@ -361,6 +361,54 @@
 }
 .article-link-btn:hover { background: var(--cp-green-light); }
 
+/* ─── En-tête : bloc droit (date + bouton copier) ─── */
+.article-card-header-right {
+    display: flex; align-items: center; gap: 10px;
+    flex-shrink: 0;
+}
+
+/* ─── Bouton « Copier » (discret, DA premium) ─── */
+.article-copy-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 9px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.72rem; font-weight: 500;
+    color: var(--cp-text-muted);
+    background: transparent;
+    border: 1px solid var(--cp-border);
+    border-radius: 6px; cursor: pointer;
+    transition: all 0.18s;
+}
+.article-copy-btn:hover {
+    color: var(--cp-green);
+    border-color: var(--cp-green-light);
+    background: var(--cp-green-lighter);
+}
+.article-copy-btn.is-copied {
+    color: var(--cp-green);
+    border-color: var(--cp-green-light);
+    background: var(--cp-green-light);
+}
+
+/* ─── Préambule replié : en-tête cliquable ─── */
+.article-card--preambule {
+    border-left: 3px solid var(--cp-green);
+    background: var(--cp-green-lighter);
+}
+.article-collapse-toggle {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: transparent; border: none; padding: 0;
+    cursor: pointer; text-align: left;
+}
+.article-collapse-toggle .collapse-chevron {
+    color: var(--cp-green);
+    transition: transform 0.2s;
+    flex-shrink: 0;
+}
+.article-collapse-toggle .collapse-chevron.is-open {
+    transform: rotate(90deg);
+}
+
 /* Structure grid (onglet Structure) */
 .structure-grid {
     display: grid; grid-template-columns: 1fr 1fr; gap: 12px;

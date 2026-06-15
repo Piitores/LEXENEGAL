@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     ArrowLeft, ChevronRight, Search,
-    BookOpen, FileText, ChevronDown, ExternalLink
+    BookOpen, FileText, ChevronDown, ExternalLink, Copy, Check
 } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import SEO from '../../components/SEO/SEO';
@@ -63,6 +63,114 @@ interface HierarchyNode {
     articles: Article[];
     children: HierarchyNode[];
 }
+
+// ── Helpers article ──
+
+const isPreambule = (art: Article): boolean =>
+    !!art.tags?.includes('preambule') ||
+    art.num === 'Préambule' ||
+    art.num_court === 'Préambule';
+
+// Texte lisible pour le presse-papiers : on privilégie content_raw, sinon on
+// dérive un texte propre depuis content_html (suppression des balises + décodage
+// des entités courantes), précédé du numéro/intitulé de l'article.
+const articleToPlainText = (art: Article): string => {
+    const heading = art.num || (art.article_number ? `Article ${art.article_number}` : '');
+    let body = (art.content_raw || '').trim();
+    if (!body && art.content_html) {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = art.content_html;
+        body = (tmp.textContent || tmp.innerText || '').replace(/\n{3,}/g, '\n\n').trim();
+    }
+    return heading ? `${heading}\n\n${body}` : body;
+};
+
+// ── Carte d'un article (gère le repli du préambule + le bouton Copier) ──
+
+const ArticleCard: React.FC<{ art: Article; slug: string | undefined }> = ({ art, slug }) => {
+    const preambule = isPreambule(art);
+    // Préambule replié par défaut ; articles normaux toujours ouverts.
+    const [open, setOpen] = useState(!preambule);
+    const [copied, setCopied] = useState(false);
+
+    const handleCopy = async () => {
+        try {
+            await navigator.clipboard.writeText(articleToPlainText(art));
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1500);
+        } catch {
+            /* presse-papiers indisponible (contexte non sécurisé) : on ignore */
+        }
+    };
+
+    const heading = art.num_court || art.num || `Art. ${art.article_number}`;
+
+    return (
+        <article className={`article-card ${preambule ? 'article-card--preambule' : ''}`}>
+            <div className="article-card-header">
+                {preambule ? (
+                    <button
+                        type="button"
+                        className="article-collapse-toggle"
+                        onClick={() => setOpen(o => !o)}
+                        aria-expanded={open}
+                    >
+                        <ChevronRight
+                            size={15}
+                            className={`collapse-chevron ${open ? 'is-open' : ''}`}
+                        />
+                        <span className="article-num">{heading}</span>
+                    </button>
+                ) : (
+                    <span className="article-num">{heading}</span>
+                )}
+
+                <div className="article-card-header-right">
+                    {art.modifications && art.modifications.length > 0 && (
+                        <span className="article-date">
+                            {art.modifications[art.modifications.length - 1]}
+                        </span>
+                    )}
+                    <button
+                        type="button"
+                        className={`article-copy-btn ${copied ? 'is-copied' : ''}`}
+                        onClick={handleCopy}
+                        title="Copier le texte de l'article"
+                        aria-label="Copier le texte de l'article"
+                    >
+                        {copied ? <Check size={13} /> : <Copy size={13} />}
+                        <span>{copied ? 'Copié' : 'Copier'}</span>
+                    </button>
+                </div>
+            </div>
+
+            {open && (
+                <>
+                    <div className="article-body">
+                        {art.content_html ? (
+                            <div dangerouslySetInnerHTML={{ __html: art.content_html }} />
+                        ) : (
+                            art.content_raw || '(Contenu non disponible)'
+                        )}
+                    </div>
+
+                    {art.tags && art.tags.length > 0 && (
+                        <div className="article-tags">
+                            {art.tags.map((tag, ti) => (
+                                <span key={ti} className="article-tag">{tag}</span>
+                            ))}
+                        </div>
+                    )}
+
+                    <Link to={`/code/${slug}/${art.slug}`} className="article-link-btn">
+                        <ExternalLink size={13} />
+                        Voir l'article complet
+                    </Link>
+                </>
+            )}
+        </article>
+    );
+};
 
 // ── Composant principal ──
 
@@ -591,39 +699,7 @@ const CodePage: React.FC = () => {
                                         </div>
                                     ) : (
                                         selectedArticles.map(art => (
-                                            <article key={art.id} className="article-card">
-                                                <div className="article-card-header">
-                                                    <span className="article-num">
-                                                        {art.num_court || `Art. ${art.article_number}`}
-                                                    </span>
-                                                    {art.modifications && art.modifications.length > 0 && (
-                                                        <span className="article-date">
-                                                            {art.modifications[art.modifications.length - 1]}
-                                                        </span>
-                                                    )}
-                                                </div>
-
-                                                <div className="article-body">
-                                                    {art.content_html ? (
-                                                        <div dangerouslySetInnerHTML={{ __html: art.content_html }} />
-                                                    ) : (
-                                                        art.content_raw || '(Contenu non disponible)'
-                                                    )}
-                                                </div>
-
-                                                {art.tags && art.tags.length > 0 && (
-                                                    <div className="article-tags">
-                                                        {art.tags.map((tag, ti) => (
-                                                            <span key={ti} className="article-tag">{tag}</span>
-                                                        ))}
-                                                    </div>
-                                                )}
-
-                                                <Link to={`/code/${slug}/${art.slug}`} className="article-link-btn">
-                                                    <ExternalLink size={13} />
-                                                    Voir l'article complet
-                                                </Link>
-                                            </article>
+                                            <ArticleCard key={art.id} art={art} slug={slug} />
                                         ))
                                     )}
                                 </div>
