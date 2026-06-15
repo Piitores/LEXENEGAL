@@ -538,10 +538,23 @@ const CodePage: React.FC = () => {
 
     // ── Render main panel articles ──
 
+    // Préambule(s) : article(s) sans rattachement de chapitre (node_id = null),
+    // donc absent(s) de l'arbre. On les affiche en tête de page, repliés par défaut
+    // (ArticleCard gère le repli). Vide pour les codes sans préambule (CGI, CPP…).
+    const preambuleArticles = useMemo(
+        () => articles.filter(isPreambule),
+        [articles]
+    );
+    const preambuleIds = useMemo(
+        () => new Set(preambuleArticles.map(a => a.id)),
+        [preambuleArticles]
+    );
+
     const selectedArticles = useMemo(() => {
         if (!selectedNode) return [];
-        return getArticlesForNode(selectedNode);
-    }, [selectedNode, getArticlesForNode]);
+        // On exclut les préambules : ils sont rendus une seule fois, en tête de page.
+        return getArticlesForNode(selectedNode).filter(a => !preambuleIds.has(a.id));
+    }, [selectedNode, getArticlesForNode, preambuleIds]);
 
     const breadcrumbs = useMemo(() => {
         if (!selectedNode) return [];
@@ -630,6 +643,16 @@ const CodePage: React.FC = () => {
 
                 {/* ═══════ MAIN ═══════ */}
                 <main className="code-main">
+                    {/* Préambule en tête (hors recherche) : article(s) sans chapitre,
+                        replié(s) par défaut. Rien si le code n'a pas de préambule. */}
+                    {!filteredArticles && preambuleArticles.length > 0 && (
+                        <div className="preambule-top articles-list">
+                            {preambuleArticles.map(art => (
+                                <ArticleCard key={art.id} art={art} slug={slug} />
+                            ))}
+                        </div>
+                    )}
+
                     {/* Search mode */}
                     {filteredArticles ? (
                         <div className="search-results">
