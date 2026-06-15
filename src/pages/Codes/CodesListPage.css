@@ -425,3 +425,45 @@
         padding-top: 120px;
     }
 }
+
+/* ===== Bases du hub (Corpus / LODA / Droit communautaire / JORS) ===== */
+.base-header {
+    margin: 48px 0 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+.base-header:first-of-type { margin-top: 8px; }
+.base-header h2 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin: 0 0 4px;
+    color: #1a2238;
+}
+.base-header p {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #6b7280;
+    font-style: italic;
+}
+.base-header--jors.disabled { opacity: 0.45; }
+.base-header--jors.disabled h2 { display: flex; align-items: center; gap: 10px; }
+.badge-soon {
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: #eef0f4;
+    color: #6b7280;
+    border: 1px solid #d8dce4;
+    font-style: normal;
+}
+.loda-group { margin-bottom: 28px; }
+.loda-group__titre {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #2a3450;
+    margin: 0 0 12px;
+}

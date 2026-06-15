@@ -19,8 +19,19 @@ interface LawCode {
     short_name: string;
     description: string;
     articles_count?: number;
-    category?: string;
+    category?: string;     // = nom du THÈME (pour l'icône via CODE_THEMES) — conservé pour CodeCard
+    dbCategory?: string;   // = vraie catégorie en base (code|loi|decret|ohada…) — pilote le rangement en bases
 }
+
+// Bases du hub (pilotées par la catégorie BDD `dbCategory`).
+const LODA_CATEGORIES = ['loi', 'ordonnance', 'decret', 'arrete', 'circulaire'];
+const COMMUNAUTAIRE_CATEGORIES = ['ohada', 'uemoa', 'cedeao'];
+const LODA_TYPE_LABELS: Record<string, string> = {
+    loi: 'Lois', ordonnance: 'Ordonnances', decret: 'Décrets', arrete: 'Arrêtés', circulaire: 'Circulaires',
+};
+const COMMUNAUTAIRE_TYPE_LABELS: Record<string, string> = {
+    ohada: 'OHADA — Actes uniformes', uemoa: 'UEMOA', cedeao: 'CEDEAO',
+};
 
 // Thèmes avec leurs métadonnées
 const CODE_THEMES = {
@@ -129,25 +140,32 @@ const CodesListPage: React.FC = () => {
                     short_title,
                     description,
                     category,
+                    is_active,
                     articles:articles(count)
                 `)
+                .eq('is_active', true)   // visibilité pilotée par l'interrupteur "publié" en base
                 .order('title');
 
             if (error) throw error;
 
-            const allowedSlugs = ['code-travail', 'code-securite-sociale-senegal', 'code-general-impots', 'code-de-procedure-penale', 'code-penal'];
-            const transformedCodes: LawCode[] = (codesData || [])
-                .filter((code: any) => allowedSlugs.includes(code.slug))
-                .map((code: any) => ({
-                id: code.id,
-                name: code.title,
-                slug: code.slug,
-                short_name: code.short_title || code.title,
-                description: code.description || '',
-                // Use slug-to-theme mapping for proper categorization
-                category: CODE_TO_THEME[code.slug] || 'Droit Civil',
-                articles_count: code.articles?.[0]?.count || 0
-            }));
+            // On ne filtre plus par liste blanche : on affiche tous les textes publiés (is_active),
+            // rangés par base via leur vraie catégorie BDD (dbCategory).
+            const transformedCodes: LawCode[] = (codesData || []).map((code: any) => {
+                const dbCat = code.category || 'code';
+                const themeName = dbCat === 'code'
+                    ? (CODE_TO_THEME[code.slug] || 'Droit Civil et Commercial')
+                    : (COMMUNAUTAIRE_CATEGORIES.includes(dbCat) ? 'Droit OHADA' : 'Droit Civil et Commercial');
+                return {
+                    id: code.id,
+                    name: code.title,
+                    slug: code.slug,
+                    short_name: code.short_title || code.title,
+                    description: code.description || '',
+                    category: themeName,   // thème (icône)
+                    dbCategory: dbCat,     // catégorie réelle (rangement)
+                    articles_count: code.articles?.[0]?.count || 0,
+                };
+            });
 
             setCodes(transformedCodes);
         } catch (err) {
@@ -157,13 +175,32 @@ const CodesListPage: React.FC = () => {
         }
     };
 
-    // Grouper les codes par thème
-    const codesByTheme = codes.reduce((acc, code) => {
+    // Répartition par BASE (via la catégorie réelle BDD)
+    const corpusCodes = codes.filter((c) => c.dbCategory === 'code');
+    const lodaTextes = codes.filter((c) => LODA_CATEGORIES.includes(c.dbCategory || ''));
+    const communautaireTextes = codes.filter((c) => COMMUNAUTAIRE_CATEGORIES.includes(c.dbCategory || ''));
+
+    // Corpus : grouper les CODES par thème (la grille "bento")
+    const codesByTheme = corpusCodes.reduce((acc, code) => {
         const theme = code.category || 'Autres';
         if (!acc[theme]) acc[theme] = [];
         acc[theme].push(code);
         return acc;
     }, {} as Record<string, LawCode[]>);
+
+    // Rend une base "liste" (LODA, Communautaire) : groupes par type, fiches CodeCard.
+    const renderBaseListe = (textes: LawCode[], labels: Record<string, string>, ordre: string[]) => (
+        ordre.filter((t) => textes.some((x) => x.dbCategory === t)).map((t) => (
+            <div className="loda-group" key={t}>
+                <h3 className="loda-group__titre">{labels[t]}</h3>
+                <div className="codes-list">
+                    {textes.filter((x) => x.dbCategory === t).map((code) => (
+                        <CodeCard key={code.id} code={code} />
+                    ))}
+                </div>
+            </div>
+        ))
+    );
 
     // Filtrer les codes par recherche
     const filteredCodes = searchQuery
@@ -216,9 +253,14 @@ const CodesListPage: React.FC = () => {
                             </div>
                         </div>
                     ) : (
-                        /* Bento Grid par thèmes */
+                        /* Bases : Corpus, LODA, Droit communautaire, JORS */
+                        <>
+                        <div className="base-header">
+                            <h2>Corpus</h2>
+                            <p>le droit en vigueur — codes consolidés, à jour</p>
+                        </div>
                         <div className="corpus-bento">
-                            {Object.entries(CODE_THEMES).map(([themeName, themeData]) => {
+                            {Object.entries(CODE_THEMES).filter(([n]) => n !== 'Droit OHADA').map(([themeName, themeData]) => {
                                 const themeCodes = codesByTheme[themeName] || [];
                                 const IconComponent = themeData.icon;
 
@@ -262,6 +304,32 @@ const CodesListPage: React.FC = () => {
                                 );
                             })}
                         </div>
+
+                        {lodaTextes.length > 0 && (
+                            <>
+                                <div className="base-header base-header--loda">
+                                    <h2>LODA</h2>
+                                    <p>textes source — lois, ordonnances, décrets, arrêtés &amp; circulaires (version d'origine)</p>
+                                </div>
+                                {renderBaseListe(lodaTextes, LODA_TYPE_LABELS, LODA_CATEGORIES)}
+                            </>
+                        )}
+
+                        {communautaireTextes.length > 0 && (
+                            <>
+                                <div className="base-header base-header--commu">
+                                    <h2>Droit communautaire</h2>
+                                    <p>actes uniformes &amp; réglementation communautaire (sous-régional)</p>
+                                </div>
+                                {renderBaseListe(communautaireTextes, COMMUNAUTAIRE_TYPE_LABELS, COMMUNAUTAIRE_CATEGORIES)}
+                            </>
+                        )}
+
+                        <div className="base-header base-header--jors disabled">
+                            <h2>JORS <span className="badge-soon">à venir</span></h2>
+                            <p>Journal Officiel de la République du Sénégal</p>
+                        </div>
+                        </>
                     )}
                 </div>
             </section>
@@ -271,18 +339,18 @@ const CodesListPage: React.FC = () => {
                 <div className="corpus-container">
                     <div className="stats-grid">
                         <div className="stat-item">
-                            <span className="stat-value">{codes.length}</span>
-                            <span className="stat-label">Codes disponibles</span>
+                            <span className="stat-value">{corpusCodes.length}</span>
+                            <span className="stat-label">Codes consolidés</span>
+                        </div>
+                        <div className="stat-item">
+                            <span className="stat-value">{lodaTextes.length + communautaireTextes.length}</span>
+                            <span className="stat-label">Textes source &amp; actes</span>
                         </div>
                         <div className="stat-item">
                             <span className="stat-value">
                                 {codes.reduce((sum, c) => sum + (c.articles_count || 0), 0)}
                             </span>
                             <span className="stat-label">Articles indexés</span>
-                        </div>
-                        <div className="stat-item">
-                            <span className="stat-value">6</span>
-                            <span className="stat-label">Branches du droit</span>
                         </div>
                     </div>
                 </div>
