@@ -135,9 +135,11 @@ export function injectIntoShell(shell, headHtml, bodyHtml) {
   return html;
 }
 
-// Lecture (mémoïsée) de la coquille dist/index.html
+// Lecture (mémoïsée) de la coquille dist/index.html. Filet de secours : si la lecture
+// fichier échoue (includeFiles indisponible), on récupère la coquille via HTTP depuis
+// le déploiement lui-même (la route / sert index.html) → robuste au câblage Vercel.
 let _shell = null;
-function getShell() {
+async function getShell(req) {
   if (_shell) return _shell;
   const candidates = [
     path.join(process.cwd(), 'dist', 'index.html'),
@@ -147,6 +149,17 @@ function getShell() {
   for (const p of candidates) {
     try { _shell = fs.readFileSync(p, 'utf8'); return _shell; } catch (e) { /* next */ }
   }
+  try {
+    const host = req.headers['x-forwarded-host'] || req.headers.host;
+    const proto = req.headers['x-forwarded-proto'] || 'https';
+    if (host) {
+      const r = await fetch(`${proto}://${host}/index.html`);
+      if (r.ok) {
+        const t = await r.text();
+        if (t.includes('id="app"')) { _shell = t; return _shell; }
+      }
+    }
+  } catch (e) { /* ignore */ }
   return null;
 }
 
@@ -165,7 +178,7 @@ export default async function handler(req, res) {
   try {
     const slug = (req.query && req.query.slug) ||
       (req.url || '').replace(/^.*\/decision\//, '').replace(/[?#].*$/, '');
-    const shell = getShell();
+    const shell = await getShell(req);
     if (!slug || !shell) {
       res.statusCode = shell ? 400 : 500;
       return res.end(shell || 'Service indisponible');
