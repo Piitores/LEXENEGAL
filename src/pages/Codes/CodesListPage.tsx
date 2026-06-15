@@ -123,6 +123,7 @@ const CodesListPage: React.FC = () => {
     const [codes, setCodes] = useState<LawCode[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const [activeBase, setActiveBase] = useState<'codes' | 'loda' | 'communautaire'>('codes');
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -218,7 +219,7 @@ const CodesListPage: React.FC = () => {
                     <div className="corpus-hero__emblem">
                         <Scale size={48} strokeWidth={1} />
                     </div>
-                    <h1>Le Corpus Législatif National</h1>
+                    <h1>Corpus National</h1>
                     <p>L'intégralité des textes de loi du Sénégal, structurés, versionnés et accessibles.</p>
 
                     {/* Barre de recherche interne */}
@@ -253,12 +254,18 @@ const CodesListPage: React.FC = () => {
                             </div>
                         </div>
                     ) : (
-                        /* Bases : Corpus, LODA, Droit communautaire, JORS */
+                        /* Bases en ONGLETS : Codes consolidés / LODA / Droit communautaire / JORS */
                         <>
-                        <div className="base-header">
-                            <h2>Corpus</h2>
-                            <p>le droit en vigueur — codes consolidés, à jour</p>
+                        <div className="bases-tabs">
+                            <button className={`base-tab ${activeBase === 'codes' ? 'actif' : ''}`} onClick={() => setActiveBase('codes')}>Codes consolidés <span className="base-tab__count">{corpusCodes.length}</span></button>
+                            <button className={`base-tab ${activeBase === 'loda' ? 'actif' : ''}`} onClick={() => setActiveBase('loda')}>LODA <span className="base-tab__count">{lodaTextes.length}</span></button>
+                            <button className={`base-tab ${activeBase === 'communautaire' ? 'actif' : ''}`} onClick={() => setActiveBase('communautaire')}>Droit communautaire <span className="base-tab__count">{communautaireTextes.length}</span></button>
+                            <button className="base-tab base-tab--soon" disabled>JORS <span className="badge-soon">à venir</span></button>
                         </div>
+
+                        {activeBase === 'codes' && (
+                        <div className="base-panel">
+                            <p className="base-panel__sous-titre">le droit en vigueur — codes consolidés, à jour</p>
                         <div className="corpus-bento">
                             {Object.entries(CODE_THEMES).filter(([n]) => n !== 'Droit OHADA').map(([themeName, themeData]) => {
                                 const themeCodes = codesByTheme[themeName] || [];
@@ -304,31 +311,26 @@ const CodesListPage: React.FC = () => {
                                 );
                             })}
                         </div>
-
-                        {lodaTextes.length > 0 && (
-                            <>
-                                <div className="base-header base-header--loda">
-                                    <h2>LODA</h2>
-                                    <p>textes source — lois, ordonnances, décrets, arrêtés &amp; circulaires (version d'origine)</p>
-                                </div>
-                                {renderBaseListe(lodaTextes, LODA_TYPE_LABELS, LODA_CATEGORIES)}
-                            </>
-                        )}
-
-                        {communautaireTextes.length > 0 && (
-                            <>
-                                <div className="base-header base-header--commu">
-                                    <h2>Droit communautaire</h2>
-                                    <p>actes uniformes &amp; réglementation communautaire (sous-régional)</p>
-                                </div>
-                                {renderBaseListe(communautaireTextes, COMMUNAUTAIRE_TYPE_LABELS, COMMUNAUTAIRE_CATEGORIES)}
-                            </>
-                        )}
-
-                        <div className="base-header base-header--jors disabled">
-                            <h2>JORS <span className="badge-soon">à venir</span></h2>
-                            <p>Journal Officiel de la République du Sénégal</p>
                         </div>
+                        )}
+
+                        {activeBase === 'loda' && (
+                        <div className="base-panel">
+                            <p className="base-panel__sous-titre">textes source — lois, ordonnances, décrets, arrêtés &amp; circulaires (version d'origine)</p>
+                            {lodaTextes.length > 0
+                                ? renderBaseListe(lodaTextes, LODA_TYPE_LABELS, LODA_CATEGORIES)
+                                : <p className="base-vide">Aucun texte publié pour l'instant.</p>}
+                        </div>
+                        )}
+
+                        {activeBase === 'communautaire' && (
+                        <div className="base-panel">
+                            <p className="base-panel__sous-titre">actes uniformes &amp; réglementation communautaire (sous-régional)</p>
+                            {communautaireTextes.length > 0
+                                ? renderBaseListe(communautaireTextes, COMMUNAUTAIRE_TYPE_LABELS, COMMUNAUTAIRE_CATEGORIES)
+                                : <p className="base-vide">Aucun texte publié pour l'instant.</p>}
+                        </div>
+                        )}
                         </>
                     )}
                 </div>
