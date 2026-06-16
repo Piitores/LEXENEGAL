@@ -73,10 +73,19 @@ async function generateSitemap() {
     const decisions = await fetchAllRows('decisions', 'slug,date_decision');
     
     console.log('⏳ Fetching codes...');
-    const codes = await fetchAllRows('laws_and_codes', 'id,slug,updated_at');
+    const allCodes = await fetchAllRows('laws_and_codes', 'id,slug,updated_at,is_active');
+    // Seuls les codes PUBLIÉS (is_active) doivent figurer dans le sitemap.
+    const codes = allCodes.filter((c) => c.is_active && c.slug);
+    const codeSlugById = new Map(codes.map((c) => [c.id, c.slug]));
+
+    console.log('⏳ Fetching articles...');
+    const articles = await fetchAllRows('articles', 'code_id,slug');
+    // On ne garde que les articles appartenant à un code publié.
+    const activeArticles = articles.filter((a) => a.slug && codeSlugById.has(a.code_id));
 
     console.log(`📄 Found ${decisions.length} decisions`);
-    console.log(`📚 Found ${codes.length} codes`);
+    console.log(`📚 Found ${codes.length} codes publiés (${allCodes.length} au total)`);
+    console.log(`📃 Found ${activeArticles.length} articles (codes publiés)`);
 
     // Static pages
     const staticPages = [
@@ -122,6 +131,18 @@ async function generateSitemap() {
 `;
     }
 
+    // 3. Add article pages (codes publiés)
+    for (const article of activeArticles) {
+        const codeSlug = codeSlugById.get(article.code_id);
+        if (!codeSlug) continue;
+        xml += `  <url>
+    <loc>${BASE_URL}/code/${codeSlug}/${article.slug}</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+`;
+    }
+
     // 4. Add decision pages
     for (const decision of decisions) {
         if (!decision.slug) continue;
@@ -150,7 +171,7 @@ async function generateSitemap() {
     fs.writeFileSync(outputPath, xml);
 
     console.log(`✅ Sitemap saved to ${outputPath}`);
-    console.log(`📊 Total URLs generated: ${staticPages.length + codes.length + decisions.length}`);
+    console.log(`📊 Total URLs generated: ${staticPages.length + codes.length + activeArticles.length + decisions.length}`);
 }
 
 generateSitemap().catch(console.error);
