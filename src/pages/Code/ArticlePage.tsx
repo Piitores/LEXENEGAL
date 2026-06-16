@@ -9,6 +9,11 @@ import { createClient } from '@supabase/supabase-js';
 import SEO from '../../components/SEO/SEO';
 import ConversionModal from '../../components/ConversionModal/ConversionModal';
 import ReportErrorModal from '../../components/ReportError/ReportErrorModal';
+import CodeNavTree from '../../components/CodeNavTree/CodeNavTree';
+import {
+    Article as CodeArticle, StructureNode, HierarchyNode,
+    buildTreeFromNodes, buildTreeLegacy, getBreadcrumb,
+} from '../../lib/codeTree';
 import './ArticlePage.css';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
@@ -112,6 +117,20 @@ const ArticlePage: React.FC = () => {
     const [currentVersion, setCurrentVersion] = useState<ArticleVersion | null>(null);
     const [loading, setLoading] = useState(true);
 
+    // Arbre de navigation (même mécanique que la page Code)
+    const [hierarchy, setHierarchy] = useState<HierarchyNode[]>([]);
+    const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
+    const [treeActiveNodeId, setTreeActiveNodeId] = useState<string | null>(null);
+    const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+    const toggleNode = (id: string) => {
+        setExpandedNodes(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id); else next.add(id);
+            return next;
+        });
+    };
+
     // Navigation - previous/next articles
     const [prevArticle, setPrevArticle] = useState<{ slug: string; number: string } | null>(null);
     const [nextArticle, setNextArticle] = useState<{ slug: string; number: string } | null>(null);
@@ -146,6 +165,9 @@ const ArticlePage: React.FC = () => {
             checkProAccess();
         }
     }, [codeSlug, articleSlug]);
+
+    // Ferme le tiroir « Sommaire » (mobile) quand on change d'article
+    useEffect(() => { setMobileNavOpen(false); }, [articleSlug]);
 
     const checkProAccess = async () => {
         try {
@@ -192,6 +214,29 @@ const ArticlePage: React.FC = () => {
 
                 if (articleData) {
                     setArticle(articleData);
+
+                    // Arbre de navigation du code (mêmes données/mécanique que CodePage)
+                    const { data: allArts } = await supabase
+                        .from('articles')
+                        .select('*')
+                        .eq('code_id', lawData.id)
+                        .order('display_order');
+                    const { data: nodesData } = await supabase
+                        .from('structure_nodes')
+                        .select('*')
+                        .eq('code_id', lawData.id)
+                        .order('position');
+                    const tree = (nodesData && nodesData.length > 0)
+                        ? buildTreeFromNodes(nodesData as StructureNode[], (allArts || []) as CodeArticle[])
+                        : buildTreeLegacy((allArts || []) as CodeArticle[]);
+                    setHierarchy(tree);
+                    setTreeActiveNodeId(articleData.node_id ?? null);
+                    if (articleData.node_id) {
+                        const path = getBreadcrumb(articleData.node_id, tree) || [];
+                        setExpandedNodes(new Set(path.map(p => p.id)));
+                    } else {
+                        setExpandedNodes(new Set());
+                    }
 
                     // Get versions
                     const { data: versionsData } = await supabase
@@ -393,7 +438,41 @@ const ArticlePage: React.FC = () => {
                 url={`https://www.lexenegal.sn/code/${codeSlug}/${articleSlug}`}
             />
 
-            <div className="article-container">
+            <div className="article-layout">
+                {/* ARBRE DE NAVIGATION (gauche) — même composant que la page Code.
+                    Desktop : colonne fixe. Mobile : tiroir « Sommaire » ouvrable. */}
+                {hierarchy.length > 0 && (
+                    <>
+                        {mobileNavOpen && (
+                            <div className="article-nav-backdrop" onClick={() => setMobileNavOpen(false)} />
+                        )}
+                        <aside className={`article-tree-aside ${mobileNavOpen ? 'is-open' : ''}`}>
+                            <div className="article-tree-aside__mhead">
+                                <span>Sommaire</span>
+                                <button type="button" onClick={() => setMobileNavOpen(false)} aria-label="Fermer le sommaire">
+                                    <X size={18} />
+                                </button>
+                            </div>
+                            <CodeNavTree
+                                nodes={hierarchy}
+                                slug={codeSlug}
+                                expandedNodes={expandedNodes}
+                                onToggle={toggleNode}
+                                onSelect={(node) => { setMobileNavOpen(false); navigate(`/code/${codeSlug}?node=${encodeURIComponent(node.name)}`); }}
+                                activeNodeId={treeActiveNodeId}
+                                activeArticleSlug={article.slug}
+                            />
+                        </aside>
+                    </>
+                )}
+
+                <div className="article-container">
+                {/* Bouton « Sommaire » (mobile uniquement) pour ouvrir l'arbre */}
+                {hierarchy.length > 0 && (
+                    <button type="button" className="article-nav-toggle" onClick={() => setMobileNavOpen(true)}>
+                        <BookOpen size={16} /> Sommaire
+                    </button>
+                )}
                 {/* BREADCRUMB — minimal et raffiné */}
                 <nav className="article-breadcrumb">
                     <Link to="/codes">Codes</Link>
@@ -405,19 +484,38 @@ const ArticlePage: React.FC = () => {
 
                 {/* HEADER */}
                 <header className="article-header">
-                    {/* Contexte hiérarchique complet (premium + imprimable) */}
+                    {/* Contexte hiérarchique enrichi (badges de niveau, premium + imprimable).
+                        On n'utilise PAS part_title (incohérent) : Titre > Chapitre > Section. */}
                     {(() => {
-                        const segs = [article.part_title, article.title_name, article.chapter_name, article.section_name].filter(Boolean);
-                        return segs.length ? (
+                        const levels = ([
+                            article.title_name ? { kind: 'titre', raw: article.title_name } : null,
+                            article.chapter_name ? { kind: 'chapitre', raw: article.chapter_name } : null,
+                            article.section_name ? { kind: 'section', raw: article.section_name } : null,
+                        ].filter(Boolean) as { kind: string; raw: string }[]);
+                        if (!levels.length) return null;
+                        const split = (raw: string) => {
+                            const idx = raw.indexOf(' - ');
+                            return idx > -1
+                                ? { badge: raw.slice(0, idx).trim(), label: raw.slice(idx + 3).trim() }
+                                : { badge: '', label: raw.trim() };
+                        };
+                        return (
                             <div className="article-hierarchy" aria-label="Emplacement dans le code">
-                                {segs.map((seg, i) => (
-                                    <span className="ah-seg" key={i}>
-                                        <Link className="ah-link" to={`/code/${codeSlug}?node=${encodeURIComponent(String(seg))}`}>{seg}</Link>
-                                        {i < segs.length - 1 && <span className="ah-sep" aria-hidden="true">›</span>}
-                                    </span>
-                                ))}
+                                {levels.map((lvl, i) => {
+                                    const { badge, label } = split(lvl.raw);
+                                    return (
+                                        <Link
+                                            key={i}
+                                            className={`ah-row ah-row--${lvl.kind}`}
+                                            to={`/code/${codeSlug}?node=${encodeURIComponent(lvl.raw)}`}
+                                        >
+                                            <span className={`ah-badge ah-badge--${lvl.kind}`}>{badge || lvl.kind}</span>
+                                            <span className="ah-label">{label}</span>
+                                        </Link>
+                                    );
+                                })}
                             </div>
-                        ) : null;
+                        );
                     })()}
                     <h1>Article {article.article_number}</h1>
 
@@ -646,6 +744,7 @@ const ArticlePage: React.FC = () => {
                 {/* SIGNATURE */}
                 <div className="article-signature">
                     LEXENEGAL n'est pas un outil. C'est la mémoire juridique organisée du Sénégal.
+                </div>
                 </div>
             </div>
 

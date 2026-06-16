@@ -24,6 +24,114 @@
     padding: 0 24px;
 }
 
+/* ─── Layout avec arbre de navigation (gauche) ─── */
+.article-layout {
+    display: flex;
+    align-items: flex-start;
+    gap: 32px;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+.article-layout .article-container {
+    flex: 1;
+    min-width: 0;
+    max-width: 900px;
+    margin: 0;
+    padding: 0;
+}
+.article-tree-aside {
+    width: 300px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 100px;
+    max-height: calc(100vh - 130px);
+    overflow-y: auto;
+    background: #FFFFFF;
+    border: 1px solid #EEF0F2;
+    border-radius: 12px;
+    padding: 14px 10px;
+}
+/* En-tête du tiroir + bouton « Sommaire » + backdrop : cachés sur desktop */
+.article-tree-aside__mhead { display: none; }
+.article-nav-toggle { display: none; }
+.article-nav-backdrop { display: none; }
+
+/* Sous 1024px : la page redevient une colonne centrée ; l'arbre devient un tiroir. */
+@media (max-width: 1024px) {
+    .article-layout { display: block; }
+    .article-layout .article-container { max-width: 900px; margin: 0 auto; }
+
+    /* Bouton d'ouverture */
+    .article-nav-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        margin-bottom: 18px;
+        padding: 9px 16px;
+        background: #047857;
+        color: #fff;
+        border: none;
+        border-radius: 9px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    /* Backdrop */
+    .article-nav-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(17, 24, 39, 0.45);
+        z-index: 1000;
+    }
+
+    /* Tiroir : hors écran par défaut, glisse depuis la gauche quand .is-open */
+    .article-tree-aside {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 86%;
+        max-width: 340px;
+        max-height: none;
+        margin: 0;
+        border-radius: 0;
+        border: none;
+        box-shadow: 2px 0 24px rgba(0, 0, 0, 0.18);
+        transform: translateX(-100%);
+        transition: transform 0.25s ease;
+        z-index: 1001;
+        padding: 0 10px 16px;
+    }
+    .article-tree-aside.is-open { transform: translateX(0); }
+
+    /* En-tête du tiroir (titre + fermer), collant en haut */
+    .article-tree-aside__mhead {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: sticky;
+        top: 0;
+        background: #fff;
+        padding: 14px 4px 12px;
+        margin-bottom: 4px;
+        border-bottom: 1px solid #EEF0F2;
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: #111827;
+    }
+    .article-tree-aside__mhead button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #6B7280;
+        display: inline-flex;
+        padding: 4px;
+    }
+}
+
 /* Breadcrumb */
 .article-breadcrumb {
     display: flex;
@@ -1025,25 +1133,49 @@
 /* Bloc « emplacement dans le code » : Livre › Titre › Chapitre › Section */
 .article-hierarchy {
     display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 0.35rem 0;
-    margin: 0 0 1rem;
+    flex-direction: column;
+    gap: 0.3rem;
+    margin: 0 0 1.1rem;
     padding-left: 0.9rem;
     border-left: 2px solid #166534;
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.09em;
-    line-height: 1.6;
-    color: #8a8f98;
-    font-weight: 500;
 }
-.article-hierarchy .ah-seg { display: inline-flex; align-items: baseline; }
-.article-hierarchy .ah-sep { margin: 0 0.55rem; color: #c8a86b; font-weight: 400; }
-.article-hierarchy .ah-seg:last-child { color: #166534; font-weight: 600; }
+.article-hierarchy .ah-row {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    text-decoration: none;
+    color: #4b5563;
+    transition: color 0.15s;
+}
+.article-hierarchy .ah-row:hover { color: #166534; }
+.article-hierarchy .ah-row:hover .ah-label { text-decoration: underline; }
+.article-hierarchy .ah-badge {
+    flex-shrink: 0;
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    padding: 2px 7px;
+    border-radius: 4px;
+    line-height: 1.4;
+    white-space: nowrap;
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #d1fae5;
+}
+.article-hierarchy .ah-badge--titre { background: #047857; color: #fff; border-color: #047857; }
+.article-hierarchy .ah-badge--chapitre { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
+.article-hierarchy .ah-badge--section { background: #f3f4f6; color: #6b7280; border-color: #e5e7eb; }
+.article-hierarchy .ah-label {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: inherit;
+    line-height: 1.35;
+}
 @media print {
-    .article-hierarchy { color: #000; border-left-color: #000; }
-    .article-hierarchy .ah-sep { color: #000; }
+    .article-hierarchy { border-left-color: #000; }
+    .article-hierarchy .ah-badge { background: #fff !important; color: #000 !important; border-color: #000 !important; }
+    .article-hierarchy .ah-label { color: #000; }
 }
 
 /* alinéas : indentation par niveau + marqueur (1. a) •) discret */
