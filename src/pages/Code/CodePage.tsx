@@ -592,7 +592,7 @@ const CodePage: React.FC = () => {
 
     return (
         <div className="code-page">
-            <SEO title={law.title} description={`${law.title} — ${totalArticles} articles`} />
+            <SEO title={`${law.title} | Lexenegal`} description={`${law.title} — texte intégral consolidé (${totalArticles} articles). Droit sénégalais sur Lexenegal.`} url={`https://www.lexenegal.sn/code/${slug}`} />
 
             <div className="code-layout">
                 {/* ═══════ SIDEBAR ═══════ */}

@@ -295,7 +295,7 @@ const DecisionPage: React.FC = () => {
                 matiere={decision.matiere_principale}
                 date={formattedDate}
                 type="article"
-                url={`https://lexenegal.sn/decision/${slug}`}
+                url={`https://www.lexenegal.sn/decision/${slug}`}
                 chambre={decision.chambre}
                 resume={decision.resume}
                 motsCles={decision.mots_cles}
@@ -342,7 +342,7 @@ const DecisionPage: React.FC = () => {
                         <Scale size={14} /> Source Certifiée : Lexenegal.sn
                     </div>
 
-                    <h1 className="decision-title">{decision.chambre || decision.juridiction || 'Chambre'}</h1>
+                    <h1 className="decision-title">{[decision.reference, decision.chambre || decision.juridiction].filter(Boolean).join(' — ') || 'Décision'}</h1>
                     <div className="decision-ref">{decision.reference} • {decision.date_decision ? new Date(decision.date_decision).toLocaleDateString('fr-FR', { dateStyle: 'long' }) : 'Date N/D'}</div>
 
                     {/* EXPERT BLOCK */}

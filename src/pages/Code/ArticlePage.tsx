@@ -388,8 +388,9 @@ const ArticlePage: React.FC = () => {
     return (
         <div className="article-page">
             <SEO
-                title={`Article ${article.article_number} - ${law?.title} | LEXENEGAL`}
-                description={`Texte intégral de l'article ${article.article_number} du ${law?.title}`}
+                title={`Article ${article.article_number} — ${law?.title} | Lexenegal`}
+                description={`Texte intégral de l'article ${article.article_number} du ${law?.title}. Droit sénégalais consolidé sur Lexenegal.`}
+                url={`https://www.lexenegal.sn/code/${codeSlug}/${articleSlug}`}
             />
 
             <div className="article-container">

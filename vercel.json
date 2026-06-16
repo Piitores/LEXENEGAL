@@ -10,7 +10,15 @@
     "rewrites": [
         {
             "source": "/decision/:slug",
-            "destination": "/api/render?slug=:slug"
+            "destination": "/api/render?type=decision&slug=:slug"
+        },
+        {
+            "source": "/code/:codeSlug/:articleSlug",
+            "destination": "/api/render?type=article&code=:codeSlug&slug=:articleSlug"
+        },
+        {
+            "source": "/code/:slug",
+            "destination": "/api/render?type=code&slug=:slug"
         },
         {
             "source": "/(.*)",

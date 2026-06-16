@@ -21,7 +21,7 @@ const SEO: React.FC<SEOProps> = ({
     title = 'Lexenegal | La Mémoire Juridique du Sénégal',
     description = 'La référence numérique du droit sénégalais. Jurisprudence certifiée du TGI Dakar, Cour d\'Appel, Cour Suprême. Barreau du Sénégal.',
     image = '/og-image.svg',
-    url = 'https://lexenegal.sn',
+    url = 'https://www.lexenegal.sn',
     type = 'website',
     juridiction,
     reference,
