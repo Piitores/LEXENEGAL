@@ -110,7 +110,7 @@ export function buildDecisionHead(d, canonical) {
   };
   return headBlock({ title, description, keywords, canonical, ogType: 'article', schema });
 }
-export function buildDecisionBody(d) {
+export function buildDecisionBody(d, cited) {
   const ref = d.reference || 'Décision';
   const court = d.chambre || d.juridiction || '';
   const dateFr = formatDateFr(d.date_decision);
@@ -125,11 +125,19 @@ export function buildDecisionBody(d) {
     ? `<p class="ssr-motscles"><strong>Mots-clés :</strong> ${esc(d.mots_cles.join(', '))}</p>` : '';
   const resume = d.resume ? `<section class="ssr-resume"><h2>Résumé</h2><p>${esc(stripHtml(d.resume))}</p></section>` : '';
   const corps = textToParagraphs(d.texte_brut || d.texte_integral || '');
+  const cites = (cited && cited.length)
+    ? `<section class="ssr-cited"><h2>Textes et articles cités</h2><ul>${cited.map((c) => {
+        const a = c.article; if (!a || !a.code || !a.code.slug || !a.slug) return '';
+        const label = a.num || a.num_court || (a.article_number != null ? `Article ${a.article_number}` : 'Article');
+        return `<li><a href="/code/${esc(a.code.slug)}/${esc(a.slug)}">${esc(label)} — ${esc(a.code.title)}</a></li>`;
+      }).filter(Boolean).join('')}</ul></section>`
+    : '';
   return wrapContent(`<article>
     <h1>${esc([ref, court].filter(Boolean).join(' — '))}</h1>
     <ul class="ssr-meta">${meta}</ul>
     ${motscles}${resume}
     <section class="ssr-corps"><h2>Texte intégral</h2>${corps}</section>
+    ${cites}
   </article>`);
 }
 
@@ -231,7 +239,12 @@ async function sb(pathq) {
 }
 const one = (rows) => (rows && rows[0]) ? rows[0] : null;
 async function fetchDecision(slug) {
-  return one(await sb(`decisions?slug=eq.${encodeURIComponent(slug)}&select=reference,slug,date_decision,juridiction,chambre,matiere_principale,parties_principales,resume,mots_cles,texte_brut,texte_integral&limit=1`));
+  return one(await sb(`decisions?slug=eq.${encodeURIComponent(slug)}&select=id,reference,slug,date_decision,juridiction,chambre,matiere_principale,parties_principales,resume,mots_cles,texte_brut,texte_integral&limit=1`));
+}
+async function fetchCitedArticles(decisionId) {
+  try {
+    return await sb(`decision_article_links?decision_id=eq.${decisionId}&select=article:articles(slug,num,num_court,article_number,code:laws_and_codes(slug,title))&limit=40`);
+  } catch (e) { return []; }
 }
 async function fetchLaw(slug) {
   return one(await sb(`laws_and_codes?slug=eq.${encodeURIComponent(slug)}&select=id,title,category,slug&limit=1`));
@@ -308,8 +321,9 @@ export default async function handler(req, res) {
     let decision = null;
     try { decision = await fetchDecision(slug); } catch (e) { /* */ }
     if (!decision) return serveShell();
+    const cited = decision.id ? await fetchCitedArticles(decision.id) : [];
     const canonical = `${SITE}/decision/${slug}`;
-    return serveHtml(buildDecisionHead(decision, canonical), buildDecisionBody(decision));
+    return serveHtml(buildDecisionHead(decision, canonical), buildDecisionBody(decision, cited));
   } catch (e) {
     res.statusCode = 500;
     return res.end('Erreur de rendu');
