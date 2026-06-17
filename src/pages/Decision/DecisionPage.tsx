@@ -313,11 +313,11 @@ const DecisionPage: React.FC = () => {
                         <meta itemProp="position" content="2" />
                     </li>
                     <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
-                        <span itemProp="name">{decision.chambre || 'Chambre'}</span>
+                        <a itemProp="item" href="/search"><span itemProp="name">{decision.chambre || 'Chambre'}</span></a>
                         <meta itemProp="position" content="3" />
                     </li>
                     <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
-                        <span itemProp="name">{decision.reference}</span>
+                        <a itemProp="item" href={`/decision/${slug}`}><span itemProp="name">{decision.reference}</span></a>
                         <meta itemProp="position" content="4" />
                     </li>
                 </ol>
