@@ -32,6 +32,15 @@ interface ArticleInfo {
 const DecisionPage: React.FC = () => {
     const { slug } = useParams();
     const navigate = useNavigate();
+    // Retour « intelligent » : revient là d'où l'on vient (résultats de recherche, position conservée),
+    // sinon retombe sur la page de recherche.
+    const goBack = (fallback: string) => {
+        if (window.history.state && typeof window.history.state.idx === 'number' && window.history.state.idx > 0) {
+            navigate(-1);
+        } else {
+            navigate(fallback);
+        }
+    };
     const [decision, setDecision] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
     const [articles, setArticles] = useState<ArticleInfo[]>([]);
@@ -327,7 +336,7 @@ const DecisionPage: React.FC = () => {
                 {/* 1. LEFT SIDEBAR */}
                 <aside className="sidebar-left">
                     <nav className="nav-sticky">
-                        <button className="btn-back" onClick={() => navigate('/search')}>
+                        <button className="btn-back" onClick={() => goBack('/search')}>
                             <ArrowLeft size={16} /> Retour
                         </button>
 

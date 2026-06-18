@@ -111,6 +111,16 @@ const ArticlePage: React.FC = () => {
     const { codeSlug, articleSlug } = useParams();
     const navigate = useNavigate();
 
+    // Retour « intelligent » : si on vient d'une autre page du site (recherche, liste du code…),
+    // on y revient EXACTEMENT (position restaurée). Sinon on retombe sur une destination explicite.
+    const goBack = (fallback: string) => {
+        if (window.history.state && typeof window.history.state.idx === 'number' && window.history.state.idx > 0) {
+            navigate(-1);
+        } else {
+            navigate(fallback);
+        }
+    };
+
     const [article, setArticle] = useState<Article | null>(null);
     const [law, setLaw] = useState<Law | null>(null);
     const [versions, setVersions] = useState<ArticleVersion[]>([]);
@@ -425,7 +435,7 @@ const ArticlePage: React.FC = () => {
         return (
             <div className="article-page article-not-found">
                 <h2>Article non trouvé</h2>
-                <button onClick={() => navigate(`/code/${codeSlug}`)}>Retour au code</button>
+                <button onClick={() => goBack(`/code/${codeSlug}`)}>Retour au code</button>
             </div>
         );
     }
@@ -728,8 +738,8 @@ const ArticlePage: React.FC = () => {
                         <ChevronLeft size={16} />
                         {prevArticle ? `Art. ${prevArticle.number}` : 'Premier article'}
                     </button>
-                    <button className="btn-nav btn-nav-center" onClick={() => navigate(`/code/${codeSlug}`)}>
-                        Retour au sommaire
+                    <button className="btn-nav btn-nav-center" onClick={() => goBack(`/code/${codeSlug}`)}>
+                        Retour
                     </button>
                     <button
                         className={`btn-nav ${!nextArticle ? 'disabled' : ''}`}

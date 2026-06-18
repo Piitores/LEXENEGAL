@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigationType } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import Navbar from './components/Navbar/Navbar';
 import Footer from './components/Footer/Footer';
@@ -22,12 +22,47 @@ import SEO from './components/SEO/SEO';
 import AmbientEffects from './components/AmbientEffects/AmbientEffects';
 import './App.css';
 
-// ScrollToTop component to reset scroll on route change
-const ScrollToTop = () => {
-  const { pathname } = useLocation();
+// Gère le défilement à la navigation :
+// - navigation "avant" (PUSH/REPLACE, clic sur un lien) → on remonte en haut
+// - navigation "retour/avance" (POP, bouton Retour) → on restaure la position où l'on était
+// La position de chaque entrée d'historique est mémorisée par clé (sessionStorage).
+const ScrollManager = () => {
+  const location = useLocation();
+  const navType = useNavigationType(); // 'PUSH' | 'REPLACE' | 'POP'
+
+  // Mémorise en continu la position de défilement de l'entrée d'historique courante
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
+    const key = `scrollpos:${location.key}`;
+    const onScroll = () => {
+      try { sessionStorage.setItem(key, String(window.scrollY)); } catch { /* quota */ }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [location.key]);
+
+  // Applique la position au changement d'entrée d'historique
+  useLayoutEffect(() => {
+    if (navType === 'POP') {
+      const saved = sessionStorage.getItem(`scrollpos:${location.key}`);
+      const y = saved ? parseInt(saved, 10) : 0;
+      const target = isNaN(y) ? 0 : y;
+      if (target === 0) { window.scrollTo(0, 0); return; }
+      // Les listes/pages rechargent leurs données de façon asynchrone : on retente la
+      // restauration tant que la hauteur de page n'a pas atteint la cible (max ~1,2 s).
+      let tries = 0;
+      const restore = () => {
+        window.scrollTo(0, target);
+        tries++;
+        if (Math.abs(window.scrollY - target) > 4 && tries < 12) {
+          setTimeout(restore, 100);
+        }
+      };
+      requestAnimationFrame(restore);
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }, [location.key, navType]);
+
   return null;
 };
 
@@ -47,7 +82,7 @@ function App() {
     <HelmetProvider>
       <Router>
         <BotBlocker>
-          <ScrollToTop />
+          <ScrollManager />
           <SEO />
           <div className="app">
             <AmbientEffects />

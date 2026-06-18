@@ -496,3 +496,44 @@
     transform: translateY(-2px);
     background: #000;
 }
+/* --- Onglets de recherche (Jurisprudence / Codes & articles) --- */
+.searchTabs {
+  display: flex;
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--border-color, rgba(0,0,0,0.08));
+  margin: 0 0 0.75rem 0;
+}
+.searchTab {
+  background: none;
+  border: none;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-secondary, #6b7280);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.searchTab:hover { color: var(--text-primary, #111); }
+.searchTab.active {
+  color: var(--text-primary, #111);
+  border-bottom-color: var(--accent, #1a4d8f);
+}
+.searchTabCount {
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: var(--surface-2, rgba(0,0,0,0.06));
+  color: var(--text-secondary, #6b7280);
+  border-radius: 999px;
+  padding: 0.05rem 0.5rem;
+  min-width: 1.4rem;
+  text-align: center;
+}
+.searchTab.active .searchTabCount {
+  background: var(--accent, #1a4d8f);
+  color: #fff;
+}

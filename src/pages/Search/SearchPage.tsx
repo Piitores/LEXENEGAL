@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
@@ -8,6 +8,10 @@ import './SearchPage.css';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// Retire les balises HTML pour l'aperçu d'un article
+const stripHtml = (html: string) =>
+    (html || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 
 // --- TYPES ---
 interface Decision {
@@ -21,6 +25,15 @@ interface Decision {
     mots_cles: string[];
 }
 
+interface ArticleHit {
+    id: string;
+    article_number: string;
+    slug: string;
+    code_slug: string;
+    code_title: string;
+    content: string;
+}
+
 const SearchPage: React.FC = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const queryParam = searchParams.get('q') || '';
@@ -28,6 +41,13 @@ const SearchPage: React.FC = () => {
 
     const [results, setResults] = useState<Decision[]>([]);
     const [totalHits, setTotalHits] = useState(0);
+
+    // Onglet actif + résultats "Codes & articles"
+    const [activeTab, setActiveTab] = useState<'decisions' | 'articles'>('decisions');
+    const [articleResults, setArticleResults] = useState<ArticleHit[]>([]);
+    const [articlesLoading, setArticlesLoading] = useState(false);
+    // L'utilisateur a-t-il choisi un onglet manuellement ? (sinon on choisit pour lui selon la requête)
+    const userPickedTab = useRef(false);
     const [suggestions, setSuggestions] = useState<Decision[]>([]);
     const [facets, setFacets] = useState<any>({});
     const [loading, setLoading] = useState(false);
@@ -90,7 +110,62 @@ const SearchPage: React.FC = () => {
     useEffect(() => {
         setQuery(queryParam);
         setOffset(0);
+        userPickedTab.current = false; // nouvelle requête → on laissera l'onglet se choisir automatiquement
     }, [queryParam]);
+
+    // RECHERCHE "CODES & ARTICLES" (en parallèle des décisions)
+    useEffect(() => {
+        const term = query?.trim() || '';
+        if (term.length < 2) {
+            setArticleResults([]);
+            return;
+        }
+        let cancelled = false;
+        setArticlesLoading(true);
+        const timer = setTimeout(async () => {
+            try {
+                const { data, error: artErr } = await supabase.rpc('search_articles', {
+                    search_query: term,
+                    result_limit: 50
+                });
+                if (cancelled) return;
+                if (artErr) throw artErr;
+                const arr: ArticleHit[] = (data || []).map((a: any) => ({
+                    id: a.id,
+                    article_number: a.article_number,
+                    slug: a.slug,
+                    code_slug: a.code_slug || 'code-travail',
+                    code_title: a.code_title || 'Code',
+                    content: a.content || ''
+                }));
+                setArticleResults(arr);
+            } catch (e) {
+                if (!cancelled) setArticleResults([]);
+                console.warn('search_articles error:', e);
+            } finally {
+                if (!cancelled) setArticlesLoading(false);
+            }
+        }, 300);
+        return () => { cancelled = true; clearTimeout(timer); };
+    }, [query]);
+
+    // Choix automatique de l'onglet : si l'utilisateur cherche "article 10" (ou que la
+    // jurisprudence ne donne rien mais les articles oui), on ouvre l'onglet "Codes & articles".
+    useEffect(() => {
+        if (userPickedTab.current) return;
+        const looksLikeArticle = /\b(art\.?|article)\s*\.?\s*[0-9lr]/i.test(query || '');
+        if ((looksLikeArticle && articleResults.length > 0) ||
+            (results.length === 0 && articleResults.length > 0 && !loading)) {
+            setActiveTab('articles');
+        } else if (results.length > 0) {
+            setActiveTab('decisions');
+        }
+    }, [results, articleResults, query, loading]);
+
+    const selectTab = (tab: 'decisions' | 'articles') => {
+        userPickedTab.current = true;
+        setActiveTab(tab);
+    };
 
     // TRIGGER SEARCH
     useEffect(() => {
@@ -576,25 +651,48 @@ const SearchPage: React.FC = () => {
                     </div>
                 </div>
 
+                {/* ONGLETS : Jurisprudence / Codes & articles */}
+                <div className="searchTabs" role="tablist">
+                    <button
+                        role="tab"
+                        aria-selected={activeTab === 'decisions'}
+                        className={`searchTab ${activeTab === 'decisions' ? 'active' : ''}`}
+                        onClick={() => selectTab('decisions')}
+                    >
+                        Jurisprudence <span className="searchTabCount">{totalHits}</span>
+                    </button>
+                    <button
+                        role="tab"
+                        aria-selected={activeTab === 'articles'}
+                        className={`searchTab ${activeTab === 'articles' ? 'active' : ''}`}
+                        onClick={() => selectTab('articles')}
+                    >
+                        Codes &amp; articles <span className="searchTabCount">{articleResults.length}</span>
+                    </button>
+                </div>
+
                 <div className="resultsToolbar">
                     <div className="resultsCount">
-                        <span className="count-number">{totalHits}</span> résultats
+                        <span className="count-number">{activeTab === 'decisions' ? totalHits : articleResults.length}</span> résultats
                     </div>
-                    <div className="sortControls">
-                        <select
-                            className="sortSelect"
-                            value={sortOption}
-                            onChange={(e) => setSortOption(e.target.value as any)}
-                        >
-                            <option value="relevance">Pertinence</option>
-                            <option value="date_desc">Plus récent</option>
-                            <option value="date_asc">Plus ancien</option>
-                        </select>
-                    </div>
+                    {activeTab === 'decisions' && (
+                        <div className="sortControls">
+                            <select
+                                className="sortSelect"
+                                value={sortOption}
+                                onChange={(e) => setSortOption(e.target.value as any)}
+                            >
+                                <option value="relevance">Pertinence</option>
+                                <option value="date_desc">Plus récent</option>
+                                <option value="date_asc">Plus ancien</option>
+                            </select>
+                        </div>
+                    )}
                 </div>
 
                 {error && <div className="errorBanner"><strong>Erreur technique :</strong> {error}</div>}
 
+                {activeTab === 'decisions' && (<>
                 <LayoutGroup>
                     <motion.div className="resultsGrid" layout>
                         <AnimatePresence>
@@ -659,6 +757,30 @@ const SearchPage: React.FC = () => {
                 {!loading && results.length < totalHits && (
                     <div className="loadMoreContainer">
                         <button onClick={() => setOffset(p => p + 20)} className="loadMoreBtn">Voir plus</button>
+                    </div>
+                )}
+                </>)}
+
+                {/* RÉSULTATS "CODES & ARTICLES" */}
+                {activeTab === 'articles' && (
+                    <div className="resultsGrid">
+                        {articleResults.map((art) => (
+                            <div
+                                key={art.id}
+                                className="resultCard linear-card"
+                                onClick={() => window.open(`/code/${art.code_slug}/${art.slug}`, '_blank')}
+                            >
+                                <div className="cardHeader">
+                                    <span className="cardRef">Article {art.article_number}</span>
+                                    <span className="cardDate">{art.code_title}</span>
+                                </div>
+                                <p className="cardSnippet">{stripHtml(art.content).slice(0, 240) || 'Voir l’article complet.'}</p>
+                            </div>
+                        ))}
+                        {!articlesLoading && articleResults.length === 0 && (
+                            <div className="emptyState"><p>Aucun article trouvé pour «&nbsp;{query}&nbsp;».</p></div>
+                        )}
+                        {articlesLoading && <div className="loadingState"><div className="spinner"></div></div>}
                     </div>
                 )}
             </div>
