@@ -274,10 +274,16 @@ export default async function handler(req, res) {
     const type = q.type || 'decision';
     const shell = await getShell(req);
     if (!shell) { res.statusCode = 500; return res.end('Service indisponible'); }
-    const serveShell = (maxAge = 60) => {
+    const serveShell = (maxAge = 60, noindex = false) => {
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       res.setHeader('Cache-Control', `public, s-maxage=${maxAge}`);
-      return res.end(shell);
+      // Contenu introuvable (slug inexistant OU décision/code masqué via is_active) :
+      // on sert la coquille SPA avec un noindex propre pour une désindexation rapide,
+      // sans bloquer le suivi des liens internes.
+      const out = noindex
+        ? shell.replace(/<\/head>/i, '<meta name="robots" content="noindex, follow" />\n</head>')
+        : shell;
+      return res.end(out);
     };
     const serveHtml = (headHtml, bodyHtml) => {
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
@@ -291,7 +297,7 @@ export default async function handler(req, res) {
       if (!slug) return serveShell();
       let law = null;
       try { law = await fetchLaw(slug); } catch (e) { /* */ }
-      if (!law) return serveShell();
+      if (!law) return serveShell(60, true);
       let articles = [];
       try { articles = await fetchCodeArticles(law.id); } catch (e) { /* */ }
       const canonical = `${SITE}/code/${slug}`;
@@ -303,10 +309,10 @@ export default async function handler(req, res) {
       if (!codeSlug || !artSlug) return serveShell();
       let law = null;
       try { law = await fetchLaw(codeSlug); } catch (e) { /* */ }
-      if (!law) return serveShell();
+      if (!law) return serveShell(60, true);
       let art = null;
       try { art = await fetchArticle(law.id, artSlug); } catch (e) { /* */ }
-      if (!art) return serveShell();
+      if (!art) return serveShell(60, true);
       const [content, citing] = await Promise.all([
         art.content_html ? Promise.resolve(art.content_html) : fetchCurrentVersion(art.id),
         fetchCitingDecisions(art.id),
@@ -320,7 +326,7 @@ export default async function handler(req, res) {
     if (!slug) return serveShell();
     let decision = null;
     try { decision = await fetchDecision(slug); } catch (e) { /* */ }
-    if (!decision) return serveShell();
+    if (!decision) return serveShell(60, true);
     const cited = decision.id ? await fetchCitedArticles(decision.id) : [];
     const canonical = `${SITE}/decision/${slug}`;
     return serveHtml(buildDecisionHead(decision, canonical), buildDecisionBody(decision, cited));
