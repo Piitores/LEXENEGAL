@@ -62,6 +62,18 @@
     <priority>0.9</priority>
   </url>
   <url>
+    <loc>https://www.lexenegal.sn/code/loi-cybercriminalite</loc>
+    <lastmod>2026-06-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/loi-protection-donnees-personnelles</loc>
+    <lastmod>2026-06-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
     <loc>https://www.lexenegal.sn/code/code-travail</loc>
     <lastmod>2026-01-24</lastmod>
     <changefreq>weekly</changefreq>
@@ -75,12 +87,6 @@
   </url>
   <url>
     <loc>https://www.lexenegal.sn/code/code-marches-publics</loc>
-    <lastmod>2026-06-15</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/code/loi-cybercriminalite</loc>
     <lastmod>2026-06-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
@@ -122,12 +128,6 @@
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/code/loi-protection-donnees-personnelles</loc>
-    <lastmod>2026-06-15</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/code/ohada-mediation</loc>
     <lastmod>2026-06-15</lastmod>
     <changefreq>weekly</changefreq>
@@ -142,6 +142,60 @@
   <url>
     <loc>https://www.lexenegal.sn/code/ohada-transport-marchandises</loc>
     <lastmod>2026-06-15</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-cafes-restaurants-hotels</loc>
+    <lastmod>2026-06-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-comite-lutte-contre-le-travail-des-enfants</loc>
+    <lastmod>2026-06-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-fixant-la-liste-des-secteurs-d-activite</loc>
+    <lastmod>2026-06-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-fixant-les-ressorts-des-itss</loc>
+    <lastmod>2026-06-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-interministeriel-abrogeant-et-remplacant-larrete-intermin</loc>
+    <lastmod>2026-06-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-interministeriel-fixant-les-modalites-types-de-statuts</loc>
+    <lastmod>2026-06-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-ministeriel-n-3748-mfpteop-dtss-du-06-juin-2003-relatif-a</loc>
+    <lastmod>2026-06-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-ministeriel-n-3749-mfpteop-dtss-du-06-juin-2003-fixant-et</loc>
+    <lastmod>2026-06-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-portant-approbation-de-la-modification-des-articles-24-et</loc>
+    <lastmod>2026-06-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -523,6 +577,86 @@
   </url>
   <url>
     <loc>https://www.lexenegal.sn/code/decret-2006-1253-inspection-medicale/preambule</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-fixant-la-liste-des-secteurs-d-activite/art-2</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-fixant-la-liste-des-secteurs-d-activite/art-3</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-fixant-la-liste-des-secteurs-d-activite/art-4</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-fixant-la-liste-des-secteurs-d-activite/art-5</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-fixant-la-liste-des-secteurs-d-activite/art-6</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-fixant-la-liste-des-secteurs-d-activite/art-premier</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-fixant-la-liste-des-secteurs-d-activite/preambule</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-interministeriel-fixant-les-modalites-types-de-statuts/art-2</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-interministeriel-fixant-les-modalites-types-de-statuts/art-3</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-interministeriel-fixant-les-modalites-types-de-statuts/art-4</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-interministeriel-fixant-les-modalites-types-de-statuts/art-5</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-interministeriel-fixant-les-modalites-types-de-statuts/art-6</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-interministeriel-fixant-les-modalites-types-de-statuts/art-7</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-interministeriel-fixant-les-modalites-types-de-statuts/art-8</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-interministeriel-fixant-les-modalites-types-de-statuts/art-premier</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-interministeriel-fixant-les-modalites-types-de-statuts/preambule</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -17222,6 +17356,126 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://www.lexenegal.sn/code/arrete-ministeriel-n-3749-mfpteop-dtss-du-06-juin-2003-fixant-et/art-2</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-ministeriel-n-3749-mfpteop-dtss-du-06-juin-2003-fixant-et/art-3</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-ministeriel-n-3749-mfpteop-dtss-du-06-juin-2003-fixant-et/art-4</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-ministeriel-n-3749-mfpteop-dtss-du-06-juin-2003-fixant-et/art-5</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-ministeriel-n-3749-mfpteop-dtss-du-06-juin-2003-fixant-et/art-6</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-ministeriel-n-3749-mfpteop-dtss-du-06-juin-2003-fixant-et/art-premier</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-portant-approbation-de-la-modification-des-articles-24-et/art-2</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-portant-approbation-de-la-modification-des-articles-24-et/art-3</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-portant-approbation-de-la-modification-des-articles-24-et/art-premier</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-portant-approbation-de-la-modification-des-articles-24-et/preambule</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-ministeriel-n-3748-mfpteop-dtss-du-06-juin-2003-relatif-a/art-10</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-ministeriel-n-3748-mfpteop-dtss-du-06-juin-2003-relatif-a/art-11</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-ministeriel-n-3748-mfpteop-dtss-du-06-juin-2003-relatif-a/art-12</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-ministeriel-n-3748-mfpteop-dtss-du-06-juin-2003-relatif-a/art-13</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-ministeriel-n-3748-mfpteop-dtss-du-06-juin-2003-relatif-a/art-14</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-ministeriel-n-3748-mfpteop-dtss-du-06-juin-2003-relatif-a/art-2</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-ministeriel-n-3748-mfpteop-dtss-du-06-juin-2003-relatif-a/art-3</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-ministeriel-n-3748-mfpteop-dtss-du-06-juin-2003-relatif-a/art-4</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-ministeriel-n-3748-mfpteop-dtss-du-06-juin-2003-relatif-a/art-5</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-ministeriel-n-3748-mfpteop-dtss-du-06-juin-2003-relatif-a/art-6</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-ministeriel-n-3748-mfpteop-dtss-du-06-juin-2003-relatif-a/art-7</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-ministeriel-n-3748-mfpteop-dtss-du-06-juin-2003-relatif-a/art-8</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-ministeriel-n-3748-mfpteop-dtss-du-06-juin-2003-relatif-a/art-9</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-ministeriel-n-3748-mfpteop-dtss-du-06-juin-2003-relatif-a/art-premier</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://www.lexenegal.sn/code/ohada-reglement-arbitrage-ccja/art-1</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -17508,6 +17762,21 @@
   </url>
   <url>
     <loc>https://www.lexenegal.sn/code/decret-2021-1469-travail-femmes-enceintes/preambule</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-interministeriel-abrogeant-et-remplacant-larrete-intermin/art-2</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-interministeriel-abrogeant-et-remplacant-larrete-intermin/art-premier</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-interministeriel-abrogeant-et-remplacant-larrete-intermin/preambule</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -22927,6 +23196,81 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://www.lexenegal.sn/code/arrete-fixant-les-ressorts-des-itss/art-10</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-fixant-les-ressorts-des-itss/art-11</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-fixant-les-ressorts-des-itss/art-12</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-fixant-les-ressorts-des-itss/art-13</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-fixant-les-ressorts-des-itss/art-14</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-fixant-les-ressorts-des-itss/art-2</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-fixant-les-ressorts-des-itss/art-3</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-fixant-les-ressorts-des-itss/art-4</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-fixant-les-ressorts-des-itss/art-5</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-fixant-les-ressorts-des-itss/art-6</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-fixant-les-ressorts-des-itss/art-7</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-fixant-les-ressorts-des-itss/art-8</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-fixant-les-ressorts-des-itss/art-9</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-fixant-les-ressorts-des-itss/art-premier</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-fixant-les-ressorts-des-itss/preambule</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://www.lexenegal.sn/code/loi-protection-donnees-personnelles/art-10</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -24963,6 +25307,56 @@
   </url>
   <url>
     <loc>https://www.lexenegal.sn/code/decret-2006-1250-circulation-vehicules-et-engins/preambule</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-comite-lutte-contre-le-travail-des-enfants/art-10</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-comite-lutte-contre-le-travail-des-enfants/art-2</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-comite-lutte-contre-le-travail-des-enfants/art-3</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-comite-lutte-contre-le-travail-des-enfants/art-4</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-comite-lutte-contre-le-travail-des-enfants/art-5</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-comite-lutte-contre-le-travail-des-enfants/art-6</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-comite-lutte-contre-le-travail-des-enfants/art-7</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-comite-lutte-contre-le-travail-des-enfants/art-8</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-comite-lutte-contre-le-travail-des-enfants/art-9</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-comite-lutte-contre-le-travail-des-enfants/art-premier</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -30503,6 +30897,26 @@
   </url>
   <url>
     <loc>https://www.lexenegal.sn/code/ohada-societes-commerciales-gie/preambule</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-cafes-restaurants-hotels/art-2</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-cafes-restaurants-hotels/art-3</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-cafes-restaurants-hotels/art-premier</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/arrete-cafes-restaurants-hotels/preambule</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
