@@ -152,12 +152,20 @@ export function buildCodeHead(law, nArticles, canonical) {
   };
   return headBlock({ title, description, keywords: `${law.title}, Droit sénégalais, texte intégral, Lexenegal`, canonical, ogType: 'website', schema });
 }
+function abrogationBanner(law) {
+  if (!law || !law.abrogation_note) return '';
+  const link = law.abrogated_by_slug
+    ? ` <a href="/code/${esc(law.abrogated_by_slug)}">Voir le texte en vigueur →</a>` : '';
+  return `<div class="ssr-abrogation" style="background:#fef2f2;border:1px solid #fca5a5;border-left:4px solid #dc2626;color:#991b1b;padding:0.85rem 1.1rem;border-radius:8px;margin:0 0 1.25rem;">⛔ ${esc(law.abrogation_note)}${link}</div>`;
+}
+
 export function buildCodeBody(law, articles) {
   const links = (articles || []).map((a) => {
     const label = a.num || a.num_court || (a.article_number != null ? `Article ${a.article_number}` : a.slug);
     return `<li><a href="/code/${esc(law.slug)}/${esc(a.slug)}">${esc(label)}</a></li>`;
   }).join('\n');
   return wrapContent(`<article>
+    ${abrogationBanner(law)}
     <h1>${esc(law.title)}</h1>
     <p>Texte intégral consolidé${articles && articles.length ? ` — ${articles.length} articles` : ''}. Cliquez sur un article pour en consulter le texte.</p>
     <nav class="ssr-toc" aria-label="Articles"><h2>Articles</h2><ul>${links}</ul></nav>
@@ -191,6 +199,7 @@ export function buildArticleBody(law, art, contentHtml, citing) {
   // contentHtml = HTML déjà généré par notre pipeline (de confiance) -> injecté tel quel
   return wrapContent(`<article>
     <nav class="ssr-bc" aria-label="Fil d'Ariane"><a href="/code/${esc(law.slug)}">${esc(law.title)}</a> › ${esc(numLabel)}</nav>
+    ${abrogationBanner(law)}
     <h1>${esc(numLabel)}</h1>
     <div class="ssr-article-body">${contentHtml || `<p>Texte de l'article non disponible.</p>`}</div>
     ${citingHtml}
@@ -247,7 +256,7 @@ async function fetchCitedArticles(decisionId) {
   } catch (e) { return []; }
 }
 async function fetchLaw(slug) {
-  return one(await sb(`laws_and_codes?slug=eq.${encodeURIComponent(slug)}&select=id,title,category,slug&limit=1`));
+  return one(await sb(`laws_and_codes?slug=eq.${encodeURIComponent(slug)}&select=id,title,category,slug,abrogation_note,abrogated_by_slug&limit=1`));
 }
 async function fetchCodeArticles(codeId) {
   return sb(`articles?code_id=eq.${codeId}&select=num,num_court,article_number,slug&order=display_order&limit=3000`);

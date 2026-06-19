@@ -423,6 +423,11 @@
 .article-body .abrogation-banner { background: #fef2f2; border: 1px solid #fca5a5; border-left: 4px solid #dc2626; color: #991b1b; padding: 0.7rem 1rem; border-radius: 8px; margin: 0 0 1rem; }
 .article-body .note-disclaimer { background: #eef2ff; border: 1px solid #c7d2fe; border-left: 4px solid #4f46e5; color: #3730a3; padding: 0.7rem 1rem; border-radius: 8px; margin: 0 0 1rem; font-size: 0.95rem; }
 
+/* Bandeau d'abrogation au niveau du TEXTE entier (en tête de page code) */
+.law-abrogation-banner { display: flex; gap: 0.6rem; align-items: flex-start; background: #fef2f2; border: 1px solid #fca5a5; border-left: 4px solid #dc2626; color: #991b1b; padding: 0.85rem 1.1rem; border-radius: 8px; margin: 0 0 1.25rem; font-size: 0.95rem; line-height: 1.5; }
+.law-abrogation-banner .lab-icon { font-size: 1.05rem; line-height: 1.4; }
+.law-abrogation-banner a { color: #b91c1c; font-weight: 600; white-space: nowrap; text-decoration: underline; }
+
 .article-body .pastille {
     margin: 0.85rem 0 1rem;
     border: 1px solid #e5e7eb;

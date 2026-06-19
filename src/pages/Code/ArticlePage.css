@@ -1212,6 +1212,11 @@
 }
 .article-text .art-tableau th { background: var(--cp-green-lighter, #f0fdf4); font-weight: 600; }
 
+/* Bandeau d'abrogation au niveau du TEXTE entier (sous le fil d'Ariane) */
+.law-abrogation-banner { display: flex; gap: 0.6rem; align-items: flex-start; background: #fef2f2; border: 1px solid #fca5a5; border-left: 4px solid #dc2626; color: #991b1b; padding: 0.85rem 1.1rem; border-radius: 8px; margin: 0.5rem 0 1.25rem; font-size: 0.95rem; line-height: 1.5; }
+.law-abrogation-banner .lab-icon { font-size: 1.05rem; line-height: 1.4; }
+.law-abrogation-banner a { color: #b91c1c; font-weight: 600; white-space: nowrap; text-decoration: underline; }
+
 /* D4 — bandeaux abrogation + note législative (rendus dans content_raw) */
 .article-text .abrogation-banner {
     background: #fef2f2;

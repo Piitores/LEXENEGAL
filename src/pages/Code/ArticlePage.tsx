@@ -48,6 +48,8 @@ interface Law {
     slug: string;
     publication_date?: string | null;
     reference?: string | null;
+    abrogation_note?: string | null;
+    abrogated_by_slug?: string | null;
 }
 
 interface CitingDecision {
@@ -207,7 +209,7 @@ const ArticlePage: React.FC = () => {
             // Get law info
             const { data: lawData } = await supabase
                 .from('laws_and_codes')
-                .select('id, title, slug, publication_date, reference')
+                .select('id, title, slug, publication_date, reference, abrogation_note, abrogated_by_slug')
                 .eq('slug', codeSlug)
                 .single();
 
@@ -491,6 +493,16 @@ const ArticlePage: React.FC = () => {
                     <ChevronRight size={13} />
                     <span className="bc-current">Art. {article.article_number}</span>
                 </nav>
+
+                {/* BANDEAU ABROGATION (texte entier abrogé par un autre texte) */}
+                {law?.abrogation_note && (
+                    <div className="law-abrogation-banner" role="note">
+                        <span className="lab-icon" aria-hidden="true">⛔</span>
+                        <span>{law.abrogation_note}{law.abrogated_by_slug && (
+                            <> <Link to={`/code/${law.abrogated_by_slug}`}>Voir le texte en vigueur →</Link></>
+                        )}</span>
+                    </div>
+                )}
 
                 {/* HEADER */}
                 <header className="article-header">

@@ -420,6 +420,16 @@ const CodePage: React.FC = () => {
 
                 {/* ═══════ MAIN ═══════ */}
                 <main className="code-main">
+                    {/* BANDEAU ABROGATION (texte entier abrogé par un autre texte) */}
+                    {law.abrogation_note && (
+                        <div className="law-abrogation-banner" role="note">
+                            <span className="lab-icon" aria-hidden="true">⛔</span>
+                            <span>{law.abrogation_note}{law.abrogated_by_slug && (
+                                <> <Link to={`/code/${law.abrogated_by_slug}`}>Voir le texte en vigueur →</Link></>
+                            )}</span>
+                        </div>
+                    )}
+
                     {/* Préambule en tête (hors recherche) : article(s) sans chapitre,
                         replié(s) par défaut. Rien si le code n'a pas de préambule. */}
                     {!filteredArticles && preambuleArticles.length > 0 && (

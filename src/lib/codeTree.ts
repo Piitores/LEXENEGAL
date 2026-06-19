@@ -7,6 +7,8 @@ export interface Law {
     slug: string;
     reference: string;
     category: string;
+    abrogation_note?: string | null;
+    abrogated_by_slug?: string | null;
 }
 
 export interface Article {
