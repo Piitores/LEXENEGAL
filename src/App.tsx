@@ -30,6 +30,14 @@ const ScrollManager = () => {
   const location = useLocation();
   const navType = useNavigationType(); // 'PUSH' | 'REPLACE' | 'POP'
 
+  // Désactive la restauration de défilement NATIVE du navigateur : sur une appli qui
+  // charge son contenu de façon asynchrone, elle restaure une position avant que le
+  // contenu soit prêt → atterrissage au footer au rafraîchissement. On laisse ce
+  // ScrollManager piloter le défilement.
+  useEffect(() => {
+    if ('scrollRestoration' in window.history) window.history.scrollRestoration = 'manual';
+  }, []);
+
   // Mémorise en continu la position de défilement de l'entrée d'historique courante
   useEffect(() => {
     const key = `scrollpos:${location.key}`;

@@ -159,6 +159,9 @@ const CodePage: React.FC = () => {
     // Refs pour la gestion du scroll (corrige le « saut au footer »)
     const sidebarRef = useRef<HTMLElement>(null);
     const activeNodeRef = useRef<HTMLButtonElement>(null);
+    // Position de page à restaurer après un déplier/replier manuel de l'arbre
+    // (évite que le navigateur « clampe » le défilement vers le footer).
+    const preserveScrollY = useRef<number | null>(null);
 
     useEffect(() => {
         if (slug) fetchCodeData();
@@ -181,6 +184,16 @@ const CodePage: React.FC = () => {
             else if (e.bottom > c.bottom) cont.scrollTop += e.bottom - c.bottom + 12;
         }
     }, [selectedNode]);
+
+    // Déplier/replier l'arbre ne doit PAS bouger la page : on restaure la position
+    // mémorisée juste avant l'action (sinon le raccourcissement du contenu fait
+    // « clamper » le défilement vers le footer).
+    useLayoutEffect(() => {
+        if (preserveScrollY.current != null) {
+            window.scrollTo(0, preserveScrollY.current);
+            preserveScrollY.current = null;
+        }
+    }, [expandedNodes]);
 
     // ── Data fetching ──
 
@@ -274,6 +287,7 @@ const CodePage: React.FC = () => {
     // ── Actions ──
 
     const toggleNode = (nodeId: string) => {
+        preserveScrollY.current = window.scrollY;
         setExpandedNodes(prev => {
             const next = new Set(prev);
             if (next.has(nodeId)) next.delete(nodeId);
@@ -300,8 +314,8 @@ const CodePage: React.FC = () => {
         // (scroll géré par le useLayoutEffect sur selectedNode — voir plus haut)
     };
 
-    const expandAll = () => setExpandedNodes(new Set(collectAllNodeIds(hierarchy)));
-    const collapseAll = () => setExpandedNodes(new Set());
+    const expandAll = () => { preserveScrollY.current = window.scrollY; setExpandedNodes(new Set(collectAllNodeIds(hierarchy))); };
+    const collapseAll = () => { preserveScrollY.current = window.scrollY; setExpandedNodes(new Set()); };
 
     // ── Search ──
 
