@@ -49,10 +49,12 @@ const ArticleHoverPreview: React.FC<ArticleHoverPreviewProps> = ({
                 .single();
 
             if (data) {
-                // Truncate to first 300 characters
-                const truncated = data.content.length > 300
-                    ? data.content.substring(0, 300) + '...'
-                    : data.content;
+                // Le contenu est du HTML : on en extrait le texte lisible (sinon les
+                // balises s'afficheraient telles quelles), puis on tronque proprement.
+                const tmp = document.createElement('div');
+                tmp.innerHTML = data.content || '';
+                const plain = (tmp.textContent || '').replace(/\s+/g, ' ').trim();
+                const truncated = plain.length > 300 ? plain.substring(0, 300) + '…' : plain;
                 setContent(truncated);
             }
         } catch (error) {
