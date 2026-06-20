@@ -843,6 +843,18 @@
     line-height: 1.6;
 }
 
+/* Liens « Texte d'application » (renvois vers les articles du décret) : visiblement cliquables. */
+.annotation-content a {
+    color: #2563EB;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    font-weight: 500;
+}
+
+.annotation-content a:hover {
+    color: #1D4ED8;
+}
+
 /* ─────────────────────────────────────────────────────
    DOCTRINE FISCALE SECTION
    ───────────────────────────────────────────────────── */

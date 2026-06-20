@@ -11,7 +11,7 @@ export function articleUrl(codeSlug: string, artSlug: string): string {
 // Pied de référence en texte brut (réutilisé par le bouton « Copier » et la copie manuelle).
 export function attributionFooter(num: string, codeTitle: string | undefined, url: string): string {
   const ref = [num, codeTitle].filter(Boolean).join(', ');
-  return `\n\n— ${ref}\nSource : LexeSenegal — ${url}`;
+  return `\n\n— ${ref}\nSource : Lexenegal — ${url}`;
 }
 
 const esc = (s: string) =>
@@ -49,7 +49,7 @@ export function useCopyAttribution(codeSlug?: string, codeTitle?: string) {
         .join('');
       e.clipboardData.setData(
         'text/html',
-        `${htmlBody}<p>— ${esc(ref)}<br>Source : <a href="${url}">LexeSenegal</a></p>`
+        `${htmlBody}<p>— ${esc(ref)}<br>Source : <a href="${url}">Lexenegal</a></p>`
       );
       e.preventDefault();
     };
