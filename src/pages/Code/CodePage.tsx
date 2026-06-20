@@ -13,6 +13,7 @@ import {
     buildTreeFromNodes, buildTreeLegacy, countArticles, getArticlesForNode,
     getBreadcrumb, collectAllNodeIds, computeMaxArticlesInLevel,
 } from '../../lib/codeTree';
+import { useCopyAttribution, attributionFooter, articleUrl } from '../../hooks/useCopyAttribution';
 import './CodePage.css';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
@@ -51,9 +52,8 @@ const ArticleCard: React.FC<{ art: Article; slug: string | undefined; codeTitle?
     const handleCopy = async () => {
         try {
             const ref = art.num || `Article ${art.article_number}`;
-            const url = `https://www.lexenegal.sn/code/${slug}/${art.slug}`;
-            const attribution = `\n\n— ${ref}${codeTitle ? `, ${codeTitle}` : ''}\nSource : LexeSenegal — ${url}`;
-            await navigator.clipboard.writeText(articleToPlainText(art) + attribution);
+            const url = articleUrl(slug || '', art.slug);
+            await navigator.clipboard.writeText(articleToPlainText(art) + attributionFooter(ref, codeTitle, url));
             setCopied(true);
             setTimeout(() => setCopied(false), 1500);
         } catch {
@@ -64,7 +64,11 @@ const ArticleCard: React.FC<{ art: Article; slug: string | undefined; codeTitle?
     const heading = art.num_court || art.num || `Art. ${art.article_number}`;
 
     return (
-        <article className={`article-card ${preambule ? 'article-card--preambule' : ''}`}>
+        <article
+            className={`article-card ${preambule ? 'article-card--preambule' : ''}`}
+            data-art-slug={art.slug}
+            data-art-num={art.num || `Article ${art.article_number}`}
+        >
             <div className="article-card-header">
                 {preambule ? (
                     <button
@@ -143,6 +147,9 @@ const CodePage: React.FC = () => {
     const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
     const [selectedNode, setSelectedNode] = useState<HierarchyNode | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+
+    // Toute copie de texte d'un article emporte la référence LexeSenegal + le lien.
+    useCopyAttribution(slug, law?.title);
     const [activeTab, setActiveTab] = useState<'articles' | 'structure'>('articles');
 
     // Stats

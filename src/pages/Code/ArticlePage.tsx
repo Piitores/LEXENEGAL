@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useCopyAttribution } from '../../hooks/useCopyAttribution';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     ArrowLeft, ChevronLeft, ChevronRight,
@@ -123,6 +124,9 @@ const ArticlePage: React.FC = () => {
 
     const [article, setArticle] = useState<Article | null>(null);
     const [law, setLaw] = useState<Law | null>(null);
+
+    // Toute copie de texte de l'article emporte la référence LexeSenegal + le lien.
+    useCopyAttribution(codeSlug, law?.title);
     const [versions, setVersions] = useState<ArticleVersion[]>([]);
     const [currentVersion, setCurrentVersion] = useState<ArticleVersion | null>(null);
     const [loading, setLoading] = useState(true);
@@ -611,7 +615,11 @@ const ArticlePage: React.FC = () => {
                 </AnimatePresence>
 
                 {/* CONTENT */}
-                <div className={`article-content-wrapper ${showComparison && compareVersion ? 'side-by-side' : ''}`}>
+                <div
+                    className={`article-content-wrapper ${showComparison && compareVersion ? 'side-by-side' : ''}`}
+                    data-art-slug={articleSlug}
+                    data-art-num={`Article ${article.article_number}`}
+                >
                     {showComparison && compareVersion && isPro ? (
                         <>
                             {/* OLD VERSION */}
