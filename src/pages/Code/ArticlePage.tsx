@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useCopyAttribution } from '../../hooks/useCopyAttribution';
+import AnnotationContent from './AnnotationContent';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     ArrowLeft, ChevronLeft, ChevronRight,
@@ -659,10 +660,16 @@ const ArticlePage: React.FC = () => {
                             {annotations.map(anno => (
                                 <div key={anno.id} className="article-annotation">
                                     {anno.title && <h4>{anno.title}</h4>}
-                                    <div 
-                                        className="annotation-content" 
-                                        dangerouslySetInnerHTML={{ __html: anno.content_raw }} 
-                                    />
+                                    {/data-article-id=/.test(anno.content_raw) ? (
+                                        <div className="annotation-content">
+                                            <AnnotationContent html={anno.content_raw} />
+                                        </div>
+                                    ) : (
+                                        <div
+                                            className="annotation-content"
+                                            dangerouslySetInnerHTML={{ __html: anno.content_raw }}
+                                        />
+                                    )}
                                 </div>
                             ))}
                         </div>
