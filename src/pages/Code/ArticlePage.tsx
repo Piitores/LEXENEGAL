@@ -113,14 +113,12 @@ const ArticlePage: React.FC = () => {
     const { codeSlug, articleSlug } = useParams();
     const navigate = useNavigate();
 
-    // Retour « intelligent » : si on vient d'une autre page du site (recherche, liste du code…),
-    // on y revient EXACTEMENT (position restaurée). Sinon on retombe sur une destination explicite.
+    // « Retour au code » : on revient TOUJOURS à la page du code en cours de
+    // consultation. (Auparavant un retour navigateur « intelligent » renvoyait vers
+    // la page d'où l'on venait — souvent l'accueil du Corpus national — ce qui était
+    // déroutant : le bouton est libellé « Retour au code », il doit mener au code.)
     const goBack = (fallback: string) => {
-        if (window.history.state && typeof window.history.state.idx === 'number' && window.history.state.idx > 0) {
-            navigate(-1);
-        } else {
-            navigate(fallback);
-        }
+        navigate(fallback);
     };
 
     const [article, setArticle] = useState<Article | null>(null);

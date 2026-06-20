@@ -42,7 +42,7 @@ const articleToPlainText = (art: Article): string => {
 
 // ── Carte d'un article (gère le repli du préambule + le bouton Copier) ──
 
-const ArticleCard: React.FC<{ art: Article; slug: string | undefined }> = ({ art, slug }) => {
+const ArticleCard: React.FC<{ art: Article; slug: string | undefined; codeTitle?: string }> = ({ art, slug, codeTitle }) => {
     const preambule = isPreambule(art);
     // Préambule replié par défaut ; articles normaux toujours ouverts.
     const [open, setOpen] = useState(!preambule);
@@ -50,7 +50,10 @@ const ArticleCard: React.FC<{ art: Article; slug: string | undefined }> = ({ art
 
     const handleCopy = async () => {
         try {
-            await navigator.clipboard.writeText(articleToPlainText(art));
+            const ref = art.num || `Article ${art.article_number}`;
+            const url = `https://www.lexenegal.sn/code/${slug}/${art.slug}`;
+            const attribution = `\n\n— ${ref}${codeTitle ? `, ${codeTitle}` : ''}\nSource : LexeSenegal — ${url}`;
+            await navigator.clipboard.writeText(articleToPlainText(art) + attribution);
             setCopied(true);
             setTimeout(() => setCopied(false), 1500);
         } catch {
@@ -435,7 +438,7 @@ const CodePage: React.FC = () => {
                     {!filteredArticles && preambuleArticles.length > 0 && (
                         <div className="preambule-top articles-list">
                             {preambuleArticles.map(art => (
-                                <ArticleCard key={art.id} art={art} slug={slug} />
+                                <ArticleCard key={art.id} art={art} slug={slug} codeTitle={law?.title} />
                             ))}
                         </div>
                     )}
@@ -509,7 +512,7 @@ const CodePage: React.FC = () => {
                                         </div>
                                     ) : (
                                         selectedArticles.map(art => (
-                                            <ArticleCard key={art.id} art={art} slug={slug} />
+                                            <ArticleCard key={art.id} art={art} slug={slug} codeTitle={law?.title} />
                                         ))
                                     )}
                                 </div>
