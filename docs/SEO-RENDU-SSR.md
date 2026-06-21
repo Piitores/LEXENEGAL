@@ -57,8 +57,19 @@ C'est l'emplacement prévu pour le contenu rédigé (présentation du texte, his
 - décret → `Décret n° 2006-1249 … — texte intégral | Lexenegal`
 - Acte uniforme → `Acte uniforme relatif au droit de l'arbitrage — texte intégral | Lexenegal` (juridiction OHADA, jamais Sénégal)
 
+## Pages pré-rendues
+
+| Route | Type | SSR |
+|-------|------|-----|
+| `/` (accueil) | `home` | ✅ (H1, intro, liens internes vers les codes) |
+| `/codes` | `codes` | ✅ (index groupé par catégorie) |
+| `/code/:slug` | `code` | ✅ (cf. règle ci-dessus) |
+| `/code/:code/:article` | `article` | ✅ |
+| `/decision/:slug` | `decision` | ✅ |
+
+L'accueil et `/codes` font une requête Supabase (liste des codes actifs) mise en cache CDN 24 h (`s-maxage=86400`), donc la fonction ne s'exécute qu'environ une fois par jour.
+
 ## Pistes connexes (non encore faites)
 
-- **Page d'accueil + `/codes`** : encore servies en coquille vide (pas de SSR). À pré-rendre.
 - **Redirection non-www → www** : actuellement `307` (temporaire) côté Vercel ; passer en `308` (permanent) dans les réglages domaine.
 - **Casse des `reference`** : certaines sont en capitales (ex. code sécurité sociale) — à normaliser pour l'affichage sans altérer la valeur légale.

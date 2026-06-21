@@ -292,6 +292,55 @@ function injectIntoShell(shell, headHtml, bodyHtml) {
   return html;
 }
 
+/* ---------- ACCUEIL & INDEX DES CODES ---------- */
+export function buildHomeHead(canonical) {
+  const title = 'Lexenegal — Codes, lois et jurisprudence du Sénégal en texte intégral';
+  const description = 'Lexenegal, la mémoire juridique du Sénégal : codes, lois, décrets, arrêtés et décisions de justice en texte intégral et version consolidée. Recherche et consultation gratuites.';
+  const keywords = 'droit sénégalais, codes Sénégal, lois Sénégal, jurisprudence Sénégal, Code pénal Sénégal, Constitution du Sénégal, législation Sénégal, Lexenegal';
+  const schema = {
+    '@context': 'https://schema.org', '@type': 'WebSite', name: 'Lexenegal', url: SITE, inLanguage: 'fr', description,
+    potentialAction: { '@type': 'SearchAction', target: `${SITE}/search?q={query}`, 'query-input': 'required name=query' },
+  };
+  return headBlock({ title, description, keywords, canonical, ogType: 'website', schema });
+}
+export function buildHomeBody(codes) {
+  const items = (codes || []).map((c) => `<li><a href="/code/${esc(c.slug)}">${esc(c.short_title || c.title)}</a></li>`).join('\n');
+  const nav = items ? `<nav class="ssr-home-codes" aria-label="Codes"><h2>Codes et textes en consultation</h2><ul>${items}</ul></nav>` : '';
+  return wrapContent(`<article>
+    <h1>Lexenegal — la mémoire juridique du Sénégal</h1>
+    <p>Consultez gratuitement les <strong>codes, lois, décrets et arrêtés</strong> ainsi que la <strong>jurisprudence du Sénégal</strong> en texte intégral et version consolidée : Code pénal, Code de procédure pénale, Constitution du Sénégal, Code du travail, Code général des impôts, Actes uniformes OHADA, et les décisions de la Cour suprême, de la CCJA et du Conseil constitutionnel.</p>
+    <p><a href="/codes">Tous les codes et textes</a> · <a href="/search">Rechercher dans la base</a></p>
+    ${nav}
+  </article>`);
+}
+const CAT_LABELS = { code: 'Codes', loi: 'Lois', decret: 'Décrets', arrete: 'Arrêtés', ohada: 'Actes uniformes OHADA' };
+export function buildCodesHead(canonical) {
+  const title = 'Tous les codes et textes juridiques du Sénégal | Lexenegal';
+  const description = 'Liste complète des codes, lois, décrets, arrêtés et Actes uniformes OHADA consultables en texte intégral sur Lexenegal — la mémoire juridique du Sénégal.';
+  const keywords = 'codes Sénégal, textes juridiques Sénégal, lois Sénégal, décrets Sénégal, OHADA, droit sénégalais, Lexenegal';
+  const schema = { '@context': 'https://schema.org', '@type': 'CollectionPage', name: title, url: canonical, inLanguage: 'fr' };
+  return headBlock({ title, description, keywords, canonical, ogType: 'website', schema });
+}
+export function buildCodesBody(texts) {
+  const order = ['code', 'loi', 'decret', 'arrete', 'ohada'];
+  const groups = {};
+  (texts || []).forEach((t) => { const k = String(t.category || 'code').toLowerCase(); (groups[k] = groups[k] || []).push(t); });
+  const sections = order.filter((k) => groups[k] && groups[k].length).map((k) => {
+    const items = groups[k].map((c) => `<li><a href="/code/${esc(c.slug)}">${esc(c.short_title || c.title)}</a></li>`).join('\n');
+    return `<section><h2>${esc(CAT_LABELS[k] || k)}</h2><ul>${items}</ul></section>`;
+  }).join('\n');
+  // catégories hors liste connue (au cas où), placées en fin
+  const extra = Object.keys(groups).filter((k) => !order.includes(k)).map((k) => {
+    const items = groups[k].map((c) => `<li><a href="/code/${esc(c.slug)}">${esc(c.short_title || c.title)}</a></li>`).join('\n');
+    return `<section><h2>${esc(k)}</h2><ul>${items}</ul></section>`;
+  }).join('\n');
+  return wrapContent(`<article>
+    <h1>Tous les codes et textes juridiques du Sénégal</h1>
+    <p>Codes, lois, décrets, arrêtés et Actes uniformes OHADA consultables en texte intégral et version consolidée sur Lexenegal.</p>
+    ${sections}${extra}
+  </article>`);
+}
+
 /* ---------- Accès Supabase REST ---------- */
 async function sb(pathq) {
   const r = await fetch(`${SUPABASE_URL}/rest/v1/${pathq}`,
@@ -300,6 +349,14 @@ async function sb(pathq) {
   return r.json();
 }
 const one = (rows) => (rows && rows[0]) ? rows[0] : null;
+async function fetchHomeCodes() {
+  try { return await sb(`laws_and_codes?is_active=eq.true&category=eq.code&select=slug,title,short_title&order=title&limit=60`); }
+  catch (e) { return []; }
+}
+async function fetchAllTexts() {
+  try { return await sb(`laws_and_codes?is_active=eq.true&select=slug,title,short_title,category&order=category,title&limit=300`); }
+  catch (e) { return []; }
+}
 async function fetchDecision(slug) {
   return one(await sb(`decisions?slug=eq.${encodeURIComponent(slug)}&select=id,reference,slug,date_decision,juridiction,chambre,matiere_principale,parties_principales,resume,mots_cles,texte_brut,texte_integral&limit=1`));
 }
@@ -353,6 +410,16 @@ export default async function handler(req, res) {
       res.statusCode = 200;
       return res.end(injectIntoShell(shell, headHtml, bodyHtml));
     };
+
+    if (type === 'home') {
+      const codes = await fetchHomeCodes();
+      return serveHtml(buildHomeHead(`${SITE}/`), buildHomeBody(codes));
+    }
+
+    if (type === 'codes') {
+      const texts = await fetchAllTexts();
+      return serveHtml(buildCodesHead(`${SITE}/codes`), buildCodesBody(texts));
+    }
 
     if (type === 'code') {
       const slug = q.slug;
