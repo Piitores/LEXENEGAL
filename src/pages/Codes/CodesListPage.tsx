@@ -131,6 +131,7 @@ const CODE_TO_THEME: Record<string, string> = {
     'constitution-senegal': 'Droit Constitutionnel',  // Constitution — branche autonome
     'code-minier': 'Droit Minier',  // Code Minier
     'code-electoral': 'Droit Électoral', // Code Électoral
+    'loi-2024-09-amnistie': 'Droit Pénal', // Loi d'amnistie 2024 (base LODA, icône Pénal)
     'code-de-l-urbanisme': "Droit de l'Urbanisme", // Code de l'Urbanisme
     'au-suretes': 'Droit OHADA',  // Acte Uniforme Sûretés
     'au-commercial': 'Droit OHADA',  // Acte Uniforme Droit Commercial Général
@@ -171,9 +172,10 @@ const CodesListPage: React.FC = () => {
             // rangés par base via leur vraie catégorie BDD (dbCategory).
             const transformedCodes: LawCode[] = (codesData || []).map((code: any) => {
                 const dbCat = code.category || 'code';
-                const themeName = dbCat === 'code'
-                    ? (CODE_TO_THEME[code.slug] || 'Autres')
-                    : (COMMUNAUTAIRE_CATEGORIES.includes(dbCat) ? 'Droit OHADA' : 'Autres');
+                // Le mapping slug->branche s'applique à TOUS les textes (codes ET LODA) ;
+                // défaut « Autres » (sauf communautaire -> OHADA).
+                const themeName = CODE_TO_THEME[code.slug]
+                    || (COMMUNAUTAIRE_CATEGORIES.includes(dbCat) ? 'Droit OHADA' : 'Autres');
                 return {
                     id: code.id,
                     name: code.title,
