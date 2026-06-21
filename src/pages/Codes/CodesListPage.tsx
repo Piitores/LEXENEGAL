@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import {
     Scale, BookOpen, Users, Building, Briefcase, Radio, Pickaxe,
     FileText, ChevronRight, Loader2, Gavel, Landmark,
-    Search, Map, Vote
+    Search, Map, Vote, Scroll, Leaf
 } from 'lucide-react';
 import './CodesListPage.css';
 
@@ -89,6 +89,16 @@ const CODE_THEMES = {
         icon: Map,
         color: '#F59E0B',
         description: 'Aménagement, construction, cadastre, foncier'
+    },
+    'Droit Constitutionnel': {
+        icon: Scroll,
+        color: '#4338CA',
+        description: 'Constitution, institutions, libertés fondamentales'
+    },
+    "Droit de l'Environnement": {
+        icon: Leaf,
+        color: '#15803D',
+        description: 'Environnement, ressources naturelles, pollution'
     }
 };
 
@@ -111,6 +121,9 @@ const CODE_TO_THEME: Record<string, string> = {
     'code-des-douanes': 'Droit Douanier et Fiscal', // Code des douanes
     'code-general-impots': 'Droit Douanier et Fiscal', // Code Général des Impôts (CGI)
     'code-de-la-presse': 'Droit de la Communication',  // Code de la Presse
+    'code-communications-electroniques': 'Droit de la Communication',  // Code des communications électroniques (était mal classé en Civil)
+    'code-de-l-environnement': "Droit de l'Environnement",  // Code de l'Environnement (était mal classé en Civil)
+    'constitution-senegal': 'Droit Constitutionnel',  // Constitution — branche autonome
     'code-minier': 'Droit Minier',  // Code Minier
     'code-electoral': 'Droit Électoral', // Code Électoral
     'code-de-l-urbanisme': "Droit de l'Urbanisme", // Code de l'Urbanisme
