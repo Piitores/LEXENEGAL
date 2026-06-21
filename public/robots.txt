@@ -1,16 +1,41 @@
 # LEXENEGAL - Robots.txt
-# Autorisation complète de l'indexation de la base publique
+# Mémoire juridique du Sénégal
 
-User-agent: *
+# Moteurs de recherche — autorisés
+User-agent: Googlebot
 Allow: /
 
-# Sitemap
-Sitemap: https://lexenegal.sn/sitemap.xml
+User-agent: Bingbot
+Allow: /
 
-# Crawl-delay pour éviter la surcharge (optionnel)
-Crawl-delay: 1
+User-agent: Applebot
+Allow: /
 
-# Interdire l'accès aux pages techniques (si applicable)
+# Scrapers IA d'entraînement — interdits
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: Meta-ExternalAgent
+Disallow: /
+
+User-agent: GoogleOther
+Disallow: /
+
+# Tous les autres bots
+User-agent: *
+Crawl-delay: 10
 Disallow: /api/
 Disallow: /_next/
 Disallow: /admin/
+
+# Sitemap
+Sitemap: https://lexenegal.sn/sitemap.xml
