@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 import {
     Scale, BookOpen, Users, Building, Briefcase, Radio, Pickaxe,
     FileText, ChevronRight, Loader2, Gavel, Landmark,
-    Search, Map, Vote, Scroll, Leaf
+    Search, Map, Vote, Scroll, Leaf, FolderOpen
 } from 'lucide-react';
 import './CodesListPage.css';
 
@@ -99,6 +99,11 @@ const CODE_THEMES = {
         icon: Leaf,
         color: '#15803D',
         description: 'Environnement, ressources naturelles, pollution'
+    },
+    'Autres': {
+        icon: FolderOpen,
+        color: '#6B7280',
+        description: 'Textes non encore rattachés à une branche'
     }
 };
 
@@ -167,8 +172,8 @@ const CodesListPage: React.FC = () => {
             const transformedCodes: LawCode[] = (codesData || []).map((code: any) => {
                 const dbCat = code.category || 'code';
                 const themeName = dbCat === 'code'
-                    ? (CODE_TO_THEME[code.slug] || 'Droit Civil et Commercial')
-                    : (COMMUNAUTAIRE_CATEGORIES.includes(dbCat) ? 'Droit OHADA' : 'Droit Civil et Commercial');
+                    ? (CODE_TO_THEME[code.slug] || 'Autres')
+                    : (COMMUNAUTAIRE_CATEGORIES.includes(dbCat) ? 'Droit OHADA' : 'Autres');
                 return {
                     id: code.id,
                     name: code.title,
@@ -376,7 +381,7 @@ const CodesListPage: React.FC = () => {
 
 // Composant Card pour un code
 const CodeCard: React.FC<{ code: LawCode }> = ({ code }) => {
-    const theme = CODE_THEMES[code.category as keyof typeof CODE_THEMES] || CODE_THEMES['Droit Civil et Commercial'];
+    const theme = CODE_THEMES[code.category as keyof typeof CODE_THEMES] || CODE_THEMES['Autres'];
     const IconComponent = theme.icon;
     const linkPath = code.slug === 'doctrine-fiscale' ? '/doctrine-fiscale' : `/code/${code.slug}`;
 
