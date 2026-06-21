@@ -61,10 +61,10 @@ const CODE_THEMES = {
         color: '#0891B2',
         description: 'Administration, marchés publics, fonction publique'
     },
-    'Droit de la Communication': {
+    'Droit du Numérique et des Communications': {
         icon: Radio,
         color: '#8B5CF6',
-        description: 'Presse écrite, audiovisuel, presse en ligne'
+        description: 'Numérique, communications électroniques, presse, cybersécurité, données personnelles'
     },
     'Droit Minier': {
         icon: Pickaxe,
@@ -126,8 +126,11 @@ const CODE_TO_THEME: Record<string, string> = {
     'code-des-obligations-de-ladministration': 'Droit Administratif',  // COA
     'code-des-douanes': 'Droit Douanier et Fiscal', // Code des douanes
     'code-general-impots': 'Droit Douanier et Fiscal', // Code Général des Impôts (CGI)
-    'code-de-la-presse': 'Droit de la Communication',  // Code de la Presse
-    'code-communications-electroniques': 'Droit de la Communication',  // Code des communications électroniques (était mal classé en Civil)
+    'code-de-la-presse': 'Droit du Numérique et des Communications',  // Code de la Presse
+    'code-communications-electroniques': 'Droit du Numérique et des Communications',  // Code des communications électroniques
+    'loi-transactions-electroniques': 'Droit du Numérique et des Communications',  // Loi 2008-08 transactions électroniques (LODA)
+    'loi-cybercriminalite': 'Droit du Numérique et des Communications',  // Loi cybercriminalité (LODA)
+    'loi-protection-donnees-personnelles': 'Droit du Numérique et des Communications',  // Loi protection des données (LODA)
     'code-de-l-environnement': "Droit de la Santé et de l'Environnement",  // Code de l'Environnement
     'loi-83-71-code-hygiene': "Droit de la Santé et de l'Environnement",   // Code de l'Hygiène
     'loi-66-69-exercice-medecine': "Droit de la Santé et de l'Environnement", // Exercice de la médecine (LODA)
