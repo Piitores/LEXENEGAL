@@ -195,13 +195,14 @@ const SearchPage: React.FC = () => {
                     const getParentCategory = (j: string) => {
                         if (!j) return 'Autres';
                         const lower = j.toLowerCase();
-                        if (lower.includes('cour de cassation')) return 'Cour de Cassation';
-                        if (lower.includes('cour suprême') || lower.includes('cour supreme') || lower === 'la cour') return 'Cour Suprême';
                         if (lower.includes('ccja') || lower.includes('commune de justice')) return 'CCJA';
+                        if (lower.includes('conseil constitutionnel')) return 'Conseil Constitutionnel';
                         if (lower.includes("cour d'appel") || lower.includes('cour d appel') || lower.includes('cour d’appel')) return "Cour d'Appel";
                         if (lower.includes('tribunal') || lower.includes('tribunaux') || lower.includes('high court')) return 'Tribunaux';
-                        if (lower.includes("conseil d'état") || lower.includes('conseil d etat') || lower.includes('conseil d’état')) return "Conseil d'État";
-                        if (lower.includes('conseil constitutionnel')) return 'Conseil Constitutionnel';
+                        // Cour suprême : intègre l'ex-Cour de cassation et l'ex-Conseil d'État (réforme de 2008)
+                        if (lower.includes('cour de cassation') || lower.includes('cour suprême') || lower.includes('cour supreme')
+                            || lower.includes("conseil d'état") || lower.includes('conseil d etat') || lower.includes('conseil d’état') || lower.includes('conseil d’etat')
+                            || lower === 'la cour') return 'Cour Suprême';
                         return 'Autres';
                     };
 
@@ -502,9 +503,9 @@ const SearchPage: React.FC = () => {
                         <div className="customDateInputs">
                             <label>Intervalle</label>
                             <div className="rangeInputs">
-                                <input type="text" placeholder="2020" value={customYearStart} onChange={(e) => setCustomYearStart(e.target.value)} onFocus={handleCustomDateFocus} maxLength={4} />
+                                <input type="text" inputMode="numeric" placeholder="2020" value={customYearStart} onChange={(e) => setCustomYearStart(e.target.value.replace(/\D/g, '').slice(0, 4))} onFocus={handleCustomDateFocus} maxLength={4} />
                                 <span className="rangeSep">-</span>
-                                <input type="text" placeholder="2024" value={customYearEnd} onChange={(e) => setCustomYearEnd(e.target.value)} onFocus={handleCustomDateFocus} maxLength={4} />
+                                <input type="text" inputMode="numeric" placeholder="2024" value={customYearEnd} onChange={(e) => setCustomYearEnd(e.target.value.replace(/\D/g, '').slice(0, 4))} onFocus={handleCustomDateFocus} maxLength={4} />
                             </div>
                         </div>
                     </div>
