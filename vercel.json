@@ -9,10 +9,6 @@
     },
     "rewrites": [
         {
-            "source": "/",
-            "destination": "/api/render?type=home"
-        },
-        {
             "source": "/codes",
             "destination": "/api/render?type=codes"
         },
