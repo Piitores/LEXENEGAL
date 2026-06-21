@@ -143,14 +143,25 @@ export function buildDecisionBody(d, cited) {
 
 /* ---------- CODE (loi entière) ---------- */
 export function buildCodeHead(law, nArticles, canonical) {
-  const title = `${law.title} | Lexenegal`;
-  const description = `${law.title} — texte intégral consolidé${nArticles ? ` (${nArticles} articles)` : ''}. Droit sénégalais : consultez chaque article sur Lexenegal.`;
+  const baseName = law.short_title || law.title;
+  // « du Sénégal » seulement si le nom ne porte pas déjà une marque géographique/légale
+  const senegal = /sénégal|senegal|constitution|loi\s*n[°o]/i.test(baseName) ? '' : ' du Sénégal';
+  const refTxt = law.reference ? ` (${law.reference})` : '';
+  const artTxt = nArticles ? `, ${nArticles} articles` : '';
+  const title = `${baseName}${senegal} — texte intégral et version consolidée | Lexenegal`;
+  const description = `${baseName}${senegal}${refTxt} : texte intégral et version consolidée${artTxt}. Consultation gratuite, article par article, avec la jurisprudence et les textes liés, sur Lexenegal — la mémoire juridique du Sénégal.`;
+  const keywords = [
+    baseName, `${baseName} Sénégal`, `${baseName} texte intégral`, `${baseName} version consolidée`,
+    law.reference, 'droit sénégalais', 'législation Sénégal', 'Lexenegal',
+  ].filter(Boolean).join(', ');
   const schema = {
     '@context': 'https://schema.org', '@type': 'Legislation', name: law.title,
+    ...(law.reference ? { legislationIdentifier: law.reference } : {}),
+    ...(law.publication_date ? { datePublished: law.publication_date } : {}),
     legislationJurisdiction: { '@type': 'AdministrativeArea', name: 'Sénégal' },
     inLanguage: 'fr', isPartOf: { '@type': 'WebSite', name: 'Lexenegal', url: SITE }, url: canonical,
   };
-  return headBlock({ title, description, keywords: `${law.title}, Droit sénégalais, texte intégral, Lexenegal`, canonical, ogType: 'website', schema });
+  return headBlock({ title, description, keywords, canonical, ogType: 'website', schema });
 }
 function abrogationBanner(law) {
   if (!law || !law.abrogation_note) return '';
@@ -160,15 +171,30 @@ function abrogationBanner(law) {
 }
 
 export function buildCodeBody(law, articles) {
+  const baseName = law.short_title || law.title;
   const links = (articles || []).map((a) => {
     const label = a.num || a.num_court || (a.article_number != null ? `Article ${a.article_number}` : a.slug);
     return `<li><a href="/code/${esc(law.slug)}/${esc(a.slug)}">${esc(label)}</a></li>`;
   }).join('\n');
+  const n = articles && articles.length ? articles.length : 0;
+  // Chapô SEO : référence + date de publication (données vérifiées en base)
+  const refLine = [
+    law.reference ? esc(law.reference) : '',
+    law.publication_date ? `publié le ${esc(formatDateFr(law.publication_date))}` : '',
+  ].filter(Boolean).join(' — ');
+  const intro = `<p class="ssr-code-intro">${esc(baseName)}${refLine ? ` — ${refLine}` : ''}. `
+    + `Texte intégral et version consolidée${n ? `, ${n} articles` : ''}, consultable gratuitement article par article, `
+    + `avec la jurisprudence et les textes liés.</p>`;
+  // Bloc de présentation éditorial (contenu de confiance, rédigé/vérifié) si renseigné
+  const presentation = law.description
+    ? `<section class="ssr-presentation">${law.description}</section>`
+    : '';
   return wrapContent(`<article>
     ${abrogationBanner(law)}
-    <h1>${esc(law.title)}</h1>
-    <p>Texte intégral consolidé${articles && articles.length ? ` — ${articles.length} articles` : ''}. Cliquez sur un article pour en consulter le texte.</p>
-    <nav class="ssr-toc" aria-label="Articles"><h2>Articles</h2><ul>${links}</ul></nav>
+    <h1>${esc(baseName)} — texte intégral et version consolidée</h1>
+    ${intro}
+    ${presentation}
+    <nav class="ssr-toc" aria-label="Articles"><h2>Articles · ${esc(baseName)}</h2><ul>${links}</ul></nav>
   </article>`);
 }
 
@@ -256,7 +282,7 @@ async function fetchCitedArticles(decisionId) {
   } catch (e) { return []; }
 }
 async function fetchLaw(slug) {
-  return one(await sb(`laws_and_codes?slug=eq.${encodeURIComponent(slug)}&select=id,title,category,slug,abrogation_note,abrogated_by_slug&limit=1`));
+  return one(await sb(`laws_and_codes?slug=eq.${encodeURIComponent(slug)}&select=id,title,short_title,category,slug,reference,publication_date,description,abrogation_note,abrogated_by_slug&limit=1`));
 }
 async function fetchCodeArticles(codeId) {
   return sb(`articles?code_id=eq.${codeId}&select=num,num_court,article_number,slug&order=display_order&limit=3000`);
