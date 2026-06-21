@@ -184,13 +184,14 @@ const SearchPage: React.FC = () => {
     useEffect(() => {
         const loadFacets = async () => {
             try {
-                // Get distinct matières with counts
-                const { data: allDecisions } = await supabase
-                    .from('decisions')
-                    .select('matiere_principale, chambre, juridiction');
+                // Facettes agrégées côté serveur (TOUTES les décisions, pas un échantillon plafonné à 1000)
+                const { data: facetData, error: facetErr } = await supabase.rpc('get_decision_facets');
 
-                if (allDecisions) {
+                if (facetData && !facetErr) {
                     const matiereCount: Record<string, number> = {};
+                    (facetData.matieres || []).forEach((m: any) => {
+                        if (m.matiere_principale) matiereCount[m.matiere_principale] = m.n;
+                    });
                     
                     const getParentCategory = (j: string) => {
                         if (!j) return 'Autres';
@@ -208,26 +209,23 @@ const SearchPage: React.FC = () => {
 
                     const juridictionTree: Record<string, { total: number, subJuridictions: Record<string, number>, chambres: Record<string, number> }> = {};
 
-                    allDecisions.forEach((d: any) => {
-                        if (d.matiere_principale) {
-                            matiereCount[d.matiere_principale] = (matiereCount[d.matiere_principale] || 0) + 1;
-                        }
-                        
-                        const jStr = d.juridiction || 'Non spécifié';
+                    (facetData.juridictions || []).forEach((row: any) => {
+                        const n = row.n || 0;
+                        const jStr = row.juridiction || 'Non spécifié';
                         const parent = getParentCategory(jStr);
-                        
+
                         if (!juridictionTree[parent]) {
                             juridictionTree[parent] = { total: 0, subJuridictions: {}, chambres: {} };
                         }
-                        juridictionTree[parent].total += 1;
-                        
+                        juridictionTree[parent].total += n;
+
                         // Si la juridiction exacte n'est pas le parent exact, on l'ajoute aux sous-juridictions
                         if (jStr && jStr !== parent) {
-                            juridictionTree[parent].subJuridictions[jStr] = (juridictionTree[parent].subJuridictions[jStr] || 0) + 1;
+                            juridictionTree[parent].subJuridictions[jStr] = (juridictionTree[parent].subJuridictions[jStr] || 0) + n;
                         }
-                        
-                        if (d.chambre) {
-                            juridictionTree[parent].chambres[d.chambre] = (juridictionTree[parent].chambres[d.chambre] || 0) + 1;
+
+                        if (row.chambre) {
+                            juridictionTree[parent].chambres[row.chambre] = (juridictionTree[parent].chambres[row.chambre] || 0) + n;
                         }
                     });
 
