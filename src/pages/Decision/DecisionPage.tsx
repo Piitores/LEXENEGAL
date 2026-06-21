@@ -351,8 +351,8 @@ const DecisionPage: React.FC = () => {
                         <Scale size={14} /> Source Certifiée : Lexenegal.sn
                     </div>
 
-                    <h1 className="decision-title">{[decision.reference, decision.chambre || decision.juridiction].filter(Boolean).join(' — ') || 'Décision'}</h1>
-                    <div className="decision-ref">{decision.reference} • {decision.date_decision ? new Date(decision.date_decision).toLocaleDateString('fr-FR', { dateStyle: 'long' }) : 'Date N/D'}</div>
+                    <h1 className="decision-title">{[decision.juridiction, decision.reference, decision.chambre].filter(Boolean).join(' — ') || 'Décision'}</h1>
+                    <div className="decision-ref">{decision.date_decision ? new Date(decision.date_decision).toLocaleDateString('fr-FR', { dateStyle: 'long' }) : 'Date N/D'}</div>
 
                     {/* EXPERT BLOCK */}
                     <div id="expert-block" className="expert-box">

@@ -91,7 +91,8 @@ export function buildDecisionHead(d, canonical) {
   const ref = d.reference || 'Décision';
   const court = d.chambre || d.juridiction || 'Cour Suprême du Sénégal';
   const dateFr = formatDateFr(d.date_decision);
-  const title = `${ref} — ${court} | Lexenegal`;
+  const heading = [d.juridiction, ref, d.chambre].filter(Boolean).join(' — ');
+  const title = `${heading} | Lexenegal`;
   const description = d.resume
     ? `${stripHtml(d.resume).slice(0, 150)}... | ${d.matiere_principale || 'Jurisprudence'} - ${court}, Sénégal.`
     : `${d.matiere_principale || 'Décision'} du ${dateFr || 'N/D'}. ${court}. Texte intégral certifié - Jurisprudence Sénégal sur Lexenegal.`;
@@ -133,7 +134,7 @@ export function buildDecisionBody(d, cited) {
       }).filter(Boolean).join('')}</ul></section>`
     : '';
   return wrapContent(`<article>
-    <h1>${esc([ref, court].filter(Boolean).join(' — '))}</h1>
+    <h1>${esc([d.juridiction, ref, d.chambre].filter(Boolean).join(' — '))}</h1>
     <ul class="ssr-meta">${meta}</ul>
     ${motscles}${resume}
     <section class="ssr-corps"><h2>Texte intégral</h2>${corps}</section>
