@@ -97,7 +97,9 @@ const CodeNavTree: React.FC<CodeNavTreeProps> = ({
                                             to={`/code/${slug}/${art.slug}`}
                                             className={`tree-article-chip ${activeArticleSlug && art.slug === activeArticleSlug ? 'is-active' : ''}`}
                                         >
-                                            {art.num_court || `Art. ${art.article_number}`}
+                                            {/^(\d|premier|[LRD]\.)/i.test(art.article_number)
+                                                ? `Article ${art.article_number}`
+                                                : (art.num_court || art.article_number)}
                                         </Link>
                                     ))}
                                 </div>

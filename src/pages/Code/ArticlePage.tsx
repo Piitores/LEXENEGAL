@@ -496,7 +496,7 @@ const ArticlePage: React.FC = () => {
                     <ChevronRight size={13} />
                     <Link to={`/code/${codeSlug}`}>{law?.title}</Link>
                     <ChevronRight size={13} />
-                    <span className="bc-current">Art. {article.article_number}</span>
+                    <span className="bc-current">Article {article.article_number}</span>
                 </nav>
 
                 {/* BANDEAU ABROGATION (texte entier abrogé par un autre texte) */}
@@ -778,7 +778,7 @@ const ArticlePage: React.FC = () => {
                         disabled={!prevArticle}
                     >
                         <ChevronLeft size={16} />
-                        {prevArticle ? `Art. ${prevArticle.number}` : 'Premier article'}
+                        {prevArticle ? `Article ${prevArticle.number}` : 'Premier article'}
                     </button>
                     <button className="btn-nav btn-nav-center" onClick={() => goBack(`/code/${codeSlug}`)}>
                         Retour
@@ -788,7 +788,7 @@ const ArticlePage: React.FC = () => {
                         onClick={() => nextArticle && navigate(`/code/${codeSlug}/${nextArticle.slug}`)}
                         disabled={!nextArticle}
                     >
-                        {nextArticle ? `Art. ${nextArticle.number}` : 'Dernier article'}
+                        {nextArticle ? `Article ${nextArticle.number}` : 'Dernier article'}
                         <ChevronRight size={16} />
                     </button>
                 </div>
