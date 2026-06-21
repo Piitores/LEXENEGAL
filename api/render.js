@@ -142,23 +142,49 @@ export function buildDecisionBody(d, cited) {
 }
 
 /* ---------- CODE (loi entière) ---------- */
-export function buildCodeHead(law, nArticles, canonical) {
+/*
+ * Règle SEO générique et FIDÈLE au type de texte (catégorie laws_and_codes) —
+ * voir docs/SEO-RENDU-SSR.md. À conserver pour tous les futurs déploiements.
+ *  - « version consolidée » : RÉSERVÉ aux codes (category='code'). Un décret,
+ *    arrêté, loi ou Acte uniforme est un texte unique → seulement « texte intégral ».
+ *  - Juridiction : Sénégal pour code/loi/decret/arrete ; OHADA pour les Actes
+ *    uniformes (communautaire, 17 États) → JAMAIS « du Sénégal » sur l'OHADA.
+ *  - « du Sénégal » accolé au nom : uniquement pour les codes au nom générique
+ *    (« Code X »), pas quand le nom porte déjà sa référence (« Loi n° … »).
+ */
+function codeSeoMeta(law) {
   const baseName = law.short_title || law.title;
-  // « du Sénégal » seulement si le nom ne porte pas déjà une marque géographique/légale
-  const senegal = /sénégal|senegal|constitution|loi\s*n[°o]/i.test(baseName) ? '' : ' du Sénégal';
+  const cat = String(law.category || 'code').toLowerCase();
+  const isCode = cat === 'code';
+  const isOhada = cat === 'ohada';
+  const descriptor = isCode ? 'texte intégral et version consolidée' : 'texte intégral';
+  const geo = (isCode && !/sénégal|senegal|constitution|loi\s*n[°o]/i.test(baseName)) ? ' du Sénégal' : '';
+  const jurisdiction = isOhada ? 'OHADA' : 'Sénégal';
+  const jurAdjective = isOhada ? 'droit OHADA' : 'droit sénégalais';
+  return { baseName, cat, isCode, isOhada, descriptor, geo, jurisdiction, jurAdjective };
+}
+
+export function buildCodeHead(law, nArticles, canonical) {
+  const m = codeSeoMeta(law);
   const refTxt = law.reference ? ` (${law.reference})` : '';
   const artTxt = nArticles ? `, ${nArticles} articles` : '';
-  const title = `${baseName}${senegal} — texte intégral et version consolidée | Lexenegal`;
-  const description = `${baseName}${senegal}${refTxt} : texte intégral et version consolidée${artTxt}. Consultation gratuite, article par article, avec la jurisprudence et les textes liés, sur Lexenegal — la mémoire juridique du Sénégal.`;
+  const title = `${m.baseName}${m.geo} — ${m.descriptor} | Lexenegal`;
+  const tail = m.isOhada ? ' — droit uniforme OHADA.' : ' — la mémoire juridique du Sénégal.';
+  const description = `${m.baseName}${m.geo}${refTxt} : ${m.descriptor}${artTxt}. `
+    + `Consultation gratuite, article par article, avec la jurisprudence et les textes liés, sur Lexenegal${tail}`;
+  const nameHasJur = new RegExp(m.jurisdiction, 'i').test(m.baseName);
   const keywords = [
-    baseName, `${baseName} Sénégal`, `${baseName} texte intégral`, `${baseName} version consolidée`,
-    law.reference, 'droit sénégalais', 'législation Sénégal', 'Lexenegal',
+    m.baseName,
+    nameHasJur ? null : `${m.baseName} ${m.jurisdiction}`,
+    `${m.baseName} texte intégral`,
+    m.isCode ? `${m.baseName} version consolidée` : null,
+    law.reference, m.jurAdjective, m.isOhada ? 'OHADA' : 'législation Sénégal', 'Lexenegal',
   ].filter(Boolean).join(', ');
   const schema = {
     '@context': 'https://schema.org', '@type': 'Legislation', name: law.title,
     ...(law.reference ? { legislationIdentifier: law.reference } : {}),
     ...(law.publication_date ? { datePublished: law.publication_date } : {}),
-    legislationJurisdiction: { '@type': 'AdministrativeArea', name: 'Sénégal' },
+    legislationJurisdiction: { '@type': m.isOhada ? 'Organization' : 'AdministrativeArea', name: m.jurisdiction },
     inLanguage: 'fr', isPartOf: { '@type': 'WebSite', name: 'Lexenegal', url: SITE }, url: canonical,
   };
   return headBlock({ title, description, keywords, canonical, ogType: 'website', schema });
@@ -171,7 +197,7 @@ function abrogationBanner(law) {
 }
 
 export function buildCodeBody(law, articles) {
-  const baseName = law.short_title || law.title;
+  const m = codeSeoMeta(law);
   const links = (articles || []).map((a) => {
     const label = a.num || a.num_court || (a.article_number != null ? `Article ${a.article_number}` : a.slug);
     return `<li><a href="/code/${esc(law.slug)}/${esc(a.slug)}">${esc(label)}</a></li>`;
@@ -182,8 +208,9 @@ export function buildCodeBody(law, articles) {
     law.reference ? esc(law.reference) : '',
     law.publication_date ? `publié le ${esc(formatDateFr(law.publication_date))}` : '',
   ].filter(Boolean).join(' — ');
-  const intro = `<p class="ssr-code-intro">${esc(baseName)}${refLine ? ` — ${refLine}` : ''}. `
-    + `Texte intégral et version consolidée${n ? `, ${n} articles` : ''}, consultable gratuitement article par article, `
+  const descriptorCap = m.descriptor.charAt(0).toUpperCase() + m.descriptor.slice(1);
+  const intro = `<p class="ssr-code-intro">${esc(m.baseName)}${refLine ? ` — ${refLine}` : ''}. `
+    + `${descriptorCap}${n ? `, ${n} articles` : ''}, consultable gratuitement article par article, `
     + `avec la jurisprudence et les textes liés.</p>`;
   // Bloc de présentation éditorial (contenu de confiance, rédigé/vérifié) si renseigné
   const presentation = law.description
@@ -191,10 +218,10 @@ export function buildCodeBody(law, articles) {
     : '';
   return wrapContent(`<article>
     ${abrogationBanner(law)}
-    <h1>${esc(baseName)} — texte intégral et version consolidée</h1>
+    <h1>${esc(m.baseName)}${esc(m.geo)} — ${esc(m.descriptor)}</h1>
     ${intro}
     ${presentation}
-    <nav class="ssr-toc" aria-label="Articles"><h2>Articles · ${esc(baseName)}</h2><ul>${links}</ul></nav>
+    <nav class="ssr-toc" aria-label="Articles"><h2>Articles · ${esc(m.baseName)}</h2><ul>${links}</ul></nav>
   </article>`);
 }
 
