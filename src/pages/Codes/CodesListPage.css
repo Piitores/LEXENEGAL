@@ -517,3 +517,40 @@
     font-style: italic;
 }
 .base-vide { color: #9ca3af; font-style: italic; padding: 24px 0; }
+/* ───────── Base LODA réorganisée : filtre branche + sections repliables + tri ───────── */
+.loda-filtres {
+    display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+    margin: 0.25rem 0 1.5rem;
+}
+.loda-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; flex: 1 1 auto; }
+.loda-chip {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    padding: 0.35rem 0.8rem; border-radius: 999px;
+    border: 1px solid #d1d5db; background: #fff; color: #374151;
+    font-size: 0.85rem; cursor: pointer; transition: all 0.15s;
+}
+.loda-chip:hover { border-color: #9ca3af; background: #f9fafb; }
+.loda-chip.actif { background: #1f2937; border-color: #1f2937; color: #fff; }
+.loda-chip__n { font-size: 0.72rem; opacity: 0.7; font-weight: 600; }
+.loda-chip.actif .loda-chip__n { opacity: 0.85; }
+.loda-tri {
+    flex: 0 0 auto; padding: 0.35rem 0.6rem; border-radius: 8px;
+    border: 1px solid #d1d5db; background: #fff; color: #374151;
+    font-size: 0.85rem; cursor: pointer;
+}
+
+.loda-section { border-bottom: 1px solid #eef0f3; }
+.loda-section__head {
+    display: flex; align-items: center; gap: 0.6rem; width: 100%;
+    padding: 0.85rem 0.25rem; background: none; border: none; cursor: pointer;
+    text-align: left; color: #111827;
+}
+.loda-section__head:hover { color: #1d4ed8; }
+.loda-section__chev { transition: transform 0.2s; flex: 0 0 auto; color: #6b7280; }
+.loda-section.is-open .loda-section__chev { transform: rotate(90deg); }
+.loda-section__titre { font-size: 1.05rem; font-weight: 700; flex: 1 1 auto; }
+.loda-section__n {
+    flex: 0 0 auto; font-size: 0.78rem; font-weight: 600; color: #6b7280;
+    background: #f3f4f6; border-radius: 999px; padding: 0.1rem 0.6rem;
+}
+.loda-section .codes-list { padding: 0.25rem 0 1rem; }

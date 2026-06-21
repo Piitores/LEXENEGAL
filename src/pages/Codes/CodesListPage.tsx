@@ -21,6 +21,7 @@ interface LawCode {
     articles_count?: number;
     category?: string;     // = nom du THÈME (pour l'icône via CODE_THEMES) — conservé pour CodeCard
     dbCategory?: string;   // = vraie catégorie en base (code|loi|decret|ohada…) — pilote le rangement en bases
+    publication_date?: string | null;  // pour le tri LODA par date
 }
 
 // Bases du hub (pilotées par la catégorie BDD `dbCategory`).
@@ -143,6 +144,10 @@ const CodesListPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [activeBase, setActiveBase] = useState<'codes' | 'loda' | 'communautaire'>('codes');
+    // Base LODA : filtre par branche, sections (par type) repliables, tri.
+    const [lodaBranche, setLodaBranche] = useState<string | null>(null);
+    const [lodaExpanded, setLodaExpanded] = useState<Set<string>>(new Set());
+    const [lodaSort, setLodaSort] = useState<'date' | 'numero' | 'alpha'>('date');
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -161,6 +166,7 @@ const CodesListPage: React.FC = () => {
                     description,
                     category,
                     is_active,
+                    publication_date,
                     articles:articles(count)
                 `)
                 .eq('is_active', true)   // visibilité pilotée par l'interrupteur "publié" en base
@@ -185,6 +191,7 @@ const CodesListPage: React.FC = () => {
                     category: themeName,   // thème (icône)
                     dbCategory: dbCat,     // catégorie réelle (rangement)
                     articles_count: code.articles?.[0]?.count || 0,
+                    publication_date: code.publication_date || null,
                 };
             });
 
@@ -222,6 +229,63 @@ const CodesListPage: React.FC = () => {
             </div>
         ))
     );
+
+    // --- Base LODA réorganisée : filtre branche + sections (type) repliables + tri ---
+    const lodaNum = (s: string) => { const m = s.match(/n[°o]\s*([\d-]+)/i); return m ? m[1] : ''; };
+    const lodaSorters: Record<string, (a: LawCode, b: LawCode) => number> = {
+        date: (a, b) => (b.publication_date || '0').localeCompare(a.publication_date || '0'),
+        numero: (a, b) => lodaNum(a.name).localeCompare(lodaNum(b.name), 'fr', { numeric: true }),
+        alpha: (a, b) => a.name.localeCompare(b.name, 'fr'),
+    };
+    const renderLodaBase = () => {
+        const brancheCount: Record<string, number> = {};
+        lodaTextes.forEach((c) => { const b = c.category || 'Autres'; brancheCount[b] = (brancheCount[b] || 0) + 1; });
+        const branches = Object.keys(brancheCount).sort((a, b) => a.localeCompare(b, 'fr'));
+        const filtered = lodaBranche ? lodaTextes.filter((c) => (c.category || 'Autres') === lodaBranche) : lodaTextes;
+        const sortFn = lodaSorters[lodaSort];
+        const isOpen = (t: string) => (lodaBranche ? true : lodaExpanded.has(t));
+        const toggle = (t: string) => setLodaExpanded((prev) => { const n = new Set(prev); n.has(t) ? n.delete(t) : n.add(t); return n; });
+        return (
+            <>
+                <div className="loda-filtres">
+                    <div className="loda-chips">
+                        <button className={`loda-chip ${!lodaBranche ? 'actif' : ''}`} onClick={() => setLodaBranche(null)}>
+                            Tout <span className="loda-chip__n">{lodaTextes.length}</span>
+                        </button>
+                        {branches.map((b) => (
+                            <button key={b} className={`loda-chip ${lodaBranche === b ? 'actif' : ''}`}
+                                onClick={() => setLodaBranche(lodaBranche === b ? null : b)}>
+                                {b} <span className="loda-chip__n">{brancheCount[b]}</span>
+                            </button>
+                        ))}
+                    </div>
+                    <select className="loda-tri" value={lodaSort} onChange={(e) => setLodaSort(e.target.value as 'date' | 'numero' | 'alpha')}>
+                        <option value="date">Plus récent</option>
+                        <option value="numero">Numéro</option>
+                        <option value="alpha">A → Z</option>
+                    </select>
+                </div>
+                {LODA_CATEGORIES.filter((t) => filtered.some((x) => x.dbCategory === t)).map((t) => {
+                    const items = filtered.filter((x) => x.dbCategory === t).sort(sortFn);
+                    const open = isOpen(t);
+                    return (
+                        <div className={`loda-section ${open ? 'is-open' : ''}`} key={t}>
+                            <button className="loda-section__head" onClick={() => toggle(t)}>
+                                <ChevronRight size={16} className="loda-section__chev" />
+                                <span className="loda-section__titre">{LODA_TYPE_LABELS[t] || t}</span>
+                                <span className="loda-section__n">{items.length}</span>
+                            </button>
+                            {open && (
+                                <div className="codes-list">
+                                    {items.map((code) => <CodeCard key={code.id} code={code} />)}
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
+            </>
+        );
+    };
 
     // Filtrer les codes par recherche
     const filteredCodes = searchQuery
@@ -338,7 +402,7 @@ const CodesListPage: React.FC = () => {
                         <div className="base-panel">
                             <p className="base-panel__sous-titre">textes source — lois, ordonnances, décrets, arrêtés &amp; circulaires (version d'origine)</p>
                             {lodaTextes.length > 0
-                                ? renderBaseListe(lodaTextes, LODA_TYPE_LABELS, LODA_CATEGORIES)
+                                ? renderLodaBase()
                                 : <p className="base-vide">Aucun texte publié pour l'instant.</p>}
                         </div>
                         )}
