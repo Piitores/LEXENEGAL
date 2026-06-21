@@ -40,6 +40,7 @@ export interface StructureNode {
     label: string;
     parent_id: string | null;
     position: number;
+    note?: string | null;
 }
 
 export interface HierarchyNode {
@@ -48,6 +49,7 @@ export interface HierarchyNode {
     type: string;
     numero: string | null;
     intitule: string | null;
+    note?: string | null;
     articles: Article[];
     children: HierarchyNode[];
 }
@@ -64,6 +66,7 @@ export const buildTreeFromNodes = (nodes: StructureNode[], arts: Article[]): Hie
             type: nd.type,
             numero: nd.numero,
             intitule: nd.intitule,
+            note: nd.note ?? null,
             articles: [],
             children: []
         });

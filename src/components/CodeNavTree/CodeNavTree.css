@@ -85,3 +85,23 @@
     border-color: var(--cp-green); color: var(--cp-green);
     background: var(--cp-green-light); font-weight: 600;
 }
+
+/* Nota sur un intitulé (titre) : petit « ! » ambré, infobulle native au survol */
+.tree-nota {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 15px;
+    height: 15px;
+    margin-left: 6px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    line-height: 1;
+    color: #b45309;
+    background: #fef3c7;
+    border: 1px solid #f59e0b;
+    border-radius: 50%;
+    cursor: help;
+}
+.tree-nota:hover { background: #fde68a; }

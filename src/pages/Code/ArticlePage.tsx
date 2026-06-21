@@ -34,6 +34,8 @@ interface Article {
     modifications?: string[];
     content_raw?: string;
     notes?: string | null;
+    status?: string | null;
+    is_active?: boolean;
 }
 
 interface ArticleVersion {
@@ -507,6 +509,14 @@ const ArticlePage: React.FC = () => {
                     </div>
                 )}
 
+                {/* BANDEAU ABROGATION (article individuel abrogé) */}
+                {(article.status === 'abrogé' || article.is_active === false) && (
+                    <div className="article-abrogation-banner" role="note">
+                        <span className="lab-icon" aria-hidden="true">⛔</span>
+                        <span>{article.notes || 'Cet article a été abrogé.'}</span>
+                    </div>
+                )}
+
                 {/* HEADER */}
                 <header className="article-header">
                     {/* Contexte hiérarchique enrichi (badges de niveau, premium + imprimable).
@@ -542,7 +552,14 @@ const ArticlePage: React.FC = () => {
                             </div>
                         );
                     })()}
-                    <h1>Article {article.article_number}</h1>
+                    <h1>Article {article.article_number}
+                        {article.notes && article.status !== 'abrogé' && article.is_active !== false && (
+                            <span className="article-nota" tabIndex={0} role="note" aria-label={`Note : ${article.notes}`}>
+                                <span className="article-nota__mark">!</span>
+                                <span className="article-nota__tip">{article.notes}</span>
+                            </span>
+                        )}
+                    </h1>
 
                     {/* VERSION INFO */}
                     <div className="version-info-wrapper" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px', marginTop: '16px' }}>
@@ -617,7 +634,7 @@ const ArticlePage: React.FC = () => {
 
                 {/* CONTENT */}
                 <div
-                    className={`article-content-wrapper ${showComparison && compareVersion ? 'side-by-side' : ''}`}
+                    className={`article-content-wrapper ${showComparison && compareVersion ? 'side-by-side' : ''} ${(article.status === 'abrogé' || article.is_active === false) ? 'is-abroge' : ''}`}
                     data-art-slug={articleSlug}
                     data-art-num={`Article ${article.article_number}`}
                 >

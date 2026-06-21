@@ -55,6 +55,15 @@ const CodeNavTree: React.FC<CodeNavTreeProps> = ({
                     <span className="tree-node-label">
                         <span className="node-type">{node.type}</span>
                         <span className="node-name" title={node.name}>{node.name}</span>
+                        {node.note && (
+                            <span
+                                className="tree-nota"
+                                title={node.note}
+                                role="note"
+                                aria-label={`Note : ${node.note}`}
+                                onClick={(e) => e.stopPropagation()}
+                            >!</span>
+                        )}
                     </span>
                     <span className="tree-badge">{articleCount}</span>
                 </button>

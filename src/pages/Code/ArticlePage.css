@@ -1311,3 +1311,85 @@
 .article-hierarchy .ah-link { color: inherit; text-decoration: none; }
 .article-hierarchy .ah-link:hover { color: #166534; text-decoration: underline; }
 .article-hierarchy .ah-seg:last-child .ah-link { color: #166534; font-weight: 600; }
+
+/* ───────────────── Notas (point d'exclamation + tooltip au survol) ─────────────────
+   Discret par défaut : un petit « ! ». La nota ne s'affiche qu'au survol / focus. */
+.article-nota {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    margin-left: 0.5rem;
+    cursor: help;
+    outline: none;
+}
+.article-nota__mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.05rem;
+    height: 1.05rem;
+    font-size: 0.72rem;
+    font-weight: 800;
+    line-height: 1;
+    color: #b45309;
+    background: #fef3c7;
+    border: 1px solid #f59e0b;
+    border-radius: 50%;
+    transition: background 0.15s, transform 0.15s;
+}
+.article-nota:hover .article-nota__mark,
+.article-nota:focus .article-nota__mark { background: #fde68a; transform: scale(1.08); }
+.article-nota__tip {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    z-index: 40;
+    width: max-content;
+    max-width: min(360px, 80vw);
+    background: #1f2937;
+    color: #f9fafb;
+    font-size: 0.82rem;
+    font-weight: 400;
+    line-height: 1.45;
+    text-align: left;
+    padding: 0.6rem 0.75rem;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.15s, transform 0.15s, visibility 0.15s;
+}
+.article-nota__tip::before {
+    content: "";
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-bottom-color: #1f2937;
+}
+.article-nota:hover .article-nota__tip,
+.article-nota:focus .article-nota__tip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* Bandeau « article abrogé » (article individuel) — réutilise la palette d'abrogation */
+.article-abrogation-banner {
+    display: flex; gap: 0.6rem; align-items: flex-start;
+    background: #f9fafb; border: 1px solid #d1d5db; border-left: 4px solid #6b7280;
+    color: #4b5563; padding: 0.85rem 1.1rem; border-radius: 8px;
+    margin: 0.5rem 0 1.25rem; font-size: 0.95rem; line-height: 1.5;
+}
+.article-abrogation-banner .lab-icon { font-size: 1.05rem; line-height: 1.4; }
+
+/* Contenu d'un article abrogé : grisé (le texte reste lisible mais visiblement inactif) */
+.article-content-wrapper.is-abroge .article-text {
+    color: #9ca3af;
+    font-style: italic;
+}
