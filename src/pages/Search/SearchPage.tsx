@@ -273,17 +273,16 @@ const SearchPage: React.FC = () => {
             let dateFrom: string | null = null;
             let dateTo: string | null = null;
 
-            if (datePreset === '3y') {
+            const validStart = /^\d{4}$/.test(customYearStart);
+            const validEnd = /^\d{4}$/.test(customYearEnd);
+            if (validStart || validEnd) {
+                // Intervalle d'années personnalisé (prioritaire sur les presets)
+                if (validStart) dateFrom = `${customYearStart}-01-01`;
+                if (validEnd) dateTo = `${customYearEnd}-12-31`;
+            } else if (datePreset === '3y') {
                 dateFrom = `${currentYear - 3}-01-01`;
             } else if (datePreset === '5y') {
                 dateFrom = `${currentYear - 5}-01-01`;
-            } else if (datePreset === 'custom') {
-                if (customYearStart && /^\d{4}$/.test(customYearStart)) {
-                    dateFrom = `${customYearStart}-01-01`;
-                }
-                if (customYearEnd && /^\d{4}$/.test(customYearEnd)) {
-                    dateTo = `${customYearEnd}-12-31`;
-                }
             }
 
             let decisions: Decision[] = [];
@@ -416,8 +415,10 @@ const SearchPage: React.FC = () => {
         }
     };
 
-    const handleCustomDateFocus = () => {
-        setDatePreset('custom');
+    const handleCustomYear = (which: 'start' | 'end', raw: string) => {
+        const v = raw.replace(/\D/g, '').slice(0, 4);
+        if (which === 'start') setCustomYearStart(v); else setCustomYearEnd(v);
+        if (v) setDatePreset('custom');
     };
 
     const clearFilters = () => {
@@ -503,9 +504,9 @@ const SearchPage: React.FC = () => {
                         <div className="customDateInputs">
                             <label>Intervalle</label>
                             <div className="rangeInputs">
-                                <input type="text" inputMode="numeric" placeholder="2020" value={customYearStart} onChange={(e) => setCustomYearStart(e.target.value.replace(/\D/g, '').slice(0, 4))} onFocus={handleCustomDateFocus} maxLength={4} />
+                                <input type="text" inputMode="numeric" placeholder="2020" value={customYearStart} onChange={(e) => handleCustomYear('start', e.target.value)} maxLength={4} />
                                 <span className="rangeSep">-</span>
-                                <input type="text" inputMode="numeric" placeholder="2024" value={customYearEnd} onChange={(e) => setCustomYearEnd(e.target.value.replace(/\D/g, '').slice(0, 4))} onFocus={handleCustomDateFocus} maxLength={4} />
+                                <input type="text" inputMode="numeric" placeholder="2024" value={customYearEnd} onChange={(e) => handleCustomYear('end', e.target.value)} maxLength={4} />
                             </div>
                         </div>
                     </div>
