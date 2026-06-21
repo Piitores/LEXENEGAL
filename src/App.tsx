@@ -18,6 +18,7 @@ import AccessRequestPage from './pages/AccessRequest/AccessRequestPage';
 import AdminPage from './pages/Admin/AdminPage';
 import NotFoundPage from './pages/Error/NotFoundPage';
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
+import { useBlockSelectAll } from './hooks/useBlockSelectAll';
 import SEO from './components/SEO/SEO';
 import AmbientEffects from './components/AmbientEffects/AmbientEffects';
 import './App.css';
@@ -76,6 +77,9 @@ const ScrollManager = () => {
 
 function App() {
   const [scrolled, setScrolled] = useState(false);
+
+  // Dissuasion des copies sauvages : Ctrl/Cmd+A neutralisé hors champs de saisie.
+  useBlockSelectAll();
 
   useEffect(() => {
     const handleScroll = () => {
