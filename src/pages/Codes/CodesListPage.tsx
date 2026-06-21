@@ -96,10 +96,10 @@ const CODE_THEMES = {
         color: '#4338CA',
         description: 'Constitution, institutions, libertés fondamentales'
     },
-    "Droit de l'Environnement": {
+    "Droit de la Santé et de l'Environnement": {
         icon: Leaf,
         color: '#15803D',
-        description: 'Environnement, ressources naturelles, pollution'
+        description: 'Santé publique, hygiène, médecine, environnement, ressources naturelles'
     },
     'Autres': {
         icon: FolderOpen,
@@ -128,7 +128,9 @@ const CODE_TO_THEME: Record<string, string> = {
     'code-general-impots': 'Droit Douanier et Fiscal', // Code Général des Impôts (CGI)
     'code-de-la-presse': 'Droit de la Communication',  // Code de la Presse
     'code-communications-electroniques': 'Droit de la Communication',  // Code des communications électroniques (était mal classé en Civil)
-    'code-de-l-environnement': "Droit de l'Environnement",  // Code de l'Environnement (était mal classé en Civil)
+    'code-de-l-environnement': "Droit de la Santé et de l'Environnement",  // Code de l'Environnement
+    'loi-83-71-code-hygiene': "Droit de la Santé et de l'Environnement",   // Code de l'Hygiène
+    'loi-66-69-exercice-medecine': "Droit de la Santé et de l'Environnement", // Exercice de la médecine (LODA)
     'constitution-senegal': 'Droit Constitutionnel',  // Constitution — branche autonome
     'code-minier': 'Droit Minier',  // Code Minier
     'code-electoral': 'Droit Électoral', // Code Électoral
