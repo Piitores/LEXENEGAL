@@ -528,23 +528,24 @@ const ArticlePage: React.FC = () => {
                             article.section_name ? { kind: 'section', raw: article.section_name } : null,
                         ].filter(Boolean) as { kind: string; raw: string }[]);
                         if (!levels.length) return null;
+                        const KIND: Record<string, string> = { titre: 'Titre', chapitre: 'Chapitre', section: 'Section', 'sous-section': 'Sous-section', paragraphe: 'Paragraphe', livre: 'Livre', partie: 'Partie' };
+                        // sépare « numéro — intitulé » (tiret cadratin — , demi-cadratin – ou simple -)
                         const split = (raw: string) => {
-                            const idx = raw.indexOf(' - ');
-                            return idx > -1
-                                ? { badge: raw.slice(0, idx).trim(), label: raw.slice(idx + 3).trim() }
-                                : { badge: '', label: raw.trim() };
+                            const m = raw.match(/^\s*(.*?)\s+[—–-]\s+(.*)$/);
+                            return m ? { num: m[1].trim(), label: m[2].trim() } : { num: '', label: raw.trim() };
                         };
                         return (
                             <div className="article-hierarchy" aria-label="Emplacement dans le code">
                                 {levels.map((lvl, i) => {
-                                    const { badge, label } = split(lvl.raw);
+                                    const { num, label } = split(lvl.raw);
+                                    const badge = `${KIND[lvl.kind] || lvl.kind}${num ? ' ' + num : ''}`;
                                     return (
                                         <Link
                                             key={i}
                                             className={`ah-row ah-row--${lvl.kind}`}
                                             to={`/code/${codeSlug}?node=${encodeURIComponent(lvl.raw)}`}
                                         >
-                                            <span className={`ah-badge ah-badge--${lvl.kind}`}>{badge || lvl.kind}</span>
+                                            <span className={`ah-badge ah-badge--${lvl.kind}`}>{badge}</span>
                                             <span className="ah-label">{label}</span>
                                         </Link>
                                     );
