@@ -19,6 +19,7 @@ interface Decision {
     reference: string;
     date_decision: string;
     matiere_principale: string;
+    juridiction: string;
     chambre: string;
     resume: string;
     slug: string;
@@ -307,6 +308,7 @@ const SearchPage: React.FC = () => {
                     reference: d.reference || 'Décision',
                     date_decision: d.date_decision,
                     matiere_principale: d.matiere_principale,
+                    juridiction: d.juridiction,
                     chambre: d.chambre,
                     resume: d.resume,
                     slug: d.slug || d.id,
@@ -339,6 +341,7 @@ const SearchPage: React.FC = () => {
                     reference: d.reference || 'Décision',
                     date_decision: d.date_decision,
                     matiere_principale: d.matiere_principale,
+                    juridiction: d.juridiction,
                     chambre: d.chambre,
                     resume: d.resume,
                     slug: d.slug || d.id,
@@ -376,6 +379,7 @@ const SearchPage: React.FC = () => {
                     reference: d.reference || 'Décision',
                     date_decision: d.date_decision,
                     matiere_principale: '',
+                    juridiction: d.juridiction || '',
                     chambre: d.chambre,
                     resume: d.resume,
                     slug: d.slug || d.id,
@@ -715,7 +719,7 @@ const SearchPage: React.FC = () => {
                                                 : 'Date N/D'}
                                         </span>
                                     </div>
-                                    <h2 className="cardTitle">{hit.matiere_principale} {hit.chambre ? `— ${hit.chambre}` : ''}</h2>
+                                    <h2 className="cardTitle">{[hit.matiere_principale || hit.juridiction, hit.chambre].filter(Boolean).join(' — ') || 'Décision'}</h2>
                                     <p className="cardSnippet">{hit.resume || 'Aucun aperçu disponible pour ce document.'}</p>
                                     <div className="cardTags">
                                         {hit.mots_cles && hit.mots_cles.slice(0, 3).map(tag => (

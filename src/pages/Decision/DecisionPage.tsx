@@ -202,7 +202,12 @@ const DecisionPage: React.FC = () => {
 
     const handleCopyRef = () => {
         if (!decision) return;
-        const refText = `${decision.juridiction || 'Juridiction'}, ${decision.chambre || ''}, ${decision.date_decision ? new Date(decision.date_decision).toLocaleDateString('fr-FR') : ''}, ${decision.reference}`;
+        const refText = [
+            decision.juridiction,
+            decision.chambre,
+            decision.date_decision ? new Date(decision.date_decision).toLocaleDateString('fr-FR') : null,
+            decision.reference
+        ].filter(Boolean).join(', ');
         navigator.clipboard.writeText(refText);
         alert("Référence copiée : " + refText);
     };
