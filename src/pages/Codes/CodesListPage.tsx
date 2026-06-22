@@ -115,6 +115,7 @@ const CODE_TO_THEME: Record<string, string> = {
     'code-famille': 'Droit de la Famille',  // Code de la Famille
     'code-de-la-famille': 'Droit de la Famille', // Code de la Famille (nouveau slug)
     'code-civil': 'Droit Civil et Commercial',
+    'cocc': 'Droit Civil et Commercial',  // Code des Obligations Civiles et Commerciales (slug réel en base)
     'code-des-obligations-civiles-et-commerciales': 'Droit Civil et Commercial',  // Code des Obligations Civiles et Commerciales
     'code-procedure-civile': 'Droit Civil et Commercial',  // Code de Procédure Civile
     'code-de-procedure-civile': 'Droit Civil et Commercial',  // Code de Procédure Civile (Vrai slug de la DB)
