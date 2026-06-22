@@ -532,7 +532,12 @@ const ArticlePage: React.FC = () => {
                         // sépare « numéro — intitulé » (tiret cadratin — , demi-cadratin – ou simple -)
                         const split = (raw: string) => {
                             const m = raw.match(/^\s*(.*?)\s+[—–-]\s+(.*)$/);
-                            return m ? { num: m[1].trim(), label: m[2].trim() } : { num: '', label: raw.trim() };
+                            if (m) return { num: m[1].trim(), label: m[2].trim() };
+                            const r = raw.trim();
+                            // pas de tiret : un ordinal seul (PRELIMINAIRE, PREMIER, II, BIS…) est le numéro ; sinon un intitulé
+                            return /^(PREMIER|PREMIÈRE|PREMIERE|PRELIMINAIRE|PRÉLIMINAIRE|BIS|[IVXLC]+|\d+)$/i.test(r)
+                                ? { num: r, label: '' }
+                                : { num: '', label: r };
                         };
                         return (
                             <div className="article-hierarchy" aria-label="Emplacement dans le code">
