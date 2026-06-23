@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
+import useAuth from '../../hooks/useAuth';
 import { Star, FolderPlus, Check, Loader2 } from 'lucide-react';
 import './DecisionActions.css';
 
@@ -15,8 +16,9 @@ interface Folder {
 }
 
 const DecisionActions: React.FC<DecisionActionsProps> = ({ decisionId, onNeedUpgrade }) => {
-    const [isPro, setIsPro] = useState(false);
-    const [userId, setUserId] = useState<string | null>(null);
+    // Favoris & dossiers = ouverts à TOUT compte connecté (plus de réserve "Pro").
+    const { user, isConnected } = useAuth();
+    const userId = user?.id ?? null;
     const [isFavorite, setIsFavorite] = useState(false);
     const [loadingFav, setLoadingFav] = useState(false);
 
@@ -26,62 +28,48 @@ const DecisionActions: React.FC<DecisionActionsProps> = ({ decisionId, onNeedUpg
     const [addedToFolders, setAddedToFolders] = useState<string[]>([]);
 
     useEffect(() => {
-        checkUserAccess();
-    }, [decisionId]);
+        if (!isConnected || !userId) {
+            setIsFavorite(false);
+            setFolders([]);
+            setAddedToFolders([]);
+            return;
+        }
+        loadUserData(userId);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [userId, isConnected, decisionId]);
 
-    const checkUserAccess = async () => {
+    const loadUserData = async (uid: string) => {
         try {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) return;
-
-            setUserId(session.user.id);
-
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('subscription_tier, role')
-                .eq('id', session.user.id)
+            // Favori déjà posé ?
+            const { data: favData } = await supabase
+                .from('favorites')
+                .select('id')
+                .eq('user_id', uid)
+                .eq('decision_id', decisionId)
                 .single();
+            setIsFavorite(!!favData);
 
-            const userIsPro = profile?.subscription_tier === 'pro' || profile?.role === 'admin';
-            setIsPro(userIsPro);
+            // Dossiers de l'utilisateur
+            const { data: foldersData } = await supabase
+                .from('folders')
+                .select('id, name')
+                .eq('user_id', uid)
+                .order('name');
+            if (foldersData) setFolders(foldersData);
 
-            if (userIsPro) {
-                // Check if already favorite
-                const { data: favData } = await supabase
-                    .from('favorites')
-                    .select('id')
-                    .eq('user_id', session.user.id)
-                    .eq('decision_id', decisionId)
-                    .single();
-
-                setIsFavorite(!!favData);
-
-                // Load user folders
-                const { data: foldersData } = await supabase
-                    .from('folders')
-                    .select('id, name')
-                    .eq('user_id', session.user.id)
-                    .order('name');
-
-                if (foldersData) setFolders(foldersData);
-
-                // Check which folders already contain this decision
-                const { data: existingLinks } = await supabase
-                    .from('folder_decisions')
-                    .select('folder_id')
-                    .eq('decision_id', decisionId);
-
-                if (existingLinks) {
-                    setAddedToFolders(existingLinks.map(l => l.folder_id));
-                }
-            }
+            // Dossiers contenant déjà cette décision (filtrés par la RLS folder_decisions)
+            const { data: existingLinks } = await supabase
+                .from('folder_decisions')
+                .select('folder_id')
+                .eq('decision_id', decisionId);
+            if (existingLinks) setAddedToFolders(existingLinks.map(l => l.folder_id));
         } catch (error) {
-            console.error('Access check error:', error);
+            console.error('User data load error:', error);
         }
     };
 
     const toggleFavorite = async () => {
-        if (!isPro) {
+        if (!isConnected) {
             onNeedUpgrade();
             return;
         }
@@ -110,7 +98,7 @@ const DecisionActions: React.FC<DecisionActionsProps> = ({ decisionId, onNeedUpg
     };
 
     const addToFolder = async (folderId: string) => {
-        if (!isPro) {
+        if (!isConnected) {
             onNeedUpgrade();
             return;
         }
@@ -161,7 +149,7 @@ const DecisionActions: React.FC<DecisionActionsProps> = ({ decisionId, onNeedUpg
                 <button
                     className="action-btn action-folder"
                     onClick={() => {
-                        if (!isPro) {
+                        if (!isConnected) {
                             onNeedUpgrade();
                             return;
                         }

@@ -153,9 +153,7 @@ const ArticlePage: React.FC = () => {
     // Comparison mode
     const [showComparison, setShowComparison] = useState(false);
     const [compareVersion, setCompareVersion] = useState<ArticleVersion | null>(null);
-    // En dev local (npm run dev) on débloque les fonctions PRO pour tester.
-    // import.meta.env.DEV est TOUJOURS false dans le build de production.
-    const [isPro, setIsPro] = useState(import.meta.env.DEV);
+    // Comparateur de versions = ouvert à tout compte connecté (cf. isAuthenticated).
     const [showConversionModal, setShowConversionModal] = useState(false);
 
     // Citing decisions
@@ -187,19 +185,9 @@ const ArticlePage: React.FC = () => {
     const checkProAccess = async () => {
         try {
             const { data: { session } } = await supabase.auth.getSession();
-            if (session) {
-                setIsAuthenticated(true);
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('subscription_tier, role')
-                    .eq('id', session.user.id)
-                    .single();
-                setIsPro(import.meta.env.DEV || profile?.subscription_tier === 'pro' || profile?.role === 'admin');
-            } else {
-                setIsAuthenticated(false);
-            }
+            setIsAuthenticated(!!session);
         } catch (error) {
-            console.error('Error checking PRO access:', error);
+            console.error('Error checking auth:', error);
         }
     };
 
@@ -377,7 +365,7 @@ const ArticlePage: React.FC = () => {
 
 
     const handleCompareClick = () => {
-        if (!isPro) {
+        if (!isAuthenticated) {
             setShowConversionModal(true);
             return;
         }
@@ -589,7 +577,7 @@ const ArticlePage: React.FC = () => {
                     >
                         <GitCompare size={16} />
                         Comparer les versions
-                        {!isPro && <Lock size={12} className="pro-lock" />}
+                        {!isAuthenticated && <Lock size={12} className="pro-lock" />}
                     </button>
                     <button
                         className="inline-report-btn"
@@ -602,7 +590,7 @@ const ArticlePage: React.FC = () => {
 
                 {/* COMPARISON MODE */}
                 <AnimatePresence>
-                    {showComparison && isPro && (
+                    {showComparison && isAuthenticated && (
                         <motion.div
                             className="comparison-panel"
                             initial={{ opacity: 0, height: 0 }}
@@ -637,7 +625,7 @@ const ArticlePage: React.FC = () => {
                     data-art-slug={articleSlug}
                     data-art-num={`Article ${article.article_number}`}
                 >
-                    {showComparison && compareVersion && isPro ? (
+                    {showComparison && compareVersion && isAuthenticated ? (
                         <>
                             {/* OLD VERSION */}
                             <div className="version-column version-old">
