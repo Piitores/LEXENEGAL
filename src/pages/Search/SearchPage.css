@@ -38,6 +38,36 @@
     font-size: 0.85rem;
     color: var(--color-text-secondary, #6B7280);
 }
+
+/* Vue « Tout » (fédérée) — une section par pilier */
+.tout-view {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+.tout-section__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+.tout-section__head h3 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--color-text, #111827);
+    margin: 0;
+}
+.tout-voir {
+    background: none;
+    border: none;
+    color: var(--color-accent, #047857);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+.tout-voir:hover {
+    text-decoration: underline;
+}
 .searchPage.linear-theme {
     display: flex;
     min-height: 100vh;

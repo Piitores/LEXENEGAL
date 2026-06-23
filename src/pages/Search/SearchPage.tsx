@@ -54,7 +54,7 @@ const SearchPage: React.FC = () => {
     const [totalHits, setTotalHits] = useState(0);
 
     // Onglet actif + résultats "Codes & articles"
-    const [activeTab, setActiveTab] = useState<'decisions' | 'articles' | 'doctrine'>('decisions');
+    const [activeTab, setActiveTab] = useState<'tout' | 'decisions' | 'articles' | 'doctrine'>('tout');
     const [articleResults, setArticleResults] = useState<ArticleHit[]>([]);
     const [articlesLoading, setArticlesLoading] = useState(false);
     const [doctrineResults, setDoctrineResults] = useState<DoctrineHit[]>([]);
@@ -166,18 +166,8 @@ const SearchPage: React.FC = () => {
         return () => { cancelled = true; clearTimeout(timer); };
     }, [query]);
 
-    // Choix automatique de l'onglet : si l'utilisateur cherche "article 10" (ou que la
-    // jurisprudence ne donne rien mais les articles oui), on ouvre l'onglet "Codes & articles".
-    useEffect(() => {
-        if (userPickedTab.current) return;
-        const looksLikeArticle = /\b(art\.?|article)\s*\.?\s*[0-9lr]/i.test(query || '');
-        if ((looksLikeArticle && articleResults.length > 0) ||
-            (results.length === 0 && articleResults.length > 0 && !loading)) {
-            setActiveTab('articles');
-        } else if (results.length > 0) {
-            setActiveTab('decisions');
-        }
-    }, [results, articleResults, query, loading]);
+    // Défaut « Tout » (fédéré) : plus de re-forçage automatique vers la jurisprudence
+    // (dé-biaisage demandé). L'utilisateur choisit son périmètre via les onglets.
 
     // Index des codes (titres + alias DB `code_aliases` = source) pour la détection structurée.
     useEffect(() => {
@@ -257,7 +247,7 @@ const SearchPage: React.FC = () => {
         return () => { cancelled = true; clearTimeout(timer); };
     }, [query]);
 
-    const selectTab = (tab: 'decisions' | 'articles' | 'doctrine') => {
+    const selectTab = (tab: 'tout' | 'decisions' | 'articles' | 'doctrine') => {
         userPickedTab.current = true;
         setActiveTab(tab);
     };
@@ -784,6 +774,14 @@ const SearchPage: React.FC = () => {
                 <div className="searchTabs" role="tablist">
                     <button
                         role="tab"
+                        aria-selected={activeTab === 'tout'}
+                        className={`searchTab ${activeTab === 'tout' ? 'active' : ''}`}
+                        onClick={() => selectTab('tout')}
+                    >
+                        Tout <span className="searchTabCount">{totalHits + articleResults.length + doctrineResults.length}</span>
+                    </button>
+                    <button
+                        role="tab"
                         aria-selected={activeTab === 'decisions'}
                         className={`searchTab ${activeTab === 'decisions' ? 'active' : ''}`}
                         onClick={() => selectTab('decisions')}
@@ -810,7 +808,7 @@ const SearchPage: React.FC = () => {
 
                 <div className="resultsToolbar">
                     <div className="resultsCount">
-                        <span className="count-number">{activeTab === 'decisions' ? totalHits : activeTab === 'articles' ? articleResults.length : doctrineResults.length}</span> résultats
+                        <span className="count-number">{activeTab === 'tout' ? (totalHits + articleResults.length + doctrineResults.length) : activeTab === 'decisions' ? totalHits : activeTab === 'articles' ? articleResults.length : doctrineResults.length}</span> résultats
                     </div>
                     {activeTab === 'decisions' && (
                         <div className="sortControls">
@@ -828,6 +826,71 @@ const SearchPage: React.FC = () => {
                 </div>
 
                 {error && <div className="errorBanner"><strong>Erreur technique :</strong> {error}</div>}
+
+                {activeTab === 'tout' && (
+                    <div className="tout-view">
+                        {results.length > 0 && (
+                            <section className="tout-section">
+                                <div className="tout-section__head">
+                                    <h3>Jurisprudence</h3>
+                                    <button className="tout-voir" onClick={() => selectTab('decisions')}>Voir les {totalHits} →</button>
+                                </div>
+                                <div className="resultsGrid">
+                                    {results.slice(0, 4).map((d) => (
+                                        <div key={d.id} className="resultCard linear-card" onClick={() => navigate(`/decision/${d.slug}`)}>
+                                            <div className="cardHeader">
+                                                <span className="cardRef">{d.reference || d.matiere_principale || d.juridiction}</span>
+                                                <span className="cardDate">{[d.juridiction, d.chambre, d.date_decision && new Date(d.date_decision).toLocaleDateString('fr-FR')].filter(Boolean).join(' · ')}</span>
+                                            </div>
+                                            {d.resume && <p className="cardSnippet">{stripHtml(d.resume).slice(0, 200)}</p>}
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
+                        )}
+                        {articleResults.length > 0 && (
+                            <section className="tout-section">
+                                <div className="tout-section__head">
+                                    <h3>Codes &amp; articles</h3>
+                                    <button className="tout-voir" onClick={() => selectTab('articles')}>Voir les {articleResults.length} →</button>
+                                </div>
+                                <div className="resultsGrid">
+                                    {articleResults.slice(0, 4).map((art) => (
+                                        <div key={art.id} className="resultCard linear-card" onClick={() => window.open(`/code/${art.code_slug}/${art.slug}`, '_blank')}>
+                                            <div className="cardHeader">
+                                                <span className="cardRef">Article {art.article_number}</span>
+                                                <span className="cardDate">{art.code_title}</span>
+                                            </div>
+                                            <p className="cardSnippet">{stripHtml(art.content).slice(0, 200)}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
+                        )}
+                        {doctrineResults.length > 0 && (
+                            <section className="tout-section">
+                                <div className="tout-section__head">
+                                    <h3>Doctrine</h3>
+                                    <button className="tout-voir" onClick={() => selectTab('doctrine')}>Voir les {doctrineResults.length} →</button>
+                                </div>
+                                <div className="resultsGrid">
+                                    {doctrineResults.slice(0, 4).map((d) => (
+                                        <div key={d.id} className="resultCard linear-card" onClick={() => navigate('/doctrine-fiscale')}>
+                                            <div className="cardHeader">
+                                                <span className="cardRef">{d.reference_complete}</span>
+                                                {d.annee && <span className="cardDate">{d.annee}</span>}
+                                            </div>
+                                            {d.objet && <p className="cardSnippet">{d.objet}</p>}
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
+                        )}
+                        {results.length === 0 && articleResults.length === 0 && doctrineResults.length === 0 && !loading && !articlesLoading && !doctrineLoading && query.trim().length >= 3 && (
+                            <div className="emptyState"><p>Aucun résultat pour «&nbsp;{query}&nbsp;».</p></div>
+                        )}
+                    </div>
+                )}
 
                 {activeTab === 'decisions' && (<>
                 <LayoutGroup>
