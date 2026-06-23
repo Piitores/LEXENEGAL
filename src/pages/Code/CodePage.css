@@ -5,17 +5,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-    --cp-green: #047857;
-    --cp-green-light: rgba(4, 120, 87, 0.08);
-    --cp-green-lighter: rgba(4, 120, 87, 0.04);
-    --cp-bg: #F8F9FB;
-    --cp-card: #FFFFFF;
-    --cp-border: #E5E7EB;
-    --cp-border-light: #F0F1F3;
-    --cp-text: #111827;
-    --cp-text-muted: #6B7280;
-    --cp-text-faint: #9CA3AF;
-    --cp-radius: 12px;
+    /* Alias → tokens centralisés (src/styles/tokens.css) */
+    --cp-green: var(--color-accent);
+    --cp-green-light: var(--color-accent-wash);
+    --cp-green-lighter: var(--color-accent-wash-soft);
+    --cp-bg: var(--color-bg-subtle);
+    --cp-card: var(--color-bg);
+    --cp-border: var(--color-border);
+    --cp-border-light: var(--color-border-light);
+    --cp-text: var(--color-text);
+    --cp-text-muted: var(--color-text-secondary);
+    --cp-text-faint: var(--color-text-faint);
+    --cp-radius: var(--radius-lg);
     --cp-sidebar-width: 320px;
 }
 

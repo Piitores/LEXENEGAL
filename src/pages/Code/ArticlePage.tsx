@@ -17,6 +17,7 @@ import {
     buildTreeFromNodes, buildTreeLegacy, getBreadcrumb,
 } from '../../lib/codeTree';
 import './ArticlePage.css';
+import '../../styles/legal-content.css';
 
 
 interface Article {

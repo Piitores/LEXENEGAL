@@ -1,0 +1,59 @@
+/* =========================================================
+   LEXENEGAL — Rendu des TEXTES LÉGAUX (charte de production)
+   Réf : pages/Charte-Production-Textes.md
+   Importé APRÈS le CSS de page (CodePage/ArticlePage) → prioritaire.
+   Conteneurs visés : .article-text (ArticlePage) et .article-body (CodePage).
+   ========================================================= */
+
+/* ─────────────────────────────────────────────
+   NOTA LÉGALE = callout AMBRÉ, distinct du corps
+   (markup type COCC : <p class="alinea nota-ohada"><em>…</em></p>)
+   ───────────────────────────────────────────── */
+.article-text p.nota-ohada,
+.article-text p.nota,
+.article-body p.nota-ohada,
+.article-body p.nota {
+    margin: var(--space-md) 0;
+    padding: var(--space-sm) var(--space-md);
+    background: var(--nota-bg);
+    border-left: 4px solid var(--nota-border);
+    border-radius: var(--radius-sm);
+    color: var(--nota-text);
+    font-size: 0.9rem;
+    font-style: normal;
+    line-height: 1.6;
+    text-indent: 0;     /* annule l'indentation d'alinéa */
+    text-align: left;   /* annule le justify d'alinéa */
+}
+.article-text p.nota-ohada em,
+.article-text p.nota em,
+.article-body p.nota-ohada em,
+.article-body p.nota em {
+    font-style: normal; /* plus besoin de l'italique pour se distinguer */
+    color: inherit;
+}
+
+/* ─────────────────────────────────────────────
+   ABROGATION (premium) : contenu GRISÉ + mention « Abrogé » ROUGE
+   Le bandeau reste sur fond propre ; seule la mention est rouge.
+   ───────────────────────────────────────────── */
+/* Tout le contenu d'un article abrogé passe en gris (corps + titres + tableaux) */
+.article-content-wrapper.is-abroge .article-text,
+.article-content-wrapper.is-abroge .article-text * {
+    color: var(--color-text-faint) !important;
+}
+
+/* Bandeaux d'abrogation (texte entier ET article) : fond propre, mention rouge */
+.law-abrogation-banner,
+.article-abrogation-banner {
+    background: var(--color-bg) !important;
+    border: 1px solid var(--color-border) !important;
+    border-left: 4px solid var(--color-danger) !important;
+    color: var(--color-danger-strong) !important;
+}
+.law-abrogation-banner a,
+.article-abrogation-banner a,
+.law-abrogation-banner .lab-icon,
+.article-abrogation-banner .lab-icon {
+    color: var(--color-danger) !important;
+}

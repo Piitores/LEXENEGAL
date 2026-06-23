@@ -15,6 +15,7 @@ import {
 } from '../../lib/codeTree';
 import { useCopyAttribution, attributionFooter, articleUrl } from '../../hooks/useCopyAttribution';
 import './CodePage.css';
+import '../../styles/legal-content.css';
 
 
 // ── Helpers article ──
