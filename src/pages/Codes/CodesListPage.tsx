@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import {
     Scale, BookOpen, Users, Building, Briefcase, Radio, Pickaxe,
@@ -148,7 +148,10 @@ const CodesListPage: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     // Le Droit communautaire (OHADA) est désormais une entrée AUTONOME du header
     // (hors Corpus National) → plus d'onglet « communautaire » dans ce hub.
-    const [activeBase, setActiveBase] = useState<'codes' | 'loda'>('codes');
+    const [searchParams] = useSearchParams();
+    const [activeBase, setActiveBase] = useState<'codes' | 'loda'>(
+        searchParams.get('base') === 'loda' ? 'loda' : 'codes'
+    );
     // Base LODA : filtre par branche, sections (par type) repliables, tri.
     const [lodaBranche, setLodaBranche] = useState<string | null>(null);
     const [lodaExpanded, setLodaExpanded] = useState<Set<string>>(new Set());

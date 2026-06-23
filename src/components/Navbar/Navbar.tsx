@@ -11,7 +11,7 @@ interface DDItem { label: string; to?: string; soon?: boolean; }
 // Corpus National = codes + LODA + JO (à venir)
 const CORPUS: DDItem[] = [
   { label: 'Codes consolidés', to: '/codes' },
-  { label: 'Lois, décrets & arrêtés (LODA)', to: '/codes' },
+  { label: 'Lois, décrets & arrêtés (LODA)', to: '/codes?base=loda' },
   { label: 'Journaux officiels', soon: true },
 ];
 
