@@ -8,6 +8,7 @@
 
 import React from 'react';
 import ArticleHoverPreview from '../components/ArticleHoverPreview/ArticleHoverPreview';
+import { normalizeArticleNumber } from '../lib/articleRefResolver';
 
 /**
  * Configuration des codes avec leurs patterns de détection
@@ -61,7 +62,7 @@ const CODE_CONFIG: { code: string; prefixes: string[]; patterns: RegExp[] }[] = 
         ]
     },
     {
-        code: 'code-securite-sociale',
+        code: 'code-securite-sociale-senegal',
         prefixes: [''],
         patterns: [
             /Art(?:icle)?[.\s]*(\d+)\s+du\s+Code\s+de\s+la\s+S[ée]curit[ée]\s+Sociale/gi,
@@ -78,7 +79,7 @@ const CODE_CONFIG: { code: string; prefixes: string[]; patterns: RegExp[] }[] = 
     },
     // OHADA Codes
     {
-        code: 'au-suretes',
+        code: 'ohada-suretes',
         prefixes: [''],
         patterns: [
             /Art(?:icle)?[.\s]*(\d+)\s+(?:de\s+l[''])?(?:Acte\s+Uniforme|AU)\s+(?:portant\s+)?(?:sur\s+les?\s+)?[Ss][ûu]ret[ée]s?/gi,
@@ -87,7 +88,7 @@ const CODE_CONFIG: { code: string; prefixes: string[]; patterns: RegExp[] }[] = 
         ]
     },
     {
-        code: 'au-commercial',
+        code: 'ohada-droit-commercial-general',
         prefixes: [''],
         patterns: [
             /Art(?:icle)?[.\s]*(\d+)\s+(?:de\s+l[''])?(?:Acte\s+Uniforme|AU)\s+(?:portant\s+sur\s+le\s+)?[Dd]roit\s+[Cc]ommercial/gi,
@@ -174,7 +175,7 @@ export function renderTextWithArticleLinks(
         if (!articleMaps[art.code_slug]) {
             articleMaps[art.code_slug] = new Map();
         }
-        articleMaps[art.code_slug].set(art.article_number, art);
+        articleMaps[art.code_slug].set(normalizeArticleNumber(art.article_number), art);
     }
 
     const citations = findAllArticleCitations(text);
@@ -195,7 +196,7 @@ export function renderTextWithArticleLinks(
         // Chercher l'article
         const codeMap = articleMaps[citation.codeSlug];
         const prefix = citation.codeSlug === 'code-travail' ? 'L.' : '';
-        const articleKey = `${prefix}${citation.articleNum}`;
+        const articleKey = normalizeArticleNumber(`${prefix}${citation.articleNum}`);
         const article = codeMap?.get(articleKey);
 
         if (article) {
@@ -253,7 +254,7 @@ export function textToHtmlWithLinks(
         if (!articleMaps[art.code_slug]) {
             articleMaps[art.code_slug] = new Map();
         }
-        articleMaps[art.code_slug].set(art.article_number, art);
+        articleMaps[art.code_slug].set(normalizeArticleNumber(art.article_number), art);
     }
 
     const citations = findAllArticleCitations(text);
@@ -264,7 +265,7 @@ export function textToHtmlWithLinks(
         const c = citations[i];
         const codeMap = articleMaps[c.codeSlug];
         const prefix = c.codeSlug === 'code-travail' ? 'L.' : '';
-        const articleKey = `${prefix}${c.articleNum}`;
+        const articleKey = normalizeArticleNumber(`${prefix}${c.articleNum}`);
         const article = codeMap?.get(articleKey);
 
         if (article) {
