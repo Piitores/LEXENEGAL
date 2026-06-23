@@ -9,6 +9,7 @@ import { supabase } from '../../lib/supabase';
 import SEO from '../../components/SEO/SEO';
 import CodeNavTree from '../../components/CodeNavTree/CodeNavTree';
 import TextPresentation from '../../components/TextPresentation/TextPresentation';
+import LinkedLegalContent from '../../components/LinkedLegalContent/LinkedLegalContent';
 import {
     Law, Article, HierarchyNode,
     buildTreeFromNodes, buildTreeLegacy, countArticles, getArticlesForNode,
@@ -109,7 +110,7 @@ const ArticleCard: React.FC<{ art: Article; slug: string | undefined; codeTitle?
                 <>
                     <div className="article-body">
                         {art.content_html ? (
-                            <div dangerouslySetInnerHTML={{ __html: art.content_html }} />
+                            <LinkedLegalContent html={art.content_html} />
                         ) : (
                             art.content_raw || '(Contenu non disponible)'
                         )}

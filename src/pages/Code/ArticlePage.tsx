@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useCopyAttribution } from '../../hooks/useCopyAttribution';
-import AnnotationContent from './AnnotationContent';
+import LinkedLegalContent from '../../components/LinkedLegalContent/LinkedLegalContent';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     ArrowLeft, ChevronLeft, ChevronRight,
@@ -643,10 +643,7 @@ const ArticlePage: React.FC = () => {
                             </div>
                         </>
                     ) : (
-                        <div
-                            className="article-text"
-                            dangerouslySetInnerHTML={{ __html: currentVersion.content }}
-                        />
+                        <LinkedLegalContent className="article-text" html={currentVersion.content} />
                     )}
 
                     {/* ANNOTATIONS (Pastilles grises du CGI) */}
@@ -655,16 +652,7 @@ const ArticlePage: React.FC = () => {
                             {annotations.map(anno => (
                                 <div key={anno.id} className="article-annotation">
                                     {anno.title && <h4>{anno.title}</h4>}
-                                    {/data-article-id=/.test(anno.content_raw) ? (
-                                        <div className="annotation-content">
-                                            <AnnotationContent html={anno.content_raw} />
-                                        </div>
-                                    ) : (
-                                        <div
-                                            className="annotation-content"
-                                            dangerouslySetInnerHTML={{ __html: anno.content_raw }}
-                                        />
-                                    )}
+                                    <LinkedLegalContent className="annotation-content" html={anno.content_raw} />
                                 </div>
                             ))}
                         </div>

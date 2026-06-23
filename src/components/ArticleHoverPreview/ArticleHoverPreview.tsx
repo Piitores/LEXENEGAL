@@ -7,7 +7,7 @@ import './ArticleHoverPreview.css';
 
 
 interface ArticleHoverPreviewProps {
-    articleId: string;
+    articleId?: string;        // optionnel : les renvois COCC n'ont qu'un slug
     articleNumber: string;
     codeName: string;
     codeSlug: string;
@@ -38,10 +38,24 @@ const ArticleHoverPreview: React.FC<ArticleHoverPreviewProps> = ({
     const fetchArticleContent = async () => {
         setLoading(true);
         try {
+            // Résolution de l'id : direct si fourni, sinon via le couple (code, slug)
+            // — les renvois COCC ne portent qu'un slug dans leur href.
+            let resolvedId = articleId;
+            if (!resolvedId && articleSlug && codeSlug) {
+                const { data: code } = await supabase
+                    .from('laws_and_codes').select('id').eq('slug', codeSlug).maybeSingle();
+                if (code) {
+                    const { data: art } = await supabase
+                        .from('articles').select('id').eq('slug', articleSlug).eq('code_id', code.id).maybeSingle();
+                    resolvedId = art?.id;
+                }
+            }
+            if (!resolvedId) { setContent('Contenu non disponible'); return; }
+
             const { data } = await supabase
                 .from('article_versions')
                 .select('content')
-                .eq('article_id', articleId)
+                .eq('article_id', resolvedId)
                 .eq('is_current', true)
                 .single();
 
