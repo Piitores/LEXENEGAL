@@ -138,6 +138,7 @@ const ArticlePage: React.FC = () => {
     const [hierarchy, setHierarchy] = useState<HierarchyNode[]>([]);
     const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
     const [treeActiveNodeId, setTreeActiveNodeId] = useState<string | null>(null);
+    const [nodePath, setNodePath] = useState<HierarchyNode[]>([]);
     const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
     const toggleNode = (id: string) => {
@@ -251,8 +252,10 @@ const ArticlePage: React.FC = () => {
                     if (articleData.node_id) {
                         const path = getBreadcrumb(articleData.node_id, tree) || [];
                         setExpandedNodes(new Set(path.map(p => p.id)));
+                        setNodePath(path);
                     } else {
                         setExpandedNodes(new Set());
+                        setNodePath([]);
                     }
 
                     // Get versions
@@ -519,38 +522,31 @@ const ArticlePage: React.FC = () => {
 
                 {/* HEADER */}
                 <header className="article-header">
-                    {/* Contexte hiérarchique enrichi (badges de niveau, premium + imprimable).
-                        On n'utilise PAS part_title (incohérent) : Titre > Chapitre > Section. */}
+                    {/* Fil d'Ariane complet depuis l'arbre (Partie › Livre › Titre › Chapitre › Section › Paragraphe),
+                        chaque niveau avec son mot. Construit depuis structure_nodes (et non les champs plats). */}
                     {(() => {
-                        const levels = ([
-                            article.title_name ? { kind: 'titre', raw: article.title_name } : null,
-                            article.chapter_name ? { kind: 'chapitre', raw: article.chapter_name } : null,
-                            article.section_name ? { kind: 'section', raw: article.section_name } : null,
-                        ].filter(Boolean) as { kind: string; raw: string }[]);
-                        if (!levels.length) return null;
-                        const KIND: Record<string, string> = { titre: 'Titre', chapitre: 'Chapitre', section: 'Section', 'sous-section': 'Sous-section', paragraphe: 'Paragraphe', livre: 'Livre', partie: 'Partie' };
-                        // sépare « numéro — intitulé » (tiret cadratin — , demi-cadratin – ou simple -)
-                        const split = (raw: string) => {
-                            const m = raw.match(/^\s*(.*?)\s+[—–-]\s+(.*)$/);
-                            if (m) return { num: m[1].trim(), label: m[2].trim() };
-                            const r = raw.trim();
-                            // pas de tiret : un ordinal seul (PRELIMINAIRE, PREMIER, II, BIS…) est le numéro ; sinon un intitulé
-                            return /^(PREMIER|PREMIÈRE|PREMIERE|PRELIMINAIRE|PRÉLIMINAIRE|BIS|[IVXLC]+|\d+)$/i.test(r)
-                                ? { num: r, label: '' }
-                                : { num: '', label: r };
+                        if (!nodePath.length) return null;
+                        const KIND: Record<string, string> = { partie: 'Partie', livre: 'Livre', titre: 'Titre', chapitre: 'Chapitre', section: 'Section', 'sous-section': 'Sous-section', paragraphe: 'Paragraphe', division: '' };
+                        const fmt = (n: HierarchyNode) => {
+                            const kind = KIND[n.type] ?? n.type;
+                            const num = (n.numero || '').trim();
+                            const intit = (n.intitule || n.name || '').trim();
+                            // ne pas répéter le mot du type s'il est déjà dans l'intitulé (ex. « PREMIERE PARTIE »)
+                            const intitHasKind = (!!kind && new RegExp(`\\b${kind}\\b`, 'i').test(intit)) || /\bPARTIE\b/i.test(intit);
+                            const badge = num ? `${kind} ${num}`.trim() : (intitHasKind ? '' : kind);
+                            return { badge, label: intit };
                         };
                         return (
                             <div className="article-hierarchy" aria-label="Emplacement dans le code">
-                                {levels.map((lvl, i) => {
-                                    const { num, label } = split(lvl.raw);
-                                    const badge = `${KIND[lvl.kind] || lvl.kind}${num ? ' ' + num : ''}`;
+                                {nodePath.map((n) => {
+                                    const { badge, label } = fmt(n);
                                     return (
                                         <Link
-                                            key={i}
-                                            className={`ah-row ah-row--${lvl.kind}`}
-                                            to={`/code/${codeSlug}?node=${encodeURIComponent(lvl.raw)}`}
+                                            key={n.id}
+                                            className={`ah-row ah-row--${n.type}`}
+                                            to={`/code/${codeSlug}?node=${encodeURIComponent(n.name)}`}
                                         >
-                                            <span className={`ah-badge ah-badge--${lvl.kind}`}>{badge}</span>
+                                            {badge && <span className={`ah-badge ah-badge--${n.type}`}>{badge}</span>}
                                             <span className="ah-label">{label}</span>
                                         </Link>
                                     );
