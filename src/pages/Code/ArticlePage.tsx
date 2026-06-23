@@ -5,7 +5,7 @@ import LinkedLegalContent from '../../components/LinkedLegalContent/LinkedLegalC
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     ArrowLeft, ChevronLeft, ChevronRight,
-    GitCompare, Clock, Scale, Lock, FileText, Gavel, AlertCircle, X, ExternalLink, BookOpen
+    GitCompare, Clock, Scale, Lock, FileText, Gavel, AlertCircle, X, ExternalLink, BookOpen, Loader2
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import SEO from '../../components/SEO/SEO';
@@ -78,7 +78,7 @@ interface DoctrineLink {
         id: string;
         reference_complete: string;
         objet: string;
-        content_raw: string;
+        content_raw?: string; // chargé à la demande pour un connecté (gate DB par colonne)
     }
 }
 
@@ -312,7 +312,7 @@ const ArticlePage: React.FC = () => {
                         .from('article_doctrine_links')
                         .select(`
                             doctrine_id,
-                            doctrine:doctrine(id, reference_complete, objet, content_raw)
+                            doctrine:doctrine(id, reference_complete, objet)
                         `)
                         .eq('article_id', articleData.id);
                     if (doctrineData) setDoctrineLinks(doctrineData as unknown as DoctrineLink[]);
@@ -402,11 +402,25 @@ const ArticlePage: React.FC = () => {
         );
     };
 
-    const handleDoctrineClick = (doctrine: DoctrineLink['doctrine']) => {
+    const handleDoctrineClick = async (doctrine: DoctrineLink['doctrine']) => {
         if (!isAuthenticated) {
             setShowAuthModal(true);
-        } else {
-            setSelectedDoctrine(doctrine);
+            return;
+        }
+        // Ouvre d'abord (teaser), puis charge le corps à la demande. Le gate réel
+        // est en base : un anon ne peut pas lire content_raw (migration colonne).
+        setSelectedDoctrine(doctrine);
+        if (doctrine.content_raw === undefined) {
+            const { data } = await supabase
+                .from('doctrine')
+                .select('content_raw')
+                .eq('id', doctrine.id)
+                .single();
+            if (data?.content_raw != null) {
+                setSelectedDoctrine((prev) =>
+                    prev && prev.id === doctrine.id ? { ...prev, content_raw: data.content_raw } : prev
+                );
+            }
         }
     };
 
@@ -825,12 +839,18 @@ const ArticlePage: React.FC = () => {
                                         <strong>Objet :</strong> {selectedDoctrine.objet}
                                     </div>
                                 )}
-                                <div 
-                                    className="doctrine-text" 
-                                    dangerouslySetInnerHTML={{ 
-                                        __html: selectedDoctrine.content_raw.replace(/\n/g, '<br />') 
-                                    }} 
-                                />
+                                {selectedDoctrine.content_raw !== undefined ? (
+                                    <div
+                                        className="doctrine-text"
+                                        dangerouslySetInnerHTML={{
+                                            __html: selectedDoctrine.content_raw.replace(/\n/g, '<br />')
+                                        }}
+                                    />
+                                ) : (
+                                    <div className="doctrine-text" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#6b7280' }}>
+                                        <Loader2 size={18} className="spinner" /> Chargement du texte…
+                                    </div>
+                                )}
                             </div>
                         </motion.div>
                     </>

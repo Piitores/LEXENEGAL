@@ -14,8 +14,13 @@ interface DoctrineItem {
     service_emetteur: string;
     reference_complete: string;
     objet: string;
-    content_raw: string;
+    content_raw?: string; // chargé à la demande pour un connecté (gate DB par colonne)
 }
+
+// Colonnes teaser servies à tous (anon inclus). content_raw est EXCLU : l'anon n'a
+// plus le privilège de le lire (migration doctrine_gate_content_raw_columns) → on le
+// charge à la demande, seulement pour un connecté.
+const TEASER_COLUMNS = 'id, numero, annee, date, service_emetteur, reference_complete, objet, destinataire, signataire';
 
 const DoctrinePage: React.FC = () => {
     const navigate = useNavigate();
@@ -24,6 +29,9 @@ const DoctrinePage: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedDoctrine, setSelectedDoctrine] = useState<DoctrineItem | null>(null);
     const [expandedId, setExpandedId] = useState<string | null>(null);
+    // Corps (content_raw) chargés à la demande, par id — pas en masse.
+    const [bodies, setBodies] = useState<Record<string, string>>({});
+    const [loadingBodyId, setLoadingBodyId] = useState<string | null>(null);
     // En dev local on débloque la consultation (import.meta.env.DEV = false en prod).
     const [isAuthenticated, setIsAuthenticated] = useState(import.meta.env.DEV);
     const [showAuthModal, setShowAuthModal] = useState(false);
@@ -42,7 +50,7 @@ const DoctrinePage: React.FC = () => {
         try {
             const { data, error } = await supabase
                 .from('doctrine')
-                .select('*')
+                .select(TEASER_COLUMNS)
                 .order('annee', { ascending: false })
                 .order('date', { ascending: false });
 
@@ -55,12 +63,27 @@ const DoctrinePage: React.FC = () => {
         }
     };
 
-    const handleDoctrineClick = (doctrine: DoctrineItem) => {
+    const handleDoctrineClick = async (doctrine: DoctrineItem) => {
         if (!isAuthenticated) {
             setShowAuthModal(true);
-        } else {
-            // Accordéon : on déplie/replie la doctrine sous sa carte (repliée par défaut).
-            setExpandedId((prev) => (prev === doctrine.id ? null : doctrine.id));
+            return;
+        }
+        // Accordéon : on déplie/replie la doctrine sous sa carte (repliée par défaut).
+        const willExpand = expandedId !== doctrine.id;
+        setExpandedId(willExpand ? doctrine.id : null);
+        // Corps chargé à la demande (le gate réel est en base : un anon ne peut pas
+        // lire content_raw même en contournant ce JS).
+        if (willExpand && bodies[doctrine.id] === undefined) {
+            setLoadingBodyId(doctrine.id);
+            const { data } = await supabase
+                .from('doctrine')
+                .select('content_raw')
+                .eq('id', doctrine.id)
+                .single();
+            if (data?.content_raw != null) {
+                setBodies((prev) => ({ ...prev, [doctrine.id]: data.content_raw }));
+            }
+            setLoadingBodyId(null);
         }
     };
 
@@ -167,9 +190,16 @@ const DoctrinePage: React.FC = () => {
 
                                 {expandedId === item.id && (
                                     <div className="doctrine-card__content">
-                                        {item.content_raw.split('\n').map((paragraph, idx) => (
-                                            paragraph.trim() ? <p key={idx}>{paragraph}</p> : <br key={idx} />
-                                        ))}
+                                        {bodies[item.id] !== undefined ? (
+                                            bodies[item.id].split('\n').map((paragraph, idx) => (
+                                                paragraph.trim() ? <p key={idx}>{paragraph}</p> : <br key={idx} />
+                                            ))
+                                        ) : (
+                                            <div className="doctrine-loading" style={{ padding: '1.5rem' }}>
+                                                <Loader2 size={24} className="spinner" />
+                                                <p>{loadingBodyId === item.id ? 'Chargement du texte…' : 'Texte indisponible.'}</p>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -220,7 +250,7 @@ const DoctrinePage: React.FC = () => {
                                 <h3 style={{ marginBottom: '1.5rem', fontFamily: 'var(--font-heading)' }}>
                                     Objet : {selectedDoctrine.objet}
                                 </h3>
-                                {selectedDoctrine.content_raw.split('\n').map((paragraph, idx) => (
+                                {(bodies[selectedDoctrine.id] ?? selectedDoctrine.content_raw ?? '').split('\n').map((paragraph, idx) => (
                                     paragraph.trim() ? <p key={idx}>{paragraph}</p> : <br key={idx} />
                                 ))}
                             </div>
@@ -249,20 +279,21 @@ const DoctrinePage: React.FC = () => {
                             onClick={e => e.stopPropagation()}
                         >
                             <BookOpen size={48} color="#047857" style={{ margin: '0 auto 1rem' }} />
-                            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', fontFamily: 'var(--font-heading)' }}>Contenu Réservé</h2>
+                            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', fontFamily: 'var(--font-heading)' }}>Lecture réservée aux membres</h2>
                             <p style={{ color: '#4b5563', marginBottom: '1.5rem', lineHeight: 1.5 }}>
-                                La consultation de la doctrine fiscale nécessite d'être connecté à votre compte Lexenegal.
+                                Créez un <strong>compte gratuit</strong> pour lire l'intégralité de la doctrine fiscale
+                                (circulaires, notes et lettres de la DGID). L'objet et les références restent en accès libre.
                             </p>
                             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-                                <button 
-                                    onClick={() => setShowAuthModal(false)}
-                                    style={{ padding: '0.75rem 1.5rem', border: '1px solid #d1d5db', background: 'white', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}
-                                >
-                                    Fermer
-                                </button>
-                                <button 
-                                    onClick={() => navigate('/login')}
+                                <button
+                                    onClick={() => navigate('/signup')}
                                     style={{ padding: '0.75rem 1.5rem', border: 'none', background: '#047857', color: 'white', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}
+                                >
+                                    Créer un compte
+                                </button>
+                                <button
+                                    onClick={() => navigate('/login')}
+                                    style={{ padding: '0.75rem 1.5rem', border: '1px solid #d1d5db', background: 'white', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}
                                 >
                                     Se connecter
                                 </button>
