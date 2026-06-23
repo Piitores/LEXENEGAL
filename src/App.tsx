@@ -91,6 +91,15 @@ function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Retire le splash anti-FOUC une fois l'app React montée (le design est prêt).
+  useEffect(() => {
+    const splash = document.getElementById('app-splash');
+    if (!splash) return;
+    splash.classList.add('is-hidden');
+    const t = setTimeout(() => splash.remove(), 450);
+    return () => clearTimeout(t);
+  }, []);
+
   return (
     <HelmetProvider>
       <Router>

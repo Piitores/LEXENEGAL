@@ -146,7 +146,9 @@ const CodesListPage: React.FC = () => {
     const [codes, setCodes] = useState<LawCode[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
-    const [activeBase, setActiveBase] = useState<'codes' | 'loda' | 'communautaire'>('codes');
+    // Le Droit communautaire (OHADA) est désormais une entrée AUTONOME du header
+    // (hors Corpus National) → plus d'onglet « communautaire » dans ce hub.
+    const [activeBase, setActiveBase] = useState<'codes' | 'loda'>('codes');
     // Base LODA : filtre par branche, sections (par type) repliables, tri.
     const [lodaBranche, setLodaBranche] = useState<string | null>(null);
     const [lodaExpanded, setLodaExpanded] = useState<Set<string>>(new Set());
@@ -346,7 +348,6 @@ const CodesListPage: React.FC = () => {
                         <div className="bases-tabs">
                             <button className={`base-tab ${activeBase === 'codes' ? 'actif' : ''}`} onClick={() => setActiveBase('codes')}>Codes consolidés <span className="base-tab__count">{corpusCodes.length}</span></button>
                             <button className={`base-tab ${activeBase === 'loda' ? 'actif' : ''}`} onClick={() => setActiveBase('loda')}>LODA <span className="base-tab__count">{lodaTextes.length}</span></button>
-                            <button className={`base-tab ${activeBase === 'communautaire' ? 'actif' : ''}`} onClick={() => setActiveBase('communautaire')}>Droit communautaire <span className="base-tab__count">{communautaireTextes.length}</span></button>
                             <button className="base-tab base-tab--soon" disabled>JORS <span className="badge-soon">à venir</span></button>
                         </div>
 
@@ -410,14 +411,6 @@ const CodesListPage: React.FC = () => {
                         </div>
                         )}
 
-                        {activeBase === 'communautaire' && (
-                        <div className="base-panel">
-                            <p className="base-panel__sous-titre">actes uniformes &amp; réglementation communautaire (sous-régional)</p>
-                            {communautaireTextes.length > 0
-                                ? renderBaseListe(communautaireTextes, COMMUNAUTAIRE_TYPE_LABELS, COMMUNAUTAIRE_CATEGORIES)
-                                : <p className="base-vide">Aucun texte publié pour l'instant.</p>}
-                        </div>
-                        )}
                         </>
                     )}
                 </div>

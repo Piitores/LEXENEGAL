@@ -478,6 +478,11 @@ const CodePage: React.FC = () => {
                         </div>
                     ) : selectedNode ? (
                         <>
+                            {/* Présentation du texte (en tête du code, niveau racine) */}
+                            {breadcrumbs.length <= 1 && law && (
+                                <TextPresentation law={law} articleCount={totalArticles} />
+                            )}
+
                             {/* Breadcrumb */}
                             <div className="code-breadcrumb">
                                 {breadcrumbs.map((bc, i) => (
