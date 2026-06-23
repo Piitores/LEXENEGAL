@@ -17,7 +17,7 @@ const CORPUS: DDItem[] = [
 
 // Droit communautaire = sous-rubriques par organisation (OHADA dispo ; UEMOA / UA à venir)
 const COMMUNAUTAIRE: DDItem[] = [
-  { label: 'OHADA', to: '/search?q=OHADA' },
+  { label: 'OHADA', to: '/droit-communautaire' },
   { label: 'UEMOA', soon: true },
   { label: 'Union africaine (UA)', soon: true },
 ];

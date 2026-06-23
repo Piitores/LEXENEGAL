@@ -1,0 +1,138 @@
+/* ═══════════════════════════════════════════════════════════════════
+   PAGE DROIT COMMUNAUTAIRE (OHADA)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.comm-page {
+    min-height: 100vh;
+    padding-top: 100px;
+    background: #ffffff;
+}
+
+.comm-hero {
+    padding: 40px 0 48px;
+    background: linear-gradient(180deg, #f9fafb 0%, #ffffff 100%);
+    text-align: center;
+}
+
+.comm-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    background: rgba(4, 120, 87, 0.08);
+    color: #047857;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    border-radius: 20px;
+    margin-bottom: 18px;
+}
+
+.comm-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(1.9rem, 4.5vw, 2.8rem);
+    font-weight: 700;
+    color: #111827;
+    line-height: 1.18;
+    letter-spacing: -0.02em;
+    margin: 0 0 16px;
+}
+
+.comm-subtitle {
+    font-size: 1.05rem;
+    color: #6b7280;
+    line-height: 1.7;
+    max-width: 640px;
+    margin: 0 auto;
+}
+
+.comm-list {
+    padding: 16px 0 96px;
+}
+
+.comm-list__heading {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 24px;
+}
+
+.comm-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.comm-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 18px 18px;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
+    text-decoration: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.comm-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(4, 120, 87, 0.3);
+    box-shadow: 0 16px 36px -24px rgba(4, 120, 87, 0.4);
+}
+
+.comm-card__icon {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: 11px;
+    background: rgba(4, 120, 87, 0.08);
+    color: #047857;
+}
+
+.comm-card__title {
+    flex: 1;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: #111827;
+    line-height: 1.4;
+}
+
+.comm-card__arrow {
+    color: #9ca3af;
+    flex-shrink: 0;
+}
+
+.comm-card:hover .comm-card__arrow { color: #047857; }
+
+.comm-soon {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 28px;
+    font-size: 0.9rem;
+    color: #6b7280;
+}
+
+.comm-soon__pill {
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #b45309;
+    background: #fef3c7;
+    padding: 3px 10px;
+    border-radius: 20px;
+}
+
+.comm-loading { display: flex; justify-content: center; padding: 40px 0; }
+.comm-spin { color: #047857; animation: comm-rot 0.8s linear infinite; }
+@keyframes comm-rot { to { transform: rotate(360deg); } }
+.comm-empty { color: #9ca3af; }
+
+@media (max-width: 880px) { .comm-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .comm-grid { grid-template-columns: 1fr; } .comm-list { padding-bottom: 64px; } }
