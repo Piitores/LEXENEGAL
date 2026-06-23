@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     FolderPlus, Star, Search, Bell, BellOff,
     FileText, ChevronRight, Plus, ArrowLeft,
-    Loader2, AlertCircle
+    Loader2, AlertCircle, History
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import ConversionModal from '../../components/ConversionModal/ConversionModal';
@@ -63,6 +63,7 @@ const CabinetPage: React.FC = () => {
     const [favorites, setFavorites] = useState<Favorite[]>([]);
     const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
     const [annotations, setAnnotations] = useState<Annotation[]>([]);
+    const [recentViews, setRecentViews] = useState<any[]>([]);
 
     const [showNewFolderModal, setShowNewFolderModal] = useState(false);
     const [newFolderName, setNewFolderName] = useState('');
@@ -159,6 +160,34 @@ const CabinetPage: React.FC = () => {
                 ...a,
                 decision: a.decisions as any
             })));
+        }
+
+        // Consultations récentes : déduites du journal d'audit (action 'view_decision',
+        // resource_id = slug). Pas de table dédiée.
+        const { data: viewLogs } = await supabase
+            .from('audit_log')
+            .select('resource_id, created_at')
+            .eq('user_id', userId)
+            .eq('action', 'view_decision')
+            .order('created_at', { ascending: false })
+            .limit(50);
+
+        if (viewLogs && viewLogs.length) {
+            const seen = new Set<string>();
+            const slugs: string[] = [];
+            for (const log of viewLogs) {
+                const s = log.resource_id as string | null;
+                if (s && !seen.has(s)) { seen.add(s); slugs.push(s); }
+                if (slugs.length >= 6) break;
+            }
+            if (slugs.length) {
+                const { data: decs } = await supabase
+                    .from('decisions')
+                    .select('reference, slug, chambre, date_decision')
+                    .in('slug', slugs);
+                const bySlug = new Map((decs || []).map((d: any) => [d.slug, d]));
+                setRecentViews(slugs.map(s => bySlug.get(s)).filter(Boolean));
+            }
         }
     };
 
@@ -403,6 +432,40 @@ const CabinetPage: React.FC = () => {
                                     </div>
                                 ))}
                             </div>
+                        )}
+                    </motion.section>
+
+                    {/* BLOC 5: CONSULTATIONS RÉCENTES */}
+                    <motion.section
+                        className="bento-block bento-recent"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.5 }}
+                    >
+                        <div className="block-header">
+                            <h2><History size={20} /> Consultations Récentes</h2>
+                        </div>
+
+                        {recentViews.length === 0 ? (
+                            <div className="empty-state">
+                                <History size={32} strokeWidth={1} />
+                                <p>Vos décisions consultées apparaîtront ici.</p>
+                            </div>
+                        ) : (
+                            <ul className="favorites-list">
+                                {recentViews.map(dec => (
+                                    <li
+                                        key={dec.slug}
+                                        onClick={() => navigate(`/decision/${dec.slug}`)}
+                                    >
+                                        <div className="fav-info">
+                                            <span className="fav-ref">{dec.reference}</span>
+                                            <span className="fav-chamber">{dec.chambre}</span>
+                                        </div>
+                                        <ChevronRight size={16} />
+                                    </li>
+                                ))}
+                            </ul>
                         )}
                     </motion.section>
                 </div>

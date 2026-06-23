@@ -1,0 +1,111 @@
+.account-nudge {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 900;
+    max-width: 340px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px 18px;
+    background: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 14px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.14);
+}
+
+.account-nudge__close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #9CA3AF;
+    display: inline-flex;
+    padding: 4px;
+    border-radius: 6px;
+}
+.account-nudge__close:hover {
+    background: #F3F4F6;
+    color: #374151;
+}
+
+.account-nudge__icon {
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #ECFDF5;
+    color: #047857;
+}
+
+.account-nudge__body {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex: 1 1 190px;
+    padding-right: 14px;
+}
+.account-nudge__body strong {
+    font-size: 0.95rem;
+    color: #111827;
+}
+.account-nudge__body span {
+    font-size: 0.82rem;
+    color: #6B7280;
+    line-height: 1.4;
+}
+
+.account-nudge__actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    width: 100%;
+    margin-top: 4px;
+}
+.account-nudge__cta {
+    background: linear-gradient(135deg, #047857, #065F46);
+    color: #fff;
+    border: none;
+    border-radius: 9px;
+    padding: 9px 16px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+.account-nudge__cta:hover {
+    box-shadow: 0 6px 18px rgba(4, 120, 87, 0.25);
+    transform: translateY(-1px);
+}
+.account-nudge__link {
+    background: none;
+    border: none;
+    color: #047857;
+    font-size: 0.85rem;
+    cursor: pointer;
+    font-weight: 500;
+}
+.account-nudge__link:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 480px) {
+    .account-nudge {
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        max-width: none;
+    }
+}
+
+@media print {
+    .account-nudge {
+        display: none !important;
+    }
+}
