@@ -136,10 +136,12 @@ const AdminPage: React.FC = () => {
     const toggleUserTier = async (userId: string, currentTier: string | undefined) => {
         const newTier = currentTier === 'pro' ? 'free' : 'pro';
 
-        const { error } = await supabase
-            .from('profiles')
-            .update({ subscription_tier: newTier })
-            .eq('id', userId);
+        // Passe par la RPC sécurisée (les colonnes role/subscription_tier ne sont plus
+        // modifiables en direct par un compte authentifié — cf. migration anti-auto-promotion).
+        const { error } = await supabase.rpc('admin_set_subscription_tier', {
+            target: userId,
+            new_tier: newTier,
+        });
 
         if (!error) {
             setUsers(users.map(u =>
