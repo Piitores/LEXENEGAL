@@ -3,6 +3,8 @@ import { supabase } from '../../lib/supabase';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import './SearchPage.css';
+import { detectArticleRef, detectDecisionRef } from '../../lib/searchRefDetect';
+import { buildCodeIndex, normalizeToken, normalizeArticleNumber } from '../../lib/articleRefResolver';
 
 
 // Retire les balises HTML pour l'aperçu d'un article
@@ -31,6 +33,10 @@ interface ArticleHit {
     content: string;
 }
 
+type BestMatch =
+    | { kind: 'article'; article_number: string; slug: string; code_slug: string; code_title: string }
+    | { kind: 'decision'; reference: string; slug: string; date_decision: string; chambre: string; juridiction: string };
+
 const SearchPage: React.FC = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const queryParam = searchParams.get('q') || '';
@@ -50,6 +56,10 @@ const SearchPage: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [offset, setOffset] = useState(0);
+
+    // Détection de références structurées → carte « meilleur résultat »
+    const [codeIndex, setCodeIndex] = useState<Map<string, string>>(new Map());
+    const [bestMatch, setBestMatch] = useState<BestMatch | null>(null);
 
     const navigate = useNavigate();
 
@@ -158,6 +168,62 @@ const SearchPage: React.FC = () => {
             setActiveTab('decisions');
         }
     }, [results, articleResults, query, loading]);
+
+    // Index des codes (titres + alias DB `code_aliases` = source) pour la détection structurée.
+    useEffect(() => {
+        (async () => {
+            const { data: laws } = await supabase.from('laws_and_codes').select('slug, title, short_title').eq('is_active', true);
+            const idx = buildCodeIndex(laws || []);
+            const { data: aliases } = await supabase.from('code_aliases').select('code_slug, alias');
+            (aliases || []).forEach((a: any) => idx.set(normalizeToken(a.alias), a.code_slug));
+            setCodeIndex(idx);
+        })();
+    }, []);
+
+    // « Meilleur résultat » : référence structurée (article ou décision) → cible directe,
+    // en TÊTE et SANS occulter la liste FTS (condition proprio).
+    useEffect(() => {
+        const q = (query || '').trim();
+        setBestMatch(null);
+        if (q.length < 3) return;
+        let active = true;
+        (async () => {
+            // 1) Article : « article 24 AUDCG »
+            if (codeIndex.size) {
+                const art = detectArticleRef(q, codeIndex);
+                if (art) {
+                    const { data } = await supabase
+                        .from('articles')
+                        .select('article_number, slug, laws_and_codes!inner(slug, short_title)')
+                        .eq('laws_and_codes.slug', art.codeSlug)
+                        .limit(300);
+                    const hit = (data || []).find(
+                        (a: any) => normalizeArticleNumber(a.article_number) === normalizeArticleNumber(art.articleNumber),
+                    );
+                    if (hit && active) {
+                        setBestMatch({
+                            kind: 'article',
+                            article_number: hit.article_number,
+                            slug: hit.slug,
+                            code_slug: (hit as any).laws_and_codes?.slug || art.codeSlug,
+                            code_title: (hit as any).laws_and_codes?.short_title || art.codeSlug,
+                        });
+                        return;
+                    }
+                }
+            }
+            // 2) Décision : « arrêt 34 du 14 janvier 2005 »
+            const dec = detectDecisionRef(q);
+            if (dec && (dec.dateISO || dec.number)) {
+                let qb: any = supabase.from('decisions').select('reference, slug, date_decision, chambre, juridiction').limit(1);
+                if (dec.dateISO) qb = qb.eq('date_decision', dec.dateISO);
+                if (dec.number) qb = qb.ilike('reference', `%${dec.number}%`);
+                const { data } = await qb;
+                if (data && data[0] && active) setBestMatch({ kind: 'decision', ...(data[0] as any) });
+            }
+        })();
+        return () => { active = false; };
+    }, [query, codeIndex]);
 
     const selectTab = (tab: 'decisions' | 'articles') => {
         userPickedTab.current = true;
@@ -650,6 +716,37 @@ const SearchPage: React.FC = () => {
                         ))}
                     </div>
                 </div>
+
+                {/* MEILLEUR RÉSULTAT (référence structurée) — en tête, n'occulte pas la liste */}
+                {bestMatch && (
+                    <div
+                        className="best-match"
+                        onClick={() =>
+                            navigate(
+                                bestMatch.kind === 'article'
+                                    ? `/code/${bestMatch.code_slug}/${bestMatch.slug}`
+                                    : `/decision/${bestMatch.slug}`,
+                            )
+                        }
+                    >
+                        <span className="best-match__badge">★ Meilleur résultat</span>
+                        {bestMatch.kind === 'article' ? (
+                            <div className="best-match__body">
+                                <strong>Article {bestMatch.article_number}</strong>
+                                <span className="best-match__meta">{bestMatch.code_title}</span>
+                            </div>
+                        ) : (
+                            <div className="best-match__body">
+                                <strong>{bestMatch.reference}</strong>
+                                <span className="best-match__meta">
+                                    {[bestMatch.juridiction, bestMatch.chambre, bestMatch.date_decision && new Date(bestMatch.date_decision).toLocaleDateString('fr-FR')]
+                                        .filter(Boolean)
+                                        .join(' · ')}
+                                </span>
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {/* ONGLETS : Jurisprudence / Codes & articles */}
                 <div className="searchTabs" role="tablist">
