@@ -21,6 +21,7 @@ import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
 import { useBlockSelectAll } from './hooks/useBlockSelectAll';
 import SEO from './components/SEO/SEO';
 import AmbientEffects from './components/AmbientEffects/AmbientEffects';
+import AccountNudge from './components/AccountNudge/AccountNudge';
 import './App.css';
 
 // Gère le défilement à la navigation :
@@ -129,6 +130,7 @@ function App() {
             </Routes>
           </ErrorBoundary>
           <Footer />
+          <AccountNudge />
         </div>
         </BotBlocker>
       </Router>

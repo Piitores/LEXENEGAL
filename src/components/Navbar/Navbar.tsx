@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Search, BookOpen, Briefcase, Scale, Shield, LogOut, User } from 'lucide-react';
+import { Search, BookOpen, Scale, Shield, LogOut, User } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import useAuth from '../../hooks/useAuth';
 import LexenegalSymbol from '../LexenegalSymbol/LexenegalSymbol';
@@ -41,11 +41,6 @@ function Navbar({ scrolled }: { scrolled: boolean }) {
             <BookOpen size={16} />
             Corpus National
           </Link>
-          <Link to="/cabinet" className={`navbar__link ${location.pathname === '/cabinet' ? 'navbar__link--highlight' : ''}`} onClick={() => setMenuOpen(false)}>
-            <Briefcase size={16} />
-            Mon Cabinet
-          </Link>
-
           {/* Admin Link - Only visible for admins */}
           {isAdmin && (
             <Link to="/admin" className="navbar__link navbar__link--admin" onClick={() => setMenuOpen(false)}>
@@ -57,11 +52,11 @@ function Navbar({ scrolled }: { scrolled: boolean }) {
           {/* Auth Button */}
           {user ? (
             <div className="navbar__user-menu">
-              <span className="navbar__user-name">
+              <Link to="/cabinet" className="navbar__user-name" onClick={() => setMenuOpen(false)} title="Mon Cabinet">
                 <User size={16} />
                 {user.email?.split('@')[0]}
-              </span>
-              <button className="navbar__logout" onClick={handleLogout}>
+              </Link>
+              <button className="navbar__logout" onClick={handleLogout} title="Déconnexion">
                 <LogOut size={16} />
               </button>
             </div>
