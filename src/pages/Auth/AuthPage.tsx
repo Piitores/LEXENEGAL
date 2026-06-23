@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, User, ArrowRight, Check, Loader2 } from 'lucide-react';
@@ -8,7 +9,10 @@ import './AuthPage.css';
 type AuthMode = 'login' | 'register' | 'verify' | 'success';
 
 const AuthPage: React.FC = () => {
-    const [mode, setMode] = useState<AuthMode>('login');
+    const location = useLocation();
+    const navigate = useNavigate();
+    // Le mode initial dépend de la route : /signup → inscription, /login → connexion.
+    const [mode, setMode] = useState<AuthMode>(location.pathname === '/signup' ? 'register' : 'login');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [message, setMessage] = useState<string | null>(null);
@@ -24,6 +28,24 @@ const AuthPage: React.FC = () => {
     // OTP State
     const [otp, setOtp] = useState(['', '', '', '', '', '', '', '']);
     const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+    // Suit la route : passer de /login à /signup (via la navbar) bascule le mode,
+    // sans écraser un basculement manuel (le bouton interne ne change pas l'URL).
+    useEffect(() => {
+        if (mode === 'verify' || mode === 'success') return;
+        setMode(location.pathname === '/signup' ? 'register' : 'login');
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [location.pathname]);
+
+    // Si l'utilisateur est déjà connecté, inutile d'afficher la page de connexion.
+    useEffect(() => {
+        let active = true;
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (active && session) navigate('/', { replace: true });
+        });
+        return () => { active = false; };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const handleOtpChange = (index: number, value: string) => {
         // Allow only numbers

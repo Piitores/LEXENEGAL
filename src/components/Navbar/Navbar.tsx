@@ -30,6 +30,49 @@ const AUTOUR: DDItem[] = [
   { label: 'Fiches techniques', soon: true },
 ];
 
+// Composant de niveau module (ne pas définir dans Navbar : éviterait le remontage à chaque rendu).
+const NavDropdown: React.FC<{
+  id: string;
+  label: string;
+  icon: React.ReactNode;
+  items: DDItem[];
+  openDD: string | null;
+  setOpenDD: React.Dispatch<React.SetStateAction<string | null>>;
+  onNavigate: () => void;
+  wide?: boolean;
+}> = ({ id, label, icon, items, openDD, setOpenDD, onNavigate, wide }) => (
+  <div
+    className="nav-dd"
+    onMouseEnter={() => setOpenDD(id)}
+    onMouseLeave={() => setOpenDD((cur) => (cur === id ? null : cur))}
+  >
+    <button
+      type="button"
+      className="navbar__link nav-dd__btn"
+      aria-expanded={openDD === id}
+      onClick={() => setOpenDD((cur) => (cur === id ? null : id))}
+    >
+      {icon}
+      {label}
+      <ChevronDown size={14} className={`nav-dd__chevron ${openDD === id ? 'nav-dd__chevron--open' : ''}`} />
+    </button>
+    <div className={`nav-dd__panel ${wide ? 'nav-dd__panel--wide' : ''} ${openDD === id ? 'nav-dd__panel--open' : ''}`}>
+      {items.map((it) =>
+        it.soon ? (
+          <span key={it.label} className="nav-dd__item nav-dd__item--soon">
+            {it.label}
+            <span className="nav-dd__badge">à venir</span>
+          </span>
+        ) : (
+          <Link key={it.label} to={it.to!} className="nav-dd__item" onClick={onNavigate}>
+            {it.label}
+          </Link>
+        )
+      )}
+    </div>
+  </div>
+);
+
 function Navbar({ scrolled }: { scrolled: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [openDD, setOpenDD] = useState<string | null>(null);
@@ -41,46 +84,17 @@ function Navbar({ scrolled }: { scrolled: boolean }) {
   const isScrolled = scrolled || !isHome;
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/');
+    setMenuOpen(false);
+    try {
+      await supabase.auth.signOut();
+    } catch (e) {
+      console.warn('signOut error (on force la déconnexion):', e);
+    }
+    // Rechargement complet → état d'auth garanti propre (évite un état SPA résiduel).
+    window.location.assign('/');
   };
 
   const closeAll = () => { setMenuOpen(false); setOpenDD(null); };
-
-  const Dropdown = ({ id, label, icon, items, wide }: {
-    id: string; label: string; icon: React.ReactNode; items: DDItem[]; wide?: boolean;
-  }) => (
-    <div
-      className="nav-dd"
-      onMouseEnter={() => setOpenDD(id)}
-      onMouseLeave={() => setOpenDD((cur) => (cur === id ? null : cur))}
-    >
-      <button
-        type="button"
-        className="navbar__link nav-dd__btn"
-        aria-expanded={openDD === id}
-        onClick={() => setOpenDD((cur) => (cur === id ? null : id))}
-      >
-        {icon}
-        {label}
-        <ChevronDown size={14} className={`nav-dd__chevron ${openDD === id ? 'nav-dd__chevron--open' : ''}`} />
-      </button>
-      <div className={`nav-dd__panel ${wide ? 'nav-dd__panel--wide' : ''} ${openDD === id ? 'nav-dd__panel--open' : ''}`}>
-        {items.map((it) =>
-          it.soon ? (
-            <span key={it.label} className="nav-dd__item nav-dd__item--soon">
-              {it.label}
-              <span className="nav-dd__badge">à venir</span>
-            </span>
-          ) : (
-            <Link key={it.label} to={it.to!} className="nav-dd__item" onClick={closeAll}>
-              {it.label}
-            </Link>
-          )
-        )}
-      </div>
-    </div>
-  );
 
   return (
     <nav className={`navbar ${isScrolled ? 'navbar--scrolled' : ''}`}>
@@ -100,9 +114,9 @@ function Navbar({ scrolled }: { scrolled: boolean }) {
             Jurisprudence
           </Link>
 
-          <Dropdown id="corpus" label="Corpus National" icon={<BookOpen size={16} />} items={CORPUS} />
-          <Dropdown id="ohada" label="Droit communautaire" icon={<Globe2 size={16} />} items={COMMUNAUTAIRE} />
-          <Dropdown id="autour" label="Autour de la loi" icon={<FileText size={16} />} items={AUTOUR} />
+          <NavDropdown id="corpus" label="Corpus National" icon={<BookOpen size={16} />} items={CORPUS} openDD={openDD} setOpenDD={setOpenDD} onNavigate={closeAll} />
+          <NavDropdown id="ohada" label="Droit communautaire" icon={<Globe2 size={16} />} items={COMMUNAUTAIRE} openDD={openDD} setOpenDD={setOpenDD} onNavigate={closeAll} />
+          <NavDropdown id="autour" label="Autour de la loi" icon={<FileText size={16} />} items={AUTOUR} openDD={openDD} setOpenDD={setOpenDD} onNavigate={closeAll} />
 
           {/* Admin Link - Only visible for admins */}
           {isAdmin && (

@@ -111,7 +111,7 @@
    transition: 0.3s;
  }
 
- @media (max-width: 768px) {
+ @media (max-width: 1024px) {
    .navbar__menu {
      position: fixed;
      top: 0;
@@ -320,7 +320,7 @@
  }
 
  /* Dropdowns sur mobile : panneaux dépliés en ligne dans le menu plein écran */
- @media (max-width: 768px) {
+ @media (max-width: 1024px) {
    .navbar__menu {
      justify-content: flex-start;
      padding-top: 88px;
@@ -357,3 +357,5 @@
      justify-content: center;
    }
  }
+/* Le menu utilisateur (déconnexion) ne doit jamais être compressé/masqué */
+.navbar__user-menu { flex-shrink: 0; }

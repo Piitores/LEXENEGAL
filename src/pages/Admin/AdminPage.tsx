@@ -183,8 +183,12 @@ const AdminPage: React.FC = () => {
     };
 
     const handleLogout = async () => {
-        await supabase.auth.signOut();
-        navigate('/');
+        try {
+            await supabase.auth.signOut();
+        } catch (e) {
+            console.warn('signOut error (on force la déconnexion):', e);
+        }
+        window.location.assign('/');
     };
 
     const pendingReports = reports.filter(r => r.status === 'pending').length;
