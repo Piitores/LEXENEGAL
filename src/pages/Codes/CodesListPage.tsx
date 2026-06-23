@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../../lib/supabase';
 import {
     Scale, BookOpen, Users, Building, Briefcase, Radio, Pickaxe,
     FileText, ChevronRight, Loader2, Gavel, Landmark,
@@ -8,9 +8,6 @@ import {
 } from 'lucide-react';
 import './CodesListPage.css';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 interface LawCode {
     id: string;

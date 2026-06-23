@@ -1,13 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../../lib/supabase';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import './SearchPage.css';
 
-// --- CONFIG SUPABASE FTS ---
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Retire les balises HTML pour l'aperçu d'un article
 const stripHtml = (html: string) =>

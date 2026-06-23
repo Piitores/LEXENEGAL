@@ -5,7 +5,7 @@ import {
     ArrowLeft, ChevronRight, Search,
     BookOpen, FileText, ChevronDown, ExternalLink, Copy, Check
 } from 'lucide-react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../../lib/supabase';
 import SEO from '../../components/SEO/SEO';
 import CodeNavTree from '../../components/CodeNavTree/CodeNavTree';
 import {
@@ -16,9 +16,6 @@ import {
 import { useCopyAttribution, attributionFooter, articleUrl } from '../../hooks/useCopyAttribution';
 import './CodePage.css';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // ── Helpers article ──
 

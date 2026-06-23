@@ -1,13 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Search, Scale, BookOpen, ArrowRight, Loader2 } from 'lucide-react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../../lib/supabase';
 import './Hero.css';
 
-// Supabase client for Full-Text Search
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-const supabase = supabaseUrl ? createClient(supabaseUrl, supabaseAnonKey) : null;
 
 interface SearchResult {
   type: 'decision' | 'article';

@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Download, ArrowLeft, Copy, Scale, BookOpen, Printer, AlertCircle, FileText } from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../../lib/supabase';
 import LexenegalSymbol from '../../components/LexenegalSymbol/LexenegalSymbol';
 import SEO from '../../components/SEO/SEO';
 import DecisionActions from '../../components/DecisionActions/DecisionActions';
@@ -16,10 +16,6 @@ import AnnotationPanel from '../../components/AnnotationPanel/AnnotationPanel';
 import './DecisionPage.css';
 
 // --- CONFIG ---
-// Supabase client for articles
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://lphmualoyxetsgldccrw.supabase.co';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 interface ArticleInfo {
     id: string;

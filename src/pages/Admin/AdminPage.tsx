@@ -7,16 +7,13 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../../lib/supabase';
 import {
     BarChart3, Users, FileText, BookOpen, Shield,
     AlertTriangle, Crown, Loader2, LogOut, History, X, Star
 } from 'lucide-react';
 import './AdminPage.css';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 interface Stats {
     decisions: number;
