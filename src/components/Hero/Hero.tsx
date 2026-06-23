@@ -1,8 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Search, Scale, BookOpen, ArrowRight, Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import HeroSenegalStatic from './HeroSenegalStatic';
+import CanvasBoundary from './CanvasBoundary';
 import './Hero.css';
+
+// 3D backdrop is loaded only on the client, after mount, when motion is allowed.
+const HeroCanvas = lazy(() => import('./HeroCanvas'));
 
 
 interface SearchResult {
@@ -22,8 +27,20 @@ function Hero() {
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  // Gate the WebGL backdrop: client-only (avoids SSR/prerender), and disabled
+  // when the user prefers reduced motion (→ static silhouette instead).
+  const [enable3D, setEnable3D] = useState(false);
 
-  const suggestions = ['Abus de confiance', 'Licenciement', 'L.52'];
+  const suggestions = ['Licenciement', 'Article 5 COCC', 'Code pénal'];
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const apply = () => setEnable3D(!reduce.matches);
+    apply();
+    reduce.addEventListener?.('change', apply);
+    return () => reduce.removeEventListener?.('change', apply);
+  }, []);
 
   // Handle search with debounce
   useEffect(() => {
@@ -65,7 +82,7 @@ function Hero() {
                 id: hit.id,
                 title: hit.reference || 'Décision',
                 subtitle: `${hit.chambre || hit.juridiction || 'Juridiction'} · ${hit.date_decision ? new Date(hit.date_decision).getFullYear() : ''}`,
-                slug: hit.id // Use ID as slug for decisions
+                slug: hit.slug || hit.id,
               });
             });
           }
@@ -155,16 +172,15 @@ function Hero() {
         <circle cx="50%" cy="50%" r="1" className="hero__grid-dot" style={{ animationDelay: '3.5s' }} />
       </svg>
 
-      <div className="hero__bg-abstract"></div>
-
       <div className="hero__container container">
         <div className="hero__content animate-fade-up">
           <h1 className="hero__title">
-            La <span className="text-gradient">référence</span> numérique<br />
-            du droit sénégalais.
+            La <span className="text-gradient">mémoire juridique organisée</span><br />
+            du Sénégal.
           </h1>
           <p className="hero__subtitle">
-            LEXENEGAL n'est pas un outil. C'est la mémoire juridique organisée du Sénégal.
+            Codes, lois, jurisprudence et doctrine, réunis et vérifiés.{' '}
+            <strong>Lexenegal n'est pas qu'un outil</strong> : c'est la mémoire vivante du droit sénégalais.
           </p>
 
           {/* SPOTLIGHT SEARCH */}
@@ -243,6 +259,19 @@ function Hero() {
                 {tag}
               </button>
             ))}
+          </div>
+
+          {/* 3D stage — fragments épars → territoire Sénégal (décoratif, SEO-safe) */}
+          <div className="hero__stage" aria-hidden="true">
+            {enable3D ? (
+              <CanvasBoundary fallback={<HeroSenegalStatic />}>
+                <Suspense fallback={<HeroSenegalStatic />}>
+                  <HeroCanvas />
+                </Suspense>
+              </CanvasBoundary>
+            ) : (
+              <HeroSenegalStatic />
+            )}
           </div>
         </div>
       </div>
