@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import './Footer.css';
 
 function Footer() {
@@ -11,21 +12,22 @@ function Footer() {
           <div className="footer__brand">
             <h2 className="footer__logo">LEXENEGAL</h2>
             <p className="footer__desc">
-              L'excellence technologique au service de la transparence judiciaire.
+              La mémoire juridique organisée du Sénégal. Codes, lois, jurisprudence
+              et doctrine, réunis et vérifiés.
             </p>
           </div>
 
           <div className="footer__col">
-            <h4>Plateforme</h4>
-            <a href="#">Jurisprudence</a>
-            <a href="#">Législation</a>
-            <a href="#">Tarifs</a>
+            <h4>Explorer</h4>
+            <Link to="/search">Jurisprudence</Link>
+            <Link to="/codes">Codes &amp; lois</Link>
+            <Link to="/doctrine-fiscale">Doctrine</Link>
           </div>
           <div className="footer__col">
-            <h4>Légal</h4>
-            <a href="#">CGU</a>
-            <a href="#">Confidentialité</a>
-            <a href="#">Mentions Légales</a>
+            <h4>Compte</h4>
+            <Link to="/signup">Créer un compte</Link>
+            <Link to="/login">Se connecter</Link>
+            <Link to="/cabinet">Mon Cabinet</Link>
           </div>
           <div className="footer__col">
             <h4>Contact</h4>
@@ -36,7 +38,7 @@ function Footer() {
 
         <div className="footer__bottom">
           <p>© {currentYear} LEXENEGAL. Tous droits réservés.</p>
-          <p className="footer__signature">Source Certifiée: LEXENEGAL.SN</p>
+          <p className="footer__signature">Source Certifiée : LEXENEGAL.SN</p>
         </div>
       </div>
     </footer>

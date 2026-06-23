@@ -23,7 +23,7 @@ function Hero() {
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  const suggestions = ['Abus de confiance', 'Licenciement', 'L.52'];
+  const suggestions = ['Licenciement', 'Article 5 COCC', 'Code pénal'];
 
   // Handle search with debounce
   useEffect(() => {
@@ -65,7 +65,7 @@ function Hero() {
                 id: hit.id,
                 title: hit.reference || 'Décision',
                 subtitle: `${hit.chambre || hit.juridiction || 'Juridiction'} · ${hit.date_decision ? new Date(hit.date_decision).getFullYear() : ''}`,
-                slug: hit.id // Use ID as slug for decisions
+                slug: hit.slug || hit.id,
               });
             });
           }
@@ -160,11 +160,12 @@ function Hero() {
       <div className="hero__container container">
         <div className="hero__content animate-fade-up">
           <h1 className="hero__title">
-            La <span className="text-gradient">référence</span> numérique<br />
-            du droit sénégalais.
+            La <span className="text-gradient">mémoire juridique organisée</span><br />
+            du Sénégal.
           </h1>
           <p className="hero__subtitle">
-            LEXENEGAL n'est pas un outil. C'est la mémoire juridique organisée du Sénégal.
+            Codes, lois, jurisprudence et doctrine, réunis et vérifiés.{' '}
+            <strong>Lexenegal n'est pas qu'un outil</strong> : c'est la mémoire vivante du droit sénégalais.
           </p>
 
           {/* SPOTLIGHT SEARCH */}
