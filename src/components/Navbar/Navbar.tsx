@@ -1,51 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Search, BookOpen, Briefcase, Scale, Shield, LogOut, User } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import useAuth from '../../hooks/useAuth';
 import LexenegalSymbol from '../LexenegalSymbol/LexenegalSymbol';
 import './Navbar.css';
 
 function Navbar({ scrolled }: { scrolled: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   const isHome = location.pathname === '/';
   const isScrolled = scrolled || !isHome;
 
-  useEffect(() => {
-    checkUser();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      checkUser();
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const checkUser = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    setUser(session?.user || null);
-
-    if (session?.user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', session.user.id)
-        .single();
-
-      setIsAdmin(profile?.role === 'admin');
-    } else {
-      setIsAdmin(false);
-    }
-  };
-
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    setUser(null);
-    setIsAdmin(false);
     navigate('/');
   };
 
