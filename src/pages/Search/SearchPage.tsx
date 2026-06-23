@@ -37,6 +37,14 @@ type BestMatch =
     | { kind: 'article'; article_number: string; slug: string; code_slug: string; code_title: string }
     | { kind: 'decision'; reference: string; slug: string; date_decision: string; chambre: string; juridiction: string };
 
+interface DoctrineHit {
+    id: string;
+    reference_complete: string;
+    objet: string | null;
+    annee: number | null;
+    date: string | null;
+}
+
 const SearchPage: React.FC = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const queryParam = searchParams.get('q') || '';
@@ -46,9 +54,11 @@ const SearchPage: React.FC = () => {
     const [totalHits, setTotalHits] = useState(0);
 
     // Onglet actif + résultats "Codes & articles"
-    const [activeTab, setActiveTab] = useState<'decisions' | 'articles'>('decisions');
+    const [activeTab, setActiveTab] = useState<'decisions' | 'articles' | 'doctrine'>('decisions');
     const [articleResults, setArticleResults] = useState<ArticleHit[]>([]);
     const [articlesLoading, setArticlesLoading] = useState(false);
+    const [doctrineResults, setDoctrineResults] = useState<DoctrineHit[]>([]);
+    const [doctrineLoading, setDoctrineLoading] = useState(false);
     // L'utilisateur a-t-il choisi un onglet manuellement ? (sinon on choisit pour lui selon la requête)
     const userPickedTab = useRef(false);
     const [suggestions, setSuggestions] = useState<Decision[]>([]);
@@ -225,7 +235,29 @@ const SearchPage: React.FC = () => {
         return () => { active = false; };
     }, [query, codeIndex]);
 
-    const selectTab = (tab: 'decisions' | 'articles') => {
+    // Pilier DOCTRINE (fédération) : recherche FTS dédiée (RPC search_doctrine).
+    useEffect(() => {
+        const term = (query || '').trim();
+        if (term.length < 3) { setDoctrineResults([]); return; }
+        let cancelled = false;
+        setDoctrineLoading(true);
+        const timer = setTimeout(async () => {
+            try {
+                const { data, error: dErr } = await supabase.rpc('search_doctrine', { search_query: term, result_limit: 30 });
+                if (cancelled) return;
+                if (dErr) throw dErr;
+                setDoctrineResults((data || []) as DoctrineHit[]);
+            } catch (e) {
+                if (!cancelled) setDoctrineResults([]);
+                console.warn('search_doctrine error:', e);
+            } finally {
+                if (!cancelled) setDoctrineLoading(false);
+            }
+        }, 300);
+        return () => { cancelled = true; clearTimeout(timer); };
+    }, [query]);
+
+    const selectTab = (tab: 'decisions' | 'articles' | 'doctrine') => {
         userPickedTab.current = true;
         setActiveTab(tab);
     };
@@ -766,11 +798,19 @@ const SearchPage: React.FC = () => {
                     >
                         Codes &amp; articles <span className="searchTabCount">{articleResults.length}</span>
                     </button>
+                    <button
+                        role="tab"
+                        aria-selected={activeTab === 'doctrine'}
+                        className={`searchTab ${activeTab === 'doctrine' ? 'active' : ''}`}
+                        onClick={() => selectTab('doctrine')}
+                    >
+                        Doctrine <span className="searchTabCount">{doctrineResults.length}</span>
+                    </button>
                 </div>
 
                 <div className="resultsToolbar">
                     <div className="resultsCount">
-                        <span className="count-number">{activeTab === 'decisions' ? totalHits : articleResults.length}</span> résultats
+                        <span className="count-number">{activeTab === 'decisions' ? totalHits : activeTab === 'articles' ? articleResults.length : doctrineResults.length}</span> résultats
                     </div>
                     {activeTab === 'decisions' && (
                         <div className="sortControls">
@@ -878,6 +918,28 @@ const SearchPage: React.FC = () => {
                             <div className="emptyState"><p>Aucun article trouvé pour «&nbsp;{query}&nbsp;».</p></div>
                         )}
                         {articlesLoading && <div className="loadingState"><div className="spinner"></div></div>}
+                    </div>
+                )}
+
+                {activeTab === 'doctrine' && (
+                    <div className="resultsGrid">
+                        {doctrineResults.map((d) => (
+                            <div
+                                key={d.id}
+                                className="resultCard linear-card"
+                                onClick={() => navigate('/doctrine-fiscale')}
+                            >
+                                <div className="cardHeader">
+                                    <span className="cardRef">{d.reference_complete}</span>
+                                    {d.annee && <span className="cardDate">{d.annee}</span>}
+                                </div>
+                                {d.objet && <p className="cardSnippet">{d.objet}</p>}
+                            </div>
+                        ))}
+                        {!doctrineLoading && doctrineResults.length === 0 && (
+                            <div className="emptyState"><p>Aucune doctrine trouvée pour «&nbsp;{query}&nbsp;».</p></div>
+                        )}
+                        {doctrineLoading && <div className="loadingState"><div className="spinner"></div></div>}
                     </div>
                 )}
             </div>
