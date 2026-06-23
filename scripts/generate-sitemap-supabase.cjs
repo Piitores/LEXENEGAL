@@ -92,8 +92,8 @@ async function generateSitemap() {
         { url: '/', priority: '1.0', changefreq: 'daily' },
         { url: '/search', priority: '0.9', changefreq: 'daily' },
         { url: '/codes', priority: '0.9', changefreq: 'daily' },
-        { url: '/solutions', priority: '0.7', changefreq: 'monthly' },
-        { url: '/espace-professionnel', priority: '0.7', changefreq: 'monthly' },
+        { url: '/droit-communautaire', priority: '0.8', changefreq: 'weekly' },
+        { url: '/doctrine-fiscale', priority: '0.8', changefreq: 'weekly' },
     ];
 
     // Build XML
