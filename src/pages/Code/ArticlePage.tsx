@@ -805,7 +805,7 @@ const ArticlePage: React.FC = () => {
                 onClose={() => setShowConversionModal(false)}
                 onRequestAccess={() => {
                     setShowConversionModal(false);
-                    navigate('/espace-professionnel#contact');
+                    navigate('/solliciter-acces');
                 }}
             />
 
