@@ -9,7 +9,7 @@
   --color-bg-alt: #F9FAFB;
   --color-bg-emerald: #F0FDF4;
   --color-accent: #047857;
-  --color-accent-dark: #064E3B;
+  /* --color-accent-dark défini dans tokens.css (#065F46) — source unique */
   --color-text-main: #1A1A1A;
   --color-text-light: #4B5563;
   --color-text-muted: #9CA3AF;

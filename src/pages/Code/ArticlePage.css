@@ -582,13 +582,14 @@
 
 /* Variables Lexenegal */
 .article-text {
-    --emerald-prestige: #047857;
-    --emerald-dark: #065f46;
-    --emerald-light: #10B981;
-    --noir-charbon: #1A1A1A;
-    --gris-texte: #374151;
-    --gris-clair: #E5E7EB;
-    --gris-elegant: #F8F9FA;
+    /* Alias → tokens centralisés (src/styles/tokens.css) */
+    --emerald-prestige: var(--color-accent);
+    --emerald-dark: var(--color-accent-dark);
+    --emerald-light: var(--color-accent-light);
+    --noir-charbon: var(--color-text);
+    --gris-texte: var(--color-text-strong);
+    --gris-clair: var(--color-border);
+    --gris-elegant: var(--color-bg-subtle);
 }
 
 /* ─────────────────────────────────────────────────────

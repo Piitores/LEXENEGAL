@@ -8,14 +8,15 @@
    VARIABLES DE COULEURS LEXENEGAL
    ───────────────────────────────────────────────────── */
 :root {
-    --emerald-prestige: #047857;
-    --emerald-dark: #065f46;
-    --noir-charbon: #1A1A1A;
-    --gris-texte: #374151;
-    --blanc-pur: #FFFFFF;
-    --gris-elegant: #F8F9FA;
-    --gris-clair: #E5E7EB;
-    --or-subtil: #D4AF37;
+    /* Alias → tokens centralisés (src/styles/tokens.css) */
+    --emerald-prestige: var(--color-accent);
+    --emerald-dark: var(--color-accent-dark);
+    --noir-charbon: var(--color-text);
+    --gris-texte: var(--color-text-strong);
+    --blanc-pur: var(--color-bg);
+    --gris-elegant: var(--color-bg-subtle);
+    --gris-clair: var(--color-border);
+    --or-subtil: var(--color-gold);
 }
 
 /* ─────────────────────────────────────────────────────

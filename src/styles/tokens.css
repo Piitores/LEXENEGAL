@@ -1,0 +1,55 @@
+/* =========================================================
+   LEXENEGAL — DESIGN TOKENS (source unique)
+   Charte : pages/Charte-Production-Textes.md
+   Toute couleur/police/espacement passe par ces variables.
+   ========================================================= */
+:root {
+  /* --- Accent émeraude (identité) --- */
+  --color-accent: #047857;
+  --color-accent-dark: #065F46;
+  --color-accent-light: #10B981;
+  --color-accent-50: #ECFDF5;
+  --color-accent-wash: rgba(4, 120, 87, 0.08);
+  --color-accent-wash-soft: rgba(4, 120, 87, 0.04);
+
+  /* --- Neutres --- */
+  --color-text: #111827;          /* corps / titres */
+  --color-text-strong: #374151;   /* texte appuyé secondaire */
+  --color-text-secondary: #6B7280;
+  --color-text-faint: #9CA3AF;
+  --color-border: #E5E7EB;
+  --color-border-light: #F0F1F3;
+  --color-bg: #FFFFFF;
+  --color-bg-subtle: #F8F9FB;
+
+  /* --- États sémantiques (charte) --- */
+  --color-danger: #DC2626;        /* mention « Abrogé » */
+  --color-danger-strong: #991B1B;
+  --nota-bg: #FEF3C7;             /* nota légale = ambré */
+  --nota-border: #F59E0B;
+  --nota-text: #B45309;
+  --color-gold: #D4AF37;          /* indicateur de modification */
+
+  /* --- Typographie : 3 rôles --- */
+  --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'Georgia', 'Times New Roman', serif;
+
+  /* --- Espacement --- */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+
+  /* --- Rayons --- */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+
+  /* --- Ombres --- */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.08);
+}
