@@ -8,7 +8,7 @@ import './ScrollReveal.css';
 
 /* ─── Header ─── */
 
-const RevealHeader: React.FC<{ translate: MotionValue<number> }> = ({ translate }) => (
+const RevealHeader: React.FC<{ translate: number | MotionValue<number> }> = ({ translate }) => (
     <motion.div style={{ translateY: translate }} className="scroll-reveal__header">
         <span className="scroll-reveal__badge">
             <Sparkles size={12} />
@@ -26,8 +26,8 @@ const RevealHeader: React.FC<{ translate: MotionValue<number> }> = ({ translate 
 );
 
 const RevealCard: React.FC<{
-    rotate: MotionValue<number>;
-    scale: MotionValue<number>;
+    rotate: number | MotionValue<number>;
+    scale: number | MotionValue<number>;
     children: React.ReactNode;
 }> = ({ rotate, scale, children }) => (
     <motion.div style={{ rotateX: rotate, scale }} className="scroll-reveal__card">
@@ -36,10 +36,10 @@ const RevealCard: React.FC<{
 );
 
 /* ═══════════════════════════════════════════════════════════════════
-   LEFT PANEL — Jurisprudence Filter UI
+   LEFT PANEL — Jurisprudence Filter UI  (données réelles)
    ═══════════════════════════════════════════════════════════════════ */
 
-const CHAMBRES = ['Sociale', 'Civile', 'Pénale', 'Commerce'];
+const CHAMBRES = ['Sociale', 'Civile', 'Pénale', 'Commerciale'];
 
 const JurisprudencePanel: React.FC = () => {
     const [activeChambres, setActiveChambres] = useState(['Sociale']);
@@ -54,13 +54,13 @@ const JurisprudencePanel: React.FC = () => {
             <div className="pillar__header">
                 <Scale size={13} />
                 <span>Jurisprudence</span>
-                <span className="pillar__count">10 000+ décisions</span>
+                <span className="pillar__count">11 325 décisions</span>
             </div>
 
             {/* Search bar */}
             <div className="pillar__search">
                 <Search size={12} />
-                <span className="pillar__search-text">licenciement abusif...</span>
+                <span className="pillar__search-text">licenciement irrégulier...</span>
                 <span className="pillar__search-cursor" />
             </div>
 
@@ -69,14 +69,14 @@ const JurisprudencePanel: React.FC = () => {
                 <div className="filter-block__label">Juridiction</div>
                 <div className="filter-select">
                     <Landmark size={11} />
-                    <span>Cour Suprême</span>
+                    <span>Cour suprême</span>
                     <ChevronDown size={11} />
                 </div>
             </div>
 
             {/* Chambre chips */}
             <div className="filter-block">
-                <div className="filter-block__label">Chambre</div>
+                <div className="filter-block__label">Matière</div>
                 <div className="filter-chips">
                     {CHAMBRES.map(c => (
                         <button
@@ -98,31 +98,31 @@ const JurisprudencePanel: React.FC = () => {
                         <div className="range-thumb range-thumb--left" />
                         <div className="range-thumb range-thumb--right" />
                     </div>
-                    <span>2024</span>
+                    <span>2025</span>
                 </div>
             </div>
 
-            {/* Result count divider */}
+            {/* Result divider */}
             <div className="result-divider">
-                <span>52 résultats · Chambre Sociale</span>
+                <span>Cour suprême · Chambre sociale</span>
             </div>
 
-            {/* Result previews */}
+            {/* Result previews (références réelles) */}
             <div className="result-list">
                 <div className="result-card result-card--active">
-                    <div className="result-card__ref">Arrêt n° 04 CS</div>
-                    <div className="result-card__subject">Licenciement — Procédure irrégulière</div>
+                    <div className="result-card__ref">Arrêt n° 24</div>
+                    <div className="result-card__subject">Licenciement d'un délégué du personnel sans autorisation</div>
                     <div className="result-card__meta">
-                        <span>Cour Suprême</span>
-                        <span>2008</span>
+                        <span>Cour suprême · Sociale</span>
+                        <span>2024</span>
                     </div>
                 </div>
                 <div className="result-card">
-                    <div className="result-card__ref">Arrêt n° 17 CS</div>
-                    <div className="result-card__subject">Contrat à durée déterminée — Rupture</div>
+                    <div className="result-card__ref">Arrêt n° 40</div>
+                    <div className="result-card__subject">Licenciement collectif — Contrôleurs (CDG)</div>
                     <div className="result-card__meta">
-                        <span>Cour Suprême</span>
-                        <span>2012</span>
+                        <span>Cour suprême · Sociale</span>
+                        <span>2024</span>
                     </div>
                 </div>
             </div>
@@ -131,7 +131,7 @@ const JurisprudencePanel: React.FC = () => {
 };
 
 /* ═══════════════════════════════════════════════════════════════════
-   RIGHT PANEL — Code Tree Navigator
+   RIGHT PANEL — Code Tree Navigator  (Code du Travail réel)
    ═══════════════════════════════════════════════════════════════════ */
 
 interface TreeItemProps {
@@ -164,7 +164,7 @@ const CodeTreePanel: React.FC = () => (
         <div className="pillar__header pillar__header--corpus">
             <BookOpen size={13} />
             <span>Corpus National</span>
-            <span className="pillar__count">10 codes</span>
+            <span className="pillar__count">11 codes</span>
         </div>
 
         {/* Code selector */}
@@ -172,45 +172,59 @@ const CodeTreePanel: React.FC = () => (
             <Briefcase size={12} />
             <div className="code-selector__info">
                 <span className="code-selector__name">Code du Travail</span>
-                <span className="code-selector__meta">Loi n° 97-17 · 389 articles</span>
+                <span className="code-selector__meta">Loi n° 97-17 · code consolidé</span>
             </div>
             <ChevronDown size={11} />
         </div>
 
-        {/* Tree structure */}
+        {/* Tree structure (réelle) */}
         <div className="code-tree">
-            <TreeItem label="Titre I — Généralités" level={1} count="12 art." />
-            <TreeItem label="Titre II — Contrat de travail" level={1} expanded>
-                <TreeItem label="Chapitre 1 — Formation" level={2} />
-                <TreeItem label="Chapitre 2 — Exécution du contrat" level={2} />
-                <TreeItem label="Chapitre 3 — Rupture" level={2} expanded active>
-                    <TreeItem label="Art. L.51 — Résiliation d'accord parties" level={3} />
-                    <TreeItem label="Art. L.52 — Licenciement individuel" level={3} active />
-                    <TreeItem label="Art. L.53 — Préavis légal" level={3} />
+            <TreeItem label="Titre II — Des syndicats professionnels" level={1} />
+            <TreeItem label="Titre III — Du contrat de travail" level={1} expanded>
+                <TreeItem label="Chapitre I — Dispositions générales" level={2} count="6 art." />
+                <TreeItem label="Chapitre II — De l'engagement à l'essai" level={2} count="5 art." />
+                <TreeItem label="Chapitre III — Du contrat à durée déterminée" level={2} count="8 art." />
+                <TreeItem label="Chapitre IV — Du contrat à durée indéterminée" level={2} expanded active>
+                    <TreeItem label="Art. L.49 — Définition du CDI" level={3} />
+                    <TreeItem label="Art. L.50 — Résiliation & préavis" level={3} />
+                    <TreeItem label="Art. L.51 — Licenciement irrégulier" level={3} active />
                 </TreeItem>
             </TreeItem>
-            <TreeItem label="Titre III — Contrats spéciaux" level={1} count="24 art." />
-            <TreeItem label="Titre IV — Conditions de travail" level={1} count="31 art." />
+            <TreeItem label="Titre IV — De l'apprentissage et la formation" level={1} />
         </div>
     </div>
 );
 
 /* ═══════════════════════════════════════════════════════════════════
-   DUAL PILLAR MOSAIC — Two-panel layout
+   DUAL PILLAR MOSAIC — convergence des deux piliers au scroll
    ═══════════════════════════════════════════════════════════════════ */
 
-const DualPillarMosaic: React.FC = () => (
+interface MosaicProps {
+    animate: boolean;
+    leftX: MotionValue<number>;
+    rightX: MotionValue<number>;
+    opacity: MotionValue<number>;
+    hubScale: MotionValue<number>;
+    connector: MotionValue<number>;
+}
+
+const DualPillarMosaic: React.FC<MosaicProps> = ({ animate, leftX, rightX, opacity, hubScale, connector }) => (
     <div className="dual-pillar">
-        <JurisprudencePanel />
+        <motion.div className="pillar-wrap" style={animate ? { x: leftX, opacity } : undefined}>
+            <JurisprudencePanel />
+        </motion.div>
 
         <div className="dual-pillar__divider">
-            <div className="dual-pillar__hub">
+            <motion.div className="dual-pillar__connector" style={animate ? { scaleX: connector } : undefined} />
+            <motion.div className="dual-pillar__hub" style={animate ? { scale: hubScale } : undefined}>
                 <div className="dual-pillar__hub-ring" />
                 <div className="dual-pillar__hub-core"><span>L</span></div>
-            </div>
+            </motion.div>
         </div>
 
-        <CodeTreePanel />
+        <motion.div className="pillar-wrap" style={animate ? { x: rightX, opacity } : undefined}>
+            <CodeTreePanel />
+        </motion.div>
     </div>
 );
 
@@ -219,25 +233,49 @@ const DualPillarMosaic: React.FC = () => (
 const ScrollReveal: React.FC = () => {
     const containerRef = useRef<HTMLDivElement>(null);
     const [isMobile, setIsMobile] = useState(false);
+    const [reduced, setReduced] = useState(false);
 
     useEffect(() => {
         const checkMobile = () => setIsMobile(window.innerWidth <= 768);
         checkMobile();
         window.addEventListener('resize', checkMobile);
-        return () => window.removeEventListener('resize', checkMobile);
+        const mq = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+        const applyReduced = () => setReduced(!!mq?.matches);
+        applyReduced();
+        mq?.addEventListener?.('change', applyReduced);
+        return () => {
+            window.removeEventListener('resize', checkMobile);
+            mq?.removeEventListener?.('change', applyReduced);
+        };
     }, []);
 
     const { scrollYProgress } = useScroll({ target: containerRef });
-    const rotate = useTransform(scrollYProgress, [0, 1], [20, 0]);
-    const scale = useTransform(scrollYProgress, [0, 1], isMobile ? [0.7, 0.9] : [1.05, 1]);
+    const rotate = useTransform(scrollYProgress, [0, 1], [18, 0]);
+    const scale = useTransform(scrollYProgress, [0, 1], isMobile ? [0.78, 0.94] : [1.04, 1]);
     const translate = useTransform(scrollYProgress, [0, 1], [0, -100]);
+
+    // Convergence : les deux piliers arrivent écartés/estompés puis se rejoignent.
+    const leftX = useTransform(scrollYProgress, [0, 0.6], [-70, 0]);
+    const rightX = useTransform(scrollYProgress, [0, 0.6], [70, 0]);
+    const pillarsOpacity = useTransform(scrollYProgress, [0, 0.45], [0, 1]);
+    const hubScale = useTransform(scrollYProgress, [0.4, 0.78], [0.4, 1]);
+    const connector = useTransform(scrollYProgress, [0.45, 0.85], [0, 1]);
+
+    const animate = !isMobile && !reduced;
 
     return (
         <div className="scroll-reveal" ref={containerRef}>
             <div className="scroll-reveal__inner">
-                <RevealHeader translate={translate} />
-                <RevealCard rotate={rotate} scale={scale}>
-                    <DualPillarMosaic />
+                <RevealHeader translate={reduced ? 0 : translate} />
+                <RevealCard rotate={reduced ? 0 : rotate} scale={reduced ? 1 : scale}>
+                    <DualPillarMosaic
+                        animate={animate}
+                        leftX={leftX}
+                        rightX={rightX}
+                        opacity={pillarsOpacity}
+                        hubScale={hubScale}
+                        connector={connector}
+                    />
                 </RevealCard>
             </div>
         </div>

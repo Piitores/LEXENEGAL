@@ -92,26 +92,26 @@ const Manifeste: React.FC = () => {
                     viewport={{ once: true, amount: 0.5 }}
                     transition={{ duration: 0.6, delay: 0.2 }}
                 >
-                    L'Équité par la Clarté
+                    Pas seulement un outil
                 </motion.h3>
 
                 <blockquote className="manifeste__text">
                     <MagicParagraph
-                        text="Au carrefour de la tradition juridique et de l'innovation, nous croyons que le droit ne doit plus être une matière opaque. Notre mission est de restaurer la clarté là où régnait la complexité."
+                        text="Pendant longtemps, le droit sénégalais est resté épars : des décisions dispersées, des textes difficiles d'accès, une mémoire fragmentée. Une règle n'a de valeur que si chacun peut la retrouver."
                         containerRef={sectionRef}
                         offsetStart="start 0.85"
                         offsetEnd="start 0.45"
                     />
 
                     <MagicParagraph
-                        text="En éditant chaque décision avec la précision due aux grands arrêts, nous offrons aux acteurs du droit sénégalais — magistrats, avocats et citoyens — un instrument de vérité."
+                        text="Lexenegal réunit, vérifie et organise cette mémoire : la jurisprudence et les textes du Sénégal, édités avec rigueur et reliés entre eux, pour les magistrats, les avocats, les étudiants et les citoyens."
                         containerRef={sectionRef}
                         offsetStart="start 0.55"
                         offsetEnd="start 0.15"
                     />
 
                     <MagicParagraph
-                        text="Lexenegal n'est pas seulement une base de données ; c'est l'engagement d'une justice accessible, documentée et technologiquement souveraine."
+                        text="Lexenegal n'est pas qu'un outil. C'est la mémoire juridique organisée du Sénégal, pour qu'aucune règle ne se perde."
                         containerRef={sectionRef}
                         offsetStart="start 0.25"
                         offsetEnd="end 0.75"
@@ -126,7 +126,7 @@ const Manifeste: React.FC = () => {
                     viewport={{ once: true, amount: 0.5 }}
                     transition={{ duration: 0.6, delay: 0.3 }}
                 >
-                    — Le Manifeste Lexenegal
+                    Le Manifeste Lexenegal
                 </motion.div>
             </div>
         </section>

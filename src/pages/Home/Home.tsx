@@ -1,52 +1,40 @@
 import React from 'react';
 import Hero from '../../components/Hero/Hero';
 import ScrollReveal from '../../components/ScrollReveal/ScrollReveal';
-import MemoireSection from '../../components/MemoireSection/MemoireSection';
-import ArsenalSection from '../../components/ArsenalSection/ArsenalSection';
-import SecurityStandards from '../../components/Trust/SecurityStandards';
-import Ecosystem from '../../components/Ecosystem/Ecosystem';
+import PiliersAccess from '../../components/Piliers/PiliersAccess';
+import RecentlyPublished from '../../components/RecentlyPublished/RecentlyPublished';
 import Manifeste from '../../components/Manifeste/Manifeste';
+import Testimonials from '../../components/Testimonials/Testimonials';
 import Impact from '../../components/Impact/Impact';
+import SecurityStandards from '../../components/Trust/SecurityStandards';
+import FreeAccountCTA from '../../components/FreeAccountCTA/FreeAccountCTA';
 
 /**
- * Landing Page Unique - Entonnoir de Conviction
- * 
- * Structure:
- * 1. Hero Authority - Recherche centrale
- * 1.5 ScrollReveal - Transition cinématique 3D
- * 2. MemoireSection - "La Mémoire Organisée" (ex-SolutionsPage)
- * 3. ArsenalSection - "L'Arsenal Pro" + CTA (ex-ProPage)
- * 4. SecurityStandards - Badges de confiance
- * 5. Ecosystem - Chambres juridictionnelles
- * 6. Manifeste - L'Équité par la Clarté
- * 7. Impact - Chiffres et témoignages
+ * Page d'accueil — Lot 5 (acquisition-first, SEO de hub)
+ *
+ * Structure :
+ * 1. Hero — signature « Mémoire » + carte Afrique→Sénégal + recherche
+ * 2. ScrollReveal — démo produit (2 piliers, holographique)
+ * 3. PiliersAccess (A) — accès aux 4 piliers (maillage SEO)
+ * 4. RecentlyPublished (B) — fraîcheur (codes/textes récents)
+ * 5. Manifeste (C) — le récit « pas qu'un outil »
+ * 6. Testimonials (D) — confiance des praticiens
+ * 7. Impact — chiffres
+ * 8. SecurityStandards — corpus vérifié / données
+ * 9. FreeAccountCTA (E) — créer un compte gratuit
  */
 const Home: React.FC = () => {
     return (
         <main>
-            {/* 1. HERO AUTHORITY */}
             <Hero />
-
-            {/* 1.5 SCROLL REVEAL — Transition cinématique */}
             <ScrollReveal />
-
-            {/* 2. LA MÉMOIRE ORGANISÉE - Storytelling IA */}
-            <MemoireSection />
-
-            {/* 3. L'ARSENAL PRO - Bento Grid + CTA Contact */}
-            <ArsenalSection />
-
-            {/* 4. SÉCURITÉ & CONFIANCE */}
-            <SecurityStandards />
-
-            {/* 5. ÉCOSYSTÈME JURIDICTIONNEL */}
-            <Ecosystem />
-
-            {/* 6. MANIFESTE - L'Équité par la Clarté */}
+            <PiliersAccess />
+            <RecentlyPublished />
             <Manifeste />
-
-            {/* 7. IMPACT */}
+            <Testimonials />
             <Impact />
+            <SecurityStandards />
+            <FreeAccountCTA />
         </main>
     );
 };

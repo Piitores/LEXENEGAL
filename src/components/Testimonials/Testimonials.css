@@ -1,0 +1,52 @@
+/* ═══════════════════════════════════════════════════════════════════
+   TESTIMONIALS — section "confiance des praticiens"
+   ═══════════════════════════════════════════════════════════════════ */
+
+.testimonials {
+  padding: 96px 0;
+  background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
+}
+
+.testimonials__header {
+  max-width: 720px;
+  margin: 0 auto 48px;
+  text-align: center;
+}
+
+.testimonials__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 20px;
+  background: rgba(4, 120, 87, 0.08);
+  color: #047857;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border-radius: 20px;
+  margin-bottom: 20px;
+}
+
+.testimonials__title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  margin: 0 0 16px;
+}
+
+.testimonials__subtitle {
+  font-size: 1.05rem;
+  color: #6b7280;
+  line-height: 1.7;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .testimonials { padding: 64px 0; }
+  .testimonials__header { margin-bottom: 32px; }
+}
