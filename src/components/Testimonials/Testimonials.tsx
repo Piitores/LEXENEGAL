@@ -5,7 +5,7 @@ import './Testimonials.css';
 const TESTIMONIALS: ScrollReelTestimonial[] = [
     {
         quote: "Le Code général des impôts sénégalais annoté, avec les renvois directs vers la doctrine fiscale, me fait gagner un temps précieux : je vérifie une disposition et j'ai aussitôt les commentaires et les sources sous les yeux.",
-        name: 'Pape Moussa Gaye',
+        name: 'Pape Moussa Gueye',
         role: 'Senior Associate, Mansa-Tax & Legal',
         initials: 'PMG',
     },
