@@ -12,7 +12,7 @@ import TextPresentation from '../../components/TextPresentation/TextPresentation
 import {
     Law, Article, HierarchyNode,
     buildTreeFromNodes, buildTreeLegacy, countArticles, getArticlesForNode,
-    getBreadcrumb, collectAllNodeIds, computeMaxArticlesInLevel,
+    getBreadcrumb, collectAllNodeIds, computeMaxArticlesInLevel, formatNodeLabel, NODE_KIND,
 } from '../../lib/codeTree';
 import { useCopyAttribution, attributionFooter, articleUrl } from '../../hooks/useCopyAttribution';
 import './CodePage.css';
@@ -485,24 +485,31 @@ const CodePage: React.FC = () => {
 
                             {/* Breadcrumb */}
                             <div className="code-breadcrumb">
-                                {breadcrumbs.map((bc, i) => (
-                                    <React.Fragment key={bc.id}>
-                                        {i > 0 && <span className="breadcrumb-sep">›</span>}
-                                        {i < breadcrumbs.length - 1 ? (
-                                            <button className="breadcrumb-item" onClick={() => selectNode(bc)}>
-                                                {bc.name}
-                                            </button>
-                                        ) : (
-                                            <span className="breadcrumb-current">{bc.name}</span>
-                                        )}
-                                    </React.Fragment>
-                                ))}
+                                {breadcrumbs.map((bc, i) => {
+                                    const f = formatNodeLabel(bc);
+                                    const disp = f.badge ? `${f.badge} — ${f.label}` : f.label;
+                                    return (
+                                        <React.Fragment key={bc.id}>
+                                            {i > 0 && <span className="breadcrumb-sep">›</span>}
+                                            {i < breadcrumbs.length - 1 ? (
+                                                <button className="breadcrumb-item" onClick={() => selectNode(bc)}>
+                                                    {disp}
+                                                </button>
+                                            ) : (
+                                                <span className="breadcrumb-current">{disp}</span>
+                                            )}
+                                        </React.Fragment>
+                                    );
+                                })}
                                 <span className="version-pill">Version en vigueur</span>
                             </div>
 
                             {/* Section header */}
                             <div className="section-header">
-                                <h2>{selectedNode.name}</h2>
+                                {(() => {
+                                    const { badge, label } = formatNodeLabel(selectedNode);
+                                    return <h2>{badge && <span className="section-header__badge">{badge}</span>}{label}</h2>;
+                                })()}
                                 <div className="section-meta">
                                     {selectedArticles.length} article{selectedArticles.length > 1 ? 's' : ''} 
                                     {selectedNode.children.length > 0 && ` · ${selectedNode.children.length} sous-section${selectedNode.children.length > 1 ? 's' : ''}`}
@@ -549,14 +556,15 @@ const CodePage: React.FC = () => {
                                     {selectedNode.children.map(child => {
                                         const childCount = countArticles(child);
                                         const pct = (childCount / maxArticlesInLevel) * 100;
+                                        const { badge: scBadge, label: scLabel } = formatNodeLabel(child);
                                         return (
                                             <div
                                                 key={child.id}
                                                 className="structure-card"
                                                 onClick={() => selectNode(child)}
                                             >
-                                                <div className="sc-type">{child.type}</div>
-                                                <div className="sc-name">{child.name}</div>
+                                                <div className="sc-type">{scBadge || NODE_KIND[child.type] || child.type}</div>
+                                                <div className="sc-name">{scLabel}</div>
                                                 <div className="sc-bar">
                                                     <div className="sc-bar-fill" style={{ width: `${pct}%` }} />
                                                 </div>

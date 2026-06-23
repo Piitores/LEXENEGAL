@@ -57,6 +57,30 @@ export interface HierarchyNode {
     children: HierarchyNode[];
 }
 
+// Libellé des niveaux de structure (partagé : arbre, fil d'Ariane, en-têtes, cartes).
+export const NODE_KIND: Record<string, string> = {
+    partie: 'Partie', livre: 'Livre', titre: 'Titre', chapitre: 'Chapitre',
+    section: 'Section', 'sous-section': 'Sous-section', paragraphe: 'Paragraphe', division: '',
+};
+
+/**
+ * Formatage UNIFORME d'un nœud de structure → { badge, label }.
+ * - badge : « Titre 2 », « Chapitre III »… (ou '' si le mot du type est déjà
+ *   dans l'intitulé, ex. « PREMIÈRE PARTIE »).
+ * - label : l'intitulé.
+ * Source unique pour la page de présentation du code, l'arbre et la page article.
+ */
+export function formatNodeLabel(
+    n: { type: string; numero?: string | null; intitule?: string | null; name?: string }
+): { badge: string; label: string } {
+    const kind = NODE_KIND[n.type] ?? n.type;
+    const num = (n.numero || '').trim();
+    const intit = (n.intitule || n.name || '').trim();
+    const intitHasKind = (!!kind && new RegExp(`\\b${kind}\\b`, 'i').test(intit)) || /\bPARTIE\b/i.test(intit);
+    const badge = num ? `${kind} ${num}`.trim() : (intitHasKind ? '' : kind);
+    return { badge, label: intit };
+}
+
 // Arbre depuis structure_nodes (parent_id + ordre des nœuds déjà trié par `position`).
 export const buildTreeFromNodes = (nodes: StructureNode[], arts: Article[]): HierarchyNode[] => {
     const map = new Map<string, HierarchyNode>();

@@ -14,7 +14,7 @@ import ReportErrorModal from '../../components/ReportError/ReportErrorModal';
 import CodeNavTree from '../../components/CodeNavTree/CodeNavTree';
 import {
     Article as CodeArticle, StructureNode, HierarchyNode,
-    buildTreeFromNodes, buildTreeLegacy, getBreadcrumb,
+    buildTreeFromNodes, buildTreeLegacy, getBreadcrumb, formatNodeLabel,
 } from '../../lib/codeTree';
 import './ArticlePage.css';
 import '../../styles/legal-content.css';
@@ -512,20 +512,10 @@ const ArticlePage: React.FC = () => {
                         chaque niveau avec son mot. Construit depuis structure_nodes (et non les champs plats). */}
                     {(() => {
                         if (!nodePath.length) return null;
-                        const KIND: Record<string, string> = { partie: 'Partie', livre: 'Livre', titre: 'Titre', chapitre: 'Chapitre', section: 'Section', 'sous-section': 'Sous-section', paragraphe: 'Paragraphe', division: '' };
-                        const fmt = (n: HierarchyNode) => {
-                            const kind = KIND[n.type] ?? n.type;
-                            const num = (n.numero || '').trim();
-                            const intit = (n.intitule || n.name || '').trim();
-                            // ne pas répéter le mot du type s'il est déjà dans l'intitulé (ex. « PREMIERE PARTIE »)
-                            const intitHasKind = (!!kind && new RegExp(`\\b${kind}\\b`, 'i').test(intit)) || /\bPARTIE\b/i.test(intit);
-                            const badge = num ? `${kind} ${num}`.trim() : (intitHasKind ? '' : kind);
-                            return { badge, label: intit };
-                        };
                         return (
                             <div className="article-hierarchy" aria-label="Emplacement dans le code">
                                 {nodePath.map((n) => {
-                                    const { badge, label } = fmt(n);
+                                    const { badge, label } = formatNodeLabel(n);
                                     return (
                                         <Link
                                             key={n.id}
