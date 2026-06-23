@@ -63,22 +63,95 @@ export const NODE_KIND: Record<string, string> = {
     section: 'Section', 'sous-section': 'Sous-section', paragraphe: 'Paragraphe', division: '',
 };
 
+const TYPE_WORDS = 'titre|chapitre|sous-section|section|paragraphe|partie|livre|division';
+
+const ORDINALS: Record<string, string> = {
+    premier: '1', premiere: '1', deuxieme: '2', second: '2', seconde: '2',
+    troisieme: '3', quatrieme: '4', cinquieme: '5', sixieme: '6', septieme: '7',
+    huitieme: '8', neuvieme: '9', dixieme: '10', onzieme: '11', douzieme: '12',
+    treizieme: '13', quatorzieme: '14', quinzieme: '15', seizieme: '16',
+    dixseptieme: '17', dixhuitieme: '18', dixneuvieme: '19', vingtieme: '20',
+};
+
+const deburr = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const titleWord = (w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+
+function romanToInt(s: string): number {
+    const map: Record<string, number> = { I: 1, V: 5, X: 10, L: 50, C: 100, D: 500, M: 1000 };
+    const u = s.toUpperCase();
+    if (!/^[IVXLCDM]+$/.test(u)) return 0;
+    let total = 0;
+    for (let i = 0; i < u.length; i++) {
+        const cur = map[u[i]], next = map[u[i + 1]] || 0;
+        total += cur < next ? -cur : cur;
+    }
+    return total;
+}
+
+// Convertit un jeton de numérotation (romain, ordinal en lettres, arabe, + suffixe
+// bis/ter) en chiffre arabe — ou null si ce n'est pas un numéro (ex. « Législative »).
+function numToArabicOrNull(token: string): string | null {
+    const t = (token || '').trim();
+    const suf = t.match(/\b(bis|ter|quater|quinquies)\b/i);
+    const suffix = suf ? ' ' + suf[1].toLowerCase() : '';
+    const core = t.replace(/\b(bis|ter|quater|quinquies)\b/ig, '').trim();
+    if (/^[0-9]+$/.test(core)) return core + suffix;
+    if (ORDINALS[deburr(core)]) return ORDINALS[deburr(core)] + suffix;
+    const r = romanToInt(core);
+    if (r > 0) return String(r) + suffix;
+    return null;
+}
+
 /**
- * Formatage UNIFORME d'un nœud de structure → { badge, label }.
- * - badge : « Titre 2 », « Chapitre III »… (ou '' si le mot du type est déjà
- *   dans l'intitulé, ex. « PREMIÈRE PARTIE »).
- * - label : l'intitulé.
- * Source unique pour la page de présentation du code, l'arbre et la page article.
+ * Formatage UNIFORME d'un nœud de structure → { badge, label } (cf. étude
+ * `pages/Analyse-Normalisation-Structure-Nodes.md`). Gère les 3 formes de données :
+ *  1) numero rempli + intitulé propre ;
+ *  2) intitulé « TITRE II - … » (mot du niveau + chiffre collés) ;
+ *  3) intitulé abîmé « DEUXIEME [PARTIE] … » (ordinal collé, mot du niveau parfois perdu).
+ * Le mot du niveau vient de `type` (fiable) ; le numéro de `numero` ou du préfixe
+ * de l'intitulé, converti en chiffre arabe pour un badge uniforme (« Titre 2 », « Livre 2 »).
  */
 export function formatNodeLabel(
     n: { type: string; numero?: string | null; intitule?: string | null; name?: string }
 ): { badge: string; label: string } {
-    const kind = NODE_KIND[n.type] ?? n.type;
-    const num = (n.numero || '').trim();
-    const intit = (n.intitule || n.name || '').trim();
-    const intitHasKind = (!!kind && new RegExp(`\\b${kind}\\b`, 'i').test(intit)) || /\bPARTIE\b/i.test(intit);
-    const badge = num ? `${kind} ${num}`.trim() : (intitHasKind ? '' : kind);
-    return { badge, label: intit };
+    let kind = NODE_KIND[n.type] ?? n.type;
+    let num = (n.numero || '').trim();
+    let label = (n.intitule || n.name || '').trim();
+    let stripped = false;
+
+    // Forme 2 : « TYPE <jeton> [séparateur] reste » — jeton = chiffre / romain / ordinal.
+    // Deux variantes : avec séparateur (« TITRE II - … », « CHAPITRE V : … ») ou simple espace.
+    const mType =
+        label.match(new RegExp(`^\\s*(${TYPE_WORDS})\\s+(\\S+?)(\\s+(?:bis|ter|quater))?\\s*[)\\].:°—–-]+\\s*(.*)$`, 'i'))
+        || label.match(new RegExp(`^\\s*(${TYPE_WORDS})\\s+(\\S+?)(\\s+(?:bis|ter|quater))?\\s+(.*)$`, 'i'));
+    if (mType && numToArabicOrNull((mType[2] + (mType[3] || '')).trim())) {
+        kind = NODE_KIND[deburr(mType[1])] ?? titleWord(mType[1]);
+        if (!num || !numToArabicOrNull(num)) num = (mType[2] + (mType[3] || '')).trim();
+        label = (mType[4] || '').trim();
+        stripped = true;
+    }
+
+    // Forme 3 : « ORDINAL [TYPE] reste » (intitulé abîmé : ordinal collé, type parfois perdu).
+    if (!stripped) {
+        const mOrd = label.match(/^\s*([A-Za-zÀ-ÿ]+)\s*(.*)$/);
+        if (mOrd && ORDINALS[deburr(mOrd[1])]) {
+            if (!num || !numToArabicOrNull(num)) num = mOrd[1];
+            let rest = (mOrd[2] || '').trim();
+            const mt = rest.match(new RegExp(`^(${TYPE_WORDS})\\b\\s*[)\\].:°—–-]*\\s*(.*)$`, 'i'));
+            if (mt) { kind = NODE_KIND[deburr(mt[1])] ?? titleWord(mt[1]); rest = (mt[2] || '').trim(); }
+            label = rest;
+        }
+    }
+
+    // Badge : « Kind N » seulement si N est un vrai numéro (sinon on évite « Partie Législative »).
+    const arab = numToArabicOrNull(num);
+    let badge = '';
+    if (kind && arab) badge = `${kind} ${arab}`;
+    else if (kind) {
+        const hasKind = new RegExp(`\\b${kind}\\b`, 'i').test(label) || /\bPARTIE\b/i.test(label);
+        badge = hasKind ? '' : kind;
+    }
+    return { badge, label };
 }
 
 // Arbre depuis structure_nodes (parent_id + ordre des nœuds déjà trié par `position`).
