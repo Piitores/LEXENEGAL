@@ -27,6 +27,7 @@ interface User {
     email: string;
     full_name: string;
     role: string;
+    subscription_tier?: string;
     created_at: string;
 }
 
@@ -113,7 +114,7 @@ const AdminPage: React.FC = () => {
 
             const { data: usersData } = await supabase
                 .from('profiles')
-                .select('id, email, full_name, role, created_at')
+                .select('id, email, full_name, role, subscription_tier, created_at')
                 .order('created_at', { ascending: false })
                 .limit(50);
 
@@ -132,20 +133,17 @@ const AdminPage: React.FC = () => {
         }
     };
 
-    const toggleUserRole = async (userId: string, currentRole: string) => {
-        const newRole = currentRole === 'pro' ? 'user' : 'pro';
+    const toggleUserTier = async (userId: string, currentTier: string | undefined) => {
+        const newTier = currentTier === 'pro' ? 'free' : 'pro';
 
         const { error } = await supabase
             .from('profiles')
-            .update({ 
-                role: newRole,
-                subscription_tier: newRole 
-            })
+            .update({ subscription_tier: newTier })
             .eq('id', userId);
 
         if (!error) {
             setUsers(users.map(u =>
-                u.id === userId ? { ...u, role: newRole } : u
+                u.id === userId ? { ...u, subscription_tier: newTier } : u
             ));
         }
     };
@@ -287,8 +285,8 @@ const AdminPage: React.FC = () => {
                                         <td>{user.full_name || '-'}</td>
                                         <td>{user.email}</td>
                                         <td>
-                                            <span className={`role-badge role-badge--${user.role || 'user'}`}>
-                                                {user.role === 'pro' ? 'PRO' : user.role === 'admin' ? 'ADMIN' : 'User'}
+                                            <span className={`role-badge role-badge--${user.role === 'admin' ? 'admin' : (user.subscription_tier === 'pro' ? 'pro' : 'user')}`}>
+                                                {user.role === 'admin' ? 'ADMIN' : user.subscription_tier === 'pro' ? 'PRO' : 'User'}
                                             </span>
                                         </td>
                                         <td>{new Date(user.created_at).toLocaleDateString('fr-FR')}</td>
@@ -296,8 +294,8 @@ const AdminPage: React.FC = () => {
                                             {user.role !== 'admin' && (
                                                 <button
                                                     className="btn-action btn-action--pro"
-                                                    onClick={() => toggleUserRole(user.id, user.role)}
-                                                    title={user.role === 'pro' ? 'Rétrograder' : 'Passer PRO'}
+                                                    onClick={() => toggleUserTier(user.id, user.subscription_tier)}
+                                                    title={user.subscription_tier === 'pro' ? 'Rétrograder' : 'Passer PRO'}
                                                 >
                                                     <Star size={14} />
                                                     PRO
