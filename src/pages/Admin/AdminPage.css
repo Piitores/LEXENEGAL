@@ -668,3 +668,35 @@
     .report-row { flex-direction: column; }
     .report-row__actions { width: 100%; }
 }
+
+/* ─── Phase C : dashboard, contenu, sécurité ─── */
+.admin-dash-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 1.5rem;
+}
+.admin-card { background: #fff; border: 1px solid #E5E7EB; border-radius: 14px; padding: 18px 20px; }
+.admin-card h2 { display: flex; align-items: center; gap: 8px; font-size: 0.95rem; margin: 0 0 14px; color: #111827; }
+
+.bar-chart { display: flex; align-items: flex-end; gap: 10px; height: 150px; }
+.bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px; }
+.bar-col__val { font-size: 0.72rem; font-weight: 700; color: #047857; }
+.bar-col__bar { width: 70%; min-height: 3px; background: linear-gradient(180deg, #10B981, #047857); border-radius: 4px 4px 0 0; transition: height 0.4s ease; }
+.bar-col__label { font-size: 0.62rem; color: #9CA3AF; }
+
+.top-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.top-list li { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 0.82rem; color: #374151; border-bottom: 1px solid #F3F4F6; padding-bottom: 5px; }
+.top-list li:last-child { border-bottom: none; }
+.top-list a { color: #047857; text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.top-list__n { font-weight: 700; color: #111827; flex-shrink: 0; }
+
+.cat-badge { font-size: 0.7rem; font-weight: 600; color: #475569; background: #F3F4F6; padding: 3px 9px; border-radius: 6px; text-transform: capitalize; }
+.row-suspended { opacity: 0.6; }
+.susp-tag { margin-left: 8px; font-size: 0.6rem; font-weight: 700; text-transform: uppercase; color: #B45309; background: #FEF3C7; padding: 2px 7px; border-radius: 10px; }
+.admin-hint { font-size: 0.8rem; font-weight: 500; color: #9CA3AF; }
+.admin-note { margin-top: 12px; font-size: 0.82rem; color: #9CA3AF; }
+.admin-filter { margin-left: auto; font-size: 0.8rem; padding: 5px 10px; border: 1px solid #E5E7EB; border-radius: 8px; background: #fff; color: #374151; }
+.admin-section h2 { display: flex; align-items: center; gap: 8px; }
+
+@media (max-width: 900px) { .admin-dash-grid { grid-template-columns: 1fr; } }

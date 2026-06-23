@@ -173,6 +173,16 @@ const AuthPage: React.FC = () => {
 
             if (error) throw error;
 
+            // Blocage des comptes suspendus (levier admin C2)
+            if (data.user) {
+                const { data: prof } = await supabase
+                    .from('profiles').select('suspended').eq('id', data.user.id).single();
+                if (prof?.suspended) {
+                    await supabase.auth.signOut();
+                    throw new Error("Ce compte a été suspendu. Contactez l'administrateur.");
+                }
+            }
+
             // Redirect to home or decision page
             window.location.href = '/';
         } catch (err: any) {
