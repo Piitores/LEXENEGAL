@@ -8,6 +8,7 @@ import {
 import { supabase } from '../../lib/supabase';
 import SEO from '../../components/SEO/SEO';
 import CodeNavTree from '../../components/CodeNavTree/CodeNavTree';
+import TextPresentation from '../../components/TextPresentation/TextPresentation';
 import {
     Law, Article, HierarchyNode,
     buildTreeFromNodes, buildTreeLegacy, countArticles, getArticlesForNode,
@@ -562,10 +563,13 @@ const CodePage: React.FC = () => {
                             )}
                         </>
                     ) : (
-                        <div className="empty-state">
-                            <BookOpen size={48} />
-                            <p>Sélectionnez une section dans l'arbre de navigation.</p>
-                        </div>
+                        <>
+                            {law && <TextPresentation law={law} articleCount={totalArticles} />}
+                            <div className="empty-state">
+                                <BookOpen size={48} />
+                                <p>Sélectionnez une section dans l'arbre de navigation pour consulter les articles.</p>
+                            </div>
+                        </>
                     )}
                 </main>
             </div>

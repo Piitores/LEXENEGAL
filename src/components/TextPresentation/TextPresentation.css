@@ -1,0 +1,68 @@
+/* ═══════════════════════════════════════════════════════════════════
+   TEXT PRESENTATION — bloc « Présentation » en tête de page de texte (SEO)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.text-presentation {
+    background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 22px 24px;
+    margin-bottom: 24px;
+}
+
+.text-presentation__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.tp-nature {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #fff;
+    background: linear-gradient(135deg, #047857, #10b981);
+    padding: 4px 12px;
+    border-radius: 20px;
+}
+
+.tp-chip {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #374151;
+    background: rgba(4, 120, 87, 0.07);
+    padding: 4px 11px;
+    border-radius: 20px;
+}
+
+.text-presentation__label {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 8px;
+}
+
+.text-presentation__body {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 0.98rem;
+    line-height: 1.7;
+    color: #374151;
+}
+
+.text-presentation__body p { margin: 0 0 10px; }
+.text-presentation__body p:last-child { margin-bottom: 0; }
+
+.text-presentation__fallback {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #6b7280;
+}
+
+@media (max-width: 768px) {
+    .text-presentation { padding: 18px 18px; }
+}

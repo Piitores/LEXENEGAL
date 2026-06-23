@@ -7,6 +7,9 @@ export interface Law {
     slug: string;
     reference: string;
     category: string;
+    short_title?: string | null;
+    publication_date?: string | null;
+    description?: string | null;
     abrogation_note?: string | null;
     abrogated_by_slug?: string | null;
 }
