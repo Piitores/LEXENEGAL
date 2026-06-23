@@ -57,3 +57,43 @@
 .article-abrogation-banner .lab-icon {
     color: var(--color-danger) !important;
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   RENVOIS D'ARTICLE — style UNIFORME (page code, article, décision).
+   Auparavant seul `.legal-content .article-link` (décisions) était stylé ;
+   les renvois du COCC sur les pages code/article restaient des liens bruts.
+   ═══════════════════════════════════════════════════════════════════ */
+.article-link,
+a[data-article-id] {
+    color: #047857;
+    text-decoration: none;
+    font-weight: 600;
+    position: relative;
+    padding: 1px 5px;
+    margin: 0 1px;
+    border-radius: 4px;
+    background: linear-gradient(to bottom, transparent 0%, transparent 85%, rgba(4, 120, 87, 0.35) 85%, rgba(4, 120, 87, 0.35) 100%);
+    transition: color 0.25s, background 0.25s, box-shadow 0.25s, transform 0.25s;
+    cursor: pointer;
+}
+.article-link::after,
+a[data-article-id]::after {
+    content: '§';
+    font-size: 0.75em;
+    margin-left: 3px;
+    opacity: 0.5;
+    color: #047857;
+    transition: opacity 0.25s, transform 0.25s;
+}
+.article-link:hover,
+a[data-article-id]:hover {
+    color: #065f46;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.18) 0%, rgba(4, 120, 87, 0.12) 100%);
+    box-shadow: 0 2px 10px rgba(4, 120, 87, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    transform: translateY(-1px);
+}
+.article-link:hover::after,
+a[data-article-id]:hover::after {
+    opacity: 1;
+    transform: scale(1.1);
+}
