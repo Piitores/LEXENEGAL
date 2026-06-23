@@ -79,6 +79,9 @@ export function buildCodeIndex(
   return idx;
 }
 
+/** Mots-vides FR à ne jamais prendre pour un acronyme de code. */
+const STOPWORDS = new Set(['DU', 'DE', 'DES', 'LA', 'LE', 'LES', 'ET', 'EN', 'AUX', 'SUR', 'PAR', 'UN', 'UNE']);
+
 /** Extrait les références (code + article) d'une chaîne. Conservateur : 2 motifs nets. */
 export function parseCitedString(raw: string): CodeRef[] {
   const refs: CodeRef[] = [];
@@ -97,7 +100,8 @@ export function parseCitedString(raw: string): CodeRef[] {
     refs.push({ articleNumber: m[1].replace(/\s+/g, ''), codeToken: m[2].trim() });
   }
 
-  return refs;
+  // Anti mots-vides : un acronyme ne peut pas être « DU », « DE »… (évite les faux positifs)
+  return refs.filter((r) => !STOPWORDS.has(normalizeToken(r.codeToken)));
 }
 
 /**
