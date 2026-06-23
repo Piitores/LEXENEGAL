@@ -1,13 +1,9 @@
 import React, { useState, useRef } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, User, ArrowRight, Check, Loader2 } from 'lucide-react';
 import './AuthPage.css';
 
-// Supabase Client
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 type AuthMode = 'login' | 'register' | 'verify' | 'success';
 

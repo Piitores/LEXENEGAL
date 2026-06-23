@@ -6,14 +6,10 @@ import {
     FileText, ChevronRight, Plus, ArrowLeft,
     Loader2, AlertCircle
 } from 'lucide-react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../../lib/supabase';
 import ConversionModal from '../../components/ConversionModal/ConversionModal';
 import './CabinetPage.css';
 
-// Supabase
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 interface Folder {
     id: string;

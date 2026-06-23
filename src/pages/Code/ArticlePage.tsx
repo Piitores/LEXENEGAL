@@ -7,7 +7,7 @@ import {
     ArrowLeft, ChevronLeft, ChevronRight,
     GitCompare, Clock, Scale, Lock, FileText, Gavel, AlertCircle, X, ExternalLink, BookOpen
 } from 'lucide-react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../../lib/supabase';
 import SEO from '../../components/SEO/SEO';
 import ConversionModal from '../../components/ConversionModal/ConversionModal';
 import ReportErrorModal from '../../components/ReportError/ReportErrorModal';
@@ -18,9 +18,6 @@ import {
 } from '../../lib/codeTree';
 import './ArticlePage.css';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 interface Article {
     id: string;
@@ -808,7 +805,7 @@ const ArticlePage: React.FC = () => {
                 onClose={() => setShowConversionModal(false)}
                 onRequestAccess={() => {
                     setShowConversionModal(false);
-                    navigate('/espace-professionnel#contact');
+                    navigate('/solliciter-acces');
                 }}
             />
 

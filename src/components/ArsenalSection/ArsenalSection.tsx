@@ -3,13 +3,10 @@ import {
     Printer, Search, BarChart3, Bell, FileText,
     Send, Loader2, Check, BookOpen
 } from 'lucide-react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../../lib/supabase';
 import { useTiltEffect } from '../../hooks/useTiltEffect';
 import './ArsenalSection.css';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 /**
  * TiltCard — Wrapper qui applique l'effet tilt 3D sur n'importe quelle card.
