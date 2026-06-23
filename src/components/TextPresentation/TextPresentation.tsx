@@ -44,13 +44,18 @@ const TextPresentation: React.FC<Props> = ({ law, articleCount }) => {
     const nature = CATEGORY_LABELS[law.category] || 'Texte juridique';
     const date = formatDateFr(law.publication_date);
     const hasDescription = !!(law.description && law.description.trim());
+    // Évite la redondance : si la référence porte déjà l'année (ex. « Loi n° 97-17 du
+    // 1er décembre 1997 »), on n'affiche pas le chip « Publié le … » en double.
+    const pubYear = law.publication_date ? String(new Date(law.publication_date).getFullYear()) : null;
+    const refHasYear = !!(pubYear && law.reference && law.reference.includes(pubYear));
+    const showDateChip = !!date && !refHasYear;
 
     return (
         <section className="text-presentation" aria-label="Présentation du texte">
             <div className="text-presentation__meta">
                 <span className="tp-nature">{nature}</span>
                 {law.reference && <span className="tp-chip">{law.reference}</span>}
-                {date && <span className="tp-chip">Publié le {date}</span>}
+                {showDateChip && <span className="tp-chip">Publié le {date}</span>}
                 {typeof articleCount === 'number' && articleCount > 0 && (
                     <span className="tp-chip">{articleCount.toLocaleString('fr-FR')} articles</span>
                 )}
