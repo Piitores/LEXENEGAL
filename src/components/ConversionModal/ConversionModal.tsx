@@ -6,16 +6,16 @@ import './ConversionModal.css';
 interface ConversionModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onRequestAccess: () => void;
-    remainingDays?: number;  // Jours restants dans l'essai
+    onRequestAccess?: () => void; // conservé pour compat (non utilisé : le CTA mène à l'inscription)
+    remainingDays?: number;       // conservé pour compat
 }
 
-const ConversionModal: React.FC<ConversionModalProps> = ({
-    isOpen,
-    onClose,
-    onRequestAccess,
-    remainingDays
-}) => {
+/**
+ * Invitation à créer un compte GRATUIT (anciennement "passer Pro").
+ * Affichée quand un visiteur non connecté tente une action réservée aux membres
+ * (favoris, dossiers, annotations, export PDF, comparateur). La lecture reste libre.
+ */
+const ConversionModal: React.FC<ConversionModalProps> = ({ isOpen, onClose }) => {
     return (
         <AnimatePresence>
             {isOpen && (
@@ -49,49 +49,51 @@ const ConversionModal: React.FC<ConversionModalProps> = ({
 
                             {/* TITLE */}
                             <h2 className="modal-title">
-                                Passez au standard supérieur.
+                                Créez votre compte gratuit
                             </h2>
 
                             {/* MESSAGE */}
                             <p className="modal-message">
-                                Vous avez épuisé vos crédits de consultation gratuite.
-                                Pour accéder à l'intégralité de l'Arsenal Lexenegal,
-                                télécharger nos <strong>Éditions Certifiées</strong> et utiliser
-                                nos outils d'analyse avancée, sollicitez un accès privilégié.
+                                C'est <strong>gratuit</strong>. Connectez-vous ou créez un compte
+                                pour enregistrer vos favoris, organiser vos dossiers, annoter les
+                                décisions et télécharger en PDF. La lecture reste libre.
                             </p>
 
                             {/* FEATURES LIST */}
                             <ul className="modal-features">
-                                <li><Sparkles size={14} /> Téléchargement illimité PDF Master Edition</li>
-                                <li><Sparkles size={14} /> Synthèse Juridique complète (Faits, Motifs, Dispositif)</li>
-                                <li><Sparkles size={14} /> Dossiers personnels et favoris</li>
+                                <li><Sparkles size={14} /> Favoris &amp; dossiers personnels</li>
+                                <li><Sparkles size={14} /> Annotations privées sur les décisions</li>
+                                <li><Sparkles size={14} /> Téléchargement PDF &amp; comparateur de versions</li>
                             </ul>
 
-                            {/* TRIAL REMINDER */}
-                            {remainingDays !== undefined && remainingDays > 0 && (
-                                <div className="trial-reminder">
-                                    <span className="trial-badge">Essai</span>
-                                    {remainingDays} jour{remainingDays > 1 ? 's' : ''} restant{remainingDays > 1 ? 's' : ''} dans votre période d'essai
-                                </div>
-                            )}
-
-                            {/* CTA BUTTON */}
+                            {/* CTA BUTTON — création de compte */}
                             <button
                                 className="modal-cta"
                                 onClick={() => {
                                     onClose();
-                                    window.location.href = '/solliciter-acces';
+                                    window.location.href = '/signup';
                                 }}
                             >
-                                Solliciter un Accès Privilégié
+                                Créer un compte gratuit
                             </button>
 
-                            {/* SECONDARY LINK */}
+                            {/* SECONDARY — déjà inscrit */}
+                            <button
+                                className="modal-secondary"
+                                onClick={() => {
+                                    onClose();
+                                    window.location.href = '/login';
+                                }}
+                            >
+                                J'ai déjà un compte — Connexion
+                            </button>
+
+                            {/* TERTIARY — continuer sans compte */}
                             <button
                                 className="modal-secondary"
                                 onClick={onClose}
                             >
-                                Continuer la lecture simple sur le web
+                                Continuer la lecture sans compte
                             </button>
                         </motion.div>
                     </div>

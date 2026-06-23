@@ -81,17 +81,13 @@ const CabinetPage: React.FC = () => {
 
                 const { data: profile } = await supabase
                     .from('profiles')
-                    .select('subscription_tier, full_name, role')
+                    .select('full_name')
                     .eq('id', session.user.id)
                     .single();
 
-                if (profile?.subscription_tier !== 'pro' && profile?.role !== 'admin') {
-                    navigate('/solliciter-acces');
-                    return;
-                }
-
+                // Espace personnel ouvert à TOUT compte connecté (Pro reporté).
                 setIsPro(true);
-                setUserName(profile.full_name || 'Partenaire');
+                setUserName(profile?.full_name || 'Partenaire');
                 await loadCabinetData(session.user.id);
             } catch (error) {
                 console.error('Access check error:', error);

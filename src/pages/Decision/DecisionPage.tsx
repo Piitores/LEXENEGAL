@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Download, ArrowLeft, Copy, Scale, BookOpen, Printer, AlertCircle, FileText } from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
 import { supabase } from '../../lib/supabase';
+import useAuth from '../../hooks/useAuth';
 import LexenegalSymbol from '../../components/LexenegalSymbol/LexenegalSymbol';
 import SEO from '../../components/SEO/SEO';
 import DecisionActions from '../../components/DecisionActions/DecisionActions';
@@ -40,8 +41,9 @@ const DecisionPage: React.FC = () => {
     const [decision, setDecision] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
     const [articles, setArticles] = useState<ArticleInfo[]>([]);
-    const [userId, setUserId] = useState<string>('Anonymous');
-    const [isPro, setIsPro] = useState(false);
+    // Auth : favoris/annotations/PDF ouverts à tout compte connecté (Pro reporté).
+    const { user, isConnected } = useAuth();
+    const userId = user?.id ? user.id.substring(0, 8) : 'Anonymous';
 
     // State for Annotations
     const [isAnnotationOpen, setIsAnnotationOpen] = useState(false);
@@ -58,25 +60,6 @@ const DecisionPage: React.FC = () => {
 
     // Ref for printable content
     const printRef = useRef<HTMLDivElement>(null);
-
-    // Fetch user session for fingerprinting and PRO status
-    useEffect(() => {
-        const getUser = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session?.user) {
-                setUserId(session.user.id.substring(0, 8));
-
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('subscription_tier, role')
-                    .eq('id', session.user.id)
-                    .single();
-
-                setIsPro(profile?.subscription_tier === 'pro' || profile?.role === 'admin');
-            }
-        };
-        getUser();
-    }, []);
 
     useEffect(() => {
         if (!slug) return;
@@ -432,7 +415,17 @@ const DecisionPage: React.FC = () => {
                             </label>
                         </div>
 
-                        <button className="btn-elite-primary" onClick={() => handlePrint()}>
+                        <button
+                            className="btn-elite-primary"
+                            onClick={() => {
+                                // Export PDF réservé au compte connecté (levier d'acquisition ; lecture libre).
+                                if (isConnected) {
+                                    handlePrint();
+                                } else {
+                                    setShowConversionModal(true);
+                                }
+                            }}
+                        >
                             <Printer size={18} />
                             Imprimer / PDF
                         </button>
@@ -451,7 +444,7 @@ const DecisionPage: React.FC = () => {
                                 background: '#ECFDF5'
                             }}
                             onClick={() => {
-                                if (isPro) {
+                                if (isConnected) {
                                     setIsAnnotationOpen(true);
                                 } else {
                                     setShowConversionModal(true);
