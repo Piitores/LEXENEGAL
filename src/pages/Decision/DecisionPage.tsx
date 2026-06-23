@@ -9,6 +9,8 @@ import SEO from '../../components/SEO/SEO';
 import DecisionActions from '../../components/DecisionActions/DecisionActions';
 import ConversionModal from '../../components/ConversionModal/ConversionModal';
 import { textToHtmlWithLinks } from '../../utils/articleLinkRenderer';
+import ArticleHoverPreview from '../../components/ArticleHoverPreview/ArticleHoverPreview';
+import { buildCodeIndex, parseCitedString, normalizeToken, normalizeArticleNumber, type ResolvedArticle } from '../../lib/articleRefResolver';
 import { getDecisionHtml, isNewFormat } from '../../utils/decisionTextFormatter';
 import { logViewDecision, logDownloadPdf } from '../../utils/auditLogger';
 import ReportErrorModal from '../../components/ReportError/ReportErrorModal';
@@ -41,6 +43,9 @@ const DecisionPage: React.FC = () => {
     const [decision, setDecision] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
     const [articles, setArticles] = useState<ArticleInfo[]>([]);
+    const [codeIndex, setCodeIndex] = useState<Map<string, string>>(new Map());
+    // Références citées résolues en liens fiables (raw → article présent en base).
+    const [citedResolved, setCitedResolved] = useState<Record<string, ResolvedArticle>>({});
     // Auth : favoris/annotations/PDF ouverts à tout compte connecté (Pro reporté).
     const { user, isConnected } = useAuth();
     const userId = user?.id ? user.id.substring(0, 8) : 'Anonymous';
@@ -66,6 +71,47 @@ const DecisionPage: React.FC = () => {
         fetchDecision();
         fetchArticles();
     }, [slug]);
+
+    // Résout les références citées en liens FIABLES via une requête CIBLÉE (uniquement les
+    // codes réellement cités) : pas de plafond 1000, pas de lien mort. Conservateur.
+    useEffect(() => {
+        const cites: string[] = Array.isArray(decision?.articles_loi_cites) ? decision.articles_loi_cites : [];
+        if (!cites.length || codeIndex.size === 0) return;
+        let active = true;
+        (async () => {
+            const candidates: { raw: string; codeSlug: string; articleNumber: string }[] = [];
+            for (const raw of cites) {
+                const refs = parseCitedString(raw);
+                if (refs.length !== 1) continue; // multi-réfs / aucune → texte (sécurité)
+                const codeSlug = codeIndex.get(normalizeToken(refs[0].codeToken));
+                if (!codeSlug) continue; // code hors corpus → texte
+                candidates.push({ raw, codeSlug, articleNumber: refs[0].articleNumber });
+            }
+            if (!candidates.length) return;
+            const codeSlugs = Array.from(new Set(candidates.map((c) => c.codeSlug)));
+            const { data } = await supabase
+                .from('articles')
+                .select('id, slug, article_number, laws_and_codes!inner(slug, short_title)')
+                .in('laws_and_codes.slug', codeSlugs);
+            const byCode = new Map<string, ResolvedArticle[]>();
+            (data || []).forEach((a: any) => {
+                const cs = a.laws_and_codes?.slug;
+                if (!cs) return;
+                const arr = byCode.get(cs) || [];
+                arr.push({ id: a.id, slug: a.slug, article_number: a.article_number, code_slug: cs, code_name: a.laws_and_codes?.short_title || cs });
+                byCode.set(cs, arr);
+            });
+            const resolved: Record<string, ResolvedArticle> = {};
+            for (const c of candidates) {
+                const hit = (byCode.get(c.codeSlug) || []).find(
+                    (a) => normalizeArticleNumber(a.article_number) === normalizeArticleNumber(c.articleNumber),
+                );
+                if (hit) resolved[c.raw] = hit;
+            }
+            if (active) setCitedResolved(resolved);
+        })();
+        return () => { active = false; };
+    }, [decision, codeIndex]);
 
     const fetchDecision = async () => {
         setLoading(true);
@@ -174,6 +220,12 @@ const DecisionPage: React.FC = () => {
                 setArticles(formattedArticles);
                 console.log(`📚 Loaded ${formattedArticles.length} articles for hyperlinking`);
             }
+            // Index générique des codes (extensible) pour résoudre les références citées en liens fiables.
+            const { data: laws } = await supabase
+                .from('laws_and_codes')
+                .select('slug, title, short_title')
+                .eq('is_active', true);
+            if (laws) setCodeIndex(buildCodeIndex(laws));
         } catch (error) {
             console.error('Error in fetchArticles:', error);
         }
@@ -369,11 +421,34 @@ const DecisionPage: React.FC = () => {
                                 <div className="laws-title">
                                     <Scale size={12} /> Références Légales
                                 </div>
-                                {decision.articles_loi_cites.map((art: string, i: number) => (
-                                    <div key={i} className="law-citation">
-                                        <span className="law-icon">§</span> {art}
-                                    </div>
-                                ))}
+                                {decision.articles_loi_cites.map((art: string, i: number) => {
+                                    const hit = citedResolved[art];
+                                    return (
+                                        <div key={i} className="law-citation">
+                                            <span className="law-icon">§</span>{' '}
+                                            {hit ? (
+                                                <ArticleHoverPreview
+                                                    articleId={hit.id}
+                                                    articleNumber={hit.article_number}
+                                                    codeName={hit.code_name}
+                                                    codeSlug={hit.code_slug}
+                                                    articleSlug={hit.slug}
+                                                >
+                                                    <a
+                                                        href={`/code/${hit.code_slug}/${hit.slug}`}
+                                                        className="article-link"
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                    >
+                                                        {art}
+                                                    </a>
+                                                </ArticleHoverPreview>
+                                            ) : (
+                                                art
+                                            )}
+                                        </div>
+                                    );
+                                })}
                             </div>
                         )}
                     </div>

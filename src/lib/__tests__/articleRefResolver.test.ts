@@ -27,7 +27,8 @@ const lookup = (codeSlug: string, num: string): ResolvedArticle | null =>
 
 describe('normalizeArticleNumber', () => {
   it('nettoie préfixe/espaces', () => {
-    expect(normalizeArticleNumber('Article L. 56')).toBe('L.56');
+    expect(normalizeArticleNumber('Article L. 56')).toBe('L56');
+    expect(normalizeArticleNumber('L.56')).toBe('L56');
     expect(normalizeArticleNumber(' 3 ')).toBe('3');
   });
 });

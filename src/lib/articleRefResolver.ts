@@ -55,8 +55,8 @@ export function normalizeToken(s: string): string {
 export function normalizeArticleNumber(s: string): string {
   return (s || '')
     .toUpperCase()
-    .replace(/\s+/g, '')
-    .replace(/^ART(?:ICLE)?\.?/, '');
+    .replace(/^ART(?:ICLE)?\.?/, '')
+    .replace(/[\s.]+/g, ''); // insensible aux espaces ET aux points ("L. 69" = "L69" = "L.69")
 }
 
 /** Construit l'index générique token→slug à partir des codes (extensible : conventions collectives incluses dès qu'elles sont en base). */
