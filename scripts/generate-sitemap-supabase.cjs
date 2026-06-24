@@ -87,6 +87,11 @@ async function generateSitemap() {
     console.log(`📚 Found ${codes.length} codes publiés (${allCodes.length} au total)`);
     console.log(`📃 Found ${activeArticles.length} articles (codes publiés)`);
 
+    console.log('⏳ Fetching doctrine...');
+    // Doctrine fiscale : page teaser publique indexable par document (corps gaté). Pas de is_active → tout est public.
+    const doctrines = (await fetchAllRows('doctrine', 'slug,date')).filter((d) => d.slug);
+    console.log(`📑 Found ${doctrines.length} doctrines fiscales`);
+
     // Static pages
     const staticPages = [
         { url: '/', priority: '1.0', changefreq: 'daily' },
@@ -164,6 +169,23 @@ async function generateSitemap() {
 `;
     }
 
+    // 5. Add doctrine fiscale pages (teaser public par document)
+    for (const doctrine of doctrines) {
+        let lastmodTag = '';
+        if (doctrine.date && !String(doctrine.date).startsWith('1900')) {
+            try {
+                const dateStr = new Date(doctrine.date).toISOString().split('T')[0];
+                lastmodTag = `\n    <lastmod>${dateStr}</lastmod>`;
+            } catch (e) {}
+        }
+        xml += `  <url>
+    <loc>${BASE_URL}/doctrine-fiscale/${doctrine.slug}</loc>${lastmodTag}
+    <changefreq>yearly</changefreq>
+    <priority>0.6</priority>
+  </url>
+`;
+    }
+
     xml += `</urlset>`;
 
     // Write to public folder
@@ -171,7 +193,7 @@ async function generateSitemap() {
     fs.writeFileSync(outputPath, xml);
 
     console.log(`✅ Sitemap saved to ${outputPath}`);
-    console.log(`📊 Total URLs generated: ${staticPages.length + codes.length + activeArticles.length + decisions.length}`);
+    console.log(`📊 Total URLs generated: ${staticPages.length + codes.length + activeArticles.length + decisions.length + doctrines.length}`);
 }
 
 generateSitemap().catch(console.error);

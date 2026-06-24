@@ -1,50 +1,34 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Loader2, BookOpen, ChevronRight, X, Building, Calendar, FileText } from 'lucide-react';
+import { Search, Loader2, BookOpen, ChevronRight, Building, Calendar, FileText } from 'lucide-react';
 import './DoctrinePage.css';
 
 
 interface DoctrineItem {
     id: string;
+    slug: string;
     numero: string;
     annee: number;
     date: string;
     service_emetteur: string;
     reference_complete: string;
     objet: string;
-    content_raw?: string; // chargé à la demande pour un connecté (gate DB par colonne)
 }
 
 // Colonnes teaser servies à tous (anon inclus). content_raw est EXCLU : l'anon n'a
-// plus le privilège de le lire (migration doctrine_gate_content_raw_columns) → on le
-// charge à la demande, seulement pour un connecté.
-const TEASER_COLUMNS = 'id, numero, annee, date, service_emetteur, reference_complete, objet, destinataire, signataire';
+// plus le privilège de le lire (migration doctrine_gate_content_raw_columns) ; le corps
+// est lu sur la page détail (/doctrine-fiscale/:slug), à la demande, pour un connecté.
+const TEASER_COLUMNS = 'id, slug, numero, annee, date, service_emetteur, reference_complete, objet, destinataire, signataire';
 
 const DoctrinePage: React.FC = () => {
-    const navigate = useNavigate();
     const [doctrines, setDoctrines] = useState<DoctrineItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedDoctrine, setSelectedDoctrine] = useState<DoctrineItem | null>(null);
-    const [expandedId, setExpandedId] = useState<string | null>(null);
-    // Corps (content_raw) chargés à la demande, par id — pas en masse.
-    const [bodies, setBodies] = useState<Record<string, string>>({});
-    const [loadingBodyId, setLoadingBodyId] = useState<string | null>(null);
-    // En dev local on débloque la consultation (import.meta.env.DEV = false en prod).
-    const [isAuthenticated, setIsAuthenticated] = useState(import.meta.env.DEV);
-    const [showAuthModal, setShowAuthModal] = useState(false);
 
     useEffect(() => {
-        checkAuth();
         fetchDoctrines();
     }, []);
-
-    const checkAuth = async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        setIsAuthenticated(!!session || import.meta.env.DEV);
-    };
 
     const fetchDoctrines = async () => {
         try {
@@ -63,34 +47,10 @@ const DoctrinePage: React.FC = () => {
         }
     };
 
-    const handleDoctrineClick = async (doctrine: DoctrineItem) => {
-        if (!isAuthenticated) {
-            setShowAuthModal(true);
-            return;
-        }
-        // Accordéon : on déplie/replie la doctrine sous sa carte (repliée par défaut).
-        const willExpand = expandedId !== doctrine.id;
-        setExpandedId(willExpand ? doctrine.id : null);
-        // Corps chargé à la demande (le gate réel est en base : un anon ne peut pas
-        // lire content_raw même en contournant ce JS).
-        if (willExpand && bodies[doctrine.id] === undefined) {
-            setLoadingBodyId(doctrine.id);
-            const { data } = await supabase
-                .from('doctrine')
-                .select('content_raw')
-                .eq('id', doctrine.id)
-                .single();
-            if (data?.content_raw != null) {
-                setBodies((prev) => ({ ...prev, [doctrine.id]: data.content_raw }));
-            }
-            setLoadingBodyId(null);
-        }
-    };
-
     const filteredDoctrines = useMemo(() => {
         if (!searchQuery) return doctrines;
         const query = searchQuery.toLowerCase();
-        return doctrines.filter(d => 
+        return doctrines.filter(d =>
             (d.objet && d.objet.toLowerCase().includes(query)) ||
             (d.numero && d.numero.toLowerCase().includes(query)) ||
             (d.reference_complete && d.reference_complete.toLowerCase().includes(query))
@@ -154,11 +114,12 @@ const DoctrinePage: React.FC = () => {
                 ) : (
                     <div className="doctrine-list">
                         {filteredDoctrines.map((item) => (
-                            <div
+                            <Link
                                 key={item.id}
-                                className={`doctrine-card${expandedId === item.id ? ' open' : ''}`}
+                                to={`/doctrine-fiscale/${item.slug}`}
+                                className="doctrine-card"
                             >
-                                <div className="doctrine-card__summary" onClick={() => handleDoctrineClick(item)}>
+                                <div className="doctrine-card__summary">
                                     <div className="doctrine-card__header">
                                         <div className="doctrine-card__meta">
                                             <span className="doctrine-card__date">
@@ -182,29 +143,14 @@ const DoctrinePage: React.FC = () => {
                                             <span>{item.service_emetteur || "DGID"}</span>
                                         </div>
                                         <div className="doctrine-card__action">
-                                            {expandedId === item.id ? 'Replier' : 'Lire la lettre'}
+                                            Lire la lettre
                                             <ChevronRight size={16} className="doctrine-card__chevron" />
                                         </div>
                                     </div>
                                 </div>
-
-                                {expandedId === item.id && (
-                                    <div className="doctrine-card__content">
-                                        {bodies[item.id] !== undefined ? (
-                                            bodies[item.id].split('\n').map((paragraph, idx) => (
-                                                paragraph.trim() ? <p key={idx}>{paragraph}</p> : <br key={idx} />
-                                            ))
-                                        ) : (
-                                            <div className="doctrine-loading" style={{ padding: '1.5rem' }}>
-                                                <Loader2 size={24} className="spinner" />
-                                                <p>{loadingBodyId === item.id ? 'Chargement du texte…' : 'Texte indisponible.'}</p>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
+                            </Link>
                         ))}
-                        
+
                         {filteredDoctrines.length === 0 && (
                             <div className="empty-state" style={{ textAlign: 'center', padding: '4rem', color: '#6b7280' }}>
                                 <FileText size={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
@@ -215,93 +161,6 @@ const DoctrinePage: React.FC = () => {
                     </div>
                 )}
             </section>
-
-            {/* Sidebar Lecture Doctrine */}
-            <AnimatePresence>
-                {selectedDoctrine && (
-                    <motion.div 
-                        className="doctrine-reader-overlay"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        onClick={() => setSelectedDoctrine(null)}
-                    >
-                        <motion.div 
-                            className="doctrine-reader-sidebar"
-                            initial={{ x: '100%' }}
-                            animate={{ x: 0 }}
-                            exit={{ x: '100%' }}
-                            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            onClick={e => e.stopPropagation()}
-                        >
-                            <div className="doctrine-reader__header">
-                                <div className="doctrine-reader__title-area">
-                                    <h2>{selectedDoctrine.reference_complete}</h2>
-                                    <span>Du {formatDate(selectedDoctrine.date)}</span>
-                                </div>
-                                <button 
-                                    className="doctrine-reader__close"
-                                    onClick={() => setSelectedDoctrine(null)}
-                                >
-                                    <X size={24} />
-                                </button>
-                            </div>
-                            <div className="doctrine-reader__content">
-                                <h3 style={{ marginBottom: '1.5rem', fontFamily: 'var(--font-heading)' }}>
-                                    Objet : {selectedDoctrine.objet}
-                                </h3>
-                                {(bodies[selectedDoctrine.id] ?? selectedDoctrine.content_raw ?? '').split('\n').map((paragraph, idx) => (
-                                    paragraph.trim() ? <p key={idx}>{paragraph}</p> : <br key={idx} />
-                                ))}
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            {/* Auth Modal (Simple Fallback) */}
-            <AnimatePresence>
-                {showAuthModal && (
-                    <motion.div 
-                        className="auth-modal-overlay"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                        onClick={() => setShowAuthModal(false)}
-                    >
-                        <motion.div 
-                            className="auth-modal-content"
-                            initial={{ scale: 0.95, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.95, opacity: 0 }}
-                            style={{ background: 'white', padding: '2rem', borderRadius: '12px', maxWidth: '400px', textAlign: 'center' }}
-                            onClick={e => e.stopPropagation()}
-                        >
-                            <BookOpen size={48} color="#047857" style={{ margin: '0 auto 1rem' }} />
-                            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', fontFamily: 'var(--font-heading)' }}>Lecture réservée aux membres</h2>
-                            <p style={{ color: '#4b5563', marginBottom: '1.5rem', lineHeight: 1.5 }}>
-                                Créez un <strong>compte gratuit</strong> pour lire l'intégralité de la doctrine fiscale
-                                (circulaires, notes et lettres de la DGID). L'objet et les références restent en accès libre.
-                            </p>
-                            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-                                <button
-                                    onClick={() => navigate('/signup')}
-                                    style={{ padding: '0.75rem 1.5rem', border: 'none', background: '#047857', color: 'white', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}
-                                >
-                                    Créer un compte
-                                </button>
-                                <button
-                                    onClick={() => navigate('/login')}
-                                    style={{ padding: '0.75rem 1.5rem', border: '1px solid #d1d5db', background: 'white', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}
-                                >
-                                    Se connecter
-                                </button>
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
         </div>
     );
 };

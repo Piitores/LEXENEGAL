@@ -342,6 +342,61 @@ export function buildCodesBody(texts) {
   </article>`);
 }
 
+/* ---------- DOCTRINE FISCALE (teaser public, corps gaté) ---------- */
+/*
+ * SSR RÉSERVÉ AU TEASER : objet, référence, service, date, destinataire, signataire.
+ * `content_raw` n'est JAMAIS servi côté serveur public (anti-cloaking + anti-scraping) ;
+ * le corps reste chargé côté client pour un membre connecté (gate DB Phase 1).
+ */
+export function buildDoctrineHead(d, canonical) {
+  const objet = (d.objet || '').trim();
+  const ref = (d.reference_complete || (d.numero ? `Lettre n° ${d.numero}` : 'Doctrine fiscale')).trim();
+  const dateFr = formatDateFr(d.date);
+  const service = d.service_emetteur || 'DGID';
+  const titleCore = objet ? `${objet} — ${ref}` : ref;
+  const title = `${titleCore} | Doctrine fiscale | Lexenegal`;
+  const description = `Doctrine fiscale de la DGID (Sénégal) : ${ref}. `
+    + `${objet ? `Objet : ${objet}. ` : ''}${service}${dateFr ? ` — ${dateFr}` : ''}. `
+    + `Référence et objet en accès libre ; texte intégral réservé aux membres sur Lexenegal.`;
+  const keywords = [
+    objet || null, ref, 'doctrine fiscale Sénégal', 'DGID', 'circulaire fiscale',
+    'note DGID', 'droit fiscal sénégalais', 'Lexenegal',
+  ].filter(Boolean).join(', ');
+  const schema = {
+    '@context': 'https://schema.org', '@type': 'Article',
+    headline: titleCore, about: objet || 'Doctrine fiscale',
+    ...(d.date ? { datePublished: d.date } : {}),
+    inLanguage: 'fr',
+    author: { '@type': 'GovernmentOrganization', name: 'Direction générale des Impôts et des Domaines (DGID)' },
+    publisher: { '@type': 'Organization', name: 'Lexenegal', url: SITE },
+    isPartOf: { '@type': 'CollectionPage', name: 'Doctrine fiscale', url: `${SITE}/doctrine-fiscale` },
+    url: canonical,
+  };
+  return headBlock({ title, description, keywords, canonical, ogType: 'article', schema });
+}
+export function buildDoctrineBody(d) {
+  const objet = (d.objet || '').trim();
+  const ref = d.reference_complete || (d.numero ? `Lettre n° ${d.numero}` : 'Doctrine fiscale');
+  const dateFr = formatDateFr(d.date);
+  const meta = [
+    ref && `<li><strong>Référence :</strong> ${esc(ref)}</li>`,
+    d.service_emetteur && `<li><strong>Service émetteur :</strong> ${esc(d.service_emetteur)}</li>`,
+    dateFr && `<li><strong>Date :</strong> ${esc(dateFr)}</li>`,
+    d.destinataire && `<li><strong>Destinataire :</strong> ${esc(d.destinataire)}</li>`,
+    d.signataire && `<li><strong>Signataire :</strong> ${esc(d.signataire)}</li>`,
+  ].filter(Boolean).join('\n');
+  // content_raw VOLONTAIREMENT absent : teaser uniquement côté serveur public.
+  return wrapContent(`<article>
+    <nav class="ssr-bc" aria-label="Fil d'Ariane"><a href="/doctrine-fiscale">Doctrine fiscale</a> › ${esc(ref)}</nav>
+    <h1>${esc(objet || ref)}</h1>
+    <ul class="ssr-meta">${meta}</ul>
+    <section class="ssr-doctrine-gate">
+      <p>Document de doctrine fiscale de la <strong>DGID</strong> (Sénégal). L'objet et les références ci-dessus sont en accès libre.</p>
+      <p>Le <strong>texte intégral</strong> de cette lettre est réservé aux membres. <a href="/signup">Créez un compte gratuit</a> pour le consulter, ou parcourez l'ensemble de la <a href="/doctrine-fiscale">doctrine fiscale</a>.</p>
+    </section>
+  </article>`);
+}
+
 /* ---------- Accès Supabase REST ---------- */
 async function sb(pathq) {
   const r = await fetch(`${SUPABASE_URL}/rest/v1/${pathq}`,
@@ -365,6 +420,10 @@ async function fetchCitedArticles(decisionId) {
   try {
     return await sb(`decision_article_links?decision_id=eq.${decisionId}&select=article:articles(slug,num,num_court,article_number,code:laws_and_codes(slug,title))&limit=40`);
   } catch (e) { return []; }
+}
+async function fetchDoctrine(slug) {
+  // Teaser uniquement : content_raw EXCLU du select serveur public.
+  return one(await sb(`doctrine?slug=eq.${encodeURIComponent(slug)}&select=id,slug,numero,annee,date,service_emetteur,reference_complete,objet,destinataire,signataire&limit=1`));
 }
 async function fetchLaw(slug) {
   return one(await sb(`laws_and_codes?slug=eq.${encodeURIComponent(slug)}&select=id,title,short_title,category,slug,reference,publication_date,description,abrogation_note,abrogated_by_slug&limit=1`));
@@ -420,6 +479,16 @@ export default async function handler(req, res) {
     if (type === 'codes') {
       const texts = await fetchAllTexts();
       return serveHtml(buildCodesHead(`${SITE}/codes`), buildCodesBody(texts));
+    }
+
+    if (type === 'doctrine') {
+      const slug = q.slug;
+      if (!slug) return serveShell();
+      let d = null;
+      try { d = await fetchDoctrine(slug); } catch (e) { /* */ }
+      if (!d) return serveShell(60, true);
+      const canonical = `${SITE}/doctrine-fiscale/${slug}`;
+      return serveHtml(buildDoctrineHead(d, canonical), buildDoctrineBody(d));
     }
 
     if (type === 'code') {

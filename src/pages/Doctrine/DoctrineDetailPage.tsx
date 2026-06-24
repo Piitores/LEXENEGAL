@@ -1,0 +1,185 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { supabase } from '../../lib/supabase';
+import useAuth from '../../hooks/useAuth';
+import { Loader2, ArrowLeft, Building, Calendar, FileText, Lock, BookOpen } from 'lucide-react';
+import ConversionModal from '../../components/ConversionModal/ConversionModal';
+import './DoctrinePage.css';
+import './DoctrineDetailPage.css';
+
+interface DoctrineDetail {
+    id: string;
+    slug: string;
+    numero: string;
+    annee: number;
+    date: string;
+    service_emetteur: string;
+    reference_complete: string;
+    objet: string;
+    destinataire: string;
+    signataire: string;
+}
+
+// Teaser public (content_raw EXCLU : gate DB par colonne, migration doctrine_gate_content_raw_columns).
+const TEASER_COLUMNS = 'id, slug, numero, annee, date, service_emetteur, reference_complete, objet, destinataire, signataire';
+
+const MOIS_FR: Record<string, number> = {
+    janvier: 0, fevrier: 1, 'février': 1, mars: 2, avril: 3, mai: 4, juin: 5,
+    juillet: 6, aout: 7, 'août': 7, septembre: 8, octobre: 9, novembre: 10, decembre: 11, 'décembre': 11,
+};
+function formatDate(dateStr?: string | null, ref?: string | null) {
+    let d = dateStr ? new Date(dateStr) : null;
+    if ((!d || isNaN(d.getTime())) && ref) {
+        const m = ref.match(/\b(?:le|du)\s+(\d[\s\dA-Za-zÀ-ÿ]{3,40})/i);
+        if (m) {
+            const compact = m[1].replace(/\s+/g, '');
+            const mm = compact.match(/^(\d{1,2})([A-Za-zÀ-ÿ]+?)(\d{4})/);
+            if (mm) {
+                const mo = MOIS_FR[mm[2].toLowerCase()];
+                if (mo != null) d = new Date(Number(mm[3]), mo, Number(mm[1]));
+            }
+        }
+    }
+    if (!d || isNaN(d.getTime())) return 'Date inconnue';
+    return d.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+const DoctrineDetailPage: React.FC = () => {
+    const { slug } = useParams();
+    const { loading: authLoading, isConnected } = useAuth();
+    // En dev local on débloque la consultation (import.meta.env.DEV = false en prod).
+    const canRead = isConnected || import.meta.env.DEV;
+
+    const [doctrine, setDoctrine] = useState<DoctrineDetail | null>(null);
+    const [notFound, setNotFound] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [body, setBody] = useState<string | null>(null);
+    const [loadingBody, setLoadingBody] = useState(false);
+    const [showModal, setShowModal] = useState(false);
+
+    // Teaser : chargé pour tout le monde (objet, référence, métadonnées).
+    useEffect(() => {
+        let active = true;
+        setLoading(true);
+        setNotFound(false);
+        (async () => {
+            const { data, error } = await supabase
+                .from('doctrine')
+                .select(TEASER_COLUMNS)
+                .eq('slug', slug)
+                .maybeSingle();
+            if (!active) return;
+            if (error || !data) setNotFound(true);
+            else setDoctrine(data as DoctrineDetail);
+            setLoading(false);
+        })();
+        return () => { active = false; };
+    }, [slug]);
+
+    // Titre de page côté SPA (le SSR sert déjà le <head> complet aux crawlers).
+    useEffect(() => {
+        if (doctrine) {
+            const ref = doctrine.reference_complete || (doctrine.numero ? `Lettre n° ${doctrine.numero}` : 'Doctrine fiscale');
+            document.title = `${doctrine.objet ? `${doctrine.objet} — ` : ''}${ref} | Doctrine fiscale | Lexenegal`;
+        }
+        return () => { document.title = 'Lexenegal'; };
+    }, [doctrine]);
+
+    // Corps (content_raw) chargé à la demande, SEULEMENT pour un membre (gate réel en base).
+    useEffect(() => {
+        if (!doctrine || !canRead || authLoading || body !== null) return;
+        let active = true;
+        setLoadingBody(true);
+        (async () => {
+            const { data } = await supabase
+                .from('doctrine')
+                .select('content_raw')
+                .eq('id', doctrine.id)
+                .single();
+            if (!active) return;
+            setBody((data?.content_raw as string) ?? '');
+            setLoadingBody(false);
+        })();
+        return () => { active = false; };
+    }, [doctrine, canRead, authLoading, body]);
+
+    const paragraphs = useMemo(
+        () => (body || '').split('\n').map((p) => p.trim()),
+        [body]
+    );
+
+    const ref = doctrine?.reference_complete || (doctrine?.numero ? `Lettre n° ${doctrine.numero}` : 'Doctrine fiscale');
+
+    return (
+        <div className="doctrine-page doctrine-detail">
+            <div className="doctrine-detail__container">
+                <Link to="/doctrine-fiscale" className="doctrine-detail__back">
+                    <ArrowLeft size={18} /> Toute la doctrine fiscale
+                </Link>
+
+                {loading ? (
+                    <div className="doctrine-loading">
+                        <Loader2 size={40} className="spinner" />
+                        <p>Chargement…</p>
+                    </div>
+                ) : notFound ? (
+                    <div className="empty-state" style={{ textAlign: 'center', padding: '4rem', color: '#6b7280' }}>
+                        <FileText size={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
+                        <h3>Document introuvable</h3>
+                        <p>Cette lettre de doctrine n'existe pas ou a été retirée.</p>
+                        <Link to="/doctrine-fiscale" className="doctrine-detail__cta" style={{ marginTop: '1.5rem', display: 'inline-flex' }}>
+                            Parcourir la doctrine fiscale
+                        </Link>
+                    </div>
+                ) : doctrine && (
+                    <article className="doctrine-detail__card">
+                        <header className="doctrine-detail__header">
+                            <span className="doctrine-detail__eyebrow">
+                                <BookOpen size={14} /> Doctrine fiscale · DGID
+                            </span>
+                            <h1>{doctrine.objet || ref}</h1>
+                            <ul className="doctrine-detail__meta">
+                                <li><Calendar size={15} /> {formatDate(doctrine.date, doctrine.reference_complete)}</li>
+                                <li><FileText size={15} /> {ref}</li>
+                                <li><Building size={15} /> {doctrine.service_emetteur || 'DGID'}</li>
+                                {doctrine.destinataire && <li><strong>Destinataire :</strong>&nbsp;{doctrine.destinataire}</li>}
+                                {doctrine.signataire && <li><strong>Signataire :</strong>&nbsp;{doctrine.signataire}</li>}
+                            </ul>
+                        </header>
+
+                        <div className="doctrine-detail__body">
+                            {canRead ? (
+                                loadingBody || body === null ? (
+                                    <div className="doctrine-loading" style={{ padding: '2rem' }}>
+                                        <Loader2 size={24} className="spinner" />
+                                        <p>Chargement du texte…</p>
+                                    </div>
+                                ) : body ? (
+                                    paragraphs.map((p, idx) => (p ? <p key={idx}>{p}</p> : <br key={idx} />))
+                                ) : (
+                                    <p className="doctrine-detail__novel">Texte intégral indisponible pour ce document.</p>
+                                )
+                            ) : (
+                                <div className="doctrine-detail__gate">
+                                    <div className="doctrine-detail__gate-icon"><Lock size={28} /></div>
+                                    <h2>Texte intégral réservé aux membres</h2>
+                                    <p>
+                                        Créez un <strong>compte gratuit</strong> pour lire l'intégralité de cette lettre
+                                        de doctrine fiscale. L'objet et les références restent en accès libre.
+                                    </p>
+                                    <button className="doctrine-detail__cta" onClick={() => setShowModal(true)}>
+                                        Lire le texte intégral
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </article>
+                )}
+            </div>
+
+            <ConversionModal isOpen={showModal} onClose={() => setShowModal(false)} />
+        </div>
+    );
+};
+
+export default DoctrineDetailPage;

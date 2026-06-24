@@ -25,6 +25,10 @@
             "destination": "/api/render?type=code&slug=:slug"
         },
         {
+            "source": "/doctrine-fiscale/:slug",
+            "destination": "/api/render?type=doctrine&slug=:slug"
+        },
+        {
             "source": "/(.*)",
             "destination": "/index.html"
         }

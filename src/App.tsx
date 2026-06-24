@@ -14,6 +14,7 @@ import CodesListPage from './pages/Codes/CodesListPage';
 import CodePage from './pages/Code/CodePage';
 import ArticlePage from './pages/Code/ArticlePage';
 import DoctrinePage from './pages/Doctrine/DoctrinePage';
+import DoctrineDetailPage from './pages/Doctrine/DoctrineDetailPage';
 import CommunautairePage from './pages/Communautaire/CommunautairePage';
 import AccessRequestPage from './pages/AccessRequest/AccessRequestPage';
 import AdminPage from './pages/Admin/AdminPage';
@@ -124,6 +125,7 @@ function App() {
               <Route path="/code/:slug" element={<CodePage />} />
               <Route path="/code/:codeSlug/:articleSlug" element={<ArticlePage />} />
               <Route path="/doctrine-fiscale" element={<DoctrinePage />} />
+              <Route path="/doctrine-fiscale/:slug" element={<DoctrineDetailPage />} />
               <Route path="/droit-communautaire" element={<CommunautairePage />} />
 
               {/* Espace Pro */}

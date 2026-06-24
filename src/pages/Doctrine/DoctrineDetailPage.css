@@ -1,0 +1,141 @@
+/* Page détail d'une lettre de doctrine fiscale (/doctrine-fiscale/:slug) */
+.doctrine-detail {
+    padding-top: 96px;
+}
+
+.doctrine-detail__container {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+}
+
+.doctrine-detail__back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: #047857;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin: 1.5rem 0 1.25rem;
+    transition: color 0.2s;
+}
+.doctrine-detail__back:hover { color: #065F46; }
+
+.doctrine-detail__card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+.doctrine-detail__header {
+    padding: 2.25rem 2.5rem 1.75rem;
+    border-bottom: 1px solid #f3f4f6;
+    background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
+}
+
+.doctrine-detail__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #047857;
+    margin-bottom: 0.75rem;
+}
+
+.doctrine-detail__header h1 {
+    font-family: 'Playfair Display', var(--font-heading), Georgia, serif;
+    font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+    font-weight: 700;
+    color: #111827;
+    line-height: 1.25;
+    margin: 0 0 1.25rem;
+}
+
+.doctrine-detail__meta {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem 1.5rem;
+    font-size: 0.9rem;
+    color: #4b5563;
+}
+.doctrine-detail__meta li {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+.doctrine-detail__meta svg { color: #047857; flex-shrink: 0; }
+
+.doctrine-detail__body {
+    padding: 2.25rem 2.5rem 2.75rem;
+    font-family: var(--font-body);
+    font-size: 1.05rem;
+    line-height: 1.8;
+    color: #374151;
+    text-align: justify;
+}
+.doctrine-detail__body p { margin: 0 0 1.35rem; }
+.doctrine-detail__body p:last-child { margin-bottom: 0; }
+.doctrine-detail__novel { color: #6b7280; font-style: italic; }
+
+/* Bloc de gate (visiteur non connecté) */
+.doctrine-detail__gate {
+    text-align: center;
+    padding: 1.5rem 1rem 0.5rem;
+    max-width: 460px;
+    margin: 0 auto;
+}
+.doctrine-detail__gate-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #ecfdf5;
+    color: #047857;
+    margin-bottom: 1rem;
+}
+.doctrine-detail__gate h2 {
+    font-family: 'Playfair Display', var(--font-heading), Georgia, serif;
+    font-size: 1.35rem;
+    color: #111827;
+    margin: 0 0 0.75rem;
+}
+.doctrine-detail__gate p {
+    color: #4b5563;
+    line-height: 1.6;
+    margin: 0 0 1.5rem;
+    text-align: center;
+}
+
+.doctrine-detail__cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.8rem 1.6rem;
+    border: none;
+    background: #047857;
+    color: #fff;
+    border-radius: 9999px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s, transform 0.2s;
+}
+.doctrine-detail__cta:hover { background: #065F46; transform: translateY(-1px); }
+
+@media (max-width: 640px) {
+    .doctrine-detail__header { padding: 1.75rem 1.5rem 1.5rem; }
+    .doctrine-detail__body { padding: 1.75rem 1.5rem 2rem; }
+}
