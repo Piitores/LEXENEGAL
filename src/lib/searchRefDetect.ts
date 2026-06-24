@@ -26,14 +26,36 @@ function monthToNum(name: string): string | undefined {
   return MONTHS_FR[key];
 }
 
+/** Connecteurs de tête d'un nom de code (« du Code… », « de la Loi… »). */
+const LEADING_CONNECTOR = /^(?:DU|DES|DE\s+LA|DE\s+L['']?|DE|LA|LE|LES|L['']?)\s+/;
+
 /** Détecte une référence d'article résolue à un code connu (sinon null). */
 export function detectArticleRef(query: string, codeIndex: Map<string, string>): ArticleRefDetected | null {
   // Requête souvent en minuscules → on uppercase (le parseur attend « ARTICLE » + acronyme majuscule).
-  const refs = parseCitedString((query || '').toUpperCase());
-  if (refs.length !== 1) return null;
-  const codeSlug = codeIndex.get(normalizeToken(refs[0].codeToken));
-  if (!codeSlug) return null;
-  return { codeSlug, articleNumber: refs[0].articleNumber };
+  const upper = (query || '').toUpperCase();
+
+  // 1) Référence nette via le parseur partagé : acronymes (« article 24 AUDCG ») et
+  //    nom suivant « du » (« article L.56 du Code du travail »).
+  const refs = parseCitedString(upper);
+  if (refs.length === 1) {
+    const codeSlug = codeIndex.get(normalizeToken(refs[0].codeToken));
+    if (codeSlug) return { codeSlug, articleNumber: refs[0].articleNumber };
+  }
+
+  // 2) Repli (recherche) : « article <num> <nom de code EN CLAIR> » SANS « du »
+  //    — ex. « article L.97 code du travail ». On isole le numéro, puis on résout le
+  //    reste (entier, puis sans un connecteur de tête) contre l'index des codes. Reste
+  //    conservateur : si le reste ne correspond pas EXACTEMENT à un code connu → null.
+  const m = upper.match(/\bART(?:ICLE)?\.?\s+(L\.?\s?\d+[\w.-]*|\d+[\w-]*)\s+(.+)$/);
+  if (m) {
+    const articleNumber = m[1].replace(/\s+/g, '');
+    const rest = m[2].trim();
+    for (const candidate of [rest, rest.replace(LEADING_CONNECTOR, '')]) {
+      const codeSlug = codeIndex.get(normalizeToken(candidate));
+      if (codeSlug) return { codeSlug, articleNumber };
+    }
+  }
+  return null;
 }
 
 /**

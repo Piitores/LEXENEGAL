@@ -20,6 +20,28 @@ describe('detectArticleRef', () => {
   it('null si code hors corpus (AUPSRVE)', () => {
     expect(detectArticleRef('article 5 AUPSRVE', codeIndex)).toBeNull();
   });
+  // Régression : nom de code EN CLAIR, sans « du » (« article L.97 code du travail »).
+  it('article L.97 code du travail (nom en clair, sans « du ») → code-travail', () => {
+    expect(detectArticleRef('article L.97 code du travail', codeIndex)).toEqual({
+      codeSlug: 'code-travail',
+      articleNumber: 'L.97',
+    });
+  });
+  it('article L.97 du Code du travail (avec « du ») → code-travail', () => {
+    expect(detectArticleRef('article L.97 du Code du travail', codeIndex)).toEqual({
+      codeSlug: 'code-travail',
+      articleNumber: 'L.97',
+    });
+  });
+  it('numéro nu (« L.56 code du travail ») → code-travail', () => {
+    expect(detectArticleRef('article L.56 code du travail', codeIndex)).toEqual({
+      codeSlug: 'code-travail',
+      articleNumber: 'L.56',
+    });
+  });
+  it('null si nom de code en clair inconnu', () => {
+    expect(detectArticleRef('article 5 code de la planète', codeIndex)).toBeNull();
+  });
 });
 
 describe('detectDecisionRef', () => {
