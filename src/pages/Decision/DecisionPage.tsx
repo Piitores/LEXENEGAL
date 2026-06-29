@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Download, ArrowLeft, Copy, Scale, BookOpen, Printer, AlertCircle, FileText } from 'lucide-react';
+import { Download, ArrowLeft, Copy, Scale, BookOpen, Printer, AlertCircle, FileText, Home, Search } from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
 import { supabase } from '../../lib/supabase';
 import useAuth from '../../hooks/useAuth';
@@ -17,6 +17,7 @@ import ReportErrorModal from '../../components/ReportError/ReportErrorModal';
 import AnnotationPanel from '../../components/AnnotationPanel/AnnotationPanel';
 
 import './DecisionPage.css';
+import '../Error/NotFoundPage.css';
 
 // --- CONFIG ---
 
@@ -307,14 +308,39 @@ const DecisionPage: React.FC = () => {
     );
 
     if (!decision) return (
-        <div className="decisionPage" style={{ alignItems: 'center', flexDirection: 'column', gap: '1rem', marginTop: '5rem' }}>
-            <h2>Décision introuvable</h2>
-            <div style={{ background: '#F3F4F6', padding: '2rem', borderRadius: '8px', textAlign: 'left', fontFamily: 'monospace' }}>
-                <p><strong>Slug demandé :</strong> {slug}</p>
-                <p><strong>Base de données :</strong> Supabase</p>
-                <p><strong>Debug Status :</strong> {loading ? 'Loading' : 'Finished'}</p>
-                <button onClick={fetchDecision} style={{ padding: '0.5rem 1rem', marginTop: '1rem', cursor: 'pointer' }}>Réessayer</button>
+        <div className="not-found-container">
+            <div className="not-found-content">
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.25rem' }}>
+                    <Scale size={56} strokeWidth={1.25} color="#047857" aria-hidden="true" />
+                </div>
+                <h1 className="not-found-title">Décision introuvable</h1>
+                <p className="not-found-message">
+                    Cette décision n'est pas (ou plus) disponible sur Lexenegal. Le lien est
+                    peut-être ancien, ou la décision a été retirée du périmètre de publication.
+                </p>
+                <div className="not-found-actions">
+                    <button className="nf-btn-primary" onClick={() => navigate('/search')}>
+                        <Search size={18} />
+                        Rechercher une décision
+                    </button>
+                    <button className="nf-btn-secondary" onClick={() => navigate('/')}>
+                        <Home size={18} />
+                        Retour à l'accueil
+                    </button>
+                </div>
+                <div className="not-found-report">
+                    <button className="nf-report-link" onClick={() => setIsReportModalOpen(true)}>
+                        <AlertCircle size={16} />
+                        Signaler ce lien cassé
+                    </button>
+                </div>
             </div>
+            <ReportErrorModal
+                isOpen={isReportModalOpen}
+                onClose={() => setIsReportModalOpen(false)}
+                entityType="decision"
+                url={window.location.href}
+            />
         </div>
     );
 
