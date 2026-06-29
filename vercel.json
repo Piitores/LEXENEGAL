@@ -7,6 +7,18 @@
             "includeFiles": ".env"
         }
     },
+    "redirects": [
+        {
+            "source": "/code/code-des-obligations-civiles-et-commerciales",
+            "destination": "/code/cocc",
+            "permanent": true
+        },
+        {
+            "source": "/code/code-des-obligations-civiles-et-commerciales/:path*",
+            "destination": "/code/cocc",
+            "permanent": true
+        }
+    ],
     "rewrites": [
         {
             "source": "/codes",
