@@ -26,21 +26,10 @@ export type CitedResolution =
   | { kind: 'link'; article: ResolvedArticle; label: string }
   | { kind: 'text'; label: string };
 
-/** Acronymes / abréviations → slug, pour les codes PRÉSENTS en base uniquement.
- *  (Volontairement, AUPSRVE n'y est pas → reste en texte.) */
-export const CODE_ALIASES: Record<string, string> = {
-  AUDCG: 'ohada-droit-commercial-general',
-  AUSCGIE: 'ohada-societes-commerciales-gie',
-  AUPCAP: 'ohada-procedures-collectives',
-  AUS: 'ohada-suretes',
-  AUDCIF: 'ohada-comptabilite-information-financiere',
-  AUSCOOP: 'ohada-societes-cooperatives',
-  COCC: 'cocc',
-  CGI: 'code-general-impots',
-  CPP: 'code-de-procedure-penale',
-  CP: 'code-penal',
-  CSS: 'code-securite-sociale-senegal',
-};
+/** Un alias de code (acronyme → slug). SOURCE UNIQUE = vue DB `code_aliases`
+ *  (elle-même dérivée de la table `ref_code`). Plus aucun dictionnaire codé en dur ici :
+ *  les appelants chargent les alias depuis la base et les passent à buildCodeIndex. */
+export interface CodeAlias { alias: string; code_slug: string; }
 
 /** Normalise un token de code : majuscules, sans accents, alphanumérique only. */
 export function normalizeToken(s: string): string {
@@ -62,11 +51,12 @@ export function normalizeArticleNumber(s: string): string {
 /** Construit l'index générique token→slug à partir des codes (extensible : conventions collectives incluses dès qu'elles sont en base). */
 export function buildCodeIndex(
   laws: { slug: string; title?: string | null; short_title?: string | null }[],
+  aliases: CodeAlias[] = [],
 ): Map<string, string> {
   const idx = new Map<string, string>();
-  // alias d'acronymes (prioritaires, curés)
-  for (const [token, slug] of Object.entries(CODE_ALIASES)) {
-    idx.set(normalizeToken(token), slug);
+  // alias d'acronymes — SOURCE UNIQUE = vue DB `code_aliases` (dérivée de ref_code), passés par l'appelant
+  for (const a of aliases) {
+    if (a?.alias && a?.code_slug) idx.set(normalizeToken(a.alias), a.code_slug);
   }
   // tokens dérivés des titres / short_title
   for (const law of laws) {

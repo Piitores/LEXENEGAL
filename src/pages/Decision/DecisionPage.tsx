@@ -222,11 +222,12 @@ const DecisionPage: React.FC = () => {
                 console.log(`📚 Loaded ${formattedArticles.length} articles for hyperlinking`);
             }
             // Index générique des codes (extensible) pour résoudre les références citées en liens fiables.
-            const { data: laws } = await supabase
-                .from('laws_and_codes')
-                .select('slug, title, short_title')
-                .eq('is_active', true);
-            if (laws) setCodeIndex(buildCodeIndex(laws));
+            // Alias d'acronymes = vue DB `code_aliases` (source unique, dérivée de ref_code).
+            const [{ data: laws }, { data: aliases }] = await Promise.all([
+                supabase.from('laws_and_codes').select('slug, title, short_title').eq('is_active', true),
+                supabase.from('code_aliases').select('code_slug, alias'),
+            ]);
+            setCodeIndex(buildCodeIndex(laws || [], (aliases || []).map((a: any) => ({ alias: a.alias, code_slug: a.code_slug }))));
         } catch (error) {
             console.error('Error in fetchArticles:', error);
         }

@@ -2,10 +2,13 @@ import { describe, it, expect } from 'vitest';
 import { detectArticleRef, detectDecisionRef } from '../searchRefDetect';
 import { buildCodeIndex } from '../articleRefResolver';
 
-const codeIndex = buildCodeIndex([
-  { slug: 'ohada-droit-commercial-general', title: 'Acte uniforme révisé portant sur le droit commercial général', short_title: null },
-  { slug: 'code-travail', title: 'Code du Travail', short_title: 'Code du Travail' },
-]);
+const codeIndex = buildCodeIndex(
+  [
+    { slug: 'ohada-droit-commercial-general', title: 'Acte uniforme révisé portant sur le droit commercial général', short_title: null },
+    { slug: 'code-travail', title: 'Code du Travail', short_title: 'Code du Travail' },
+  ],
+  [{ alias: 'AUDCG', code_slug: 'ohada-droit-commercial-general' }],
+);
 
 describe('detectArticleRef', () => {
   it('article 24 AUDCG → code + numéro', () => {

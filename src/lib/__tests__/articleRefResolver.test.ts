@@ -14,7 +14,13 @@ const LAWS = [
   { slug: 'ohada-droit-commercial-general', title: 'Acte uniforme révisé portant sur le droit commercial général', short_title: null },
   { slug: 'code-penal', title: 'Code Pénal', short_title: null },
 ];
-const codeIndex = buildCodeIndex(LAWS);
+// Alias d'acronymes désormais fournis par l'appelant (vue DB `code_aliases` en prod).
+const ALIASES = [
+  { alias: 'AUDCG', code_slug: 'ohada-droit-commercial-general' },
+  { alias: 'COCC', code_slug: 'cocc' },
+  { alias: 'CP', code_slug: 'code-penal' },
+];
+const codeIndex = buildCodeIndex(LAWS, ALIASES);
 
 const ARTICLES: ResolvedArticle[] = [
   { id: 'a1', slug: 'article-l56', article_number: 'L.56', code_slug: 'code-travail', code_name: 'Code du Travail' },
