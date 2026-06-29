@@ -404,6 +404,15 @@ async function sb(pathq) {
   if (!r.ok) throw new Error(`supabase ${r.status}`);
   return r.json();
 }
+async function sbRpc(fn, body) {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+    method: 'POST',
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) throw new Error(`supabase rpc ${r.status}`);
+  return r.json();
+}
 const one = (rows) => (rows && rows[0]) ? rows[0] : null;
 async function fetchHomeCodes() {
   try { return await sb(`laws_and_codes?is_active=eq.true&category=eq.code&select=slug,title,short_title&order=title&limit=60`); }
@@ -470,6 +479,14 @@ export default async function handler(req, res) {
       res.statusCode = 200;
       return res.end(injectIntoShell(shell, headHtml, bodyHtml));
     };
+    // Contenu RETIRÉ volontairement (décision masquée is_active=false, ex. OHADA hors
+    // périmètre) : 410 Gone + noindex → désindexation propre, sans 404 ni faux 200.
+    const serveGone = () => {
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Cache-Control', 'public, s-maxage=86400');
+      res.statusCode = 410;
+      return res.end(shell.replace(/<\/head>/i, '<meta name="robots" content="noindex, follow" />\n</head>'));
+    };
 
     if (type === 'home') {
       const codes = await fetchHomeCodes();
@@ -525,7 +542,13 @@ export default async function handler(req, res) {
     if (!slug) return serveShell();
     let decision = null;
     try { decision = await fetchDecision(slug); } catch (e) { /* */ }
-    if (!decision) return serveShell(60, true);
+    if (!decision) {
+      // Décision masquée (existe mais is_active=false) → 410 Gone ; sinon coquille noindex.
+      let gone = false;
+      try { gone = (await sbRpc('rpc_decision_gone', { p_slug: slug })) === true; } catch (e) { /* */ }
+      if (gone) return serveGone();
+      return serveShell(60, true);
+    }
     const cited = decision.id ? await fetchCitedArticles(decision.id) : [];
     const canonical = `${SITE}/decision/${slug}`;
     return serveHtml(buildDecisionHead(decision, canonical), buildDecisionBody(decision, cited));
