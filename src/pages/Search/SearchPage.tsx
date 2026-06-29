@@ -3,8 +3,6 @@ import { supabase } from '../../lib/supabase';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import './SearchPage.css';
-import { detectArticleRef, detectDecisionRef } from '../../lib/searchRefDetect';
-import { buildCodeIndex, normalizeToken, normalizeArticleNumber } from '../../lib/articleRefResolver';
 
 
 // Retire les balises HTML pour l'aperçu d'un article
@@ -68,7 +66,6 @@ const SearchPage: React.FC = () => {
     const [offset, setOffset] = useState(0);
 
     // Détection de références structurées → carte « meilleur résultat »
-    const [codeIndex, setCodeIndex] = useState<Map<string, string>>(new Map());
     const [bestMatch, setBestMatch] = useState<BestMatch | null>(null);
 
     const navigate = useNavigate();
@@ -169,61 +166,42 @@ const SearchPage: React.FC = () => {
     // Défaut « Tout » (fédéré) : plus de re-forçage automatique vers la jurisprudence
     // (dé-biaisage demandé). L'utilisateur choisit son périmètre via les onglets.
 
-    // Index des codes (titres + alias DB `code_aliases` = source) pour la détection structurée.
-    useEffect(() => {
-        (async () => {
-            const { data: laws } = await supabase.from('laws_and_codes').select('slug, title, short_title').eq('is_active', true);
-            const idx = buildCodeIndex(laws || []);
-            const { data: aliases } = await supabase.from('code_aliases').select('code_slug, alias');
-            (aliases || []).forEach((a: any) => idx.set(normalizeToken(a.alias), a.code_slug));
-            setCodeIndex(idx);
-        })();
-    }, []);
-
-    // « Meilleur résultat » : référence structurée (article ou décision) → cible directe,
-    // en TÊTE et SANS occulter la liste FTS (condition proprio).
+    // « Meilleur résultat » : référence structurée (article ou décision) résolue par le
+    // NOYAU en base (RPC resolve_citation, source unique) → cible directe, en TÊTE et
+    // SANS occulter la liste FTS (condition proprio). Gère « non publié », désambiguïsation
+    // et juridiction validée par date côté serveur.
     useEffect(() => {
         const q = (query || '').trim();
         setBestMatch(null);
         if (q.length < 3) return;
         let active = true;
         (async () => {
-            // 1) Article : « article 24 AUDCG »
-            if (codeIndex.size) {
-                const art = detectArticleRef(q, codeIndex);
-                if (art) {
-                    const { data } = await supabase
-                        .from('articles')
-                        .select('article_number, slug, laws_and_codes!inner(slug, short_title)')
-                        .eq('laws_and_codes.slug', art.codeSlug)
-                        .limit(300);
-                    const hit = (data || []).find(
-                        (a: any) => normalizeArticleNumber(a.article_number) === normalizeArticleNumber(art.articleNumber),
-                    );
-                    if (hit && active) {
-                        setBestMatch({
-                            kind: 'article',
-                            article_number: hit.article_number,
-                            slug: hit.slug,
-                            code_slug: (hit as any).laws_and_codes?.slug || art.codeSlug,
-                            code_title: (hit as any).laws_and_codes?.short_title || art.codeSlug,
-                        });
-                        return;
-                    }
-                }
+            const { data, error } = await supabase.rpc('resolve_citation', { q });
+            if (error || !data || !active || data.intent !== 'authority') return;
+            if (data.kind === 'norme' && data.result?.status === 'ok') {
+                const r = data.result;
+                setBestMatch({
+                    kind: 'article',
+                    article_number: r.article_number,
+                    slug: r.article_slug,
+                    code_slug: r.code_slug,
+                    code_title: r.code_title || r.code_slug,
+                });
+            } else if (data.kind === 'decision' && data.result?.status === 'ok') {
+                const m = data.result.match;
+                setBestMatch({
+                    kind: 'decision',
+                    reference: m.reference,
+                    slug: m.slug,
+                    date_decision: m.date_decision,
+                    chambre: m.chambre,
+                    juridiction: m.juridiction,
+                });
             }
-            // 2) Décision : « arrêt 34 du 14 janvier 2005 »
-            const dec = detectDecisionRef(q);
-            if (dec && (dec.dateISO || dec.number)) {
-                let qb: any = supabase.from('decisions').select('reference, slug, date_decision, chambre, juridiction').limit(1);
-                if (dec.dateISO) qb = qb.eq('date_decision', dec.dateISO);
-                if (dec.number) qb = qb.ilike('reference', `%${dec.number}%`);
-                const { data } = await qb;
-                if (data && data[0] && active) setBestMatch({ kind: 'decision', ...(data[0] as any) });
-            }
+            // 'non_publie' / 'desambiguisation' / intent 'concept' → pas de carte unique (la liste FTS gère).
         })();
         return () => { active = false; };
-    }, [query, codeIndex]);
+    }, [query]);
 
     // Pilier DOCTRINE (fédération) : recherche FTS dédiée (RPC search_doctrine).
     useEffect(() => {
