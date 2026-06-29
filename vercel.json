@@ -17,6 +17,11 @@
             "source": "/code/code-des-obligations-civiles-et-commerciales/:path*",
             "destination": "/code/cocc",
             "permanent": true
+        },
+        {
+            "source": "/decision/ohada-j-02-30",
+            "destination": "/decision/conseil-constitutionnel-19931216-3-c-93",
+            "permanent": true
         }
     ],
     "rewrites": [
