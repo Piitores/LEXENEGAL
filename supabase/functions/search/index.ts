@@ -48,7 +48,7 @@ async function embedQuery(text: string, key: string): Promise<number[]> {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   try {
-    const { surface, query, limit, filters } = await req.json().catch(() => ({}));
+    const { surface, query, limit, offset, sort, filters } = await req.json().catch(() => ({}));
     const rpcName = SURFACES[surface];
     if (!rpcName || typeof query !== "string" || query.trim().length < 2) {
       return json({ error: "bad request" }, 400);
@@ -87,12 +87,16 @@ Deno.serve(async (req) => {
       query_embedding: `[${embedding.join(",")}]`,
       result_limit,
     };
-    if (surface === "decisions" && filters) {
-      args.matiere_filter = filters.matiere ?? null;
-      args.chambre_filter = filters.chambre ?? null;
-      args.juridiction_filter = filters.juridiction ?? null;
-      args.date_from = filters.date_from ?? null;
-      args.date_to = filters.date_to ?? null;
+    if (surface === "decisions") {
+      if (filters) {
+        args.matiere_filter = filters.matiere ?? null;
+        args.chambre_filter = filters.chambre ?? null;
+        args.juridiction_filter = filters.juridiction ?? null;
+        args.date_from = filters.date_from ?? null;
+        args.date_to = filters.date_to ?? null;
+      }
+      args.sort_by = typeof sort === "string" ? sort : "relevance";
+      args.result_offset = Number(offset) || 0;
     }
     if (surface === "articles" && filters?.code) args.code_slug_filter = filters.code;
 

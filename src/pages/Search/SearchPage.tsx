@@ -61,8 +61,10 @@ const SearchPage: React.FC = () => {
     const userPickedTab = useRef(false);
     // Analytics : dernier terme déjà loggé (évite de logger 2× la même requête).
     const loggedQueryRef = useRef<string>('');
-    // Mode effectif de la dernière recherche doctrine ('hybrid' via edge function, sinon 'fts' fallback).
+    // Mode effectif de la dernière recherche par pilier ('hybrid' via edge function, sinon 'fts' fallback).
     const doctrineModeRef = useRef<'hybrid' | 'fts'>('fts');
+    const articleModeRef = useRef<'hybrid' | 'fts'>('fts');
+    const decisionsModeRef = useRef<'hybrid' | 'fts'>('fts');
     const [suggestions, setSuggestions] = useState<Decision[]>([]);
     const [facets, setFacets] = useState<any>({});
     const [loading, setLoading] = useState(false);
@@ -142,13 +144,27 @@ const SearchPage: React.FC = () => {
         setArticlesLoading(true);
         const timer = setTimeout(async () => {
             try {
-                const { data, error: artErr } = await supabase.rpc('search_articles', {
-                    search_query: term,
-                    result_limit: 50
+                // HYBRIDE via l'edge function `search` ; fallback FTS (search_articles).
+                let data: any[] = [];
+                let mode: 'hybrid' | 'fts' = 'fts';
+                const { data: ef, error: efErr } = await supabase.functions.invoke('search', {
+                    body: { surface: 'articles', query: term, limit: 50 },
                 });
+                if (!efErr && ef && !ef.fallback && Array.isArray(ef.results)) {
+                    data = ef.results;
+                    mode = 'hybrid';
+                } else {
+                    const { data: ftsData, error: artErr } = await supabase.rpc('search_articles', {
+                        search_query: term,
+                        result_limit: 50
+                    });
+                    if (artErr) throw artErr;
+                    data = ftsData || [];
+                    mode = 'fts';
+                }
                 if (cancelled) return;
-                if (artErr) throw artErr;
-                const arr: ArticleHit[] = (data || []).map((a: any) => ({
+                articleModeRef.current = mode;
+                const arr: ArticleHit[] = data.map((a: any) => ({
                     id: a.id,
                     article_number: a.article_number,
                     slug: a.slug,
@@ -159,7 +175,7 @@ const SearchPage: React.FC = () => {
                 setArticleResults(arr);
             } catch (e) {
                 if (!cancelled) setArticleResults([]);
-                console.warn('search_articles error:', e);
+                console.warn('search articles error:', e);
             } finally {
                 if (!cancelled) setArticlesLoading(false);
             }
@@ -255,16 +271,22 @@ const SearchPage: React.FC = () => {
             if (loggedQueryRef.current === term) return; // déjà loggé ce terme
             loggedQueryRef.current = term;
             const total = totalHits + articleResults.length + doctrineResults.length;
+            const modes = [decisionsModeRef.current, articleModeRef.current, doctrineModeRef.current];
+            const globalMode = modes.every((m) => m === 'hybrid')
+                ? 'hybrid'
+                : modes.every((m) => m === 'fts') ? 'fts' : 'mixed';
             void supabase.rpc('log_search_event', {
                 p_source: 'front',
                 p_query: term,
                 p_surface: 'all',
-                p_mode: 'fts',
+                p_mode: globalMode,
                 p_result_count: total,
                 p_metadata: {
                     decisions: totalHits,
                     articles: articleResults.length,
                     doctrine: doctrineResults.length,
+                    decisions_mode: decisionsModeRef.current,
+                    articles_mode: articleModeRef.current,
                     doctrine_mode: doctrineModeRef.current,
                 },
             }).then(undefined, () => { /* logging best-effort */ });
@@ -397,20 +419,44 @@ const SearchPage: React.FC = () => {
             let totalCount = 0;
 
             if (searchTerm.length > 0) {
-                // Use FTS RPC for text search
-                const { data, error: rpcError } = await supabase.rpc('search_decisions_fts', {
-                    search_query: searchTerm,
-                    matiere_filter: matiereFilter,
-                    chambre_filter: chambreFilter,
-                    juridiction_filter: finalJuridictionFilter,
-                    date_from: dateFrom,
-                    date_to: dateTo,
-                    sort_by: sortOption === 'relevance' ? 'relevance' : sortOption === 'date_asc' ? 'date_asc' : 'date_desc',
-                    result_limit: pageSize,
-                    result_offset: currentOffset
+                const sortArg = sortOption === 'relevance' ? 'relevance' : sortOption === 'date_asc' ? 'date_asc' : 'date_desc';
+                // HYBRIDE via l'edge function `search` (tri + pagination + filtres) ; fallback FTS.
+                let data: any[] = [];
+                const { data: ef, error: efErr } = await supabase.functions.invoke('search', {
+                    body: {
+                        surface: 'decisions',
+                        query: searchTerm,
+                        limit: pageSize,
+                        offset: currentOffset,
+                        sort: sortArg,
+                        filters: {
+                            matiere: matiereFilter,
+                            chambre: chambreFilter,
+                            juridiction: finalJuridictionFilter,
+                            date_from: dateFrom,
+                            date_to: dateTo,
+                        },
+                    },
                 });
-
-                if (rpcError) throw rpcError;
+                if (!efErr && ef && !ef.fallback && Array.isArray(ef.results)) {
+                    data = ef.results;
+                    decisionsModeRef.current = 'hybrid';
+                } else {
+                    const { data: ftsData, error: rpcError } = await supabase.rpc('search_decisions_fts', {
+                        search_query: searchTerm,
+                        matiere_filter: matiereFilter,
+                        chambre_filter: chambreFilter,
+                        juridiction_filter: finalJuridictionFilter,
+                        date_from: dateFrom,
+                        date_to: dateTo,
+                        sort_by: sortArg,
+                        result_limit: pageSize,
+                        result_offset: currentOffset
+                    });
+                    if (rpcError) throw rpcError;
+                    data = ftsData || [];
+                    decisionsModeRef.current = 'fts';
+                }
 
                 decisions = (data || []).map((d: any) => ({
                     id: d.id,
