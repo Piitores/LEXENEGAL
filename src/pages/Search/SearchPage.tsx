@@ -61,6 +61,8 @@ const SearchPage: React.FC = () => {
     const userPickedTab = useRef(false);
     // Analytics : dernier terme déjà loggé (évite de logger 2× la même requête).
     const loggedQueryRef = useRef<string>('');
+    // Mode effectif de la dernière recherche doctrine ('hybrid' via edge function, sinon 'fts' fallback).
+    const doctrineModeRef = useRef<'hybrid' | 'fts'>('fts');
     const [suggestions, setSuggestions] = useState<Decision[]>([]);
     const [facets, setFacets] = useState<any>({});
     const [loading, setLoading] = useState(false);
@@ -205,21 +207,37 @@ const SearchPage: React.FC = () => {
         return () => { active = false; };
     }, [query]);
 
-    // Pilier DOCTRINE (fédération) : recherche FTS dédiée (RPC search_doctrine).
+    // Pilier DOCTRINE (fédération) : recherche HYBRIDE via l'edge function `search`
+    // (contrat canonique, cf. docs/RECHERCHE-HYBRIDE.md). Fallback FTS (search_doctrine)
+    // si l'embedding n'est pas disponible (fallback:true) ou en cas d'erreur.
     useEffect(() => {
         const term = (query || '').trim();
         if (term.length < 3) { setDoctrineResults([]); return; }
         let cancelled = false;
         setDoctrineLoading(true);
         const timer = setTimeout(async () => {
+            let rows: DoctrineHit[] = [];
+            let mode: 'hybrid' | 'fts' = 'fts';
             try {
-                const { data, error: dErr } = await supabase.rpc('search_doctrine', { search_query: term, result_limit: 30 });
+                const { data: ef, error: efErr } = await supabase.functions.invoke('search', {
+                    body: { surface: 'doctrine', query: term, limit: 30 },
+                });
+                if (!efErr && ef && !ef.fallback && Array.isArray(ef.results)) {
+                    rows = ef.results as DoctrineHit[];
+                    mode = 'hybrid';
+                } else {
+                    // Pas d'hybride dispo → FTS
+                    const { data, error: dErr } = await supabase.rpc('search_doctrine', { search_query: term, result_limit: 30 });
+                    if (dErr) throw dErr;
+                    rows = (data || []) as DoctrineHit[];
+                    mode = 'fts';
+                }
                 if (cancelled) return;
-                if (dErr) throw dErr;
-                setDoctrineResults((data || []) as DoctrineHit[]);
+                doctrineModeRef.current = mode;
+                setDoctrineResults(rows);
             } catch (e) {
                 if (!cancelled) setDoctrineResults([]);
-                console.warn('search_doctrine error:', e);
+                console.warn('search doctrine error:', e);
             } finally {
                 if (!cancelled) setDoctrineLoading(false);
             }
@@ -247,6 +265,7 @@ const SearchPage: React.FC = () => {
                     decisions: totalHits,
                     articles: articleResults.length,
                     doctrine: doctrineResults.length,
+                    doctrine_mode: doctrineModeRef.current,
                 },
             }).then(undefined, () => { /* logging best-effort */ });
         }, 1200);
