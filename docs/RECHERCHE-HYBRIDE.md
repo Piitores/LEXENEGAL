@@ -53,5 +53,6 @@ Toute recherche est journalisée via `log_search_event` (table `search_events`),
 
 - RPC `search_*_hybrid` : ✅ en base, utilisées par le MCP.
 - `doc_embeddings` : ✅ 24 597 vecteurs, réembed auto quotidien (cf. `auto-reembed`).
-- Edge function `search` : pilote **doctrine** d'abord.
-- Front : doctrine bascule sur l'edge function avec **fallback FTS** ; articles/décisions suivront (⚠️ `search_decisions_hybrid` doit d'abord gagner pagination + tri, absents aujourd'hui).
+- Edge function `search` : ✅ déployée, gère les **3 surfaces** (doctrine, articles, décisions). Clé Voyage lue depuis le **Vault** (`get_voyage_key`, réservé `service_role`) — pas de secret d'edge function à poser.
+- Front : ✅ **doctrine + articles + décisions** passent par l'edge function avec **fallback FTS** systématique. `search_decisions_hybrid` a reçu `sort_by` + `result_offset` + pool de candidats élargi (150) ; params en DEFAULT → compat MCP préservée.
+- Pagination hybride : bornée par le pool de candidats (~150 fts + 150 vec). Au-delà, la liste se tarit (acceptable : la valeur de l'hybride est dans les premières pages). Le tri par date s'applique **au sein** des candidats pertinents (pas un tri global de tout le corpus).
