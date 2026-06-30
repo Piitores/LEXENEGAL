@@ -434,6 +434,11 @@ async function fetchDoctrine(slug) {
   // Teaser uniquement : content_raw EXCLU du select serveur public.
   return one(await sb(`doctrine?slug=eq.${encodeURIComponent(slug)}&select=id,slug,numero,annee,date,service_emetteur,reference_complete,objet,destinataire,signataire&limit=1`));
 }
+// Anciens slugs doctrine (numériques + doublons -occ retirés) → nouveau slug SEO.
+// Alimente le 301 permanent : aucune URL indexée ne casse après la refonte des slugs.
+async function fetchDoctrineRedirect(oldSlug) {
+  return one(await sb(`doctrine_slug_redirects?old_slug=eq.${encodeURIComponent(oldSlug)}&select=new_slug&limit=1`));
+}
 async function fetchLaw(slug) {
   return one(await sb(`laws_and_codes?slug=eq.${encodeURIComponent(slug)}&select=id,title,short_title,category,slug,reference,publication_date,description,abrogation_note,abrogated_by_slug&limit=1`));
 }
@@ -487,6 +492,13 @@ export default async function handler(req, res) {
       res.statusCode = 410;
       return res.end(shell.replace(/<\/head>/i, '<meta name="robots" content="noindex, follow" />\n</head>'));
     };
+    // 301 permanent : transfère le SEO de l'ancienne URL vers la nouvelle (refonte slugs).
+    const serve301 = (location) => {
+      res.statusCode = 301;
+      res.setHeader('Location', location);
+      res.setHeader('Cache-Control', 'public, s-maxage=86400');
+      return res.end();
+    };
 
     if (type === 'home') {
       const codes = await fetchHomeCodes();
@@ -503,7 +515,15 @@ export default async function handler(req, res) {
       if (!slug) return serveShell();
       let d = null;
       try { d = await fetchDoctrine(slug); } catch (e) { /* */ }
-      if (!d) return serveShell(60, true);
+      if (!d) {
+        // Slug inconnu : peut-être un ancien slug → 301 vers le nouveau avant de renoncer.
+        let redir = null;
+        try { redir = await fetchDoctrineRedirect(slug); } catch (e) { /* */ }
+        if (redir && redir.new_slug && redir.new_slug !== slug) {
+          return serve301(`${SITE}/doctrine-fiscale/${encodeURIComponent(redir.new_slug)}`);
+        }
+        return serveShell(60, true);
+      }
       const canonical = `${SITE}/doctrine-fiscale/${slug}`;
       return serveHtml(buildDoctrineHead(d, canonical), buildDoctrineBody(d));
     }

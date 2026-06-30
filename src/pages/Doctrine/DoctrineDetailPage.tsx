@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import useAuth from '../../hooks/useAuth';
 import { Loader2, ArrowLeft, Building, Calendar, FileText, Lock, BookOpen } from 'lucide-react';
@@ -46,6 +46,7 @@ function formatDate(dateStr?: string | null, ref?: string | null) {
 
 const DoctrineDetailPage: React.FC = () => {
     const { slug } = useParams();
+    const navigate = useNavigate();
     const { loading: authLoading, isConnected } = useAuth();
     // En dev local on débloque la consultation (import.meta.env.DEV = false en prod).
     const canRead = isConnected || import.meta.env.DEV;
@@ -69,8 +70,20 @@ const DoctrineDetailPage: React.FC = () => {
                 .eq('slug', slug)
                 .maybeSingle();
             if (!active) return;
-            if (error || !data) setNotFound(true);
-            else setDoctrine(data as DoctrineDetail);
+            if (error || !data) {
+                // Slug inconnu : peut-être un ancien slug (refonte SEO) → redirection vers le nouveau.
+                const { data: redir } = await supabase
+                    .from('doctrine_slug_redirects')
+                    .select('new_slug')
+                    .eq('old_slug', slug)
+                    .maybeSingle();
+                if (!active) return;
+                if (redir?.new_slug && redir.new_slug !== slug) {
+                    navigate(`/doctrine-fiscale/${redir.new_slug}`, { replace: true });
+                    return;
+                }
+                setNotFound(true);
+            } else setDoctrine(data as DoctrineDetail);
             setLoading(false);
         })();
         return () => { active = false; };
