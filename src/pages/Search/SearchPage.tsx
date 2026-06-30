@@ -59,6 +59,8 @@ const SearchPage: React.FC = () => {
     const [doctrineLoading, setDoctrineLoading] = useState(false);
     // L'utilisateur a-t-il choisi un onglet manuellement ? (sinon on choisit pour lui selon la requête)
     const userPickedTab = useRef(false);
+    // Analytics : dernier terme déjà loggé (évite de logger 2× la même requête).
+    const loggedQueryRef = useRef<string>('');
     const [suggestions, setSuggestions] = useState<Decision[]>([]);
     const [facets, setFacets] = useState<any>({});
     const [loading, setLoading] = useState(false);
@@ -224,6 +226,32 @@ const SearchPage: React.FC = () => {
         }, 300);
         return () => { cancelled = true; clearTimeout(timer); };
     }, [query]);
+
+    // Analytics requêtable (search_events) : on logge chaque recherche UNE fois, une fois
+    // les compteurs des 4 piliers stabilisés (1,2 s sans changement). Fire-and-forget :
+    // n'attend rien, ignore les erreurs — ne doit jamais gêner la recherche.
+    useEffect(() => {
+        const term = (query || '').trim();
+        if (term.length < 3) return;
+        const timer = setTimeout(() => {
+            if (loggedQueryRef.current === term) return; // déjà loggé ce terme
+            loggedQueryRef.current = term;
+            const total = totalHits + articleResults.length + doctrineResults.length;
+            void supabase.rpc('log_search_event', {
+                p_source: 'front',
+                p_query: term,
+                p_surface: 'all',
+                p_mode: 'fts',
+                p_result_count: total,
+                p_metadata: {
+                    decisions: totalHits,
+                    articles: articleResults.length,
+                    doctrine: doctrineResults.length,
+                },
+            }).then(undefined, () => { /* logging best-effort */ });
+        }, 1200);
+        return () => clearTimeout(timer);
+    }, [query, totalHits, articleResults.length, doctrineResults.length]);
 
     const selectTab = (tab: 'tout' | 'decisions' | 'articles' | 'doctrine') => {
         userPickedTab.current = true;
