@@ -55,8 +55,24 @@ Deno.serve(async (req) => {
     }
     const result_limit = Math.max(1, Math.min(Number(limit) || 20, 50));
 
+    // Client service (passerelle contrôlée) — sert aussi à lire la clé Voyage du Vault.
+    const sb = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+
+    // Clé Voyage : variable d'env d'abord, sinon Vault via get_voyage_key (réservé service_role).
+    let voyageKey: string | null = Deno.env.get("VOYAGE_API_KEY") ?? null;
+    if (!voyageKey) {
+      try {
+        const { data } = await sb.rpc("get_voyage_key");
+        if (typeof data === "string" && data) voyageKey = data;
+      } catch (_) {
+        /* pas de clé → fallback plus bas */
+      }
+    }
+
     // Embedding de requête. Pas de clé / échec → fallback (l'appelant fait du FTS).
-    const voyageKey = Deno.env.get("VOYAGE_API_KEY");
     let embedding: number[] | null = null;
     if (voyageKey) {
       try {
@@ -66,12 +82,6 @@ Deno.serve(async (req) => {
       }
     }
     if (!embedding) return json({ results: [], total: 0, mode: "none", fallback: true });
-
-    // Appel de la RPC hybride avec la clé service (passerelle contrôlée, métadonnées only).
-    const sb = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
     const args: Record<string, unknown> = {
       query_text: query,
       query_embedding: `[${embedding.join(",")}]`,
