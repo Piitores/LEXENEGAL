@@ -1,0 +1,46 @@
+name: Sitemap quotidien
+
+# Régénère public/sitemap.xml depuis Supabase et le committe si le contenu a changé.
+# Le script lit la config depuis .env (versionné) → aucun secret à configurer.
+# Si un jour .env sort du dépôt, ajouter les variables d'environnement VITE_SUPABASE_URL
+# et VITE_SUPABASE_ANON_KEY (via des secrets de dépôt) à l'étape « Générer le sitemap ».
+
+on:
+  schedule:
+    - cron: '30 4 * * *'   # tous les jours à 04h30 UTC
+  workflow_dispatch: {}      # + déclenchement manuel depuis l'onglet Actions
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sitemap
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Générer le sitemap
+        run: node scripts/generate-sitemap-supabase.cjs
+
+      - name: Committer si le sitemap a changé
+        run: |
+          if [ -n "$(git status --porcelain public/sitemap.xml)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add public/sitemap.xml
+            git commit -m "chore(sitemap): régénération automatique quotidienne"
+            git push
+            echo "Sitemap mis à jour et poussé."
+          else
+            echo "Sitemap inchangé — rien à committer."
+          fi

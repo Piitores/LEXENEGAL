@@ -65,6 +65,21 @@ async function fetchAllRows(tableName, columns = '*') {
     return rows;
 }
 
+// Construit une balise <lastmod> uniquement si la date est valide ET plausible.
+// Évite les dates parasites de la base (ex. 1900, ou timestamps produisant 1970).
+function lastmodTagFor(dateVal) {
+    if (!dateVal) return '';
+    // La colonne date_decision est NOT NULL : « 1970-01-30 » est la sentinelle
+    // « date inconnue » utilisée en base. On n'émet pas de lastmod pour elle.
+    const iso = String(dateVal).slice(0, 10);
+    if (iso === '1970-01-30') return '';
+    const d = new Date(dateVal);
+    if (isNaN(d.getTime())) return '';
+    const year = d.getUTCFullYear();
+    if (year < 1950 || year > new Date().getUTCFullYear() + 1) return '';
+    return `\n    <lastmod>${d.toISOString().split('T')[0]}</lastmod>`;
+}
+
 async function generateSitemap() {
     console.log('📍 Generating sitemap.xml from Supabase...');
 
@@ -120,13 +135,7 @@ async function generateSitemap() {
     for (const code of codes) {
         if (!code.slug) continue;
         
-        let lastmodTag = '';
-        if (code.updated_at) {
-            try {
-                const dateStr = new Date(code.updated_at).toISOString().split('T')[0];
-                lastmodTag = `\n    <lastmod>${dateStr}</lastmod>`;
-            } catch (e) {}
-        }
+        const lastmodTag = lastmodTagFor(code.updated_at);
 
         xml += `  <url>
     <loc>${BASE_URL}/code/${code.slug}</loc>${lastmodTag}
@@ -152,14 +161,7 @@ async function generateSitemap() {
     for (const decision of decisions) {
         if (!decision.slug) continue;
 
-        let lastmodTag = '';
-        // Ignore the dummy 1900 dates from the DB as Google Search Console considers them invalid
-        if (decision.date_decision && !decision.date_decision.startsWith('1900')) {
-            try {
-                const dateStr = new Date(decision.date_decision).toISOString().split('T')[0];
-                lastmodTag = `\n    <lastmod>${dateStr}</lastmod>`;
-            } catch (e) {}
-        }
+        const lastmodTag = lastmodTagFor(decision.date_decision);
 
         xml += `  <url>
     <loc>${BASE_URL}/decision/${decision.slug}</loc>${lastmodTag}
@@ -171,13 +173,7 @@ async function generateSitemap() {
 
     // 5. Add doctrine fiscale pages (teaser public par document)
     for (const doctrine of doctrines) {
-        let lastmodTag = '';
-        if (doctrine.date && !String(doctrine.date).startsWith('1900')) {
-            try {
-                const dateStr = new Date(doctrine.date).toISOString().split('T')[0];
-                lastmodTag = `\n    <lastmod>${dateStr}</lastmod>`;
-            } catch (e) {}
-        }
+        const lastmodTag = lastmodTagFor(doctrine.date);
         xml += `  <url>
     <loc>${BASE_URL}/doctrine-fiscale/${doctrine.slug}</loc>${lastmodTag}
     <changefreq>yearly</changefreq>
