@@ -69,10 +69,8 @@ async function fetchAllRows(tableName, columns = '*') {
 // Évite les dates parasites de la base (ex. 1900, ou timestamps produisant 1970).
 function lastmodTagFor(dateVal) {
     if (!dateVal) return '';
-    // La colonne date_decision est NOT NULL : « 1970-01-30 » est la sentinelle
-    // « date inconnue » utilisée en base. On n'émet pas de lastmod pour elle.
-    const iso = String(dateVal).slice(0, 10);
-    if (iso === '1970-01-30') return '';
+    // Garde-fou : on n'émet un lastmod que pour une date valide et plausible
+    // (évite les dates parasites 1900/epoch que Search Console rejette).
     const d = new Date(dateVal);
     if (isNaN(d.getTime())) return '';
     const year = d.getUTCFullYear();
