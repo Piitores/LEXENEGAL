@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     FolderPlus, Star, Search, Bell, BellOff,
     FileText, ChevronRight, Plus, ArrowLeft,
-    Loader2, AlertCircle, History
+    Loader2, AlertCircle, History, Settings
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import ConversionModal from '../../components/ConversionModal/ConversionModal';
@@ -253,8 +253,13 @@ const CabinetPage: React.FC = () => {
 
                 {/* HEADER */}
                 <header className="cabinet-header">
-                    <h1>Bienvenue dans votre Cabinet, <span>{userName}</span></h1>
-                    <p>Gérez vos dossiers et votre veille juridique en toute sérénité.</p>
+                    <div className="cabinet-header-text">
+                        <h1>Bienvenue dans votre Cabinet, <span>{userName}</span></h1>
+                        <p>Gérez vos dossiers et votre veille juridique en toute sérénité.</p>
+                    </div>
+                    <button className="cabinet-settings-btn" onClick={() => navigate('/cabinet/parametres')} title="Paramètres du compte">
+                        <Settings size={18} /> Paramètres
+                    </button>
                 </header>
 
                 {/* BENTO GRID */}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Search, BookOpen, Scale, Shield, LogOut, User, Globe2, FileText, ChevronDown } from 'lucide-react';
+import { Search, BookOpen, Scale, Shield, LogOut, User, Globe2, FileText, ChevronDown, Settings, Briefcase } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import useAuth from '../../hooks/useAuth';
 import './Navbar.css';
@@ -75,6 +75,7 @@ const NavDropdown: React.FC<{
 function Navbar({ scrolled }: { scrolled: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [openDD, setOpenDD] = useState<string | null>(null);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -94,7 +95,7 @@ function Navbar({ scrolled }: { scrolled: boolean }) {
     window.location.assign('/');
   };
 
-  const closeAll = () => { setMenuOpen(false); setOpenDD(null); };
+  const closeAll = () => { setMenuOpen(false); setOpenDD(null); setUserMenuOpen(false); };
 
   return (
     <nav className={`navbar ${isScrolled ? 'navbar--scrolled' : ''}`}>
@@ -126,16 +127,34 @@ function Navbar({ scrolled }: { scrolled: boolean }) {
             </Link>
           )}
 
-          {/* Auth Button */}
+          {/* Auth : menu avatar déroulant */}
           {user ? (
-            <div className="navbar__user-menu">
-              <Link to="/cabinet" className="navbar__user-name" onClick={closeAll} title="Mon Cabinet">
-                <User size={16} />
-                {user.email?.split('@')[0]}
-              </Link>
-              <button className="navbar__logout" onClick={handleLogout} title="Déconnexion">
-                <LogOut size={16} />
+            <div
+              className="navbar__user"
+              onMouseEnter={() => setUserMenuOpen(true)}
+              onMouseLeave={() => setUserMenuOpen(false)}
+            >
+              <button
+                type="button"
+                className="navbar__user-trigger"
+                aria-expanded={userMenuOpen}
+                onClick={() => setUserMenuOpen((o) => !o)}
+              >
+                <span className="navbar__avatar"><User size={15} /></span>
+                <span className="navbar__user-name">{user.email?.split('@')[0]}</span>
+                <ChevronDown size={14} className={`nav-dd__chevron ${userMenuOpen ? 'nav-dd__chevron--open' : ''}`} />
               </button>
+              <div className={`navbar__user-panel ${userMenuOpen ? 'navbar__user-panel--open' : ''}`}>
+                <Link to="/cabinet" className="navbar__user-item" onClick={closeAll}>
+                  <Briefcase size={15} /> Mon Cabinet
+                </Link>
+                <Link to="/cabinet/parametres" className="navbar__user-item" onClick={closeAll}>
+                  <Settings size={15} /> Paramètres du compte
+                </Link>
+                <button className="navbar__user-item navbar__user-item--danger" onClick={handleLogout}>
+                  <LogOut size={15} /> Déconnexion
+                </button>
+              </div>
             </div>
           ) : (
             <button className="navbar__cta" onClick={() => { navigate('/login'); closeAll(); }}>

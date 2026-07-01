@@ -108,6 +108,36 @@
 /* Header */
 .cabinet-header {
     margin-bottom: 48px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.cabinet-settings-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    background: #fff;
+    border: 1.5px solid #E5E7EB;
+    border-radius: 10px;
+    padding: 0.6rem 1.1rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.cabinet-settings-btn:hover {
+    border-color: #10B981;
+    color: #047857;
+    background: #F9FAFB;
+}
+
+@media (max-width: 560px) {
+    .cabinet-header { flex-direction: column; }
 }
 
 .cabinet-header h1 {

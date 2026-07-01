@@ -10,6 +10,7 @@ import DecisionPage from './pages/Decision/DecisionPage';
 import AuthPage from './pages/Auth/AuthPage';
 import AuthCallback from './pages/Auth/AuthCallback';
 import CabinetPage from './pages/Cabinet/CabinetPage';
+import AccountSettingsPage from './pages/Cabinet/AccountSettingsPage';
 import CodesListPage from './pages/Codes/CodesListPage';
 import CodePage from './pages/Code/CodePage';
 import ArticlePage from './pages/Code/ArticlePage';
@@ -139,6 +140,7 @@ function App() {
               <Route path="/signup" element={<AuthPage />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="/cabinet" element={<CabinetPage />} />
+              <Route path="/cabinet/parametres" element={<AccountSettingsPage />} />
               <Route path="/solliciter-acces" element={<AccessRequestPage />} />
 
               {/* Admin Command Center */}

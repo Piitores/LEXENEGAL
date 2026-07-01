@@ -240,6 +240,95 @@
    color: #DC2626;
  }
 
+ /* ─── Menu avatar déroulant ─── */
+ .navbar__user { position: relative; }
+
+ .navbar__user-trigger {
+   display: flex;
+   align-items: center;
+   gap: 0.5rem;
+   padding: 0.35rem 0.7rem 0.35rem 0.4rem;
+   background: #F9FAFB;
+   border: 1px solid #E5E7EB;
+   border-radius: 50px;
+   cursor: pointer;
+   transition: all 0.2s ease;
+ }
+
+ .navbar__user-trigger:hover { border-color: #D1D5DB; background: #F3F4F6; }
+
+ .navbar__avatar {
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   width: 28px;
+   height: 28px;
+   border-radius: 50%;
+   background: linear-gradient(135deg, #10B981 0%, #047857 100%);
+   color: #fff;
+   flex-shrink: 0;
+ }
+
+ .navbar__user-panel {
+   position: absolute;
+   top: calc(100% + 8px);
+   right: 0;
+   min-width: 224px;
+   background: #fff;
+   border: 1px solid #E5E7EB;
+   border-radius: 12px;
+   box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.15);
+   padding: 6px;
+   opacity: 0;
+   visibility: hidden;
+   transform: translateY(-6px);
+   transition: all 0.18s ease;
+   z-index: 1100;
+ }
+
+ .navbar__user-panel--open { opacity: 1; visibility: visible; transform: translateY(0); }
+
+ .navbar__user-item {
+   display: flex;
+   align-items: center;
+   gap: 0.6rem;
+   width: 100%;
+   padding: 0.6rem 0.75rem;
+   border: none;
+   background: none;
+   font-size: 0.88rem;
+   font-weight: 500;
+   color: #374151;
+   text-align: left;
+   border-radius: 8px;
+   cursor: pointer;
+   transition: background 0.15s ease, color 0.15s ease;
+ }
+
+ .navbar__user-item:hover { background: #F3F4F6; color: #047857; }
+ .navbar__user-item--danger { color: #B91C1C; }
+ .navbar__user-item--danger:hover { background: #FEE2E2; color: #DC2626; }
+
+ /* Sur mobile (menu empilé), le panneau s'affiche en flux, pas en flottant */
+ @media (max-width: 1024px) {
+   .navbar__user { width: 100%; }
+   .navbar__user-trigger { width: 100%; justify-content: center; }
+   .navbar__user-panel {
+     position: static;
+     opacity: 1;
+     visibility: hidden;
+     transform: none;
+     box-shadow: none;
+     border: none;
+     padding: 0;
+     min-width: 0;
+     max-height: 0;
+     overflow: hidden;
+   }
+   .navbar__user-panel--open { visibility: visible; max-height: 300px; margin-top: 0.5rem; }
+   .navbar__user-item { justify-content: center; }
+ }
+
  /* ─── Dropdowns ─── */
  .navbar__menu { gap: 24px; }
 
