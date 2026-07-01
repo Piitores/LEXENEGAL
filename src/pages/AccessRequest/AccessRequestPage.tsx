@@ -114,7 +114,7 @@ const AccessRequestPage: React.FC = () => {
                         </div>
                         <h1>Accès Privilégié</h1>
                         <p>
-                            Rejoignez l'Arsenal Pro LEXENEGAL. 
+                            Rejoignez LEXENEGAL Pro, la mémoire juridique organisée du Sénégal.
                             Remplissez ce formulaire et notre équipe activera votre compte sous 24h.
                         </p>
                     </div>

@@ -71,6 +71,13 @@
     letter-spacing: 0.05em;
 }
 
+/* Logo image (vrai logo LEXENEGAL) */
+.auth-logo-img {
+    height: 92px;
+    width: auto;
+    display: block;
+}
+
 /* Title */
 .auth-title {
     font-family: 'Playfair Display', serif;
@@ -362,6 +369,52 @@
     background: #F9FAFB;
     border-color: #D1D5DB;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Liens secondaires (mot de passe oublié, lien magique, renvoi de code) */
+.auth-links {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1.25rem;
+    flex-wrap: wrap;
+}
+
+.auth-links--verify {
+    justify-content: center;
+    margin-top: 1.5rem;
+}
+
+.auth-link {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #047857;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    transition: color 0.2s;
+}
+
+.auth-link:hover:not(:disabled) {
+    color: #10B981;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.auth-link:disabled {
+    color: #9CA3AF;
+    cursor: not-allowed;
+}
+
+.auth-link--center {
+    justify-content: center;
+    width: 100%;
+    margin-top: 0.5rem;
 }
 
 /* Mobile */

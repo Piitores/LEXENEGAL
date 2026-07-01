@@ -3,7 +3,6 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Search, BookOpen, Scale, Shield, LogOut, User, Globe2, FileText, ChevronDown } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import useAuth from '../../hooks/useAuth';
-import LexenegalSymbol from '../LexenegalSymbol/LexenegalSymbol';
 import './Navbar.css';
 
 interface DDItem { label: string; to?: string; soon?: boolean; }
@@ -86,7 +85,8 @@ function Navbar({ scrolled }: { scrolled: boolean }) {
   const handleLogout = async () => {
     setMenuOpen(false);
     try {
-      await supabase.auth.signOut();
+      // scope 'local' : vide la session du navigateur même si le jeton serveur est déjà périmé.
+      await supabase.auth.signOut({ scope: 'local' });
     } catch (e) {
       console.warn('signOut error (on force la déconnexion):', e);
     }
@@ -100,7 +100,7 @@ function Navbar({ scrolled }: { scrolled: boolean }) {
     <nav className={`navbar ${isScrolled ? 'navbar--scrolled' : ''}`}>
       <div className="navbar__container container">
         <Link to="/" className="navbar__logo" onClick={closeAll}>
-          <LexenegalSymbol size={32} />
+          <img src="/icon-512.png" alt="" className="navbar__logo-img" />
           <span>LEXENEGAL</span>
         </Link>
 

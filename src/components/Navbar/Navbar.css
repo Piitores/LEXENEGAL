@@ -35,6 +35,13 @@
    overflow: hidden;
  }
 
+ .navbar__logo-img {
+   height: 44px;
+   width: auto;
+   display: block;
+   flex-shrink: 0;
+ }
+
  /* Menu */
  .navbar__menu {
    display: flex;

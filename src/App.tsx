@@ -24,6 +24,7 @@ import { useBlockSelectAll } from './hooks/useBlockSelectAll';
 import SEO from './components/SEO/SEO';
 import AmbientEffects from './components/AmbientEffects/AmbientEffects';
 import AccountNudge from './components/AccountNudge/AccountNudge';
+import { recordOrigin } from './lib/authRedirect';
 import './App.css';
 
 // Gère le défilement à la navigation :
@@ -41,6 +42,11 @@ const ScrollManager = () => {
   useEffect(() => {
     if ('scrollRestoration' in window.history) window.history.scrollRestoration = 'manual';
   }, []);
+
+  // Retient la page d'origine (hors écrans d'auth) pour y revenir après connexion.
+  useEffect(() => {
+    recordOrigin(location.pathname + location.search);
+  }, [location.pathname, location.search]);
 
   // Mémorise en continu la position de défilement de l'entrée d'historique courante
   useEffect(() => {
