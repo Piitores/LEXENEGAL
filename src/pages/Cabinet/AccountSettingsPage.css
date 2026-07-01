@@ -234,6 +234,19 @@
 }
 .set-confirm > span { font-size: 0.85rem; color: #B91C1C; font-weight: 600; }
 
+.set-delete-confirm {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    max-width: 420px;
+}
+.set-delete-confirm .set-input:focus-within { border-color: #DC2626; box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1); }
+
 @media (max-width: 560px) {
     .set-readonly-grid { grid-template-columns: 1fr; }
     .set-danger-row { flex-direction: column; align-items: flex-start; }

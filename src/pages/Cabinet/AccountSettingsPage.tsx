@@ -38,6 +38,7 @@ const AccountSettingsPage: React.FC = () => {
 
     // Suppression
     const [confirmDelete, setConfirmDelete] = useState(false);
+    const [deleteConfirmText, setDeleteConfirmText] = useState('');
     const [deleting, setDeleting] = useState(false);
     const [deleteMsg, setDeleteMsg] = useState<Feedback>(null);
 
@@ -108,26 +109,18 @@ const AccountSettingsPage: React.FC = () => {
         setSavingPwd(false);
     };
 
-    const requestDeletion = async () => {
+    const deleteAccount = async () => {
+        if (deleteConfirmText.trim().toUpperCase() !== 'SUPPRIMER') return;
         setDeleting(true);
         setDeleteMsg(null);
         try {
-            const { error } = await supabase.functions.invoke('send-contact-email', {
-                body: {
-                    nom: fullName || currentEmail,
-                    email: currentEmail,
-                    telephone: phone,
-                    fonction: 'Utilisateur',
-                    organisation: 'LEXENEGAL',
-                    message: `DEMANDE DE SUPPRESSION DE COMPTE — utilisateur ${currentEmail} (id: ${userId}). À traiter conformément au RGPD.`
-                }
-            });
+            const { error } = await supabase.functions.invoke('delete-account', { method: 'POST' });
             if (error) throw error;
-            setDeleteMsg({ type: 'ok', text: 'Votre demande de suppression a bien été transmise. Notre équipe la traitera sous quelques jours et vous confirmera par e-mail.' });
-            setConfirmDelete(false);
+            // Compte + données effacés : on vide la session locale et on renvoie à l'accueil.
+            try { await supabase.auth.signOut({ scope: 'local' }); } catch { /* session déjà invalide */ }
+            window.location.assign('/?compte=supprime');
         } catch (err: any) {
-            setDeleteMsg({ type: 'err', text: "Échec de l'envoi de la demande. Réessayez ou écrivez à contact@lexenegal.sn." });
-        } finally {
+            setDeleteMsg({ type: 'err', text: "Échec de la suppression. Réessayez, ou écrivez à contact@lexenegal.sn." });
             setDeleting(false);
         }
     };
@@ -249,20 +242,26 @@ const AccountSettingsPage: React.FC = () => {
                     <div className="set-danger-row">
                         <div>
                             <strong>Supprimer mon compte</strong>
-                            <p>Envoie une demande de suppression à notre équipe. Vos données seront effacées conformément au RGPD.</p>
+                            <p>Action <strong>irréversible</strong> : votre compte et toutes vos données (favoris, dossiers, annotations, recherches sauvegardées) seront définitivement effacés.</p>
                         </div>
-                        {!confirmDelete ? (
+                        {!confirmDelete && (
                             <button className="set-btn set-btn--danger" onClick={() => setConfirmDelete(true)}><Trash2 size={15} /> Supprimer…</button>
-                        ) : (
-                            <div className="set-confirm">
-                                <span>Confirmer ?</span>
-                                <button className="set-btn set-btn--danger" onClick={requestDeletion} disabled={deleting}>
-                                    {deleting ? <Loader2 size={15} className="spinner" /> : 'Oui, envoyer la demande'}
-                                </button>
-                                <button className="set-btn set-btn--ghost" onClick={() => setConfirmDelete(false)} disabled={deleting}>Annuler</button>
-                            </div>
                         )}
                     </div>
+                    {confirmDelete && (
+                        <div className="set-delete-confirm">
+                            <label className="set-field">
+                                <span>Pour confirmer, tapez <strong>SUPPRIMER</strong> ci-dessous</span>
+                                <div className="set-input"><Trash2 size={16} /><input type="text" value={deleteConfirmText} onChange={e => setDeleteConfirmText(e.target.value)} placeholder="SUPPRIMER" autoFocus /></div>
+                            </label>
+                            <div className="set-confirm">
+                                <button className="set-btn set-btn--danger" onClick={deleteAccount} disabled={deleting || deleteConfirmText.trim().toUpperCase() !== 'SUPPRIMER'}>
+                                    {deleting ? <Loader2 size={15} className="spinner" /> : 'Supprimer définitivement mon compte'}
+                                </button>
+                                <button className="set-btn set-btn--ghost" onClick={() => { setConfirmDelete(false); setDeleteConfirmText(''); }} disabled={deleting}>Annuler</button>
+                            </div>
+                        </div>
+                    )}
                     <FeedbackLine msg={deleteMsg} />
                 </motion.section>
             </div>
