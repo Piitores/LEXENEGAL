@@ -85,6 +85,11 @@
     border-color: var(--cp-green); color: var(--cp-green);
     background: var(--cp-green-light); font-weight: 600;
 }
+/* Article abrogé : grisé + barré, teinte rouge sobre */
+.tree-article-chip.is-abroge {
+    opacity: 0.55; text-decoration: line-through;
+    color: #991b1b; border-color: #fca5a5;
+}
 
 /* Nota sur un intitulé (titre) : petit « ! » ambré, infobulle native au survol */
 .tree-nota {

@@ -30,6 +30,8 @@ export interface Article {
     content_html: string | null;
     modifications: string[] | null;
     tags: string[] | null;
+    status?: string | null;
+    is_active?: boolean;
     created_at: string | null;
     updated_at: string | null;
 }

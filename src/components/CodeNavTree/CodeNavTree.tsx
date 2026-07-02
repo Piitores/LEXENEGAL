@@ -100,7 +100,8 @@ const CodeNavTree: React.FC<CodeNavTreeProps> = ({
                                         <Link
                                             key={art.id}
                                             to={`/code/${slug}/${art.slug}`}
-                                            className={`tree-article-chip ${activeArticleSlug && art.slug === activeArticleSlug ? 'is-active' : ''}`}
+                                            className={`tree-article-chip ${activeArticleSlug && art.slug === activeArticleSlug ? 'is-active' : ''} ${(art.status === 'abrogé' || art.is_active === false) ? 'is-abroge' : ''}`}
+                                            title={(art.status === 'abrogé' || art.is_active === false) ? 'Article abrogé' : undefined}
                                         >
                                             {/^(\d|premier|[LRD]\.)/i.test(art.article_number)
                                                 ? `Article ${art.article_number}`
