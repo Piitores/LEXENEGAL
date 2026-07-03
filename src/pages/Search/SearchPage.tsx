@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { supabase } from '../../lib/supabase';
+import { articleLabel } from '../../lib/articleLabel';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import './SearchPage.css';
@@ -825,7 +826,7 @@ const SearchPage: React.FC = () => {
                         <span className="best-match__badge">★ Meilleur résultat</span>
                         {bestMatch.kind === 'article' ? (
                             <div className="best-match__body">
-                                <strong>Article {bestMatch.article_number}</strong>
+                                <strong>{articleLabel({ article_number: bestMatch.article_number })}</strong>
                                 <span className="best-match__meta">{bestMatch.code_title}</span>
                             </div>
                         ) : (
@@ -929,7 +930,7 @@ const SearchPage: React.FC = () => {
                                     {articleResults.slice(0, 4).map((art) => (
                                         <div key={art.id} className="resultCard linear-card" onClick={() => window.open(`/code/${art.code_slug}/${art.slug}`, '_blank')}>
                                             <div className="cardHeader">
-                                                <span className="cardRef">Article {art.article_number}</span>
+                                                <span className="cardRef">{articleLabel({ article_number: art.article_number })}</span>
                                                 <span className="cardDate">{art.code_title}</span>
                                             </div>
                                             <p className="cardSnippet">{stripHtml(art.content).slice(0, 200)}</p>
@@ -1042,7 +1043,7 @@ const SearchPage: React.FC = () => {
                                 onClick={() => window.open(`/code/${art.code_slug}/${art.slug}`, '_blank')}
                             >
                                 <div className="cardHeader">
-                                    <span className="cardRef">Article {art.article_number}</span>
+                                    <span className="cardRef">{articleLabel({ article_number: art.article_number })}</span>
                                     <span className="cardDate">{art.code_title}</span>
                                 </div>
                                 <p className="cardSnippet">{stripHtml(art.content).slice(0, 240) || 'Voir l’article complet.'}</p>

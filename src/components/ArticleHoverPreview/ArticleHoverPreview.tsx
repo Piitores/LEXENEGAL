@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../../lib/supabase';
 import { Scale, ExternalLink } from 'lucide-react';
+import { articleLabel } from '../../lib/articleLabel';
 import './ArticleHoverPreview.css';
 
 
@@ -118,7 +119,7 @@ const ArticleHoverPreview: React.FC<ArticleHoverPreviewProps> = ({
                             {/* Header */}
                             <div className="preview-header">
                                 <Scale size={14} />
-                                <span>Article {articleNumber}</span>
+                                <span>{articleLabel({ article_number: articleNumber })}</span>
                                 <span className="preview-code">{codeName}</span>
                             </div>
 

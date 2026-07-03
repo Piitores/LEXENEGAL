@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Search, Scale, BookOpen, ArrowRight, Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { articleLabel } from '../../lib/articleLabel';
 import HeroSenegalStatic from './HeroSenegalStatic';
 import CanvasBoundary from './CanvasBoundary';
 import './Hero.css';
@@ -105,7 +106,7 @@ function Hero() {
               mixedResults.push({
                 type: 'article',
                 id: hit.id,
-                title: `Article ${hit.article_number}`,
+                title: articleLabel({ article_number: hit.article_number }),
                 subtitle: hit.code_title || 'Code',
                 slug: hit.slug,
                 codeSlug: hit.code_slug || 'code-travail'

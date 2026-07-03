@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Scale, ExternalLink } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { articleLabel } from '../../lib/articleLabel';
 import '../ArticleHoverPreview/ArticleHoverPreview.css';
 
 /**
@@ -81,7 +82,7 @@ const LinkedLegalContent: React.FC<{ html: string; className?: string }> = ({ ht
         if (findLink(e.target)) hideTimer.current = setTimeout(() => setPv(null), 160);
     }, []);
 
-    const headerLabel = pv ? (/^articles?\b/i.test(pv.number) ? pv.number : `Article ${pv.number}`) : '';
+    const headerLabel = pv ? articleLabel({ article_number: pv.number }) : '';
 
     return (
         <>

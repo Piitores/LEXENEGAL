@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useCopyAttribution } from '../../hooks/useCopyAttribution';
+import { articleLabel } from '../../lib/articleLabel';
 import LinkedLegalContent from '../../components/LinkedLegalContent/LinkedLegalContent';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -453,8 +454,8 @@ const ArticlePage: React.FC = () => {
     return (
         <div className="article-page">
             <SEO
-                title={`Article ${article.article_number} — ${law?.title} | Lexenegal`}
-                description={`Texte intégral de l'article ${article.article_number} du ${law?.title}. Droit sénégalais consolidé sur Lexenegal.`}
+                title={`${articleLabel(article)} — ${law?.title} | Lexenegal`}
+                description={`${articleLabel(article)} du ${law?.title} — texte intégral. Droit sénégalais consolidé sur Lexenegal.`}
                 url={`https://www.lexenegal.sn/code/${codeSlug}/${articleSlug}`}
             />
 
@@ -499,7 +500,7 @@ const ArticlePage: React.FC = () => {
                     <ChevronRight size={13} />
                     <Link to={`/code/${codeSlug}`}>{law?.title}</Link>
                     <ChevronRight size={13} />
-                    <span className="bc-current">Article {article.article_number}</span>
+                    <span className="bc-current">{articleLabel(article)}</span>
                 </nav>
 
                 {/* BANDEAU ABROGATION (texte entier abrogé par un autre texte) */}
@@ -544,7 +545,7 @@ const ArticlePage: React.FC = () => {
                             </div>
                         );
                     })()}
-                    <h1>Article {article.article_number}
+                    <h1>{articleLabel(article)}
                         {article.notes && article.status !== 'abrogé' && article.is_active !== false && (
                             <span className="article-nota" tabIndex={0} role="note" aria-label={`Note : ${article.notes}`}>
                                 <span className="article-nota__mark">!</span>
@@ -628,7 +629,7 @@ const ArticlePage: React.FC = () => {
                 <div
                     className={`article-content-wrapper ${showComparison && compareVersion ? 'side-by-side' : ''} ${(article.status === 'abrogé' || article.is_active === false) ? 'is-abroge' : ''}`}
                     data-art-slug={articleSlug}
-                    data-art-num={`Article ${article.article_number}`}
+                    data-art-num={articleLabel(article)}
                 >
                     {showComparison && compareVersion && isAuthenticated ? (
                         <>
@@ -758,7 +759,7 @@ const ArticlePage: React.FC = () => {
                         disabled={!prevArticle}
                     >
                         <ChevronLeft size={16} />
-                        {prevArticle ? `Article ${prevArticle.number}` : 'Premier article'}
+                        {prevArticle ? articleLabel({ article_number: prevArticle.number }) : 'Premier article'}
                     </button>
                     <button className="btn-nav btn-nav-center" onClick={() => goBack(`/code/${codeSlug}`)}>
                         Retour
@@ -768,7 +769,7 @@ const ArticlePage: React.FC = () => {
                         onClick={() => nextArticle && navigate(`/code/${codeSlug}/${nextArticle.slug}`)}
                         disabled={!nextArticle}
                     >
-                        {nextArticle ? `Article ${nextArticle.number}` : 'Dernier article'}
+                        {nextArticle ? articleLabel({ article_number: nextArticle.number }) : 'Dernier article'}
                         <ChevronRight size={16} />
                     </button>
                 </div>

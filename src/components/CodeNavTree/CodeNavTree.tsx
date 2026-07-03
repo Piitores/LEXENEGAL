@@ -4,6 +4,7 @@ import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight } from 'lucide-react';
+import { articleLabel } from '../../lib/articleLabel';
 import { HierarchyNode, countArticles, computeMaxArticlesInLevel, formatNodeLabel, NODE_KIND } from '../../lib/codeTree';
 import './CodeNavTree.css';
 
@@ -103,9 +104,7 @@ const CodeNavTree: React.FC<CodeNavTreeProps> = ({
                                             className={`tree-article-chip ${activeArticleSlug && art.slug === activeArticleSlug ? 'is-active' : ''} ${(art.status === 'abrogé' || art.is_active === false) ? 'is-abroge' : ''}`}
                                             title={(art.status === 'abrogé' || art.is_active === false) ? 'Article abrogé' : undefined}
                                         >
-                                            {/^(\d|premier|[LRD]\.)/i.test(art.article_number)
-                                                ? `Article ${art.article_number}`
-                                                : (art.num_court || art.article_number)}
+                                            {articleLabel(art)}
                                         </Link>
                                     ))}
                                 </div>
