@@ -53,8 +53,9 @@
         content: none !important;
     }
 
-    /* --- Contenu pleine largeur --- */
-    .elite-grid,
+    /* --- Contenu pleine largeur ---
+       (.elite-grid n'y figure pas : la page décision imprime via son gabarit
+       .print-template, la grille écran est masquée plus bas.) */
     .article-layout,
     .code-layout {
         display: block !important;
@@ -268,7 +269,7 @@
         /* La règle écran met ce badge en blanc sur fond émeraude ; le fond étant
            neutralisé à l'impression, sans ceci le texte serait blanc sur blanc. */
         color: #047857 !important;
-        border: 1px solid #047857;
+        border: 1px solid #047857 !important;
     }
 
     .print-synthese-resume {
