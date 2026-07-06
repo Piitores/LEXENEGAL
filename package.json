@@ -12,6 +12,7 @@
         "sitemap": "node scripts/generate-sitemap-supabase.cjs"
     },
     "dependencies": {
+        "@react-pdf/renderer": "^4.5.1",
         "@react-three/fiber": "^8.18.0",
         "@supabase/supabase-js": "^2.89.0",
         "@vercel/functions": "^3.7.2",
