@@ -27,5 +27,9 @@ describe('DecisionPdfDocument', () => {
         const buf = await renderToBuffer(element);
         expect(buf.subarray(0, 4).toString()).toBe('%PDF');
         expect(buf.length).toBeGreaterThan(2000);
+        // Le payload (repeat 120) doit produire PLUSIEURS pages : verrouille la
+        // pagination (rappel p.2+ / pied fixe) contre une régression de la lib.
+        const pages = buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g)?.length ?? 0;
+        expect(pages).toBeGreaterThan(1);
     }, 30000);
 });

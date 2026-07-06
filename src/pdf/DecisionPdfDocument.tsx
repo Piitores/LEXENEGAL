@@ -1,7 +1,6 @@
 // src/pdf/DecisionPdfDocument.tsx
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
-import type { Style } from '@react-pdf/types';
 import type { PdfBlock, PdfRun } from '../lib/pdfBlocks';
 
 // Pas de césure automatique (rendu écritures juridiques : mots entiers).
@@ -23,13 +22,16 @@ const AVERTISSEMENT =
     "Seule l'expédition délivrée par le greffe fait foi.";
 
 const M = 42.5; // 15mm en points
+// Hauteur réservée au pied fixe : bottom (18) + filet/texte/avertissement.
+// Doit couvrir le pied même quand l'avertissement passe sur 2 lignes.
+const FOOTER_H = 34;
 // BUG react-pdf v4 : un lineHeight posé au niveau de la page empêche le rendu
 // des View fixes en position absolue (pied de page). L'interligne 1.5 est donc
 // porté par chaque bloc du corps, jamais par la page.
 const LH = 1.5;
 const styles = StyleSheet.create({
     page: {
-        paddingTop: M, paddingBottom: M + 34, paddingHorizontal: M,
+        paddingTop: M, paddingBottom: M + FOOTER_H, paddingHorizontal: M,
         fontFamily: 'Times-Roman', fontSize: 11, color: '#111111',
     },
     headerRow: {
@@ -71,6 +73,11 @@ const styles = StyleSheet.create({
     bList: { lineHeight: LH, marginBottom: 4, marginLeft: 14, textAlign: 'justify' },
 });
 
+type Style = (typeof styles)[keyof typeof styles];
+
+// ⚠️ Garder BLOCK_STYLE et VARIANT_FACE alignés : la graisse effective d'un run
+// vient de runFont() (VARIANT_FACE) ; le fontFamily du style de bloc ne sert
+// qu'au préfixe de puce des listes.
 const BLOCK_STYLE: Record<PdfBlock['variant'], Style> = {
     normal: styles.bNormal, visa: styles.bVisa,
     'centered-bold': styles.bCenteredBold, 'centered-italic': styles.bCenteredItalic,
