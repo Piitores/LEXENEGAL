@@ -265,6 +265,10 @@
         font-weight: bold;
         margin-bottom: 8px;
         font-size: 11pt;
+        /* La règle écran met ce badge en blanc sur fond émeraude ; le fond étant
+           neutralisé à l'impression, sans ceci le texte serait blanc sur blanc. */
+        color: #047857 !important;
+        border: 1px solid #047857;
     }
 
     .print-synthese-resume {
