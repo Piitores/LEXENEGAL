@@ -73,6 +73,31 @@ describe('htmlToPdfBlocks', () => {
         expect(htmlToPdfBlocks('   ')).toEqual([]);
     });
 
+    it('gras + italique combinés sur un même run', () => {
+        const b = htmlToPdfBlocks('<p><strong><em>très important</em></strong></p>');
+        const run = b[0].runs[0];
+        expect(run.bold).toBe(true);
+        expect(run.italic).toBe(true);
+    });
+
+    it('tolère les balises fermantes orphelines sans perdre de texte', () => {
+        const b = htmlToPdfBlocks('</strong></p><p>Texte survivant.</em></div>');
+        expect(textOf(b)).toContain('Texte survivant.');
+    });
+
+    it('retire les commentaires HTML (même avec un > interne) sans fuite de texte', () => {
+        const b = htmlToPdfBlocks('<p>Avant <!-- a > b --> après.</p>');
+        expect(textOf(b)).toContain('Avant');
+        expect(textOf(b)).toContain('après.');
+        expect(textOf(b)).not.toContain('b -->');
+    });
+
+    it('une entité numérique invalide reste littérale au lieu de faire échouer la conversion', () => {
+        const b = htmlToPdfBlocks('<p>Code &#2097152; invalide, &#233;t&#xE9; valide.</p>');
+        expect(textOf(b)).toContain('&#2097152;');
+        expect(textOf(b)).toContain('été valide.');
+    });
+
     it('ne perd aucun mot sur un HTML complet du formatter', () => {
         const html =
             '<div class="master-composition"><h3 class="composition-title">COMPOSITION DE LA JURIDICTION</h3>' +

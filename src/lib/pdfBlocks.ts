@@ -10,7 +10,13 @@ export type BlockVariant =
     | 'dispositif' | 'heading' | 'list';
 export type PdfBlock = { variant: BlockVariant; runs: PdfRun[] };
 
-const BLOCK_TAGS = new Set(['p', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'blockquote', 'ul', 'ol', 'table', 'tr', 'td', 'th', 'br', 'hr']);
+const BLOCK_TAGS = new Set(['p', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'li', 'blockquote', 'ul', 'ol', 'table', 'tr', 'td', 'th']);
+
+// fromCodePoint jette sur un code point invalide → une entité malformée ne doit pas
+// faire échouer toute la conversion (elle reste alors en texte littéral).
+function codePoint(n: number): string | null {
+    return Number.isInteger(n) && n >= 0 && n <= 0x10ffff ? String.fromCodePoint(n) : null;
+}
 
 function decodeEntities(s: string): string {
     return s
@@ -19,8 +25,8 @@ function decodeEntities(s: string): string {
         .replace(/&gt;/g, '>')
         .replace(/&quot;/g, '"')
         .replace(/&apos;/g, "'")
-        .replace(/&#x([0-9a-fA-F]+);/g, (_, n) => String.fromCodePoint(parseInt(n, 16)))
-        .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
+        .replace(/&#x([0-9a-fA-F]+);/g, (m, n) => codePoint(parseInt(n, 16)) ?? m)
+        .replace(/&#(\d+);/g, (m, n) => codePoint(Number(n)) ?? m)
         .replace(/&amp;/g, '&');
 }
 
@@ -51,7 +57,9 @@ export function htmlToPdfBlocks(html: string): PdfBlock[] {
         current = { variant: topVariant(), runs: [] };
     };
 
-    const tokens = html.match(/<[^>]*>|[^<]+/g) ?? [];
+    // Les commentaires HTML sont retirés AVANT tokenisation (un « > » interne
+    // couperait le commentaire en deux et ferait fuir du texte parasite).
+    const tokens = html.replace(/<!--[\s\S]*?-->/g, '').match(/<[^>]*>|[^<]+/g) ?? [];
     for (const tok of tokens) {
         if (tok.startsWith('<')) {
             const m = tok.match(/^<\s*(\/?)([a-zA-Z][a-zA-Z0-9]*)/);
