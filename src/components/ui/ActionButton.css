@@ -1,0 +1,47 @@
+/* ActionButton — rendu unique des actions de pages de ressources (charte) */
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.65rem 1rem;
+    border-radius: 8px;
+    font-family: var(--font-ui, 'Inter', sans-serif);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+.action-btn:disabled { opacity: 0.6; cursor: default; }
+
+.action-btn--primary {
+    background: var(--color-accent, #047857);
+    color: #fff;
+    border: 1px solid var(--color-accent, #047857);
+}
+.action-btn--primary:hover:not(:disabled) { background: var(--color-accent-dark, #065F46); }
+
+.action-btn--secondary {
+    background: #fff;
+    color: var(--color-text, #111827);
+    border: 1px solid var(--color-border, #E5E7EB);
+}
+.action-btn--secondary:hover:not(:disabled) { border-color: var(--color-accent, #047857); color: var(--color-accent, #047857); }
+
+.action-btn--ghost {
+    background: transparent;
+    color: var(--color-text-secondary, #6B7280);
+    border: 1px dashed var(--color-border, #E5E7EB);
+}
+.action-btn--ghost:hover:not(:disabled) { color: #B45309; border-color: #B45309; }
+
+/* État actif (ex. comparaison de versions ouverte) — reprend l'ancien btn-compare.active */
+.action-btn.active {
+    background: var(--color-accent-50, #ECFDF5);
+    border-color: var(--color-accent-light, #10B981);
+    color: var(--color-accent, #047857);
+}
+
+/* Rangée horizontale d'actions (page article) : largeur au contenu */
+.article-actions .action-btn { width: auto; }

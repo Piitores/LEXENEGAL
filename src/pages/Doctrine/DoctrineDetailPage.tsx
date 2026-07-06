@@ -2,8 +2,10 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import useAuth from '../../hooks/useAuth';
-import { Loader2, ArrowLeft, Building, Calendar, FileText, Lock, BookOpen } from 'lucide-react';
+import { Loader2, ArrowLeft, Building, Calendar, FileText, Lock, BookOpen, Copy, AlertCircle } from 'lucide-react';
 import ConversionModal from '../../components/ConversionModal/ConversionModal';
+import ReportErrorModal from '../../components/ReportError/ReportErrorModal';
+import ActionButton from '../../components/ui/ActionButton';
 import './DoctrinePage.css';
 import './DoctrineDetailPage.css';
 
@@ -57,6 +59,7 @@ const DoctrineDetailPage: React.FC = () => {
     const [body, setBody] = useState<string | null>(null);
     const [loadingBody, setLoadingBody] = useState(false);
     const [showModal, setShowModal] = useState(false);
+    const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
     // Teaser : chargé pour tout le monde (objet, référence, métadonnées).
     useEffect(() => {
@@ -160,6 +163,24 @@ const DoctrineDetailPage: React.FC = () => {
                             </ul>
                         </header>
 
+                        {/* Actions du document */}
+                        <div className="doctrine-detail__actions">
+                            <ActionButton
+                                variant="secondary"
+                                icon={<Copy size={16} />}
+                                onClick={() => { navigator.clipboard.writeText(ref); alert('Référence copiée : ' + ref); }}
+                            >
+                                Copier la référence
+                            </ActionButton>
+                            <ActionButton
+                                variant="ghost"
+                                icon={<AlertCircle size={16} />}
+                                onClick={() => setIsReportModalOpen(true)}
+                            >
+                                Signaler une erreur
+                            </ActionButton>
+                        </div>
+
                         <div className="doctrine-detail__body">
                             {canRead ? (
                                 loadingBody || body === null ? (
@@ -191,6 +212,15 @@ const DoctrineDetailPage: React.FC = () => {
             </div>
 
             <ConversionModal isOpen={showModal} onClose={() => setShowModal(false)} />
+            {doctrine && (
+                <ReportErrorModal
+                    isOpen={isReportModalOpen}
+                    onClose={() => setIsReportModalOpen(false)}
+                    entityType="doctrine"
+                    entityId={doctrine.id}
+                    url={window.location.href}
+                />
+            )}
         </div>
     );
 };

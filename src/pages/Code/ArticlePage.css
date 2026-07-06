@@ -208,32 +208,6 @@
     margin-bottom: 24px;
 }
 
-.btn-compare {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 20px;
-    background: white;
-    border: 1.5px solid #E5E7EB;
-    border-radius: 10px;
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: #374151;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.btn-compare:hover {
-    border-color: #10B981;
-    color: #047857;
-}
-
-.btn-compare.active {
-    background: #ECFDF5;
-    border-color: #10B981;
-    color: #047857;
-}
-
 .pro-lock {
     color: #F59E0B;
     margin-left: 4px;

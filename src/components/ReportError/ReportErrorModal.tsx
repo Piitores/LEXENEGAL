@@ -8,7 +8,7 @@ import './ReportErrorModal.css';
 interface ReportErrorModalProps {
     isOpen: boolean;
     onClose: () => void;
-    entityType: 'decision' | 'article' | 'system' | '404';
+    entityType: 'decision' | 'article' | 'doctrine' | 'code' | 'system' | '404';
     entityId?: string;
     url: string;
 }

@@ -472,3 +472,11 @@
     letter-spacing: 0.04em;
     vertical-align: middle;
 }
+
+/* Signalement d'erreur sous la présentation du texte */
+.code-report-action {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 20px;
+}
+.code-report-action .action-btn { width: auto; }

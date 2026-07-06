@@ -15,6 +15,7 @@ import { getDecisionHtml, isNewFormat } from '../../utils/decisionTextFormatter'
 import { logViewDecision, logDownloadPdf } from '../../utils/auditLogger';
 import ReportErrorModal from '../../components/ReportError/ReportErrorModal';
 import AnnotationPanel from '../../components/AnnotationPanel/AnnotationPanel';
+import ActionButton from '../../components/ui/ActionButton';
 
 import './DecisionPage.css';
 import '../Error/NotFoundPage.css';
@@ -520,32 +521,31 @@ const DecisionPage: React.FC = () => {
                         )}
 
                         {/* Export PDF/impression réservés au compte connecté (levier d'acquisition ; lecture libre). */}
-                        <button className="btn-elite-primary" onClick={handleDownloadPdf} disabled={pdfBusy} aria-busy={pdfBusy}>
-                            <Download size={18} />
+                        <ActionButton
+                            variant="primary"
+                            icon={<Download size={18} />}
+                            onClick={handleDownloadPdf}
+                            disabled={pdfBusy}
+                            aria-busy={pdfBusy}
+                        >
                             {pdfBusy ? 'Génération…' : 'Télécharger le PDF'}
-                        </button>
+                        </ActionButton>
 
-                        <button
-                            className="btn-elite-secondary"
+                        <ActionButton
+                            variant="secondary"
+                            icon={<Printer size={16} />}
                             onClick={() => { if (isConnected) { handlePrint(); } else { setShowConversionModal(true); } }}
                         >
-                            <Printer size={16} />
                             Imprimer
-                        </button>
+                        </ActionButton>
 
-                        <button className="btn-elite-secondary" onClick={handleCopyRef}>
-                            <Copy size={16} />
+                        <ActionButton variant="secondary" icon={<Copy size={16} />} onClick={handleCopyRef}>
                             Copier Référence
-                        </button>
+                        </ActionButton>
 
-                        <button
-                            className="btn-elite-secondary"
-                            style={{
-                                marginTop: '1rem',
-                                border: '1px solid #10B981',
-                                color: '#047857',
-                                background: '#ECFDF5'
-                            }}
+                        <ActionButton
+                            variant="secondary"
+                            icon={<FileText size={16} />}
                             onClick={() => {
                                 if (isConnected) {
                                     setIsAnnotationOpen(true);
@@ -554,18 +554,16 @@ const DecisionPage: React.FC = () => {
                                 }
                             }}
                         >
-                            <FileText size={16} />
                             Mes Annotations
-                        </button>
+                        </ActionButton>
 
-                        <button
-                            className="inline-report-btn"
-                            style={{ marginTop: '1rem', width: '100%', justifyContent: 'center' }}
+                        <ActionButton
+                            variant="ghost"
+                            icon={<AlertCircle size={16} />}
                             onClick={() => setIsReportModalOpen(true)}
                         >
-                            <AlertCircle size={16} />
                             Signaler une erreur
-                        </button>
+                        </ActionButton>
                     </div>
                 </aside>
             </div>

@@ -12,6 +12,7 @@ import { supabase } from '../../lib/supabase';
 import SEO from '../../components/SEO/SEO';
 import ConversionModal from '../../components/ConversionModal/ConversionModal';
 import ReportErrorModal from '../../components/ReportError/ReportErrorModal';
+import ActionButton from '../../components/ui/ActionButton';
 import CodeNavTree from '../../components/CodeNavTree/CodeNavTree';
 import {
     Article as CodeArticle, StructureNode, HierarchyNode,
@@ -577,21 +578,22 @@ const ArticlePage: React.FC = () => {
 
                 {/* ACTIONS */}
                 <div className="article-actions">
-                    <button
-                        className={`btn-compare ${showComparison ? 'active' : ''}`}
+                    <ActionButton
+                        variant="secondary"
+                        icon={<GitCompare size={16} />}
+                        className={showComparison ? 'active' : ''}
                         onClick={handleCompareClick}
                     >
-                        <GitCompare size={16} />
                         Comparer les versions
                         {!isAuthenticated && <Lock size={12} className="pro-lock" />}
-                    </button>
-                    <button
-                        className="inline-report-btn"
+                    </ActionButton>
+                    <ActionButton
+                        variant="ghost"
+                        icon={<AlertCircle size={16} />}
                         onClick={() => setIsReportModalOpen(true)}
                     >
-                        <AlertCircle size={16} />
                         Signaler une erreur
-                    </button>
+                    </ActionButton>
                 </div>
 
                 {/* COMPARISON MODE */}

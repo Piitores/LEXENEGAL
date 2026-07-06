@@ -160,25 +160,3 @@
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
 }
-
-/* Optional inline button styling for pages */
-.inline-report-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: #6b7280;
-    background: transparent;
-    border: 1px solid #e5e7eb;
-    padding: 0.4rem 0.75rem;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.inline-report-btn:hover {
-    color: #ef4444;
-    border-color: #fca5a5;
-    background: #fef2f2;
-}

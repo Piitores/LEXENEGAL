@@ -3,13 +3,15 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     ArrowLeft, ChevronRight, Search,
-    BookOpen, FileText, ChevronDown, ExternalLink, Copy, Check
+    BookOpen, FileText, ChevronDown, ExternalLink, Copy, Check, AlertCircle
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import SEO from '../../components/SEO/SEO';
 import CodeNavTree from '../../components/CodeNavTree/CodeNavTree';
 import TextPresentation from '../../components/TextPresentation/TextPresentation';
 import LinkedLegalContent from '../../components/LinkedLegalContent/LinkedLegalContent';
+import ReportErrorModal from '../../components/ReportError/ReportErrorModal';
+import ActionButton from '../../components/ui/ActionButton';
 import {
     Law, Article, HierarchyNode,
     buildTreeFromNodes, buildTreeLegacy, countArticles, getArticlesForNode,
@@ -155,6 +157,7 @@ const CodePage: React.FC = () => {
     // Stats
     const [totalArticles, setTotalArticles] = useState(0);
     const [totalChapters, setTotalChapters] = useState(0);
+    const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
     // Refs pour la gestion du scroll (corrige le « saut au footer »)
     const sidebarRef = useRef<HTMLElement>(null);
@@ -481,7 +484,18 @@ const CodePage: React.FC = () => {
                         <>
                             {/* Présentation du texte (en tête du code, niveau racine) */}
                             {breadcrumbs.length <= 1 && law && (
-                                <TextPresentation law={law} articleCount={totalArticles} />
+                                <>
+                                    <TextPresentation law={law} articleCount={totalArticles} />
+                                    <div className="code-report-action">
+                                        <ActionButton
+                                            variant="ghost"
+                                            icon={<AlertCircle size={16} />}
+                                            onClick={() => setIsReportModalOpen(true)}
+                                        >
+                                            Signaler une erreur
+                                        </ActionButton>
+                                    </div>
+                                </>
                             )}
 
                             {/* Breadcrumb */}
@@ -578,7 +592,20 @@ const CodePage: React.FC = () => {
                         </>
                     ) : (
                         <>
-                            {law && <TextPresentation law={law} articleCount={totalArticles} />}
+                            {law && (
+                                <>
+                                    <TextPresentation law={law} articleCount={totalArticles} />
+                                    <div className="code-report-action">
+                                        <ActionButton
+                                            variant="ghost"
+                                            icon={<AlertCircle size={16} />}
+                                            onClick={() => setIsReportModalOpen(true)}
+                                        >
+                                            Signaler une erreur
+                                        </ActionButton>
+                                    </div>
+                                </>
+                            )}
                             <div className="empty-state">
                                 <BookOpen size={48} />
                                 <p>Sélectionnez une section dans l'arbre de navigation pour consulter les articles.</p>
@@ -587,6 +614,14 @@ const CodePage: React.FC = () => {
                     )}
                 </main>
             </div>
+
+            <ReportErrorModal
+                isOpen={isReportModalOpen}
+                onClose={() => setIsReportModalOpen(false)}
+                entityType="code"
+                entityId={law.id}
+                url={window.location.href}
+            />
         </div>
     );
 };
