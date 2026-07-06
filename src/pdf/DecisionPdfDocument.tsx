@@ -132,10 +132,12 @@ const DecisionPdfDocument: React.FC<{ data: DecisionPdfData }> = ({ data }) => (
                 </View>
             </View>
 
-            {/* Titre */}
+            {/* Titre — certaines références (juricaf) contiennent déjà « du [date] » : ne pas dupliquer. */}
             <View style={styles.titleBlock}>
                 <Text style={styles.title}>
-                    {data.reference}{data.dateDecision ? ` du ${data.dateDecision}` : ''}
+                    {data.reference}
+                    {data.dateDecision && !data.reference.toLowerCase().includes(data.dateDecision.toLowerCase())
+                        ? ` du ${data.dateDecision}` : ''}
                 </Text>
                 {data.juridiction ? <Text style={styles.subtitle}>{data.juridiction}</Text> : null}
                 {data.chambre ? <Text style={styles.subtitle}>{data.chambre}</Text> : null}
