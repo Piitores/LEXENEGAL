@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     ArrowLeft, ChevronRight, Search,
-    BookOpen, FileText, ChevronDown, ExternalLink, Copy, Check, AlertCircle
+    BookOpen, FileText, ChevronDown, ExternalLink, Copy, Check, AlertCircle, Printer
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import SEO from '../../components/SEO/SEO';
@@ -498,6 +498,13 @@ const CodePage: React.FC = () => {
                                 </>
                             )}
 
+                            {/* En-tête visible UNIQUEMENT à l'impression : le titre du code
+                                (affiché dans la sidebar à l'écran, masquée sur papier). */}
+                            <div className="code-print-header">
+                                <div className="cph-title">{law?.title}</div>
+                                <div className="cph-meta">Source : www.lexenegal.sn — édité le {new Date().toLocaleDateString('fr-FR')}</div>
+                            </div>
+
                             {/* Breadcrumb */}
                             <div className="code-breadcrumb">
                                 {breadcrumbs.map((bc, i) => {
@@ -526,9 +533,20 @@ const CodePage: React.FC = () => {
                                     return <h2>{badge && <span className="section-header__badge">{badge}</span>}{label}</h2>;
                                 })()}
                                 <div className="section-meta">
-                                    {selectedArticles.length} article{selectedArticles.length > 1 ? 's' : ''} 
+                                    {selectedArticles.length} article{selectedArticles.length > 1 ? 's' : ''}
                                     {selectedNode.children.length > 0 && ` · ${selectedNode.children.length} sous-section${selectedNode.children.length > 1 ? 's' : ''}`}
                                 </div>
+                                {selectedArticles.length > 0 && (
+                                    <div className="section-print-action">
+                                        <ActionButton
+                                            variant="secondary"
+                                            icon={<Printer size={16} />}
+                                            onClick={() => window.print()}
+                                        >
+                                            {breadcrumbs.length <= 1 ? 'Imprimer le texte' : 'Imprimer cette division'}
+                                        </ActionButton>
+                                    </div>
+                                )}
                             </div>
 
                             {/* Tabs */}
