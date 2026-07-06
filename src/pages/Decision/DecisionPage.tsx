@@ -48,15 +48,14 @@ const DecisionPage: React.FC = () => {
     // Références citées résolues en liens fiables (raw → article présent en base).
     const [citedResolved, setCitedResolved] = useState<Record<string, ResolvedArticle>>({});
     // Auth : favoris/annotations/PDF ouverts à tout compte connecté (Pro reporté).
-    const { user, isConnected } = useAuth();
-    const userId = user?.id ? user.id.substring(0, 8) : 'Anonymous';
+    const { isConnected } = useAuth();
 
     // State for Annotations
     const [isAnnotationOpen, setIsAnnotationOpen] = useState(false);
     const [annotations, setAnnotations] = useState<any[]>([]);
 
-    // State for Certified Edition Toggle
-    const [isCertified, setIsCertified] = useState(true);
+    // Génération PDF en cours (anti double-clic)
+    const [pdfBusy, setPdfBusy] = useState(false);
 
     // State for Conversion Modal
     const [showConversionModal, setShowConversionModal] = useState(false);
@@ -262,6 +261,24 @@ const DecisionPage: React.FC = () => {
             }
         `
     });
+
+    // Téléchargement du PDF premium (rendu @react-pdf, sans passer par l'impression).
+    const handleDownloadPdf = async () => {
+        if (!isConnected) { setShowConversionModal(true); return; }
+        if (!decision || pdfBusy) return;
+        setPdfBusy(true);
+        try {
+            // Chargé à la demande : @react-pdf/renderer reste hors du bundle principal.
+            const { downloadDecisionPdf } = await import('../../pdf/downloadDecisionPdf');
+            await downloadDecisionPdf(decision, getDecisionHtml(decision));
+            logDownloadPdf(slug || '');
+        } catch (e) {
+            console.error('PDF generation failed:', e);
+            alert("La génération du PDF a échoué. Vous pouvez utiliser le bouton Imprimer en attendant.");
+        } finally {
+            setPdfBusy(false);
+        }
+    };
 
     // SKELETON LOADER - Prestige Loading State
     if (loading) return (
@@ -502,34 +519,18 @@ const DecisionPage: React.FC = () => {
                             />
                         )}
 
-                        {/* Certified Toggle */}
-                        <div style={{ marginBottom: '1rem', padding: '0.75rem', background: '#FFFFFF', border: '1px solid #E5E7EB', borderRadius: '8px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.75rem', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
-                            <input
-                                type="checkbox"
-                                id="cert-toggle"
-                                checked={isCertified}
-                                onChange={(e) => setIsCertified(e.target.checked)}
-                                style={{ accentColor: '#047857', width: '16px', height: '16px', cursor: 'pointer' }}
-                            />
-                            <label htmlFor="cert-toggle" style={{ cursor: 'pointer', color: '#374151', lineHeight: '1.3' }}>
-                                <strong>Édition Certifiée</strong><br />
-                                <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>Masquer la date</span>
-                            </label>
-                        </div>
+                        {/* Export PDF/impression réservés au compte connecté (levier d'acquisition ; lecture libre). */}
+                        <button className="btn-elite-primary" onClick={handleDownloadPdf} disabled={pdfBusy}>
+                            <Download size={18} />
+                            {pdfBusy ? 'Génération…' : 'Télécharger le PDF'}
+                        </button>
 
                         <button
-                            className="btn-elite-primary"
-                            onClick={() => {
-                                // Export PDF réservé au compte connecté (levier d'acquisition ; lecture libre).
-                                if (isConnected) {
-                                    handlePrint();
-                                } else {
-                                    setShowConversionModal(true);
-                                }
-                            }}
+                            className="btn-elite-secondary"
+                            onClick={() => { if (isConnected) { handlePrint(); } else { setShowConversionModal(true); } }}
                         >
-                            <Printer size={18} />
-                            Imprimer / PDF
+                            <Printer size={16} />
+                            Imprimer
                         </button>
 
                         <button className="btn-elite-secondary" onClick={handleCopyRef}>
@@ -577,11 +578,6 @@ const DecisionPage: React.FC = () => {
                 width: '210mm'
             }}>
                 <div ref={printRef} className="print-template">
-                    {/* WATERMARK */}
-                    <div className="print-watermark-container">
-                        <LexenegalSymbol size={600} opacity={0.04} />
-                    </div>
-
                     {/* HEADER */}
                     <div className="print-header">
                         <div className="print-header-left">
@@ -617,20 +613,9 @@ const DecisionPage: React.FC = () => {
                     {/* CONTENT */}
                     <div className="print-body" dangerouslySetInnerHTML={{ __html: rawText }} />
 
-                    {/* FINGERPRINT WATERMARK - Invisible traceability */}
-                    <div className="print-fingerprint">
-                        Édition Certifiée pour : {userId} - {new Date().toISOString().split('T')[0]}
-                    </div>
-
                     {/* FOOTER */}
                     <div className="print-footer">
-                        <div>
-                            Source Certifiée : www.lexenegal.sn<br />
-                            {!isCertified && (
-                                <span>Généré le {new Date().toLocaleDateString('fr-FR')}</span>
-                            )}
-                        </div>
-                        <div>Édition certifiée Lexenegal.sn</div>
+                        <div>Source : www.lexenegal.sn — édité le {new Date().toLocaleDateString('fr-FR')}</div>
                     </div>
                 </div>
             </div>

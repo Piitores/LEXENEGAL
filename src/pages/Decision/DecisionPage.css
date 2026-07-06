@@ -443,23 +443,6 @@
         color: black !important;
     }
 
-    /* WATERMARK - Positioned absolutely in the center */
-    .print-watermark-container {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        z-index: -10;
-        opacity: 0.04;
-        width: 180mm;
-        /* Constrain width for clean look */
-        height: auto;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        pointer-events: none;
-    }
-
     /* HEADER */
     .print-header {
         display: flex;
@@ -614,24 +597,6 @@
         display: flex;
         justify-content: space-between;
         background: white !important;
-    }
-
-    /* FINGERPRINT WATERMARK - Invisible traceability (2% opacity) */
-    .print-fingerprint {
-        position: fixed;
-        bottom: 50%;
-        left: 0;
-        right: 0;
-        text-align: center;
-        font-size: 14pt;
-        font-family: 'Arial', sans-serif;
-        color: rgba(0, 0, 0, 0.02) !important;
-        /* 2% opacity - nearly invisible */
-        letter-spacing: 2px;
-        transform: rotate(-45deg);
-        pointer-events: none;
-        z-index: -5;
-        white-space: nowrap;
     }
 
     /* UTILS */
@@ -1190,19 +1155,6 @@
     padding: 0;
     position: relative;
     min-height: 100%;
-}
-
-/* Filigrane central */
-.print-watermark {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 300px;
-    height: auto;
-    opacity: 0.04;
-    pointer-events: none;
-    z-index: 0;
 }
 
 /* En-tête du document */
