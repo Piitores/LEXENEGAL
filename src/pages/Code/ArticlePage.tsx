@@ -6,7 +6,7 @@ import LinkedLegalContent from '../../components/LinkedLegalContent/LinkedLegalC
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     ArrowLeft, ChevronLeft, ChevronRight,
-    GitCompare, Clock, Scale, Lock, FileText, Gavel, AlertCircle, X, ExternalLink, BookOpen, Loader2
+    GitCompare, Clock, Scale, Lock, FileText, Gavel, AlertCircle, X, ExternalLink, BookOpen, Loader2, Printer
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import SEO from '../../components/SEO/SEO';
@@ -578,6 +578,13 @@ const ArticlePage: React.FC = () => {
 
                 {/* ACTIONS */}
                 <div className="article-actions">
+                    <ActionButton
+                        variant="secondary"
+                        icon={<Printer size={16} />}
+                        onClick={() => window.print()}
+                    >
+                        Imprimer l'article
+                    </ActionButton>
                     <ActionButton
                         variant="secondary"
                         icon={<GitCompare size={16} />}

@@ -99,6 +99,46 @@
     .article-text .alinea { page-break-inside: avoid; }
     .abrogation-banner, .note-disclaimer { border: 1px solid #000 !important; color: #000 !important; }
 
+    /* Page article : la pièce = fil d'Ariane + article. Le reste (décisions
+       citantes, doctrine, navigation) n'appartient pas au document imprimé. */
+    .citing-decisions,
+    .doctrine-section {
+        display: none !important;
+    }
+
+    /* --- Page code : impression d'une DIVISION avec tous ses articles --- */
+    /* Titre du code en tête (le bloc est masqué à l'écran, cf. CodePage.css). */
+    .code-print-header { display: block !important; margin-bottom: 10px; }
+    .code-print-header .cph-title { font-family: 'Playfair Display', Georgia, serif; font-weight: 700; font-size: 15pt; color: #000; }
+    .code-print-header .cph-meta { font-size: 8pt; color: #444; margin-top: 2px; border-bottom: 1px solid #000; padding-bottom: 6px; }
+
+    /* Le fil d'Ariane du code est fait de <button> : la règle générique les
+       masque → on les ré-affiche ici en texte simple. */
+    .code-breadcrumb { display: flex !important; flex-wrap: wrap; align-items: center; font-size: 10pt; color: #000; }
+    .code-breadcrumb .breadcrumb-item {
+        display: inline !important;
+        background: none !important; border: none !important; padding: 0;
+        font: inherit; color: #000 !important; cursor: default;
+    }
+    .code-breadcrumb .breadcrumb-current { color: #000 !important; font-weight: 700; }
+    .code-breadcrumb .version-pill {
+        color: #047857 !important; border: 1px solid #047857 !important;
+        padding: 0 6px; border-radius: 4px; font-size: 8pt;
+    }
+
+    /* Chrome de la page code hors sujet sur papier */
+    .code-tabs,
+    .section-print-action,
+    .code-report-action,
+    .structure-grid {
+        display: none !important;
+    }
+
+    /* Cartes d'articles : blocs propres, jamais coupées en deux, lien « voir
+       l'article » retiré (sans objet sur papier). */
+    .article-card { page-break-inside: avoid; border: none !important; box-shadow: none !important; padding-left: 0 !important; padding-right: 0 !important; }
+    .article-card .article-link-btn { display: none !important; }
+
     /* ═══════════════════════════════════════════════════════════════════
        Gabarit print des décisions (migré de DecisionPage.css, VERBATIM)
        STYLES D'IMPRESSION PDF (IDENTITÉ VISUELLE PRESTIGE)

@@ -480,3 +480,10 @@
     margin-bottom: 20px;
 }
 .code-report-action .action-btn { width: auto; }
+
+/* En-tête d'impression (titre du code) : jamais visible à l'écran */
+.code-print-header { display: none; }
+
+/* Bouton « Imprimer cette division » sous le titre de section */
+.section-print-action { margin-top: 10px; }
+.section-print-action .action-btn { width: auto; }
