@@ -590,7 +590,8 @@ const DecisionPage: React.FC = () => {
 
                     {/* TITLE */}
                     <div className="print-title">
-                        <h2>{decision.reference} du {decision.date_decision ? new Date(decision.date_decision).toLocaleDateString('fr-FR') : ''}</h2>
+                        {/* Mêmes gardes que le PDF : pas de « du » orphelin, pas de date dupliquée (juricaf). */}
+                        <h2>{decision.reference}{formattedDate && !(decision.reference || '').toLowerCase().includes(formattedDate.toLowerCase()) ? ` du ${formattedDate}` : ''}</h2>
                         <div className="print-subtitle">{decision.juridiction || ''}</div>
                         <div className="print-chambre">{decision.chambre || ''}</div>
                     </div>
