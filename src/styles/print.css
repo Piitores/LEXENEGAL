@@ -1,0 +1,319 @@
+/* ============================================================
+   LEXENEGAL — Feuille d'impression UNIQUE (toutes ressources)
+   Consolidé depuis global.css / ArticlePage.css / AccountNudge.css /
+   DecisionPage.css. Toute nouvelle nature (conventions collectives…)
+   est couverte d'office par ces règles génériques.
+   ============================================================ */
+@media print {
+    @page {
+        margin: 15mm;
+    }
+
+    body {
+        background: #fff !important;
+        color: #000 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    body::before {
+        display: none !important;
+    }
+
+    /* --- Chrome du site : rien de tout ça sur papier --- */
+    nav,
+    footer,
+    button,
+    .navbar,
+    .breadcrumbs,
+    .loading-bar-container,
+    .sidebar-left,
+    .sidebar-right,
+    .certification-badge,
+    .account-nudge,
+    .watermark-container,
+    .code-sidebar,
+    .article-tree-aside,
+    .article-nav-backdrop,
+    .article-nav-toggle,
+    .article-actions,
+    .article-nav,
+    .doctrine-detail__back {
+        display: none !important;
+    }
+
+    /* Force white background */
+    * {
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    /* Hide URL and date in browser */
+    a[href]:after {
+        content: none !important;
+    }
+
+    /* --- Contenu pleine largeur --- */
+    .elite-grid,
+    .article-layout,
+    .code-layout {
+        display: block !important;
+    }
+
+    .content-main,
+    .code-main,
+    .article-container {
+        width: 100% !important;
+        max-width: none !important;
+    }
+
+    /* --- Découpes propres --- */
+    table,
+    .art-tableau {
+        page-break-inside: avoid;
+    }
+
+    .alinea {
+        page-break-inside: avoid;
+    }
+
+    h1,
+    h2,
+    h3 {
+        page-break-after: avoid;
+    }
+
+    /* --- Article de code (migré d'ArticlePage.css, VERBATIM) --- */
+    .article-hierarchy { border-left-color: #000; }
+    .article-hierarchy .ah-badge { background: #fff !important; color: #000 !important; border-color: #000 !important; }
+    .article-hierarchy .ah-label { color: #000; }
+
+    .article-text .pastille { border-color: #000; }
+    .article-text .pastille[open] .pastille-corps { display: block; }
+
+    /* Impression — fil d'Ariane complet visible, tableaux non coupés */
+    .article-breadcrumb { display: flex !important; flex-wrap: wrap; font-size: 11px; color: #000; }
+    .article-breadcrumb .bc-node, .article-breadcrumb .bc-current { color: #000 !important; }
+    .article-text .art-tableau { overflow: visible; display: table; page-break-inside: avoid; }
+    .article-text .alinea { page-break-inside: avoid; }
+    .abrogation-banner, .note-disclaimer { border: 1px solid #000 !important; color: #000 !important; }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       Gabarit print des décisions (migré de DecisionPage.css, VERBATIM)
+       STYLES D'IMPRESSION PDF (IDENTITÉ VISUELLE PRESTIGE)
+       ═══════════════════════════════════════════════════════════════════ */
+    @page {
+        margin: 15mm;
+        size: A4 portrait;
+    }
+
+    body {
+        background: white !important;
+        font-family: 'Times New Roman', Times, serif !important;
+        font-size: 12pt !important;
+        line-height: 1.5 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color: #000 !important;
+    }
+
+    /* HIDE UI ELEMENTS - Ensure absolutely everything non-printable is hidden */
+    .elite-grid,
+    .breadcrumbs,
+    .loading-bar-container,
+    .sidebar-left,
+    .sidebar-right,
+    .certification-badge,
+    .nav-sticky,
+    .decisionPage>.elite-grid,
+    /* Specificity safeguard */
+    nav,
+    .decisionPage header,
+    footer,
+    .tools-sticky {
+        display: none !important;
+    }
+
+    /* Le gabarit est déporté hors écran (left:-9999px inline) en mode écran :
+       on le ramène dans la page au moment d'imprimer. */
+    div:has(> .print-template) {
+        position: static !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: auto !important;
+    }
+
+    /* PRINT TEMPLATE STYLES */
+    .print-template {
+        display: block !important;
+        position: relative !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: white !important;
+        color: black !important;
+    }
+
+    /* HEADER */
+    .print-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        /* Align bottom */
+        border-bottom: 3px double #047857 !important;
+        /* Emerald double border */
+        padding-bottom: 15px;
+        margin-bottom: 30px;
+    }
+
+    .print-header-left h1 {
+        font-family: 'Playfair Display', serif !important;
+        font-weight: 700;
+        font-size: 24pt;
+        color: #047857 !important;
+        /* Emerald Prestige */
+        margin: 0;
+        line-height: 1;
+        letter-spacing: 1px;
+    }
+
+    .print-header-left span {
+        font-family: 'Times New Roman', serif;
+        font-size: 11pt;
+        font-style: italic;
+        color: #444 !important;
+        display: block;
+        margin-top: 5px;
+    }
+
+    .print-header-right {
+        text-align: right;
+        color: #000 !important;
+    }
+
+    .print-header-right strong {
+        font-family: 'Playfair Display', serif;
+        font-size: 12pt;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        display: block;
+    }
+
+    .print-header-right em {
+        font-family: 'Times New Roman', serif;
+        font-size: 10pt;
+        margin-top: 4px;
+        display: block;
+    }
+
+    /* TITLE SECTION */
+    .print-title {
+        text-align: center;
+        margin-bottom: 35px;
+    }
+
+    .print-title h2 {
+        font-family: 'Playfair Display', serif !important;
+        font-size: 20pt;
+        font-weight: 700;
+        margin: 0 0 10px 0;
+        color: #000 !important;
+        line-height: 1.2;
+    }
+
+    .print-subtitle {
+        font-family: 'Playfair Display', serif;
+        font-size: 14pt;
+        font-weight: bold;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+        color: #047857 !important;
+        /* Emerald */
+    }
+
+    .print-chambre {
+        font-size: 12pt;
+        font-style: italic;
+        color: #333 !important;
+    }
+
+    /* SYNTHESE */
+    .print-synthese {
+        border: 1px solid #ddd !important;
+        border-left: 5px solid #047857 !important;
+        /* Emerald border */
+        background-color: #fcfcfc !important;
+        /* Very light grey */
+        padding: 20px;
+        margin-bottom: 35px;
+        page-break-inside: avoid;
+        border-radius: 4px;
+    }
+
+    .print-synthese-title {
+        font-family: 'Playfair Display', serif;
+        font-weight: bold;
+        text-transform: uppercase;
+        color: #047857 !important;
+        font-size: 10pt;
+        margin-bottom: 12px;
+        letter-spacing: 1px;
+    }
+
+    .print-synthese-matiere {
+        font-weight: bold;
+        margin-bottom: 8px;
+        font-size: 11pt;
+    }
+
+    .print-synthese-resume {
+        font-style: italic;
+        text-align: justify;
+        font-size: 11pt;
+        margin: 0;
+        line-height: 1.5;
+    }
+
+    /* BODY CONTENT */
+    .print-body {
+        font-family: 'Times New Roman', serif !important;
+        font-size: 12pt !important;
+        line-height: 1.6;
+        text-align: justify;
+    }
+
+    .print-body p {
+        margin-bottom: 15px;
+        text-align: justify;
+    }
+
+    .print-body h1,
+    .print-body h2,
+    .print-body h3 {
+        color: #000 !important;
+        page-break-after: avoid;
+    }
+
+    /* FOOTER - Fixed at bottom of every page */
+    .print-footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        border-top: 1px solid #ccc !important;
+        padding-top: 10px;
+        font-size: 9pt;
+        font-family: 'Arial', sans-serif;
+        color: #666 !important;
+        display: flex;
+        justify-content: space-between;
+        background: white !important;
+    }
+
+    /* UTILS */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+}

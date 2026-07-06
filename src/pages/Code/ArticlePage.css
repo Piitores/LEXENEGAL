@@ -1185,11 +1185,6 @@
     color: inherit;
     line-height: 1.35;
 }
-@media print {
-    .article-hierarchy { border-left-color: #000; }
-    .article-hierarchy .ah-badge { background: #fff !important; color: #000 !important; border-color: #000 !important; }
-    .article-hierarchy .ah-label { color: #000; }
-}
 
 /* alinéas : indentation par niveau + marqueur (1. a) •) discret */
 .article-text .alinea.niv1 { margin-left: 1.5rem; }
@@ -1295,19 +1290,7 @@
 }
 .article-text .pastille .pastille-corps p { margin: 0 0 0.6rem; text-indent: 0; }
 .article-text .pastille .pastille-corps p:last-child { margin-bottom: 0; }
-@media print {
-    .article-text .pastille { border-color: #000; }
-    .article-text .pastille[open] .pastille-corps { display: block; }
-}
 
-/* Impression — fil d'Ariane complet visible, tableaux non coupés */
-@media print {
-    .article-breadcrumb { display: flex !important; flex-wrap: wrap; font-size: 11px; color: #000; }
-    .article-breadcrumb .bc-node, .article-breadcrumb .bc-current { color: #000 !important; }
-    .article-text .art-tableau { overflow: visible; display: table; page-break-inside: avoid; }
-    .article-text .alinea { page-break-inside: avoid; }
-    .abrogation-banner, .note-disclaimer { border: 1px solid #000 !important; color: #000 !important; }
-}
 /* Liens cliquables du fil d'Ariane « emplacement dans le code » */
 .article-hierarchy .ah-link { color: inherit; text-decoration: none; }
 .article-hierarchy .ah-link:hover { color: #166534; text-decoration: underline; }
