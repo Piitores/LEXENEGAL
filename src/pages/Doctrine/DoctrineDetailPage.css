@@ -135,7 +135,17 @@
 }
 .doctrine-detail__cta:hover { background: #065F46; transform: translateY(-1px); }
 
+/* Rangée d'actions sous l'en-tête (copier la référence, signaler) */
+.doctrine-detail__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 1.25rem 2.5rem 0;
+}
+.doctrine-detail__actions .action-btn { width: auto; }
+
 @media (max-width: 640px) {
     .doctrine-detail__header { padding: 1.75rem 1.5rem 1.5rem; }
+    .doctrine-detail__actions { padding: 1.25rem 1.5rem 0; }
     .doctrine-detail__body { padding: 1.75rem 1.5rem 2rem; }
 }
