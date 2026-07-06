@@ -271,10 +271,10 @@ const DecisionPage: React.FC = () => {
             // Chargé à la demande : @react-pdf/renderer reste hors du bundle principal.
             const { downloadDecisionPdf } = await import('../../pdf/downloadDecisionPdf');
             await downloadDecisionPdf(decision, getDecisionHtml(decision));
-            logDownloadPdf(slug || '');
+            if (slug) logDownloadPdf(slug);
         } catch (e) {
             console.error('PDF generation failed:', e);
-            alert("La génération du PDF a échoué. Vous pouvez utiliser le bouton Imprimer en attendant.");
+            alert("Le téléchargement du PDF a échoué. Vous pouvez utiliser le bouton Imprimer en attendant.");
         } finally {
             setPdfBusy(false);
         }
@@ -520,7 +520,7 @@ const DecisionPage: React.FC = () => {
                         )}
 
                         {/* Export PDF/impression réservés au compte connecté (levier d'acquisition ; lecture libre). */}
-                        <button className="btn-elite-primary" onClick={handleDownloadPdf} disabled={pdfBusy}>
+                        <button className="btn-elite-primary" onClick={handleDownloadPdf} disabled={pdfBusy} aria-busy={pdfBusy}>
                             <Download size={18} />
                             {pdfBusy ? 'Génération…' : 'Télécharger le PDF'}
                         </button>
