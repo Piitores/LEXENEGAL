@@ -6,6 +6,7 @@ import { Loader2, ArrowLeft, Building, Calendar, FileText, Lock, BookOpen, Copy,
 import ConversionModal from '../../components/ConversionModal/ConversionModal';
 import ReportErrorModal from '../../components/ReportError/ReportErrorModal';
 import ActionButton from '../../components/ui/ActionButton';
+import { formatDoctrineDate } from '../../lib/doctrineDate';
 import './DoctrinePage.css';
 import './DoctrineDetailPage.css';
 
@@ -24,27 +25,6 @@ interface DoctrineDetail {
 
 // Teaser public (content_raw EXCLU : gate DB par colonne, migration doctrine_gate_content_raw_columns).
 const TEASER_COLUMNS = 'id, slug, numero, annee, date, service_emetteur, reference_complete, objet, destinataire, signataire';
-
-const MOIS_FR: Record<string, number> = {
-    janvier: 0, fevrier: 1, 'février': 1, mars: 2, avril: 3, mai: 4, juin: 5,
-    juillet: 6, aout: 7, 'août': 7, septembre: 8, octobre: 9, novembre: 10, decembre: 11, 'décembre': 11,
-};
-function formatDate(dateStr?: string | null, ref?: string | null) {
-    let d = dateStr ? new Date(dateStr) : null;
-    if ((!d || isNaN(d.getTime())) && ref) {
-        const m = ref.match(/\b(?:le|du)\s+(\d[\s\dA-Za-zÀ-ÿ]{3,40})/i);
-        if (m) {
-            const compact = m[1].replace(/\s+/g, '');
-            const mm = compact.match(/^(\d{1,2})([A-Za-zÀ-ÿ]+?)(\d{4})/);
-            if (mm) {
-                const mo = MOIS_FR[mm[2].toLowerCase()];
-                if (mo != null) d = new Date(Number(mm[3]), mo, Number(mm[1]));
-            }
-        }
-    }
-    if (!d || isNaN(d.getTime())) return 'Date inconnue';
-    return d.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' });
-}
 
 const DoctrineDetailPage: React.FC = () => {
     const { slug } = useParams();
@@ -155,7 +135,7 @@ const DoctrineDetailPage: React.FC = () => {
                             </span>
                             <h1>{doctrine.objet || ref}</h1>
                             <ul className="doctrine-detail__meta">
-                                <li><Calendar size={15} /> {formatDate(doctrine.date, doctrine.reference_complete)}</li>
+                                <li><Calendar size={15} /> {formatDoctrineDate(doctrine.date, doctrine.reference_complete)}</li>
                                 <li><FileText size={15} /> {ref}</li>
                                 <li><Building size={15} /> {doctrine.service_emetteur || 'DGID'}</li>
                                 {doctrine.destinataire && <li><strong>Destinataire :</strong>&nbsp;{doctrine.destinataire}</li>}
