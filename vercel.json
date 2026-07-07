@@ -9,6 +9,17 @@
     },
     "redirects": [
         {
+            "source": "/:path*",
+            "has": [
+                {
+                    "type": "host",
+                    "value": "lexenegal.sn"
+                }
+            ],
+            "destination": "https://www.lexenegal.sn/:path*",
+            "permanent": true
+        },
+        {
             "source": "/code/code-des-obligations-civiles-et-commerciales",
             "destination": "/code/cocc",
             "permanent": true

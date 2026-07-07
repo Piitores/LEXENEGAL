@@ -395,19 +395,19 @@ const DecisionPage: React.FC = () => {
             <nav className="breadcrumbs" aria-label="Fil d'Ariane">
                 <ol itemScope itemType="https://schema.org/BreadcrumbList">
                     <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
-                        <a itemProp="item" href="/"><span itemProp="name">Lexenegal</span></a>
+                        <a itemProp="item" href="https://www.lexenegal.sn/"><span itemProp="name">Lexenegal</span></a>
                         <meta itemProp="position" content="1" />
                     </li>
                     <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
-                        <a itemProp="item" href="/search"><span itemProp="name">Sénégal</span></a>
+                        <a itemProp="item" href="https://www.lexenegal.sn/jurisprudence"><span itemProp="name">Jurisprudence</span></a>
                         <meta itemProp="position" content="2" />
                     </li>
                     <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
-                        <a itemProp="item" href="/search"><span itemProp="name">{decision.chambre || 'Chambre'}</span></a>
+                        <a itemProp="item" href="https://www.lexenegal.sn/search"><span itemProp="name">{decision.chambre || 'Chambre'}</span></a>
                         <meta itemProp="position" content="3" />
                     </li>
                     <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
-                        <a itemProp="item" href={`/decision/${slug}`}><span itemProp="name">{decision.reference}</span></a>
+                        <a itemProp="item" href={`https://www.lexenegal.sn/decision/${slug}`}><span itemProp="name">{decision.reference || 'Décision'}</span></a>
                         <meta itemProp="position" content="4" />
                     </li>
                 </ol>

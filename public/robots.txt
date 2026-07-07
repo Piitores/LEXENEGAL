@@ -60,5 +60,5 @@ Disallow: /api/
 Disallow: /_next/
 Disallow: /admin/
 
-# Sitemap
-Sitemap: https://lexenegal.sn/sitemap.xml
+# Sitemap (toujours sur le domaine canonique www)
+Sitemap: https://www.lexenegal.sn/sitemap.xml
