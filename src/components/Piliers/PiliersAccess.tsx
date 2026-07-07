@@ -13,7 +13,7 @@ interface Pilier {
 
 const PILIERS: Pilier[] = [
     {
-        to: '/search',
+        to: '/jurisprudence',
         icon: <Scale size={26} strokeWidth={1.6} />,
         title: 'Jurisprudence',
         count: '11 325 décisions',

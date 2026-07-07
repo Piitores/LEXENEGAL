@@ -8,6 +8,7 @@ import Home from './pages/Home/Home';
 import SearchPage from './pages/Search/SearchPage';
 import DecisionPage from './pages/Decision/DecisionPage';
 import ThemePage from './pages/Jurisprudence/ThemePage';
+import JurisprudencePage from './pages/Jurisprudence/JurisprudencePage';
 import AuthPage from './pages/Auth/AuthPage';
 import AuthCallback from './pages/Auth/AuthCallback';
 import CabinetPage from './pages/Cabinet/CabinetPage';
@@ -124,7 +125,8 @@ function App() {
                 {/* Landing Page Unique */}
               <Route path="/" element={<Home />} />
 
-              {/* Jurisprudence */}
+              {/* Jurisprudence : /jurisprudence = pilier (hub), /search = résultats de recherche */}
+              <Route path="/jurisprudence" element={<JurisprudencePage />} />
               <Route path="/search" element={<SearchPage />} />
               <Route path="/decision/:slug" element={<DecisionPage />} />
               <Route path="/jurisprudence/theme/:slug" element={<ThemePage />} />

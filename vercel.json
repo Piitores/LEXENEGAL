@@ -50,6 +50,10 @@
             "destination": "/api/render?type=theme&slug=:slug"
         },
         {
+            "source": "/jurisprudence",
+            "destination": "/api/render?type=jurisprudence"
+        },
+        {
             "source": "/(.*)",
             "destination": "/index.html"
         }

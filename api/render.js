@@ -454,7 +454,7 @@ export function buildThemeBody(data) {
        ${faq.map((f) => `<h3>${esc(f.q)}</h3><p>${esc(f.a)}</p>`).join('\n')}</section>`
     : '';
   return wrapContent(`<article>
-    <nav class="ssr-bc" aria-label="Fil d'Ariane"><a href="/search">Jurisprudence</a> › ${esc(t.label)}</nav>
+    <nav class="ssr-bc" aria-label="Fil d'Ariane"><a href="/jurisprudence">Jurisprudence</a> › ${esc(t.label)}</nav>
     <h1>${esc(t.h1)}</h1>
     <p class="ssr-theme-chapo">${esc(t.chapo)}</p>
     <p class="ssr-theme-stats"><strong>${total} décisions</strong> sur ce thème dans la base${jurisTxt ? ` : ${esc(jurisTxt)}.` : '.'}</p>
@@ -462,6 +462,36 @@ export function buildThemeBody(data) {
     <section class="ssr-theme-decs"><h2>Décisions récentes — ${esc(t.label)}</h2><ul>${decs}</ul></section>
     ${faqHtml}
     <p class="ssr-theme-more"><a href="/search?q=${encodeURIComponent(t.label)}">Rechercher « ${esc(t.label)} » dans toute la base →</a></p>
+  </article>`);
+}
+
+/* ---------- HUB JURISPRUDENCE (/jurisprudence) ---------- */
+/*
+ * Page pilier distincte de /search (qui reste la page de RÉSULTATS de recherche) :
+ * porte d'entrée SEO de la jurisprudence — matières + thèmes (pages seo_themes).
+ */
+export function buildJurisprudenceHead(canonical) {
+  const title = 'Jurisprudence du Sénégal — décisions de justice en texte intégral | Lexenegal';
+  const description = 'Toute la jurisprudence du Sénégal et de l’OHADA : Cour suprême, Cour de cassation, CCJA, Conseil constitutionnel, cours d’appel. Décisions en texte intégral, classées par matière et par thème.';
+  const keywords = 'jurisprudence Sénégal, décisions de justice Sénégal, Cour suprême Sénégal, CCJA, arrêts Sénégal, droit sénégalais, Lexenegal';
+  const schema = {
+    '@context': 'https://schema.org', '@type': 'CollectionPage',
+    name: 'Jurisprudence du Sénégal', description, inLanguage: 'fr', url: canonical,
+    isPartOf: { '@type': 'WebSite', name: 'Lexenegal', url: SITE },
+  };
+  return headBlock({ title, description, keywords, canonical, ogType: 'website', schema });
+}
+export function buildJurisprudenceBody(themes) {
+  const list = themes || [];
+  const matieres = list.filter((t) => t.matiere);
+  const sujets = list.filter((t) => !t.matiere);
+  const li = (t) => `<li><a href="/jurisprudence/theme/${esc(t.slug)}">${esc(t.label)}</a>${t.cached_total ? ` <span class="ssr-theme-art-n">(${t.cached_total} décisions)</span>` : ''}</li>`;
+  return wrapContent(`<article>
+    <h1>Jurisprudence du Sénégal et de l'OHADA</h1>
+    <p>Consultez les <strong>décisions de justice du Sénégal</strong> en texte intégral : Cour suprême, Cour de cassation, Conseil constitutionnel, cours d'appel et tribunaux, ainsi que la <strong>Cour commune de justice et d'arbitrage (CCJA)</strong> de l'OHADA. Chaque décision est reliée aux articles de codes qu'elle cite.</p>
+    <p><a href="/search">Rechercher une décision, un mot-clé ou une référence →</a></p>
+    ${matieres.length ? `<section><h2>Jurisprudence par matière</h2><ul>${matieres.map(li).join('\n')}</ul></section>` : ''}
+    ${sujets.length ? `<section><h2>Jurisprudence par thème</h2><ul>${sujets.map(li).join('\n')}</ul></section>` : ''}
   </article>`);
 }
 
@@ -506,6 +536,10 @@ async function fetchDoctrine(slug) {
 // Alimente le 301 permanent : aucune URL indexée ne casse après la refonte des slugs.
 async function fetchDoctrineRedirect(oldSlug) {
   return one(await sb(`doctrine_slug_redirects?old_slug=eq.${encodeURIComponent(oldSlug)}&select=new_slug&limit=1`));
+}
+async function fetchThemesIndex() {
+  try { return await sb(`seo_themes?is_active=eq.true&select=slug,label,matiere,cached_total&order=cached_total.desc&limit=200`); }
+  catch (e) { return []; }
 }
 async function fetchThemePage(slug) {
   // RPC unique : thème + total + juridictions + 40 décisions + 12 articles cités.
@@ -599,6 +633,11 @@ export default async function handler(req, res) {
       }
       const canonical = `${SITE}/doctrine-fiscale/${slug}`;
       return serveHtml(buildDoctrineHead(d, canonical), buildDoctrineBody(d));
+    }
+
+    if (type === 'jurisprudence') {
+      const themes = await fetchThemesIndex();
+      return serveHtml(buildJurisprudenceHead(`${SITE}/jurisprudence`), buildJurisprudenceBody(themes));
     }
 
     if (type === 'theme') {

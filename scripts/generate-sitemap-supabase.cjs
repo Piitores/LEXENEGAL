@@ -105,9 +105,15 @@ async function generateSitemap() {
     const doctrines = (await fetchAllRows('doctrine', 'slug,date')).filter((d) => d.slug);
     console.log(`📑 Found ${doctrines.length} doctrines fiscales`);
 
+    console.log('⏳ Fetching pages-thèmes...');
+    // Pages-thèmes de jurisprudence (hub /jurisprudence + /jurisprudence/theme/:slug)
+    const seoThemes = (await fetchAllRows('seo_themes', 'slug,updated_at&is_active=eq.true')).filter((t) => t.slug);
+    console.log(`🏷️ Found ${seoThemes.length} pages-thèmes`);
+
     // Static pages
     const staticPages = [
         { url: '/', priority: '1.0', changefreq: 'daily' },
+        { url: '/jurisprudence', priority: '0.9', changefreq: 'weekly' },
         { url: '/search', priority: '0.9', changefreq: 'daily' },
         { url: '/codes', priority: '0.9', changefreq: 'daily' },
         { url: '/droit-communautaire', priority: '0.8', changefreq: 'weekly' },
@@ -180,6 +186,16 @@ async function generateSitemap() {
 `;
     }
 
+    // 6. Add pages-thèmes de jurisprudence
+    for (const theme of seoThemes) {
+        xml += `  <url>
+    <loc>${BASE_URL}/jurisprudence/theme/${theme.slug}</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+`;
+    }
+
     xml += `</urlset>`;
 
     // Write to public folder
@@ -187,7 +203,7 @@ async function generateSitemap() {
     fs.writeFileSync(outputPath, xml);
 
     console.log(`✅ Sitemap saved to ${outputPath}`);
-    console.log(`📊 Total URLs generated: ${staticPages.length + codes.length + activeArticles.length + decisions.length + doctrines.length}`);
+    console.log(`📊 Total URLs generated: ${staticPages.length + codes.length + activeArticles.length + decisions.length + doctrines.length + seoThemes.length}`);
 }
 
 generateSitemap().catch(console.error);

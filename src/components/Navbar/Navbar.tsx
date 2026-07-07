@@ -110,7 +110,7 @@ function Navbar({ scrolled }: { scrolled: boolean }) {
         </div>
 
         <div className={`navbar__menu ${menuOpen ? 'navbar__menu--open' : ''}`}>
-          <Link to="/search" className={`navbar__link ${location.pathname === '/search' ? 'navbar__link--highlight' : ''}`} onClick={closeAll}>
+          <Link to="/jurisprudence" className={`navbar__link ${location.pathname.startsWith('/jurisprudence') ? 'navbar__link--highlight' : ''}`} onClick={closeAll}>
             <Scale size={16} />
             Jurisprudence
           </Link>

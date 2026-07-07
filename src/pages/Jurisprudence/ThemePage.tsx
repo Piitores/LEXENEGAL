@@ -111,7 +111,7 @@ const ThemePage: React.FC = () => {
         <div className="theme-page">
             <div className="theme-page__container">
                 <nav className="theme-page__breadcrumb" aria-label="Fil d'Ariane">
-                    <Link to="/search">Jurisprudence</Link> <span>›</span> {theme.label}
+                    <Link to="/jurisprudence">Jurisprudence</Link> <span>›</span> {theme.label}
                 </nav>
 
                 <header className="theme-page__header">

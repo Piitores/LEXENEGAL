@@ -6,6 +6,11 @@
     <priority>1.0</priority>
   </url>
   <url>
+    <loc>https://www.lexenegal.sn/jurisprudence</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
     <loc>https://www.lexenegal.sn/search</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
@@ -54077,14 +54082,8 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20160719-arr-t-n20-du-19-juillet-2016</loc>
-    <lastmod>2016-07-19</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20090319-arr-t-n09-du-19-mars-2009</loc>
-    <lastmod>2009-03-19</lastmod>
+    <loc>https://www.lexenegal.sn/decision/arret-n-60-du-04-juillet-2012</loc>
+    <lastmod>2012-07-04</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -54101,20 +54100,32 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20130611-arr-t-n17-du-11-juin-2013</loc>
-    <lastmod>2013-06-11</lastmod>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20170620-arret-n-12-du-20-juin-2017</loc>
+    <lastmod>2017-06-20</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20190326-arret-n-02-du-26-mars-2019</loc>
+    <lastmod>2019-03-26</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/decision/arret-pr-n-41-du-10-mars-1999</loc>
+    <lastmod>1999-03-10</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20090319-arr-t-n09-du-19-mars-2009</loc>
+    <lastmod>2009-03-19</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20170620-arr-t-n13-du-20-juin-2017</loc>
     <lastmod>2017-06-20</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20090319-arr-t-n12-du-19-mars-2009</loc>
-    <lastmod>2009-03-19</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -54137,8 +54148,38 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20160719-arret-n-20-du-19-juillet-2016</loc>
+    <lastmod>2016-07-19</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20220516-ordonnance-n-31</loc>
     <lastmod>2022-05-16</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20200407-arret-n-14</loc>
+    <lastmod>2020-04-07</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20090319-arr-t-n12-du-19-mars-2009</loc>
+    <lastmod>2009-03-19</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/decision/arret-n-48-ss-du-1631999</loc>
+    <lastmod>1999-03-16</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/decision/arret-n61-du-03031999</loc>
+    <lastmod>1999-03-03</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -54149,8 +54190,26 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20130611-arr-t-n17-du-11-juin-2013</loc>
+    <lastmod>2013-06-11</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20220427-ordonnance-n-18-du-27-avril-2022</loc>
     <lastmod>2022-04-27</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20170426-arret-n37-du-2642017</loc>
+    <lastmod>2017-04-26</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20211228-ordonnance-n62-du-28-decembre-2021</loc>
+    <lastmod>2021-12-28</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -54161,8 +54220,38 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://www.lexenegal.sn/decision/arret-n-14-du-20-3-2001</loc>
+    <lastmod>2001-03-20</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20170328-arret-n-06-du-28-mars-2017</loc>
+    <lastmod>2017-03-28</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20130930-arr-t-n25-du-30-septembre-2013</loc>
+    <lastmod>2013-09-30</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20220322-ordonnance-n-09-du-22-mars-2022</loc>
     <lastmod>2022-03-22</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20110505-arr-t-n02-du-5-mai-2011</loc>
+    <lastmod>2011-05-05</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20200407-arret-n-01-du-07-avril-2020</loc>
+    <lastmod>2020-04-07</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -54173,14 +54262,20 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20210127-arret-n008</loc>
-    <lastmod>2021-01-27</lastmod>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20210527-arret-n29</loc>
+    <lastmod>2021-05-27</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20200407-arr-t-n10-du-7-avril-2020</loc>
-    <lastmod>2020-04-07</lastmod>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20180313-arret-n-03-du-13-mars-2018</loc>
+    <lastmod>2018-03-13</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20210127-arret-n008</loc>
+    <lastmod>2021-01-27</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -54227,6 +54322,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20210826-ordonnance-n17-du-26082021</loc>
+    <lastmod>2021-08-26</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20220516-ordonnance-aux-fins-de-decheance-n-33-du-16-mai-2022</loc>
     <lastmod>2022-05-16</lastmod>
     <changefreq>yearly</changefreq>
@@ -54263,20 +54364,8 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20190326-arr-t-n02-du-26-mars-2019</loc>
-    <lastmod>2019-03-26</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20180307-arret-n-13</loc>
     <lastmod>2018-03-07</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20210827-ordonnance-n-39-du-27-aout-2021</loc>
-    <lastmod>2021-08-27</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -54587,12 +54676,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20200407-arr-t-n01-du-7-avril-2020</loc>
-    <lastmod>2020-04-07</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-363-du-16-mai-2001</loc>
     <lastmod>2001-05-16</lastmod>
     <changefreq>yearly</changefreq>
@@ -54731,12 +54814,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20190326-arr-t-n13-du-26-mars-2019</loc>
-    <lastmod>2019-03-26</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-111-du-06-decembre-2012</loc>
     <lastmod>2012-12-06</lastmod>
     <changefreq>yearly</changefreq>
@@ -54751,12 +54828,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-121-du-21-juillet-1991</loc>
     <lastmod>1991-07-21</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-60-du-04-juillet-2012</loc>
-    <lastmod>2012-07-04</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -54911,12 +54982,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20160308-arr-t-n09-du-8-mars-2016</loc>
-    <lastmod>2016-03-08</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-44-du-852002</loc>
     <lastmod>2002-05-08</lastmod>
     <changefreq>yearly</changefreq>
@@ -54961,12 +55026,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-48-du-08-aout-2007</loc>
     <lastmod>2007-08-08</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20190326-arr-t-n11-du-26-mars-2019</loc>
-    <lastmod>2019-03-26</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -55069,12 +55128,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-07-du-140307</loc>
     <lastmod>2007-03-14</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20180313-arr-t-n03-du-13-mars-2018</loc>
-    <lastmod>2018-03-13</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -55259,12 +55312,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20110505-arr-t-n02-du-5-mai-2011</loc>
-    <lastmod>2011-05-05</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-95-audience-du-6-juillet-2005</loc>
     <lastmod>2005-07-06</lastmod>
     <changefreq>yearly</changefreq>
@@ -55303,12 +55350,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-92-du-20-mai-2010</loc>
     <lastmod>2010-05-20</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20130930-arr-t-n25-du-30-septembre-2013</loc>
-    <lastmod>2013-09-30</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -55487,12 +55528,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-04-du-05-fevrier-2013</loc>
-    <lastmod>2013-02-05</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20230322-arret-n14</loc>
     <lastmod>2023-03-22</lastmod>
     <changefreq>yearly</changefreq>
@@ -55537,12 +55572,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n110-du-2-septembre-2015</loc>
     <lastmod>2015-09-02</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20220413-ordonnance-n-13-du-13-avril-2022</loc>
-    <lastmod>2022-04-13</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -55627,12 +55656,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-51-du-23-juillet-2015</loc>
     <lastmod>2015-07-23</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20200407-arret-n-01-du-07-avril-2020</loc>
-    <lastmod>2020-04-07</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -56119,12 +56142,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-17-du-23-fevrier-2011</loc>
     <lastmod>2011-02-23</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-48-ss-du-1631999</loc>
-    <lastmod>1999-03-16</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -57287,12 +57304,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-14-du-14-avril-2022</loc>
-    <lastmod>2022-04-14</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-86-du-4-mars-1998</loc>
     <lastmod>1998-03-04</lastmod>
     <changefreq>yearly</changefreq>
@@ -57325,12 +57336,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-93-du-5-decembre-2018</loc>
     <lastmod>2018-12-05</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n29-du-27-mai-2021</loc>
-    <lastmod>2021-05-27</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -57665,12 +57670,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-pr-n-41-du-10-mars-1999</loc>
-    <lastmod>1999-03-10</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-121-du-26-juin-1996</loc>
     <lastmod>1996-06-26</lastmod>
     <changefreq>yearly</changefreq>
@@ -57703,12 +57702,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-354-du-23-decembre-1997</loc>
     <lastmod>1997-12-23</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n38-du-26-avril-2017</loc>
-    <lastmod>2017-04-26</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -57829,12 +57822,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n106-du-21-aout-2014</loc>
     <lastmod>2014-08-21</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n61-du-03031999</loc>
-    <lastmod>1999-03-03</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -58165,12 +58152,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-11-du-30-avril-2002</loc>
     <lastmod>2002-04-30</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/ordonnance-aux-fins-de-decheanche-n20-du-29-mai-2021</loc>
-    <lastmod>2021-05-29</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -58939,12 +58920,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-22-du-260405</loc>
     <lastmod>2005-04-26</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-25-du-30-septembre-2013</loc>
-    <lastmod>2013-09-30</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -60419,12 +60394,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-05-du-29-avril-2014</loc>
-    <lastmod>2014-04-29</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-211-du-31-mai-2000</loc>
     <lastmod>2000-05-31</lastmod>
     <changefreq>yearly</changefreq>
@@ -60595,12 +60564,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n31-du-18-mars-2015</loc>
     <lastmod>2015-03-18</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20210916-arret-n23</loc>
-    <lastmod>2021-09-16</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -61091,12 +61054,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n33-du-24-fevrier-1999</loc>
-    <lastmod>1999-02-24</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-35-du-28-juin-2006</loc>
     <lastmod>2006-06-28</lastmod>
     <changefreq>yearly</changefreq>
@@ -61493,12 +61450,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-51-du-20-avril-1999</loc>
-    <lastmod>1999-04-20</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-38-du-1er-avril-2015</loc>
     <lastmod>2015-04-01</lastmod>
     <changefreq>yearly</changefreq>
@@ -61531,12 +61482,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-548-du-24-decembre-1999</loc>
     <lastmod>1999-12-24</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-17-du-9-janvier-1996</loc>
-    <lastmod>1996-01-09</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -62855,12 +62800,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20170517-arret-n57-du-17-mai-2017-cour-supreme-du-senegal</loc>
-    <lastmod>2017-05-17</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/cour-d-appel-de-dakar-20190107-arret-n06-du-7-janvier-2019-role-n220-de-l-annee-2018</loc>
     <lastmod>2019-01-07</lastmod>
     <changefreq>yearly</changefreq>
@@ -62869,12 +62808,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20250328-ordonnance-n12-du-28-mars-2025-affaire-nj-143-rg-25</loc>
     <lastmod>2025-03-28</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20120704-arret-n60-du-4-juillet-2012</loc>
-    <lastmod>2012-07-04</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -63049,12 +62982,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20190403-arret-n-27</loc>
     <lastmod>2019-04-03</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20170426-arret-n37-du-2642017</loc>
-    <lastmod>2017-04-26</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -63289,12 +63216,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20220922-arret-n40</loc>
     <lastmod>2022-09-22</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20220414-arret-n14</loc>
-    <lastmod>2022-04-14</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -63575,14 +63496,14 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20120731-arr-t-n20-du-31-juillet-2012</loc>
-    <lastmod>2012-07-31</lastmod>
+    <loc>https://www.lexenegal.sn/decision/ohada-j-14-92</loc>
+    <lastmod>2012-03-22</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/ohada-j-14-92</loc>
-    <lastmod>2012-03-22</lastmod>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20120731-arr-t-n20-du-31-juillet-2012</loc>
+    <lastmod>2012-07-31</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -64241,12 +64162,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-67-du-4-decembre-1996</loc>
-    <lastmod>1996-12-04</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-40-du-20-fevrier-2008</loc>
     <lastmod>2008-02-20</lastmod>
     <changefreq>yearly</changefreq>
@@ -64307,26 +64222,20 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-128-du-15-fevrier-1994</loc>
-    <lastmod>1994-02-15</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-39-du-10-mars-1999</loc>
     <lastmod>1999-03-10</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-26-du-27-mai-2001</loc>
-    <lastmod>2001-05-27</lastmod>
+    <loc>https://www.lexenegal.sn/decision/arret-n-128-du-15-fevrier-1994</loc>
+    <lastmod>1994-02-15</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-456-du-5-decembre-2000</loc>
-    <lastmod>2003-01-23</lastmod>
+    <loc>https://www.lexenegal.sn/decision/arret-n-26-du-27-mai-2001</loc>
+    <lastmod>2001-05-27</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -64339,12 +64248,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-104-du-13-mars-1996</loc>
     <lastmod>1996-03-13</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n39-du-10-mars-1999</loc>
-    <lastmod>1999-03-10</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -65063,12 +64966,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n25-du-17-fevrier-2009</loc>
-    <lastmod>2009-02-17</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n04-du-23-septembre-2008</loc>
     <lastmod>2008-09-23</lastmod>
     <changefreq>yearly</changefreq>
@@ -65429,12 +65326,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20210826-ordonnance-n17-du-26821</loc>
-    <lastmod>2021-08-26</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20161208-arret-n-64</loc>
     <lastmod>2016-12-08</lastmod>
     <changefreq>yearly</changefreq>
@@ -65479,12 +65370,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n12-du-11-juin-2013</loc>
     <lastmod>2013-06-11</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20190326-arret-n-02-du-26-mars-2019</loc>
-    <lastmod>2019-03-26</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -65575,12 +65460,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20160721-arret-n142</loc>
     <lastmod>2016-07-21</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20220413-ordonnance-n-132022</loc>
-    <lastmod>2022-04-13</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -65771,12 +65650,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20170620-arr-t-n11-du-20-juin-2017</loc>
-    <lastmod>2017-06-20</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20210504-arret-n-11</loc>
     <lastmod>2021-05-04</lastmod>
     <changefreq>yearly</changefreq>
@@ -65791,12 +65664,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20160303-arret-n53-du-3-mars-2016</loc>
     <lastmod>2016-03-03</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20170620-arr-t-n18-du-20-juin-2017</loc>
-    <lastmod>2017-06-20</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -65845,12 +65712,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20160506-arret-n79</loc>
     <lastmod>2016-05-06</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20211229-ordonnance-n73</loc>
-    <lastmod>2021-12-29</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -65923,12 +65784,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20170511-arret-n34</loc>
     <lastmod>2017-05-11</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20210826-ordonnance-n17-du-26082021</loc>
-    <lastmod>2021-08-26</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -66169,18 +66024,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/ohada-j-15-33</loc>
     <lastmod>2013-05-02</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20170328-arret-n-06-du-28-mars-2017</loc>
-    <lastmod>2017-03-28</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20160719-arr-t-n19-du-19-juillet-2016</loc>
-    <lastmod>2016-07-19</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -67181,12 +67024,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20210827-ordonnance-n-41</loc>
-    <lastmod>2021-08-27</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20200507-arret-n-18</loc>
     <lastmod>2020-05-07</lastmod>
     <changefreq>yearly</changefreq>
@@ -67301,12 +67138,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-02-du-05-fevrier-2013</loc>
-    <lastmod>2013-02-05</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-29-du-17-decembre-2003</loc>
     <lastmod>2003-12-17</lastmod>
     <changefreq>yearly</changefreq>
@@ -67385,14 +67216,14 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20190626-arret-n-37</loc>
-    <lastmod>2019-06-26</lastmod>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20170426-arret-n38-du-26042017</loc>
+    <lastmod>2017-04-26</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20170426-arret-n38-du-26042017</loc>
-    <lastmod>2017-04-26</lastmod>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20190626-arret-n-37</loc>
+    <lastmod>2019-06-26</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -67685,12 +67516,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20210827-ordonnance-n39-du-27-aout-2021</loc>
-    <lastmod>2021-08-27</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20170405-arret-n44</loc>
     <lastmod>2017-04-05</lastmod>
     <changefreq>yearly</changefreq>
@@ -67699,6 +67524,12 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20211125-arret-n50</loc>
     <lastmod>2021-11-25</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20210827-ordonnance-n39-du-27-aout-2021</loc>
+    <lastmod>2021-08-27</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -68177,6 +68008,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20130205-arr-t-n02-du-5-fevrier-2013</loc>
+    <lastmod>2013-02-05</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-83-du-4-mars-1999</loc>
     <lastmod>1999-03-04</lastmod>
     <changefreq>yearly</changefreq>
@@ -68185,12 +68022,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/ohada-j-15-177</loc>
     <lastmod>2014-07-23</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20130205-arr-t-n02-du-5-fevrier-2013</loc>
-    <lastmod>2013-02-05</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -69161,12 +68992,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-12-du-19-mars-2009</loc>
-    <lastmod>2009-03-19</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-31-du-29-mai-2013</loc>
     <lastmod>2013-05-29</lastmod>
     <changefreq>yearly</changefreq>
@@ -69539,12 +69364,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20180313-arret-n-03-du-13-mars-2018</loc>
-    <lastmod>2018-03-13</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-485-du-13-decembre-1994</loc>
     <lastmod>1994-12-13</lastmod>
     <changefreq>yearly</changefreq>
@@ -69613,12 +69432,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20160810-arret-n63</loc>
     <lastmod>2016-08-10</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20160308-arr-t-n06-du-8-mars-2016</loc>
-    <lastmod>2016-03-08</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -69827,12 +69640,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20160719-arret-n-20-du-19-juillet-2016</loc>
-    <lastmod>2016-07-19</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n02-du-02-janvier-2014</loc>
     <lastmod>2014-01-02</lastmod>
     <changefreq>yearly</changefreq>
@@ -69853,12 +69660,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/ohada-j-15-92</loc>
     <lastmod>2014-01-30</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20170620-arret-n-12-du-20-juin-2017</loc>
-    <lastmod>2017-06-20</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -70919,12 +70720,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/ordonnance-aux-fins-de-decheance-n21-du-29-mai-2021</loc>
-    <lastmod>2021-05-29</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20161116-arret-n91</loc>
     <lastmod>2016-11-16</lastmod>
     <changefreq>yearly</changefreq>
@@ -71333,12 +71128,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20170426-arret-n38-du-2642017</loc>
-    <lastmod>2017-04-26</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20180208-arret-n07</loc>
     <lastmod>2018-02-08</lastmod>
     <changefreq>yearly</changefreq>
@@ -71597,12 +71386,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-09-du-19-mars-2009</loc>
-    <lastmod>2009-03-19</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n56-du-241013</loc>
     <lastmod>2013-10-24</lastmod>
     <changefreq>yearly</changefreq>
@@ -71707,12 +71490,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-7-du-19-12-2000</loc>
     <lastmod>2000-12-19</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20210527-arret-n29</loc>
-    <lastmod>2021-05-27</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -72047,12 +71824,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20220322-ordonnance-n-10</loc>
-    <lastmod>2022-03-22</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20190830-arret-n035</loc>
     <lastmod>2019-08-30</lastmod>
     <changefreq>yearly</changefreq>
@@ -72095,26 +71866,20 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20190716-arr-t-n24-du-16-juillet-2019</loc>
-    <lastmod>2019-07-16</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20220407-arret-n16</loc>
     <lastmod>2022-04-07</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20160308-arret-n-09-du-8-mars-2016</loc>
-    <lastmod>2016-03-08</lastmod>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20210602-arret-n-67</loc>
+    <lastmod>2021-06-02</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20210602-arret-n-67</loc>
-    <lastmod>2021-06-02</lastmod>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20160308-arret-n-09-du-8-mars-2016</loc>
+    <lastmod>2016-03-08</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -72563,14 +72328,14 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/ohada-j-05-43</loc>
-    <lastmod>2002-02-15</lastmod>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20220414-arret-n14-du-14-avril-2022</loc>
+    <lastmod>2022-04-14</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20220414-arret-n14-du-14-avril-2022</loc>
-    <lastmod>2022-04-14</lastmod>
+    <loc>https://www.lexenegal.sn/decision/ohada-j-05-43</loc>
+    <lastmod>2002-02-15</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -72935,14 +72700,14 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-01-du-26-mai-1999</loc>
-    <lastmod>1999-05-26</lastmod>
+    <loc>https://www.lexenegal.sn/decision/arret-n-33-du-24-fevrier-1999</loc>
+    <lastmod>1999-02-24</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-33-du-24-fevrier-1999</loc>
-    <lastmod>1999-02-24</lastmod>
+    <loc>https://www.lexenegal.sn/decision/arret-n-01-du-26-mai-1999</loc>
+    <lastmod>1999-05-26</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -73075,12 +72840,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-css-n-27-du-27022002</loc>
     <lastmod>2002-02-27</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-81-du-22-mai-1996</loc>
-    <lastmod>1996-05-22</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -73739,12 +73498,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/ordonnance-aux-fins-de-decheanche-n62-du-28-decembre-2021</loc>
-    <lastmod>2021-12-28</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-70-du-19-juillet-2012</loc>
     <lastmod>2012-07-19</lastmod>
     <changefreq>yearly</changefreq>
@@ -73963,12 +73716,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-21-du-8-juillet-2010</loc>
     <lastmod>2010-07-08</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/ordonnance-n18-du-26821</loc>
-    <lastmod>2021-08-26</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -74285,12 +74032,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20170426-arret-n41-du-26042017</loc>
-    <lastmod>2017-04-26</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20160721-arret-n139-du-21-juillet-2016</loc>
     <lastmod>2016-07-21</lastmod>
     <changefreq>yearly</changefreq>
@@ -74509,12 +74250,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20190401-ordonnance-n08-du-1er-avril-2019</loc>
     <lastmod>2019-04-01</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20200407-arr-t-n13-du-7-avril-2020</loc>
-    <lastmod>2020-04-07</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -75371,14 +75106,14 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20170504-arret-n36-du-04-mai-2017</loc>
-    <lastmod>2017-05-04</lastmod>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20210902-ordonnance-n21</loc>
+    <lastmod>2021-09-02</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20210902-ordonnance-n21</loc>
-    <lastmod>2021-09-02</lastmod>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20170504-arret-n36-du-04-mai-2017</loc>
+    <lastmod>2017-05-04</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -75911,12 +75646,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20190326-arr-t-n05-du-26-mars-2019</loc>
-    <lastmod>2019-03-26</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-157-du-2-juillet-1997</loc>
     <lastmod>1997-07-02</lastmod>
     <changefreq>yearly</changefreq>
@@ -76115,14 +75844,14 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20140429-arr-t-n06-du-29-avril-2014</loc>
-    <lastmod>2014-04-29</lastmod>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20190326-arret-n-12</loc>
+    <lastmod>2019-03-26</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20190326-arret-n-12</loc>
-    <lastmod>2019-03-26</lastmod>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20140429-arr-t-n06-du-29-avril-2014</loc>
+    <lastmod>2014-04-29</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -76283,12 +76012,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20200407-arr-t-n14-du-7-avril-2020</loc>
-    <lastmod>2020-04-07</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-83-du-04-aout-2009</loc>
     <lastmod>2009-08-04</lastmod>
     <changefreq>yearly</changefreq>
@@ -76415,12 +76138,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20160719-arr-t-n10-du-19-juillet-2016</loc>
-    <lastmod>2016-07-19</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-49-du-29-janvier-1993</loc>
     <lastmod>1993-01-29</lastmod>
     <changefreq>yearly</changefreq>
@@ -76447,12 +76164,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20180313-arr-t-n04-du-13-mars-2018</loc>
     <lastmod>2018-03-13</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20210902-ordonnance-n21-du-2921</loc>
-    <lastmod>2021-09-02</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -76603,12 +76314,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20161117-arret-n-174-du-17-novembre-2016</loc>
     <lastmod>2016-11-17</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20190326-arr-t-n12-du-26-mars-2019</loc>
-    <lastmod>2019-03-26</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -76909,18 +76614,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-314-du-22-mai-1997</loc>
     <lastmod>1997-05-22</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20170328-arr-t-n02-du-28-mars-2017</loc>
-    <lastmod>2017-03-28</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20190716-arr-t-n23-du-16-juillet-2019</loc>
-    <lastmod>2019-07-16</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -77387,12 +77080,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20210529-ordonnance-n-21</loc>
-    <lastmod>2021-05-29</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/ohada-j-03-212</loc>
     <lastmod>2003-05-05</lastmod>
     <changefreq>yearly</changefreq>
@@ -77467,12 +77154,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-520-du-17-juillet-1996</loc>
     <lastmod>1996-07-17</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-01-du-30-mars-2010</loc>
-    <lastmod>2010-03-30</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -77975,14 +77656,14 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20210826-ordonnance-n18-du-26082021</loc>
-    <lastmod>2021-08-26</lastmod>
+    <loc>https://www.lexenegal.sn/decision/affaire-n-82rg95</loc>
+    <lastmod>1995-04-18</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/affaire-n-82rg95</loc>
-    <lastmod>1995-04-18</lastmod>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20210826-ordonnance-n18-du-26082021</loc>
+    <lastmod>2021-08-26</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -78205,12 +77886,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/ohada-j-08-191</loc>
     <lastmod>2001-10-11</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20210527-arret-n29-du-27-mai-2021</loc>
-    <lastmod>2021-05-27</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -78851,12 +78526,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20170426-arret-n37-du-26042017</loc>
-    <lastmod>2017-04-26</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20170426-arret-n39</loc>
     <lastmod>2017-04-26</lastmod>
     <changefreq>yearly</changefreq>
@@ -79283,14 +78952,14 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20110505-arr-t-n05-du-5-mai-2011</loc>
-    <lastmod>2011-05-05</lastmod>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20160303-arret-n49-du-3-mars-2016</loc>
+    <lastmod>2016-03-03</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20160303-arret-n49-du-3-mars-2016</loc>
-    <lastmod>2016-03-03</lastmod>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20110505-arr-t-n05-du-5-mai-2011</loc>
+    <lastmod>2011-05-05</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -79559,12 +79228,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20170620-arr-t-n14-du-20-juin-2017</loc>
-    <lastmod>2017-06-20</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/ohada-j-15-31</loc>
     <lastmod>2013-05-02</lastmod>
     <changefreq>yearly</changefreq>
@@ -79777,12 +79440,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20211129-ordonnance-n-57-du-29-novembre-2021</loc>
     <lastmod>2021-11-29</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20210916-arret-n24-du-16-septembre-2021</loc>
-    <lastmod>2021-09-16</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -83759,12 +83416,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-544-du-30-juillet-1993</loc>
-    <lastmod>1994-06-01</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-37-du-06-fevrier-2008</loc>
     <lastmod>2008-02-06</lastmod>
     <changefreq>yearly</changefreq>
@@ -84287,14 +83938,14 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-45-du-24-mars-1999</loc>
-    <lastmod>1999-03-24</lastmod>
+    <loc>https://www.lexenegal.sn/decision/arret-n-57-du-24-juillet-2002</loc>
+    <lastmod>2002-07-24</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-57-du-24-juillet-2002</loc>
-    <lastmod>2002-07-24</lastmod>
+    <loc>https://www.lexenegal.sn/decision/arret-n-45-du-24-mars-1999</loc>
+    <lastmod>1999-03-24</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -84569,12 +84220,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20160719-arr-t-n14-du-19-juillet-2016</loc>
-    <lastmod>2016-07-19</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20160616-arret-n115</loc>
     <lastmod>2016-06-16</lastmod>
     <changefreq>yearly</changefreq>
@@ -84637,12 +84282,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-117-du-21-fevrier-1996</loc>
     <lastmod>1996-02-21</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20200407-arr-t-n11-du-7-avril-2020</loc>
-    <lastmod>2020-04-07</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -84809,12 +84448,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20200407-arret-n-14</loc>
-    <lastmod>2020-04-07</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-28-du-14-fevrier-2001</loc>
     <lastmod>2001-02-14</lastmod>
     <changefreq>yearly</changefreq>
@@ -84859,12 +84492,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20200407-arret-n-08</loc>
     <lastmod>2020-04-07</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20160308-arr-t-n01-du-8-mars-2016</loc>
-    <lastmod>2016-03-08</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -85007,14 +84634,14 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20090319-arr-t-n01-du-19-mars-2009</loc>
-    <lastmod>2009-03-19</lastmod>
+    <loc>https://www.lexenegal.sn/decision/n-01-du-22-mars-2002</loc>
+    <lastmod>2002-03-22</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/n-01-du-22-mars-2002</loc>
-    <lastmod>2002-03-22</lastmod>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20090319-arr-t-n01-du-19-mars-2009</loc>
+    <lastmod>2009-03-19</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -85037,12 +84664,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20160719-arr-t-n17-du-19-juillet-2016</loc>
-    <lastmod>2016-07-19</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-22-du-27-avril-2005</loc>
     <lastmod>2005-04-27</lastmod>
     <changefreq>yearly</changefreq>
@@ -85061,14 +84682,14 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20200407-arret-n-10</loc>
-    <lastmod>2020-04-07</lastmod>
+    <loc>https://www.lexenegal.sn/decision/arret-n-01-du-27-avril-2005</loc>
+    <lastmod>2005-04-27</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-01-du-27-avril-2005</loc>
-    <lastmod>2005-04-27</lastmod>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20200407-arret-n-10</loc>
+    <lastmod>2020-04-07</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -85093,12 +84714,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20210628-ordonnance-n26-du-28-juin-2021</loc>
     <lastmod>2021-06-28</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20200407-arr-t-n15-du-7-avril-2020</loc>
-    <lastmod>2020-04-07</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -85147,12 +84762,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20160721-arret-n145-du-21-juillet-2016</loc>
     <lastmod>2016-07-21</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20160308-arr-t-n07-du-8-mars-2016</loc>
-    <lastmod>2016-03-08</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -85271,20 +84880,8 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20170328-arr-t-n06-du-28-mars-2017</loc>
-    <lastmod>2017-03-28</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20210304-arret-n06-du-04-mars-2021</loc>
     <lastmod>2021-03-04</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20130205-arr-t-n04-du-5-fevrier-2013</loc>
-    <lastmod>2013-02-05</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -85297,6 +84894,12 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-194-du-15-mai-2001</loc>
     <lastmod>2001-05-15</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20130205-arr-t-n04-du-5-fevrier-2013</loc>
+    <lastmod>2013-02-05</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -85321,12 +84924,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-245-du-26-fevrier-1997</loc>
     <lastmod>1997-02-26</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20210531-ordonnance-n23</loc>
-    <lastmod>2021-05-31</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -85451,14 +85048,14 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20160308-arret-n-07-du-8-mars-2016</loc>
-    <lastmod>2016-03-08</lastmod>
+    <loc>https://www.lexenegal.sn/decision/arret-n-18-du-30-janvier-2002</loc>
+    <lastmod>2002-01-30</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-18-du-30-janvier-2002</loc>
-    <lastmod>2002-01-30</lastmod>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20160308-arret-n-07-du-8-mars-2016</loc>
+    <lastmod>2016-03-08</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -85793,12 +85390,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20170328-arr-t-n04-du-28-mars-2017</loc>
-    <lastmod>2017-03-28</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20170328-arret-n-01-du-28-mars-2017</loc>
     <lastmod>2017-03-28</lastmod>
     <changefreq>yearly</changefreq>
@@ -85819,12 +85410,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20160218-arret-n37-du-18-fevrier-2016</loc>
     <lastmod>2016-02-18</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-02-du-05-mai-2011</loc>
-    <lastmod>2011-05-05</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -85961,14 +85546,14 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20190326-arret-n-08</loc>
-    <lastmod>2019-03-26</lastmod>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20160719-arret-n-14-du-19-juillet-2016</loc>
+    <lastmod>2016-07-19</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20160719-arret-n-14-du-19-juillet-2016</loc>
-    <lastmod>2016-07-19</lastmod>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20190326-arret-n-08</loc>
+    <lastmod>2019-03-26</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -86273,12 +85858,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n43-du-24-mars-1999</loc>
-    <lastmod>1999-03-24</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-82-du-17-avril-1996</loc>
     <lastmod>1996-04-17</lastmod>
     <changefreq>yearly</changefreq>
@@ -86365,12 +85944,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/ohada-j-03-167</loc>
     <lastmod>1999-11-02</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-61-du-3-mars-1999</loc>
-    <lastmod>1999-03-03</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -88931,12 +88504,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20210826-ordonnance-n18-du-26821</loc>
-    <lastmod>2021-08-26</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/ohada-j-08-239</loc>
     <lastmod>2007-11-22</lastmod>
     <changefreq>yearly</changefreq>
@@ -89005,12 +88572,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-692-du-10-septembre-1997</loc>
     <lastmod>1999-07-06</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-267-du-06-fevrier-2002</loc>
-    <lastmod>2002-02-06</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -89561,14 +89122,14 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-51-du-2041999</loc>
-    <lastmod>1999-04-20</lastmod>
+    <loc>https://www.lexenegal.sn/decision/arret-n-54-du-24-aout-2011</loc>
+    <lastmod>2011-08-24</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-54-du-24-aout-2011</loc>
-    <lastmod>2011-08-24</lastmod>
+    <loc>https://www.lexenegal.sn/decision/arret-n-51-du-2041999</loc>
+    <lastmod>1999-04-20</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -89611,12 +89172,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/ohada-j-10-15</loc>
     <lastmod>2008-07-17</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n62-du-18-mai-1999</loc>
-    <lastmod>1999-05-18</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -91079,12 +90634,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20170328-arr-t-n03-du-28-mars-2017</loc>
-    <lastmod>2017-03-28</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-538-du-18-fevrier-1990</loc>
     <lastmod>1990-02-18</lastmod>
     <changefreq>yearly</changefreq>
@@ -91331,14 +90880,14 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20090319-arr-t-n04-du-19-mars-2009</loc>
-    <lastmod>2009-03-19</lastmod>
+    <loc>https://www.lexenegal.sn/decision/arret-n-04-du-23-11-1999</loc>
+    <lastmod>1999-11-23</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-04-du-23-11-1999</loc>
-    <lastmod>1999-11-23</lastmod>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20090319-arr-t-n04-du-19-mars-2009</loc>
+    <lastmod>2009-03-19</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -91925,12 +91474,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/ordonnance-aux-fins-de-desistement-no74-du-29-decembre-2021</loc>
-    <lastmod>2021-12-29</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/ohada-j-15-36</loc>
     <lastmod>2013-05-02</lastmod>
     <changefreq>yearly</changefreq>
@@ -91943,14 +91486,14 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20170620-arret-n-11-du-20-juin-2017</loc>
-    <lastmod>2017-06-20</lastmod>
+    <loc>https://www.lexenegal.sn/decision/arret-n-01-du-1-mars-2005</loc>
+    <lastmod>2005-03-01</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-01-du-1-mars-2005</loc>
-    <lastmod>2005-03-01</lastmod>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20170620-arret-n-11-du-20-juin-2017</loc>
+    <lastmod>2017-06-20</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -92213,12 +91756,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20190326-arret-n-13-du-26-mars-2019</loc>
-    <lastmod>2019-03-26</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n42-du-16-mai-2013</loc>
     <lastmod>2013-05-16</lastmod>
     <changefreq>yearly</changefreq>
@@ -92227,6 +91764,12 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n110-du-20-aout-2015</loc>
     <lastmod>2015-08-20</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20190326-arret-n-13-du-26-mars-2019</loc>
+    <lastmod>2019-03-26</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -92789,6 +92332,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20210531-ordonnance-n23-du-31-mai-2021</loc>
+    <lastmod>2021-05-31</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://www.lexenegal.sn/decision/ohada-j-16-203</loc>
     <lastmod>2015-10-19</lastmod>
     <changefreq>yearly</changefreq>
@@ -92797,12 +92346,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20210426-ordonnance-n11-du-26-avril-2021</loc>
     <lastmod>2021-04-26</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20210531-ordonnance-n23-du-31-mai-2021</loc>
-    <lastmod>2021-05-31</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -94697,12 +94240,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-94-du-7-mars-1996</loc>
-    <lastmod>1996-03-07</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/ohada-j-10-188</loc>
     <lastmod>2009-11-12</lastmod>
     <changefreq>yearly</changefreq>
@@ -94903,12 +94440,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-96-du-14-janvier-1997</loc>
     <lastmod>1997-01-14</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-95-du-12-aout-1999</loc>
-    <lastmod>1999-08-12</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -95149,12 +94680,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/ohada-j-09-104</loc>
     <lastmod>2007-07-19</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-14-du-20-3-2001</loc>
-    <lastmod>2001-03-20</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -95597,12 +95122,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-67rg96-du-4-decembre-1996</loc>
-    <lastmod>1996-12-04</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-01-du-07-mai-1997</loc>
     <lastmod>1997-05-07</lastmod>
     <changefreq>yearly</changefreq>
@@ -95611,6 +95130,12 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-429-du-21-avril-1995</loc>
     <lastmod>1995-04-21</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/decision/arret-n-67rg96-du-4-decembre-1996</loc>
+    <lastmod>1996-12-04</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -97691,12 +97216,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-11-du-19-mars-2009</loc>
-    <lastmod>2009-03-19</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-779-du-31-decembre-1992</loc>
     <lastmod>1992-12-31</lastmod>
     <changefreq>yearly</changefreq>
@@ -97811,12 +97330,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-13-du-20-decembre-1995</loc>
-    <lastmod>1995-12-20</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/ohada-j-11-60</loc>
     <lastmod>2010-03-25</lastmod>
     <changefreq>yearly</changefreq>
@@ -97831,6 +97344,12 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-43-du-27-mars-1991</loc>
     <lastmod>1991-03-27</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/decision/arret-n-13-du-20-decembre-1995</loc>
+    <lastmod>1995-12-20</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -98873,12 +98392,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-20-du-31-juillet-2012</loc>
-    <lastmod>2012-07-31</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-106-du-31-janvier-1992</loc>
     <lastmod>1995-03-01</lastmod>
     <changefreq>yearly</changefreq>
@@ -99017,12 +98530,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20170620-arr-t-n12-du-20-juin-2017</loc>
-    <lastmod>2017-06-20</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-33-du-06-fevrier-2008</loc>
     <lastmod>2008-02-06</lastmod>
     <changefreq>yearly</changefreq>
@@ -99035,12 +98542,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20170328-arret-n-03</loc>
-    <lastmod>2017-03-28</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-42-du-20-fevrier-2008</loc>
     <lastmod>2008-02-20</lastmod>
     <changefreq>yearly</changefreq>
@@ -99049,6 +98550,12 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-75-du-16-aout-2012</loc>
     <lastmod>2012-08-16</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20170328-arret-n-03</loc>
+    <lastmod>2017-03-28</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -100145,12 +99652,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n40-du-10-mars-1999</loc>
-    <lastmod>1999-03-10</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-162-du-29-avril-1997</loc>
     <lastmod>1997-04-29</lastmod>
     <changefreq>yearly</changefreq>
@@ -100253,12 +99754,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n44-du-24mars-1999</loc>
-    <lastmod>1999-03-24</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-54-du-26-mai-1999</loc>
     <lastmod>1999-05-26</lastmod>
     <changefreq>yearly</changefreq>
@@ -100301,6 +99796,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://www.lexenegal.sn/decision/arret-n-456-du-23-janvier-2003</loc>
+    <lastmod>2003-01-23</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-72-du-18-fevrier-1997</loc>
     <lastmod>1997-02-18</lastmod>
     <changefreq>yearly</changefreq>
@@ -100315,12 +99816,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-228-du-5-juin-1996</loc>
     <lastmod>1996-06-05</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-456-du-23-janvier-2003</loc>
-    <lastmod>2003-01-23</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -101693,6 +101188,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://www.lexenegal.sn/decision/arret-n-12-du-08022006</loc>
+    <lastmod>2006-02-08</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-09-du-250106</loc>
     <lastmod>2006-01-25</lastmod>
     <changefreq>yearly</changefreq>
@@ -101707,12 +101208,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n16-du-22-12-1999</loc>
     <lastmod>1999-12-22</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-12-du-08022006</loc>
-    <lastmod>2006-02-08</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -101791,12 +101286,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20230823-arret-n31</loc>
     <lastmod>2023-08-23</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-10-du-25-janvier-2006</loc>
-    <lastmod>2006-01-25</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -102479,14 +101968,14 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-126-du-2-avril-1996</loc>
-    <lastmod>1996-04-02</lastmod>
+    <loc>https://www.lexenegal.sn/decision/arret-n-81-du-25-janvier-1994</loc>
+    <lastmod>1996-05-22</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-81-du-25-janvier-1994</loc>
-    <lastmod>1996-05-22</lastmod>
+    <loc>https://www.lexenegal.sn/decision/arret-n-126-du-2-avril-1996</loc>
+    <lastmod>1996-04-02</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -104651,12 +104140,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20200407-arret-n-15-du-7-avril-2020</loc>
-    <lastmod>2020-04-07</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-53-du-04-juin-2014</loc>
     <lastmod>2014-06-04</lastmod>
     <changefreq>yearly</changefreq>
@@ -105461,12 +104944,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-09-du-20-mars-2012</loc>
-    <lastmod>2012-03-20</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-199-du-24-novembre-2004</loc>
     <lastmod>2004-11-24</lastmod>
     <changefreq>yearly</changefreq>
@@ -105535,12 +105012,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-24-du-22-mars-1995</loc>
     <lastmod>1995-03-22</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-132-du-27-juillet-1994</loc>
-    <lastmod>1994-07-27</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -106265,14 +105736,14 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-57-du-29-avril-1998</loc>
-    <lastmod>1998-04-29</lastmod>
+    <loc>https://www.lexenegal.sn/decision/arret-n-62-anne-du-1851999</loc>
+    <lastmod>1999-05-18</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-62-anne-du-1851999</loc>
-    <lastmod>1999-05-18</lastmod>
+    <loc>https://www.lexenegal.sn/decision/arret-n-57-du-29-avril-1998</loc>
+    <lastmod>1998-04-29</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -107279,6 +106750,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://www.lexenegal.sn/decision/arret-n-4-du-17-novembre-1998</loc>
+    <lastmod>1998-11-17</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-64-du-9-decembre-2015</loc>
     <lastmod>2015-12-09</lastmod>
     <changefreq>yearly</changefreq>
@@ -107287,12 +106764,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-28-du-26-fevrier-2003</loc>
     <lastmod>2003-02-26</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-4-du-17-novembre-1998</loc>
-    <lastmod>1998-11-17</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -107341,12 +106812,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-319-du-12-mars-2003</loc>
     <lastmod>2003-03-12</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n45-du-24-mars-1999</loc>
-    <lastmod>1999-03-24</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -107429,14 +106894,14 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-43-du-10-juin-2015</loc>
-    <lastmod>2015-06-10</lastmod>
+    <loc>https://www.lexenegal.sn/decision/arret-n-40-du-10-mars-1999</loc>
+    <lastmod>1999-03-10</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-40-du-10-mars-1999</loc>
-    <lastmod>1999-03-10</lastmod>
+    <loc>https://www.lexenegal.sn/decision/arret-n-43-du-10-juin-2015</loc>
+    <lastmod>2015-06-10</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -107461,12 +106926,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n17-du-26032014</loc>
     <lastmod>2014-03-26</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n48-du-16-mars-1999</loc>
-    <lastmod>1999-03-16</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -108197,12 +107656,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n41-du-26-avril-2017</loc>
-    <lastmod>2017-04-26</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-21-du-11-mars-2015</loc>
     <lastmod>2015-03-11</lastmod>
     <changefreq>yearly</changefreq>
@@ -108277,12 +107730,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-43-du-23-octobre-2013</loc>
     <lastmod>2013-10-23</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-259-du-5-octobre-1999</loc>
-    <lastmod>1999-10-05</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -108373,12 +107820,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-10-du-17-novembre-1998</loc>
     <lastmod>1998-11-17</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n37-du-26-avril-2017</loc>
-    <lastmod>2017-04-26</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -108623,14 +108064,14 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-68-du-27-mai-1998</loc>
-    <lastmod>1998-05-27</lastmod>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20170426-arret-n41-du-2642017</loc>
+    <lastmod>2017-04-26</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20170426-arret-n41-du-2642017</loc>
-    <lastmod>2017-04-26</lastmod>
+    <loc>https://www.lexenegal.sn/decision/arret-n-68-du-27-mai-1998</loc>
+    <lastmod>1998-05-27</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -108779,12 +108220,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n22-du-5-janvier-1999</loc>
-    <lastmod>1999-01-05</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-331-du-20-avril-1998</loc>
     <lastmod>1998-04-20</lastmod>
     <changefreq>yearly</changefreq>
@@ -108907,12 +108342,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-60-du-14-mai-1997</loc>
     <lastmod>1997-05-14</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-28-du-2-fevrier-1999</loc>
-    <lastmod>1999-02-02</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -109505,12 +108934,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n4-du-17-novembre-1998</loc>
-    <lastmod>1998-11-17</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-166-du-7-mars-1994</loc>
     <lastmod>1994-03-07</lastmod>
     <changefreq>yearly</changefreq>
@@ -109829,6 +109252,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://www.lexenegal.sn/decision/arret-n-259-du-05-octobre-1999</loc>
+    <lastmod>1999-10-05</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-25-du-9-juin-1994</loc>
     <lastmod>1994-06-09</lastmod>
     <changefreq>yearly</changefreq>
@@ -109849,12 +109278,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-11-du-21-decembre-2004</loc>
     <lastmod>2004-12-21</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-259-du-05-octobre-1999</loc>
-    <lastmod>1999-10-05</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -110071,12 +109494,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-7-du-22-decembre-2004</loc>
     <lastmod>2004-12-22</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-729-du-09-decembre-2002</loc>
-    <lastmod>2002-12-09</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -111221,12 +110638,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-250-du-28-avril-2003</loc>
-    <lastmod>2003-12-02</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-76-du-26-10-2004</loc>
     <lastmod>2004-10-26</lastmod>
     <changefreq>yearly</changefreq>
@@ -111941,12 +111352,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n24-du-16-septembre-2021</loc>
-    <lastmod>2021-09-16</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n56-du-03-avril-2014</loc>
     <lastmod>2014-04-03</lastmod>
     <changefreq>yearly</changefreq>
@@ -112529,12 +111934,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/ordonnance-aux-fins-de-decheance-no-14-du-13-avril-2022</loc>
-    <lastmod>2022-04-13</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n124-du-06-novembre-2014</loc>
     <lastmod>2014-11-06</lastmod>
     <changefreq>yearly</changefreq>
@@ -112643,14 +112042,14 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-34-du-7-10-2003</loc>
-    <lastmod>2003-10-07</lastmod>
+    <loc>https://www.lexenegal.sn/decision/arret-n-250-du-2-decembre-2003</loc>
+    <lastmod>2003-12-02</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-250-du-2-decembre-2003</loc>
-    <lastmod>2003-12-02</lastmod>
+    <loc>https://www.lexenegal.sn/decision/arret-n-34-du-7-10-2003</loc>
+    <lastmod>2003-10-07</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -112759,12 +112158,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n134-du-18-decembre-2014</loc>
     <lastmod>2014-12-18</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n23-du-16-septembre-2021</loc>
-    <lastmod>2021-09-16</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -112885,12 +112278,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-911-du-19-avril-1995</loc>
     <lastmod>1995-04-19</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n40-du-2-fevrier-1999</loc>
-    <lastmod>1999-02-02</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -113171,12 +112558,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20220413-ordonnance-n-14-du-13-avril-2022</loc>
-    <lastmod>2022-04-13</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20181011-arret-n42</loc>
     <lastmod>2018-10-11</lastmod>
     <changefreq>yearly</changefreq>
@@ -113203,12 +112584,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-41-du-25072007</loc>
     <lastmod>2007-07-25</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20211228-ordonnance-n62</loc>
-    <lastmod>2021-12-28</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -113329,12 +112704,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-357-du-24-juin-1994</loc>
     <lastmod>1996-02-07</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-17-du-12-avril-2023</loc>
-    <lastmod>2023-04-12</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -114107,12 +113476,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-13-du-20-12-95</loc>
-    <lastmod>1995-12-20</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-118-du-24-aout-2005</loc>
     <lastmod>2005-08-24</lastmod>
     <changefreq>yearly</changefreq>
@@ -114139,12 +113502,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-395-du-14-juillet-1994</loc>
     <lastmod>1995-12-20</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20211228-ordonnance-n62-du-28-decembre-2021</loc>
-    <lastmod>2021-12-28</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -114227,12 +113584,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20210529-ordonnance-n20-du-29-mai-2021</loc>
-    <lastmod>2021-05-29</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20220216-ordonnance-n-02-du-16-fevrier-2022</loc>
     <lastmod>2022-02-16</lastmod>
     <changefreq>yearly</changefreq>
@@ -114277,12 +113628,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/n-29-du-26-fevrier-1997</loc>
     <lastmod>1997-02-26</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20211228-ordonnance-n61-du-28-decembre-2021</loc>
-    <lastmod>2021-12-28</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -115175,12 +114520,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n02-du-12-janvier-2017</loc>
-    <lastmod>2017-01-12</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n34-du-9415</loc>
     <lastmod>2015-04-09</lastmod>
     <changefreq>yearly</changefreq>
@@ -115237,12 +114576,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n60-du-28-novembre-2013</loc>
     <lastmod>2013-11-28</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/ordonnance-n17-du-26821</loc>
-    <lastmod>2021-08-26</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -115817,12 +115150,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/ordonnance-n21-du-2921</loc>
-    <lastmod>2021-09-02</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n08-du-08-fevrier-2018</loc>
     <lastmod>2018-02-08</lastmod>
     <changefreq>yearly</changefreq>
@@ -116111,20 +115438,8 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-15-du-7-avril-2020</loc>
-    <lastmod>2020-04-07</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20180830-arret-n50</loc>
     <lastmod>2018-08-30</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-14-du-19-mars-2009</loc>
-    <lastmod>2009-03-19</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -116309,12 +115624,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-02-du-30-mars-2010</loc>
-    <lastmod>2010-03-30</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-na-19-du-18-janvier-2000</loc>
     <lastmod>2000-01-18</lastmod>
     <changefreq>yearly</changefreq>
@@ -116329,12 +115638,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20210610-ordonnance-j155rg21</loc>
     <lastmod>2021-06-10</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n34-du-250809</loc>
-    <lastmod>2009-08-25</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -116435,20 +115738,8 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n04-du-30-mars-2010</loc>
-    <lastmod>2010-03-30</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-10-du-30032010</loc>
     <lastmod>2010-03-30</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-12-du-19-aout-2014</loc>
-    <lastmod>2014-08-19</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -116467,12 +115758,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-02-du-20312</loc>
     <lastmod>2012-03-20</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-5-du-5-mai-2011</loc>
-    <lastmod>2011-05-05</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -116543,12 +115828,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-17-du-11-juin-2013</loc>
-    <lastmod>2013-06-11</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n02-ee-du-30-janvier-2014</loc>
     <lastmod>2014-01-30</lastmod>
     <changefreq>yearly</changefreq>
@@ -116567,12 +115846,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-2-du-20-mars-2012</loc>
-    <lastmod>2012-03-20</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-17-du-19-juin-2012</loc>
     <lastmod>2012-06-19</lastmod>
     <changefreq>yearly</changefreq>
@@ -116580,12 +115853,6 @@
   </url>
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-13-du-19-juin-2012</loc>
-    <lastmod>2012-06-19</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-16-du-19-juin-2012</loc>
     <lastmod>2012-06-19</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
@@ -116633,18 +115900,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-11-du-09-juillet-2016</loc>
-    <lastmod>2016-07-09</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20160709-arr-t-n11-du-9-juillet-2016</loc>
-    <lastmod>2016-07-09</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20160719-arret-n-10-du-19-juillet-2016</loc>
     <lastmod>2016-07-19</lastmod>
     <changefreq>yearly</changefreq>
@@ -116676,18 +115931,6 @@
   </url>
   <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20200407-arret-n-16</loc>
-    <lastmod>2020-04-07</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-1-du-19-mars-2009</loc>
-    <lastmod>2009-03-19</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20200407-arr-t-n06-du-7-avril-2020</loc>
     <lastmod>2020-04-07</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
@@ -116765,20 +116008,8 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-04-du-19-mars-2009</loc>
-    <lastmod>2009-03-19</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-05-du-10-fevrier-2016</loc>
     <lastmod>2016-02-10</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-19-du-19-juin-2012</loc>
-    <lastmod>2012-06-19</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -116821,12 +116052,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-716-du-24-septembre-2013</loc>
     <lastmod>2013-09-24</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-04-du-26-mai-2015</loc>
-    <lastmod>2015-05-26</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -116875,12 +116100,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-66-du-17-mai-1995</loc>
     <lastmod>1995-05-17</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-23-du-30-septembre-2013</loc>
-    <lastmod>2013-09-30</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -117539,12 +116758,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-14-du-20-mars-2001</loc>
-    <lastmod>2001-03-20</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-08-du-19-fevrier-2002</loc>
     <lastmod>2002-02-19</lastmod>
     <changefreq>yearly</changefreq>
@@ -117683,12 +116896,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-06-du-19-mars-2009</loc>
-    <lastmod>2009-03-19</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-78-du-16-aout-2012</loc>
     <lastmod>2012-08-16</lastmod>
     <changefreq>yearly</changefreq>
@@ -117719,14 +116926,14 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20230412-arret-n-17</loc>
-    <lastmod>2023-04-12</lastmod>
+    <loc>https://www.lexenegal.sn/decision/arret-n-24-du-20-mars-2013</loc>
+    <lastmod>2013-03-20</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-24-du-20-mars-2013</loc>
-    <lastmod>2013-03-20</lastmod>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20230412-arret-n-17</loc>
+    <lastmod>2023-04-12</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -117739,12 +116946,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/cour-supreme-20240411-arret-n27</loc>
     <lastmod>2024-04-11</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20230412-arret-n17</loc>
-    <lastmod>2023-04-12</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -118139,12 +117340,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-13-du-08-fevrier-2006</loc>
-    <lastmod>2006-02-08</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-383-du-17-juillet-1991</loc>
     <lastmod>1991-07-17</lastmod>
     <changefreq>yearly</changefreq>
@@ -118433,12 +117628,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-475-du-28-janvier-1998</loc>
-    <lastmod>1998-01-28</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/n0306-du-09-mars-2006</loc>
     <lastmod>2006-03-09</lastmod>
     <changefreq>yearly</changefreq>
@@ -118543,12 +117732,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-ss-56-ss-du-24072002</loc>
     <lastmod>2002-07-24</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n41-du-10-mars-1999</loc>
-    <lastmod>1999-03-10</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -119557,12 +118740,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-08-du-130208</loc>
     <lastmod>2008-02-13</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-12-du-08-fevrier-2006</loc>
-    <lastmod>2006-02-08</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -121457,12 +120634,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-10-du-19-mars-2009</loc>
-    <lastmod>2009-03-19</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://www.lexenegal.sn/decision/arret-n38-du-06-mars-2014</loc>
     <lastmod>2014-03-06</lastmod>
     <changefreq>yearly</changefreq>
@@ -121601,14 +120772,14 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20211229-ordonnance-n74-du-29-decembre-2021</loc>
-    <lastmod>2021-12-29</lastmod>
+    <loc>https://www.lexenegal.sn/decision/arret-n20-du-271108</loc>
+    <lastmod>2008-11-27</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n20-du-271108</loc>
-    <lastmod>2008-11-27</lastmod>
+    <loc>https://www.lexenegal.sn/decision/cour-supreme-20211229-ordonnance-n74-du-29-decembre-2021</loc>
+    <lastmod>2021-12-29</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -121663,12 +120834,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-163-du-7-aout-1996</loc>
     <lastmod>1996-08-07</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/arret-n-629-du-15-mai-1996</loc>
-    <lastmod>1996-05-15</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -121807,12 +120972,6 @@
   <url>
     <loc>https://www.lexenegal.sn/decision/arret-n-54-du-02-juin-2009</loc>
     <lastmod>2009-06-02</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.lexenegal.sn/decision/cour-supreme-20211229-ordonnance-n-74-du-29-decembre-2021</loc>
-    <lastmod>2021-12-29</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -126064,5 +125223,295 @@
     <lastmod>2004-03-15</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/titre-executoire</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/licenciement-abusif</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/expulsion</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/injonction-de-payer</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/saisie-immobiliere</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/droit-du-travail</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/abus-de-confiance</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/licenciement</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/contrat-de-travail</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/delegue-du-personnel</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/salaire</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/juge-de-l-execution</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/certificat-de-travail</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/retraite</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/convention-collective</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/faute-lourde</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/reintegration</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/bail-commercial</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/bail-et-loyers</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/saisie-attribution</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/saisie-conservatoire</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/hypotheque</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/recouvrement-de-creances</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/marches-publics</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/astreinte</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/contentieux-electoral</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/competence-de-la-ccja</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/assurances</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/vente-immobiliere</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/droit-ohada</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/recours-pour-exces-de-pouvoir</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/droit-commercial</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/escroquerie</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/detournement-de-deniers-publics</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/faux-et-usage-de-faux</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/liberte-provisoire</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/travaux-forces</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/sursis-a-execution</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/droits-enregistrement-timbre</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/droit-penal</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/droit-criminel</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/droit-administratif</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/droit-constitutionnel</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/divorce</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/succession</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/titre-foncier</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/domaine-national</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/responsabilite-civile</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/prescription</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/autorite-de-la-chose-jugee</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/preuve</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/droits-de-la-defense</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/expertise-judiciaire</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/rabat-d-arret</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/refere</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/execution-provisoire</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/dommages-et-interets</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/jurisprudence/theme/droit-civil</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>
 </urlset>
