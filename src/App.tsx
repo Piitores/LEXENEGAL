@@ -9,6 +9,8 @@ import SearchPage from './pages/Search/SearchPage';
 import DecisionPage from './pages/Decision/DecisionPage';
 import ThemePage from './pages/Jurisprudence/ThemePage';
 import JurisprudencePage from './pages/Jurisprudence/JurisprudencePage';
+import GuidesPage from './pages/Guides/GuidesPage';
+import GuideDetailPage from './pages/Guides/GuideDetailPage';
 import AuthPage from './pages/Auth/AuthPage';
 import AuthCallback from './pages/Auth/AuthCallback';
 import CabinetPage from './pages/Cabinet/CabinetPage';
@@ -138,6 +140,8 @@ function App() {
               <Route path="/doctrine-fiscale" element={<DoctrinePage />} />
               <Route path="/doctrine-fiscale/:slug" element={<DoctrineDetailPage />} />
               <Route path="/droit-communautaire" element={<CommunautairePage />} />
+              <Route path="/guides" element={<GuidesPage />} />
+              <Route path="/guides/:slug" element={<GuideDetailPage />} />
 
               {/* Espace Pro */}
               <Route path="/login" element={<AuthPage />} />

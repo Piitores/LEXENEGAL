@@ -1,0 +1,239 @@
+/* Guides pratiques (liste + détail) — chantier B Strategie-SEO-Contenu-Topical */
+
+.guides-page {
+    background: var(--color-bg);
+    min-height: 100vh;
+    padding: 7rem 1.5rem 4rem;
+}
+
+.guides-page__container {
+    max-width: 780px;
+    margin: 0 auto;
+}
+
+.guides-page__loading,
+.guides-page__empty {
+    text-align: center;
+    padding: 4rem 1rem;
+    color: var(--color-text-muted);
+}
+
+.guides-page__empty h1 {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    margin: 1rem 0 0.5rem;
+    color: var(--color-text-main);
+}
+
+.guides-page__cta {
+    display: inline-flex;
+    margin-top: 1.5rem;
+    padding: 0.7rem 1.4rem;
+    border-radius: 8px;
+    background: var(--color-accent);
+    color: var(--color-white);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.guides-page__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    margin-bottom: 0.75rem;
+}
+
+.guides-page__header h1 {
+    font-family: var(--font-display);
+    font-size: clamp(1.7rem, 3.8vw, 2.4rem);
+    line-height: 1.2;
+    color: var(--color-text-main);
+    margin: 0 0 0.9rem;
+}
+
+.guides-page__header p {
+    font-size: 1.02rem;
+    line-height: 1.7;
+    color: var(--color-text-main);
+    margin: 0 0 1rem;
+}
+
+.guides-page__list {
+    list-style: none;
+    margin: 2rem 0 0;
+    padding: 0;
+    display: grid;
+    gap: 1rem;
+}
+
+.guides-page__list a {
+    display: block;
+    padding: 1.15rem 1.3rem;
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    text-decoration: none;
+    box-shadow: var(--shadow-soft);
+    transition: border-color 0.15s ease;
+}
+
+.guides-page__list a:hover {
+    border-color: var(--color-accent);
+}
+
+.guides-page__list strong {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    color: var(--color-text-main);
+    margin-bottom: 0.35rem;
+}
+
+.guides-page__list span {
+    font-size: 0.92rem;
+    line-height: 1.55;
+    color: var(--color-text-muted);
+}
+
+/* --- Détail d'un guide --- */
+
+.guide-detail__breadcrumb {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+    margin-bottom: 1.5rem;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.guide-detail__breadcrumb a {
+    color: var(--color-accent);
+    text-decoration: none;
+}
+
+.guide-detail__breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.guide-detail__header h1 {
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 3.5vw, 2.3rem);
+    line-height: 1.25;
+    color: var(--color-text-main);
+    margin: 0 0 0.5rem;
+}
+
+.guide-detail__date {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    margin: 0 0 1.5rem;
+}
+
+.guide-detail__body {
+    font-size: 1.02rem;
+    line-height: 1.75;
+    color: var(--color-text-main);
+}
+
+.guide-detail__body h2 {
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    color: var(--color-text-main);
+    margin: 2.2rem 0 0.8rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.guide-detail__body h3 {
+    font-size: 1.1rem;
+    color: var(--color-text-main);
+    margin: 1.5rem 0 0.5rem;
+}
+
+.guide-detail__body p {
+    margin: 0 0 1rem;
+}
+
+.guide-detail__body ul {
+    margin: 0 0 1rem;
+    padding-left: 1.4rem;
+}
+
+.guide-detail__body li {
+    margin-bottom: 0.4rem;
+}
+
+.guide-detail__body a {
+    color: var(--color-accent-dark);
+    text-decoration: underline;
+    text-decoration-color: rgba(0, 0, 0, 0.2);
+    text-underline-offset: 2px;
+}
+
+.guide-detail__body a:hover {
+    text-decoration-color: currentColor;
+}
+
+.guide-detail__faq {
+    margin-top: 2.5rem;
+}
+
+.guide-detail__faq h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    color: var(--color-text-main);
+    margin: 0 0 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.guide-detail__faq details {
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.6rem;
+}
+
+.guide-detail__faq summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--color-text-main);
+}
+
+.guide-detail__faq details p {
+    margin: 0.7rem 0 0.2rem;
+    line-height: 1.65;
+}
+
+.guide-detail__theme {
+    margin-top: 2.25rem;
+    text-align: center;
+}
+
+.guide-detail__theme a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--color-accent);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.guide-detail__theme a:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+    .guides-page {
+        padding-top: 5.5rem;
+    }
+}

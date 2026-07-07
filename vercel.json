@@ -54,6 +54,14 @@
             "destination": "/api/render?type=jurisprudence"
         },
         {
+            "source": "/guides/:slug",
+            "destination": "/api/render?type=guide&slug=:slug"
+        },
+        {
+            "source": "/guides",
+            "destination": "/api/render?type=guides"
+        },
+        {
             "source": "/(.*)",
             "destination": "/index.html"
         }

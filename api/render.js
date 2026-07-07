@@ -465,6 +465,77 @@ export function buildThemeBody(data) {
   </article>`);
 }
 
+/* ---------- GUIDES PRATIQUES (/guides et /guides/:slug) ---------- */
+/*
+ * Guides éditoriaux (table guides, contenu rédigé/vérifié par nous → HTML de
+ * confiance injecté tel quel). Chaque guide = réponse directe + H2 questions +
+ * FAQ (JSON-LD Article + FAQPage) + liens vers pages-thèmes et codes.
+ */
+export function buildGuideHead(gd, canonical) {
+  const title = `${gd.title} | Lexenegal`;
+  const description = gd.description || '';
+  const schemas = [{
+    '@context': 'https://schema.org', '@type': 'Article',
+    headline: gd.title, description, inLanguage: 'fr', url: canonical,
+    ...(gd.published_at ? { datePublished: gd.published_at } : {}),
+    ...(gd.updated_at ? { dateModified: gd.updated_at } : {}),
+    author: { '@type': 'Organization', name: 'Lexenegal', url: SITE },
+    publisher: { '@type': 'Organization', name: 'Lexenegal', url: SITE },
+    isPartOf: { '@type': 'CollectionPage', name: 'Guides pratiques', url: `${SITE}/guides` },
+  }];
+  const faq = Array.isArray(gd.faq) ? gd.faq.filter((f) => f && f.q && f.a) : [];
+  if (faq.length) {
+    schemas.push({
+      '@context': 'https://schema.org', '@type': 'FAQPage',
+      mainEntity: faq.map((f) => ({
+        '@type': 'Question', name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    });
+  }
+  const keywords = `${gd.title}, droit sénégalais, guide juridique Sénégal, Lexenegal`;
+  return headBlock({ title, description, keywords, canonical, ogType: 'article', schema: schemas });
+}
+export function buildGuideBody(gd) {
+  const faq = Array.isArray(gd.faq) ? gd.faq.filter((f) => f && f.q && f.a) : [];
+  const faqHtml = faq.length
+    ? `<section class="ssr-guide-faq"><h2>Questions fréquentes</h2>
+       ${faq.map((f) => `<h3>${esc(f.q)}</h3><p>${esc(f.a)}</p>`).join('\n')}</section>`
+    : '';
+  const themeLink = gd.theme_slug
+    ? `<p class="ssr-guide-theme"><a href="/jurisprudence/theme/${esc(gd.theme_slug)}">Voir la jurisprudence liée à ce guide →</a></p>`
+    : '';
+  const dateFr = formatDateFr(gd.published_at);
+  return wrapContent(`<article>
+    <nav class="ssr-bc" aria-label="Fil d'Ariane"><a href="/guides">Guides pratiques</a> › ${esc(gd.title)}</nav>
+    <h1>${esc(gd.h1 || gd.title)}</h1>
+    ${dateFr ? `<p class="ssr-guide-date">Publié le ${esc(dateFr)} — Lexenegal, la mémoire juridique du Sénégal.</p>` : ''}
+    <div class="ssr-guide-body">${gd.content_html || ''}</div>
+    ${faqHtml}
+    ${themeLink}
+  </article>`);
+}
+export function buildGuidesHead(canonical) {
+  const title = 'Guides pratiques du droit sénégalais | Lexenegal';
+  const description = 'Guides clairs et vérifiés sur le droit sénégalais : licenciement, succession, divorce, recouvrement de créances… avec la jurisprudence et les textes liés.';
+  const schema = {
+    '@context': 'https://schema.org', '@type': 'CollectionPage',
+    name: 'Guides pratiques du droit sénégalais', description, inLanguage: 'fr', url: canonical,
+    isPartOf: { '@type': 'WebSite', name: 'Lexenegal', url: SITE },
+  };
+  return headBlock({ title, description, keywords: 'guide juridique Sénégal, droit sénégalais pratique, Lexenegal', canonical, ogType: 'website', schema });
+}
+export function buildGuidesBody(guides) {
+  const items = (guides || []).map((gd) =>
+    `<li><a href="/guides/${esc(gd.slug)}">${esc(gd.title)}</a>${gd.description ? `<p>${esc(gd.description)}</p>` : ''}</li>`
+  ).join('\n');
+  return wrapContent(`<article>
+    <h1>Guides pratiques du droit sénégalais</h1>
+    <p>Des réponses claires, appuyées sur les <a href="/codes">codes et lois du Sénégal</a> et la <a href="/jurisprudence">jurisprudence</a>, aux questions juridiques les plus fréquentes.</p>
+    <ul class="ssr-guides-list">${items}</ul>
+  </article>`);
+}
+
 /* ---------- HUB JURISPRUDENCE (/jurisprudence) ---------- */
 /*
  * Page pilier distincte de /search (qui reste la page de RÉSULTATS de recherche) :
@@ -536,6 +607,13 @@ async function fetchDoctrine(slug) {
 // Alimente le 301 permanent : aucune URL indexée ne casse après la refonte des slugs.
 async function fetchDoctrineRedirect(oldSlug) {
   return one(await sb(`doctrine_slug_redirects?old_slug=eq.${encodeURIComponent(oldSlug)}&select=new_slug&limit=1`));
+}
+async function fetchGuide(slug) {
+  return one(await sb(`guides?slug=eq.${encodeURIComponent(slug)}&is_active=eq.true&select=slug,title,h1,description,content_html,faq,theme_slug,published_at,updated_at&limit=1`));
+}
+async function fetchGuidesIndex() {
+  try { return await sb(`guides?is_active=eq.true&select=slug,title,description,published_at&order=published_at.desc&limit=200`); }
+  catch (e) { return []; }
 }
 async function fetchThemesIndex() {
   try { return await sb(`seo_themes?is_active=eq.true&select=slug,label,matiere,cached_total&order=cached_total.desc&limit=200`); }
@@ -633,6 +711,21 @@ export default async function handler(req, res) {
       }
       const canonical = `${SITE}/doctrine-fiscale/${slug}`;
       return serveHtml(buildDoctrineHead(d, canonical), buildDoctrineBody(d));
+    }
+
+    if (type === 'guides') {
+      const guides = await fetchGuidesIndex();
+      return serveHtml(buildGuidesHead(`${SITE}/guides`), buildGuidesBody(guides));
+    }
+
+    if (type === 'guide') {
+      const slug = q.slug;
+      if (!slug) return serveShell();
+      let gd = null;
+      try { gd = await fetchGuide(slug); } catch (e) { /* */ }
+      if (!gd) return serveShell(60, true);
+      const canonical = `${SITE}/guides/${slug}`;
+      return serveHtml(buildGuideHead(gd, canonical), buildGuideBody(gd));
     }
 
     if (type === 'jurisprudence') {

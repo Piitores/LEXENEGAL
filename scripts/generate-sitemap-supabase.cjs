@@ -110,10 +110,16 @@ async function generateSitemap() {
     const seoThemes = (await fetchAllRows('seo_themes', 'slug,updated_at&is_active=eq.true')).filter((t) => t.slug);
     console.log(`🏷️ Found ${seoThemes.length} pages-thèmes`);
 
+    console.log('⏳ Fetching guides...');
+    // Guides pratiques (/guides/:slug)
+    const guides = (await fetchAllRows('guides', 'slug,published_at&is_active=eq.true')).filter((g) => g.slug);
+    console.log(`📖 Found ${guides.length} guides`);
+
     // Static pages
     const staticPages = [
         { url: '/', priority: '1.0', changefreq: 'daily' },
         { url: '/jurisprudence', priority: '0.9', changefreq: 'weekly' },
+        { url: '/guides', priority: '0.8', changefreq: 'weekly' },
         { url: '/search', priority: '0.9', changefreq: 'daily' },
         { url: '/codes', priority: '0.9', changefreq: 'daily' },
         { url: '/droit-communautaire', priority: '0.8', changefreq: 'weekly' },
@@ -196,6 +202,17 @@ async function generateSitemap() {
 `;
     }
 
+    // 7. Add guides pratiques
+    for (const guide of guides) {
+        const lastmodTag = lastmodTagFor(guide.published_at);
+        xml += `  <url>
+    <loc>${BASE_URL}/guides/${guide.slug}</loc>${lastmodTag}
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+`;
+    }
+
     xml += `</urlset>`;
 
     // Write to public folder
@@ -203,7 +220,7 @@ async function generateSitemap() {
     fs.writeFileSync(outputPath, xml);
 
     console.log(`✅ Sitemap saved to ${outputPath}`);
-    console.log(`📊 Total URLs generated: ${staticPages.length + codes.length + activeArticles.length + decisions.length + doctrines.length + seoThemes.length}`);
+    console.log(`📊 Total URLs generated: ${staticPages.length + codes.length + activeArticles.length + decisions.length + doctrines.length + seoThemes.length + guides.length}`);
 }
 
 generateSitemap().catch(console.error);
