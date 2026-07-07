@@ -1,0 +1,228 @@
+/* Page-thème de jurisprudence (chantier Strategie-SEO-Contenu-Topical) */
+
+.theme-page {
+    background: var(--color-bg);
+    min-height: 100vh;
+    padding: 7rem 1.5rem 4rem;
+}
+
+.theme-page__container {
+    max-width: 860px;
+    margin: 0 auto;
+}
+
+.theme-page__loading,
+.theme-page__empty {
+    text-align: center;
+    padding: 4rem 1rem;
+    color: var(--color-text-muted);
+}
+
+.theme-page__empty h1 {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    margin: 1rem 0 0.5rem;
+    color: var(--color-text-main);
+}
+
+.theme-page__cta {
+    display: inline-flex;
+    margin-top: 1.5rem;
+    padding: 0.7rem 1.4rem;
+    border-radius: 8px;
+    background: var(--color-accent);
+    color: var(--color-white);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.theme-page__breadcrumb {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+    margin-bottom: 1.5rem;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.theme-page__breadcrumb a {
+    color: var(--color-accent);
+    text-decoration: none;
+}
+
+.theme-page__breadcrumb a:hover {
+    text-decoration: underline;
+}
+
+.theme-page__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    margin-bottom: 0.75rem;
+}
+
+.theme-page__header h1 {
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 3.5vw, 2.3rem);
+    line-height: 1.2;
+    color: var(--color-text-main);
+    margin: 0 0 1rem;
+}
+
+.theme-page__chapo {
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: var(--color-text-main);
+    margin: 0 0 0.9rem;
+}
+
+.theme-page__stats {
+    font-size: 0.95rem;
+    color: var(--color-text-muted);
+    padding: 0.75rem 1rem;
+    background: var(--color-bg-alt);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+}
+
+.theme-page__section {
+    margin-top: 2.5rem;
+}
+
+.theme-page__section h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    color: var(--color-text-main);
+    margin: 0 0 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.theme-page__articles {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.5rem;
+}
+
+.theme-page__articles li {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.55rem 0.85rem;
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+}
+
+.theme-page__articles a {
+    color: var(--color-accent-dark);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.theme-page__articles a:hover {
+    text-decoration: underline;
+}
+
+.theme-page__article-count {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+}
+
+.theme-page__decisions {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 1rem;
+}
+
+.theme-page__decisions li {
+    padding: 1rem 1.15rem;
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    box-shadow: var(--shadow-soft);
+}
+
+.theme-page__decision-ref {
+    font-weight: 600;
+    color: var(--color-accent-dark);
+    text-decoration: none;
+}
+
+.theme-page__decision-ref:hover {
+    text-decoration: underline;
+}
+
+.theme-page__decision-meta {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    margin-top: 0.2rem;
+}
+
+.theme-page__decision-resume {
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: var(--color-text-main);
+    margin: 0.6rem 0 0;
+}
+
+.theme-page__faq details {
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.6rem;
+}
+
+.theme-page__faq summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--color-text-main);
+}
+
+.theme-page__faq details p {
+    margin: 0.7rem 0 0.2rem;
+    line-height: 1.65;
+    color: var(--color-text-main);
+}
+
+.theme-page__more {
+    margin-top: 2.25rem;
+    text-align: center;
+}
+
+.theme-page__more a {
+    color: var(--color-accent);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.theme-page__more a:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+    .theme-page {
+        padding-top: 5.5rem;
+    }
+
+    .theme-page__articles li {
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+}

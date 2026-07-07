@@ -7,6 +7,7 @@ import BotBlocker from './components/BotBlocker/BotBlocker';
 import Home from './pages/Home/Home';
 import SearchPage from './pages/Search/SearchPage';
 import DecisionPage from './pages/Decision/DecisionPage';
+import ThemePage from './pages/Jurisprudence/ThemePage';
 import AuthPage from './pages/Auth/AuthPage';
 import AuthCallback from './pages/Auth/AuthCallback';
 import CabinetPage from './pages/Cabinet/CabinetPage';
@@ -126,6 +127,7 @@ function App() {
               {/* Jurisprudence */}
               <Route path="/search" element={<SearchPage />} />
               <Route path="/decision/:slug" element={<DecisionPage />} />
+              <Route path="/jurisprudence/theme/:slug" element={<ThemePage />} />
 
               {/* Codes & Lois - Pilier */}
               <Route path="/codes" element={<CodesListPage />} />

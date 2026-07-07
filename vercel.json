@@ -46,6 +46,10 @@
             "destination": "/api/render?type=doctrine&slug=:slug"
         },
         {
+            "source": "/jurisprudence/theme/:slug",
+            "destination": "/api/render?type=theme&slug=:slug"
+        },
+        {
             "source": "/(.*)",
             "destination": "/index.html"
         }

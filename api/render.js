@@ -397,6 +397,74 @@ export function buildDoctrineBody(d) {
   </article>`);
 }
 
+/* ---------- PAGE-THÈME de jurisprudence ---------- */
+/*
+ * /jurisprudence/theme/:slug — hub thématique généré depuis la base (table
+ * seo_themes + RPC get_theme_page) : chapô rédigé, décisions récentes avec
+ * résumés, articles de codes les plus cités, FAQ. Chantier
+ * Strategie-SEO-Contenu-Topical (pages-thèmes). Données 100 % issues du corpus.
+ */
+export function buildThemeHead(data, canonical) {
+  const t = data.theme;
+  const total = data.total || 0;
+  const title = `${t.label} au Sénégal : jurisprudence (${total} décisions) | Lexenegal`;
+  const description = `${stripHtml(t.chapo).slice(0, 145)}… ${total} décisions de justice sénégalaises et OHADA sur « ${t.label} », avec les articles de codes cités.`;
+  const keywords = [
+    `${t.label} Sénégal`, `${t.label} jurisprudence`, `${t.label} droit sénégalais`,
+    'jurisprudence Sénégal', 'Lexenegal',
+  ].join(', ');
+  const schemas = [{
+    '@context': 'https://schema.org', '@type': 'CollectionPage',
+    name: t.h1, description: stripHtml(t.chapo), inLanguage: 'fr', url: canonical,
+    about: t.label,
+    isPartOf: { '@type': 'WebSite', name: 'Lexenegal', url: SITE },
+  }];
+  const faq = Array.isArray(t.faq) ? t.faq.filter((f) => f && f.q && f.a) : [];
+  if (faq.length) {
+    schemas.push({
+      '@context': 'https://schema.org', '@type': 'FAQPage',
+      mainEntity: faq.map((f) => ({
+        '@type': 'Question', name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    });
+  }
+  return headBlock({ title, description, keywords, canonical, ogType: 'website', schema: schemas });
+}
+export function buildThemeBody(data) {
+  const t = data.theme;
+  const total = data.total || 0;
+  const jurisTxt = (data.juridictions || [])
+    .slice(0, 6).map((j) => `${j.juridiction} (${j.n})`).join(', ');
+  const decs = (data.decisions || []).map((d) => {
+    const meta = [d.juridiction, d.chambre, formatDateFr(d.date_decision)].filter(Boolean).join(' — ');
+    const snippet = stripHtml(d.resume || '');
+    return `<li class="ssr-theme-dec">
+      <a href="/decision/${esc(d.slug)}"><strong>${esc(d.reference || 'Décision')}</strong></a>
+      ${meta ? `<span class="ssr-theme-dec-meta"> — ${esc(meta)}</span>` : ''}
+      ${snippet ? `<p>${esc(snippet)}</p>` : ''}
+    </li>`;
+  }).join('\n');
+  const arts = (data.articles || []).map((a) =>
+    `<li><a href="/code/${esc(a.code_slug)}/${esc(a.article_slug)}">${esc(a.article_label)} — ${esc(a.code_title)}</a> <span class="ssr-theme-art-n">(cité par ${a.n} décision${a.n > 1 ? 's' : ''})</span></li>`
+  ).join('\n');
+  const faq = Array.isArray(t.faq) ? t.faq.filter((f) => f && f.q && f.a) : [];
+  const faqHtml = faq.length
+    ? `<section class="ssr-theme-faq"><h2>Questions fréquentes — ${esc(t.label)}</h2>
+       ${faq.map((f) => `<h3>${esc(f.q)}</h3><p>${esc(f.a)}</p>`).join('\n')}</section>`
+    : '';
+  return wrapContent(`<article>
+    <nav class="ssr-bc" aria-label="Fil d'Ariane"><a href="/search">Jurisprudence</a> › ${esc(t.label)}</nav>
+    <h1>${esc(t.h1)}</h1>
+    <p class="ssr-theme-chapo">${esc(t.chapo)}</p>
+    <p class="ssr-theme-stats"><strong>${total} décisions</strong> sur ce thème dans la base${jurisTxt ? ` : ${esc(jurisTxt)}.` : '.'}</p>
+    ${arts ? `<section class="ssr-theme-arts"><h2>Articles de codes les plus cités</h2><ul>${arts}</ul></section>` : ''}
+    <section class="ssr-theme-decs"><h2>Décisions récentes — ${esc(t.label)}</h2><ul>${decs}</ul></section>
+    ${faqHtml}
+    <p class="ssr-theme-more"><a href="/search?q=${encodeURIComponent(t.label)}">Rechercher « ${esc(t.label)} » dans toute la base →</a></p>
+  </article>`);
+}
+
 /* ---------- Accès Supabase REST ---------- */
 async function sb(pathq) {
   const r = await fetch(`${SUPABASE_URL}/rest/v1/${pathq}`,
@@ -438,6 +506,11 @@ async function fetchDoctrine(slug) {
 // Alimente le 301 permanent : aucune URL indexée ne casse après la refonte des slugs.
 async function fetchDoctrineRedirect(oldSlug) {
   return one(await sb(`doctrine_slug_redirects?old_slug=eq.${encodeURIComponent(oldSlug)}&select=new_slug&limit=1`));
+}
+async function fetchThemePage(slug) {
+  // RPC unique : thème + total + juridictions + 40 décisions + 12 articles cités.
+  const data = await sbRpc('get_theme_page', { p_slug: slug });
+  return (data && data.theme) ? data : null;
 }
 async function fetchLaw(slug) {
   return one(await sb(`laws_and_codes?slug=eq.${encodeURIComponent(slug)}&select=id,title,short_title,category,slug,reference,publication_date,description,abrogation_note,abrogated_by_slug&limit=1`));
@@ -526,6 +599,16 @@ export default async function handler(req, res) {
       }
       const canonical = `${SITE}/doctrine-fiscale/${slug}`;
       return serveHtml(buildDoctrineHead(d, canonical), buildDoctrineBody(d));
+    }
+
+    if (type === 'theme') {
+      const slug = q.slug;
+      if (!slug) return serveShell();
+      let data = null;
+      try { data = await fetchThemePage(slug); } catch (e) { /* */ }
+      if (!data) return serveShell(60, true);
+      const canonical = `${SITE}/jurisprudence/theme/${slug}`;
+      return serveHtml(buildThemeHead(data, canonical), buildThemeBody(data));
     }
 
     if (type === 'code') {
