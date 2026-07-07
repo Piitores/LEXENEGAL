@@ -11,7 +11,27 @@ Allow: /
 User-agent: Applebot
 Allow: /
 
-# Scrapers IA d'entraînement — interdits
+# Robots de RECHERCHE IA — autorisés (décision proprio 2026-07-07 : être visible
+# dans les réponses de ChatGPT/Claude/Perplexity, canal d'acquisition croissant)
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+# Scrapers IA d'ENTRAÎNEMENT — toujours interdits
 User-agent: GPTBot
 Disallow: /
 
@@ -25,6 +45,9 @@ User-agent: Bytespider
 Disallow: /
 
 User-agent: Meta-ExternalAgent
+Disallow: /
+
+User-agent: Google-Extended
 Disallow: /
 
 User-agent: GoogleOther
