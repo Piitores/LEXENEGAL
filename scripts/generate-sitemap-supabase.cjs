@@ -32,6 +32,7 @@ const BASE_URL = 'https://www.lexenegal.sn';
 async function fetchAllRows(tableName, columns = '*') {
     const rows = [];
     let page = 0;
+    let retries = 0;
     const pageSize = 1000;
     
     // We make raw HTTP requests to avoid needing @supabase/supabase-js dependency in the CI environment
@@ -46,10 +47,18 @@ async function fetchAllRows(tableName, columns = '*') {
         });
         
         if (!response.ok) {
-            console.error(`Error fetching ${tableName}:`, response.status, response.statusText);
-            break;
+            // Ne JAMAIS continuer silencieusement avec une liste partielle : un sitemap
+            // tronqué poussé en prod désindexe le site (incident 2026-07-07, 522 Supabase).
+            // On réessaie, puis on ÉCHOUE franchement pour que le CI ne committe rien.
+            retries += 1;
+            if (retries <= 5) {
+                console.warn(`⚠️ ${tableName}: HTTP ${response.status}, nouvelle tentative ${retries}/5 dans 15s…`);
+                await new Promise((r) => setTimeout(r, 15000));
+                continue;
+            }
+            throw new Error(`Echec définitif du fetch ${tableName}: HTTP ${response.status}`);
         }
-        
+
         const data = await response.json();
         if (!data || data.length === 0) {
             break;
@@ -214,6 +223,16 @@ async function generateSitemap() {
     }
 
     xml += `</urlset>`;
+
+    // GARDE-FOU volumétrie : on refuse d'écrire un sitemap anormalement petit
+    // (base injoignable => listes vides). Seuil ~10% sous le volume connu (~22 700).
+    const totalUrls = staticPages.length + codes.length + activeArticles.length
+        + decisions.length + doctrines.length + seoThemes.length + guides.length;
+    const MIN_URLS = 20000;
+    if (totalUrls < MIN_URLS) {
+        console.error(`❌ Sitemap anormalement petit (${totalUrls} URLs < ${MIN_URLS}) — rien n'est écrit.`);
+        process.exit(1);
+    }
 
     // Write to public folder
     const outputPath = path.join(__dirname, '..', 'public', 'sitemap.xml');
