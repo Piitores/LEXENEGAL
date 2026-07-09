@@ -366,6 +366,18 @@
     <priority>0.9</priority>
   </url>
   <url>
+    <loc>https://www.lexenegal.sn/code/decret-2015-1039-amenagement-carte-judiciaire</loc>
+    <lastmod>2026-07-09</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/decret-2021-1441-modifiant-2015-1039</loc>
+    <lastmod>2026-07-09</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
     <loc>https://www.lexenegal.sn/code/loi-2021-33-cp-terrorisme</loc>
     <lastmod>2026-07-03</lastmod>
     <changefreq>weekly</changefreq>
@@ -27288,6 +27300,71 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://www.lexenegal.sn/code/decret-2015-1039-amenagement-carte-judiciaire/art-2</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/decret-2015-1039-amenagement-carte-judiciaire/art-3</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/decret-2015-1039-amenagement-carte-judiciaire/art-4</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/decret-2015-1039-amenagement-carte-judiciaire/art-5</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/decret-2015-1039-amenagement-carte-judiciaire/art-premier</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/decret-2015-1039-amenagement-carte-judiciaire/art-signature</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/decret-2015-1039-amenagement-carte-judiciaire/art-tableau-i</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/decret-2015-1039-amenagement-carte-judiciaire/art-tableau-ii</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/decret-2015-1039-amenagement-carte-judiciaire/art-tableau-iii</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/decret-2015-1039-amenagement-carte-judiciaire/art-tableau-iv</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/decret-2015-1039-amenagement-carte-judiciaire/art-tableau-v</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/decret-2015-1039-amenagement-carte-judiciaire/art-visas</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/decret-2015-1039-amenagement-carte-judiciaire/preambule</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://www.lexenegal.sn/code/loi-2017-23-organisation-judiciaire/art-2</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -53224,6 +53301,26 @@
   </url>
   <url>
     <loc>https://www.lexenegal.sn/code/ohada-suretes/preambule</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/decret-2021-1441-modifiant-2015-1039/art-premier</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/decret-2021-1441-modifiant-2015-1039/art-signature</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/decret-2021-1441-modifiant-2015-1039/art-visas</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.lexenegal.sn/code/decret-2021-1441-modifiant-2015-1039/preambule</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
