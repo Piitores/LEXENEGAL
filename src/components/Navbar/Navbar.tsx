@@ -25,7 +25,7 @@ const COMMUNAUTAIRE: DDItem[] = [
 const AUTOUR: DDItem[] = [
   { label: 'Doctrine', to: '/doctrine-fiscale' },
   { label: 'Guides pratiques', to: '/guides' },
-  { label: 'Conventions collectives', soon: true },
+  { label: 'Conventions collectives', to: '/conventions-collectives' },
   { label: 'Rapports ministériels', soon: true },
   { label: 'Fiches techniques', soon: true },
 ];

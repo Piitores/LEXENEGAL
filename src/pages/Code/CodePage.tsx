@@ -45,7 +45,7 @@ const articleToPlainText = (art: Article): string => {
 
 // ── Carte d'un article (gère le repli du préambule + le bouton Copier) ──
 
-const ArticleCard: React.FC<{ art: Article; slug: string | undefined; codeTitle?: string }> = ({ art, slug, codeTitle }) => {
+const ArticleCard: React.FC<{ art: Article; slug: string | undefined; codeTitle?: string; basePath: string }> = ({ art, slug, codeTitle, basePath }) => {
     const preambule = isPreambule(art);
     // Préambule replié par défaut ; articles normaux toujours ouverts.
     const [open, setOpen] = useState(!preambule);
@@ -126,7 +126,7 @@ const ArticleCard: React.FC<{ art: Article; slug: string | undefined; codeTitle?
                         </div>
                     )}
 
-                    <Link to={`/code/${slug}/${art.slug}`} className="article-link-btn">
+                    <Link to={`${basePath}/${slug}/${art.slug}`} className="article-link-btn">
                         <ExternalLink size={13} />
                         Voir l'article complet
                     </Link>
@@ -152,6 +152,9 @@ const CodePage: React.FC = () => {
 
     // Toute copie de texte d'un article emporte la référence LexeSenegal + le lien.
     useCopyAttribution(slug, law?.title);
+    // Préfixe d'URL selon la nature du texte : conventions collectives sous /convention,
+    // le reste sous /code (la route /code reste un fallback valide pour tout slug).
+    const basePath = (law as any)?.category === 'convention_collective' ? '/convention' : '/code';
     const [activeTab, setActiveTab] = useState<'articles' | 'structure'>('articles');
 
     // Stats
@@ -390,7 +393,7 @@ const CodePage: React.FC = () => {
 
     return (
         <div className="code-page">
-            <SEO title={`${law.title} | Lexenegal`} description={`${law.title} — texte intégral consolidé (${totalArticles} articles). Droit sénégalais sur Lexenegal.`} url={`https://www.lexenegal.sn/code/${slug}`} />
+            <SEO title={`${law.title} | Lexenegal`} description={`${law.title} — texte intégral consolidé (${totalArticles} articles). Droit sénégalais sur Lexenegal.`} url={`https://www.lexenegal.sn${basePath}/${slug}`} />
 
             <div className="code-layout">
                 {/* ═══════ SIDEBAR ═══════ */}
@@ -462,7 +465,7 @@ const CodePage: React.FC = () => {
                     {!filteredArticles && preambuleArticles.length > 0 && (
                         <div className="preambule-top articles-list">
                             {preambuleArticles.map(art => (
-                                <ArticleCard key={art.id} art={art} slug={slug} codeTitle={law?.title} />
+                                <ArticleCard key={art.id} art={art} slug={slug} codeTitle={law?.title} basePath={basePath} />
                             ))}
                         </div>
                     )}
@@ -473,7 +476,7 @@ const CodePage: React.FC = () => {
                             <h2>{filteredArticles.length} résultat{filteredArticles.length > 1 ? 's' : ''} pour « {searchQuery} »</h2>
                             <div className="search-results-list">
                                 {filteredArticles.map(a => (
-                                    <Link key={a.id} to={`/code/${slug}/${a.slug}`} className="search-result-item">
+                                    <Link key={a.id} to={`${basePath}/${slug}/${a.slug}`} className="search-result-item">
                                         <strong>{a.num || `Article ${a.article_number}`}</strong>
                                         <span>{a.chapter_name || a.title_name || ''}</span>
                                     </Link>
@@ -577,7 +580,7 @@ const CodePage: React.FC = () => {
                                         </div>
                                     ) : (
                                         selectedArticles.map(art => (
-                                            <ArticleCard key={art.id} art={art} slug={slug} codeTitle={law?.title} />
+                                            <ArticleCard key={art.id} art={art} slug={slug} codeTitle={law?.title} basePath={basePath} />
                                         ))
                                     )}
                                 </div>

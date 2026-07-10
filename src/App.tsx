@@ -18,6 +18,7 @@ import AccountSettingsPage from './pages/Cabinet/AccountSettingsPage';
 import CodesListPage from './pages/Codes/CodesListPage';
 import CodePage from './pages/Code/CodePage';
 import ArticlePage from './pages/Code/ArticlePage';
+import ConventionsListPage from './pages/Conventions/ConventionsListPage';
 import DoctrinePage from './pages/Doctrine/DoctrinePage';
 import DoctrineDetailPage from './pages/Doctrine/DoctrineDetailPage';
 import CommunautairePage from './pages/Communautaire/CommunautairePage';
@@ -137,6 +138,11 @@ function App() {
               <Route path="/codes" element={<CodesListPage />} />
               <Route path="/code/:slug" element={<CodePage />} />
               <Route path="/code/:codeSlug/:articleSlug" element={<ArticlePage />} />
+              {/* Conventions collectives (menu « Autour de la loi ») — réutilise le lecteur
+                  générique ; les routes /code restent un fallback valide pour tout slug. */}
+              <Route path="/conventions-collectives" element={<ConventionsListPage />} />
+              <Route path="/convention/:slug" element={<CodePage />} />
+              <Route path="/convention/:codeSlug/:articleSlug" element={<ArticlePage />} />
               <Route path="/doctrine-fiscale" element={<DoctrinePage />} />
               <Route path="/doctrine-fiscale/:slug" element={<DoctrineDetailPage />} />
               <Route path="/droit-communautaire" element={<CommunautairePage />} />

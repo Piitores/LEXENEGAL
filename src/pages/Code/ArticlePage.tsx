@@ -130,6 +130,8 @@ const ArticlePage: React.FC = () => {
 
     // Toute copie de texte de l'article emporte la référence LexeSenegal + le lien.
     useCopyAttribution(codeSlug, law?.title);
+    // Préfixe d'URL : conventions collectives sous /convention, le reste sous /code.
+    const basePath = (law as any)?.category === 'convention_collective' ? '/convention' : '/code';
     const [versions, setVersions] = useState<ArticleVersion[]>([]);
     const [currentVersion, setCurrentVersion] = useState<ArticleVersion | null>(null);
     const [loading, setLoading] = useState(true);
@@ -203,7 +205,7 @@ const ArticlePage: React.FC = () => {
             // Get law info
             const { data: lawData } = await supabase
                 .from('laws_and_codes')
-                .select('id, title, slug, publication_date, reference, abrogation_note, abrogated_by_slug')
+                .select('id, title, slug, category, publication_date, reference, abrogation_note, abrogated_by_slug')
                 .eq('slug', codeSlug)
                 .single();
 
@@ -447,7 +449,7 @@ const ArticlePage: React.FC = () => {
         return (
             <div className="article-page article-not-found">
                 <h2>Article non trouvé</h2>
-                <button onClick={() => goBack(`/code/${codeSlug}`)}>Retour au code</button>
+                <button onClick={() => goBack(`${basePath}/${codeSlug}`)}>Retour au code</button>
             </div>
         );
     }
@@ -457,7 +459,7 @@ const ArticlePage: React.FC = () => {
             <SEO
                 title={`${articleLabel(article)} — ${law?.title} | Lexenegal`}
                 description={`${articleLabel(article)} du ${law?.title} — texte intégral. Droit sénégalais consolidé sur Lexenegal.`}
-                url={`https://www.lexenegal.sn/code/${codeSlug}/${articleSlug}`}
+                url={`https://www.lexenegal.sn${basePath}/${codeSlug}/${articleSlug}`}
             />
 
             <div className="article-layout">
@@ -480,7 +482,7 @@ const ArticlePage: React.FC = () => {
                                 slug={codeSlug}
                                 expandedNodes={expandedNodes}
                                 onToggle={toggleNode}
-                                onSelect={(node) => { setMobileNavOpen(false); navigate(`/code/${codeSlug}?node=${encodeURIComponent(node.name)}`); }}
+                                onSelect={(node) => { setMobileNavOpen(false); navigate(`${basePath}/${codeSlug}?node=${encodeURIComponent(node.name)}`); }}
                                 activeNodeId={treeActiveNodeId}
                                 activeArticleSlug={article.slug}
                             />
@@ -499,7 +501,7 @@ const ArticlePage: React.FC = () => {
                 <nav className="article-breadcrumb">
                     <Link to="/codes">Codes</Link>
                     <ChevronRight size={13} />
-                    <Link to={`/code/${codeSlug}`}>{law?.title}</Link>
+                    <Link to={`${basePath}/${codeSlug}`}>{law?.title}</Link>
                     <ChevronRight size={13} />
                     <span className="bc-current">{articleLabel(article)}</span>
                 </nav>
@@ -536,7 +538,7 @@ const ArticlePage: React.FC = () => {
                                         <Link
                                             key={n.id}
                                             className={`ah-row ah-row--${n.type}`}
-                                            to={`/code/${codeSlug}?node=${encodeURIComponent(n.name)}`}
+                                            to={`${basePath}/${codeSlug}?node=${encodeURIComponent(n.name)}`}
                                         >
                                             {badge && <span className={`ah-badge ah-badge--${n.type}`}>{badge}</span>}
                                             <span className="ah-label">{label}</span>
@@ -764,18 +766,18 @@ const ArticlePage: React.FC = () => {
                 <div className="article-nav">
                     <button
                         className={`btn-nav ${!prevArticle ? 'disabled' : ''}`}
-                        onClick={() => prevArticle && navigate(`/code/${codeSlug}/${prevArticle.slug}`)}
+                        onClick={() => prevArticle && navigate(`${basePath}/${codeSlug}/${prevArticle.slug}`)}
                         disabled={!prevArticle}
                     >
                         <ChevronLeft size={16} />
                         {prevArticle ? articleLabel({ article_number: prevArticle.number }) : 'Premier article'}
                     </button>
-                    <button className="btn-nav btn-nav-center" onClick={() => goBack(`/code/${codeSlug}`)}>
+                    <button className="btn-nav btn-nav-center" onClick={() => goBack(`${basePath}/${codeSlug}`)}>
                         Retour
                     </button>
                     <button
                         className={`btn-nav ${!nextArticle ? 'disabled' : ''}`}
-                        onClick={() => nextArticle && navigate(`/code/${codeSlug}/${nextArticle.slug}`)}
+                        onClick={() => nextArticle && navigate(`${basePath}/${codeSlug}/${nextArticle.slug}`)}
                         disabled={!nextArticle}
                     >
                         {nextArticle ? articleLabel({ article_number: nextArticle.number }) : 'Dernier article'}
