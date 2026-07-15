@@ -8,7 +8,6 @@ import {
   useVideoConfig,
 } from 'remotion';
 import { COLORS, FONT_DISPLAY, FONT_UI } from '../theme';
-import { STATS } from '../mock/data';
 
 // S0 — Ouverture : emblème, wordmark, tagline, compteurs du corpus.
 const S0Intro: React.FC = () => {
@@ -21,14 +20,6 @@ const S0Intro: React.FC = () => {
   const statsIn = spring({ frame: frame - 36, fps, config: { damping: 200 } });
   const gridIn = interpolate(frame, [0, 30], [0, 1], { extrapolateRight: 'clamp' });
 
-  const counter = (target: number) =>
-    Math.round(
-      interpolate(frame, [36, 85], [0, target], {
-        extrapolateLeft: 'clamp',
-        extrapolateRight: 'clamp',
-        easing: (t) => 1 - Math.pow(1 - t, 4),
-      })
-    ).toLocaleString('fr-FR');
 
   return (
     <AbsoluteFill
@@ -75,24 +66,34 @@ const S0Intro: React.FC = () => {
       <div
         style={{
           display: 'flex',
-          gap: 56,
-          marginTop: 72,
+          gap: 26,
+          marginTop: 64,
           fontFamily: FONT_UI,
           opacity: statsIn,
         }}
       >
-        {(
-          [
-            [counter(STATS.codes), 'codes consolidés'],
-            [counter(STATS.decisions), 'décisions de justice'],
-            [counter(STATS.textes), 'textes en vigueur'],
-          ] as const
-        ).map(([n, label]) => (
-          <div key={label} style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 52, fontWeight: 700, color: COLORS.accent }}>{n}</div>
-            <div style={{ fontSize: 21, color: COLORS.textSecondary, marginTop: 4 }}>{label}</div>
-          </div>
-        ))}
+        {/* Pas de décomptes figés : le corpus évolue en permanence. */}
+        {['Codes consolidés', 'Jurisprudence', 'Doctrine', 'IA connectée'].map((label, i) => {
+          const chipIn = spring({ frame: frame - 36 - i * 6, fps, config: { damping: 200 } });
+          return (
+            <div
+              key={label}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 26,
+                fontSize: 24,
+                fontWeight: 600,
+                color: COLORS.accentDark,
+                opacity: chipIn,
+                transform: `translateY(${interpolate(chipIn, [0, 1], [16, 0])}px)`,
+              }}
+            >
+              {label}
+              {i < 3 && <span style={{ color: '#D1D5DB' }}>·</span>}
+            </div>
+          );
+        })}
       </div>
     </AbsoluteFill>
   );

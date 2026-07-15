@@ -50,7 +50,7 @@ const S2Codes: React.FC = () => {
             Vérifié au Journal officiel.
           </>
         }
-        sub="25 codes · 16 770 articles — chaque alinéa extrait du JO et contrôlé."
+        sub="Chaque alinéa extrait du Journal officiel — et contrôlé."
       />
       <div
         style={{
@@ -77,7 +77,7 @@ const S2Codes: React.FC = () => {
               {CPC_TITLE}
             </h2>
             <p style={{ fontFamily: FONT_UI, color: '#6B7280', fontSize: 16, marginBottom: 26 }}>
-              967 articles · consolidé au 6 août 2013 · Base Codes
+              Consolidé au 6 août 2013 · Base Codes
             </p>
             {/* framer-motion neutralisé (rv-static-motion) : le déploiement est
                 séquencé par frame, l'état final de chaque niveau est forcé en CSS. */}

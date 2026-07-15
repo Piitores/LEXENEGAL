@@ -3,7 +3,7 @@
 **Format** : 1920 × 1080, 30 i/s, **~55 secondes** (montage V4 : coupes rapides, transitions 1/3 s).
 > V4 — le minutage scène par scène ci-dessous garde les proportions mais est compressé (~55 s au total) ; la scène Doctrine autonome a été fusionnée dans « 05 — Tout est relié ». Le code (`remotion/theme.ts`) fait foi pour les durées exactes.
 **Composition** : `LexenegalPromo` (`npx remotion studio` pour prévisualiser, `npx remotion render LexenegalPromo` pour rendre).
-**Bande-son** : voix off française (ElevenLabs `eleven_multilingual_v2`, voix George), un segment par scène (`public/promo-audio/s0…s9.mp3`, calage dans `remotion/AudioTrack.tsx`, réglages expressifs stability 0,35 / style 0,6) + lit musical rythmé bouclé à 16 % (`ambience.mp3`, pulsation douce 118 bpm) + whoosh à chaque coupe (`whoosh.mp3`).
+**Bande-son** : voix off française (ElevenLabs `eleven_multilingual_v2`, voix George), un segment par scène (`public/promo-audio/s0…s9.mp3`, calage dans `remotion/AudioTrack.tsx`, réglages expressifs stability 0,35 / style 0,6) + lit musical rythmé bouclé à 16 % (`ambience.mp3`, pulsation douce 118 bpm) + clic de souris à chaque coupe (`click.mp3`). Règle : **aucun chiffre figé** à l'écran ni en voix off (le corpus évolue en permanence).
 
 **Direction artistique** : la charte du site telle quelle — fond blanc / `#F8F9FB`, émeraude `#047857`, or `#D4AF37`, titres Playfair Display, corps Georgia, UI Inter. Les écrans sont rendus par les **composants et feuilles de style réels de l'application** (aucune maquette redessinée) et affichent des **données réelles de la base de production** (art. 45 CPC et ses 3 versions, arrêt n° 67 du 27 novembre 2025, décomptes exacts du corpus).
 
@@ -137,9 +137,9 @@ Transitions : sauf mention contraire, **fondu croisé 0,5 s** (`@remotion/transi
 |---|---|
 | S0 | LEXENEGAL. Le droit sénégalais, organisé. |
 | S1 | Posez votre question, en français. La recherche comprend le sens — et trouve la bonne réponse. |
-| S2 | Vingt-cinq codes consolidés, vérifiés au Journal officiel. |
+| S2 | Des codes consolidés, vérifiés au Journal officiel. |
 | S3 | Comparez les versions d'un article, mot à mot, depuis 1964. |
-| S4 | Treize mille décisions de justice, résumées et certifiées. |
+| S4 | Des milliers de décisions de justice, résumées et certifiées. |
 | S5 | Décisions, articles, doctrine : tout est relié, en un clic. |
 | S6 bis | Classez par dossier, annotez. Même le Code général des impôts est déjà annoté. |
 | S7 | Exportez un PDF prêt à plaider. |

@@ -35,7 +35,7 @@ const S4Jurisprudence: React.FC = () => {
         kicker="04 — Jurisprudence"
         title={
           <>
-            13 757 décisions.
+            Des milliers de décisions.
             <br />
             Résumées, indexées, sourcées.
           </>

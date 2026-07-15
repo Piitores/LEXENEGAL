@@ -25,10 +25,10 @@ const AudioTrack: React.FC = () => (
       </Sequence>
     ))}
 
-    {/* Whoosh sur chaque coupe (toutes les scènes sauf l'intro). */}
+    {/* Clic de souris sur chaque coupe (toutes les scènes sauf l'intro). */}
     {VO.slice(1).map(([scene]) => (
-      <Sequence key={`wh-${scene}`} from={SCENE_STARTS[scene] - 6}>
-        <Audio src={staticFile('promo-audio/whoosh.mp3')} volume={0.35} />
+      <Sequence key={`clic-${scene}`} from={SCENE_STARTS[scene] - 2}>
+        <Audio src={staticFile('promo-audio/click.mp3')} volume={0.55} />
       </Sequence>
     ))}
 
