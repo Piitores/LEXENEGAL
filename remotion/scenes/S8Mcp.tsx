@@ -66,7 +66,7 @@ const S8Mcp: React.FC = () => {
 
       <Caption
         dark
-        kicker="08 — Connecteur IA"
+        kicker="09 — Connecteur IA"
         title="Branchez votre IA sur le droit sénégalais."
         sub="Serveur MCP officiel : Claude répond avec les vraies sources — 12 outils de recherche juridique."
       />

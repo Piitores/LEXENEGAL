@@ -1,12 +1,12 @@
 # LEXENEGAL — Vidéo promotionnelle (Remotion)
 
-**Format** : 1920 × 1080, 30 i/s, ~84 secondes.
+**Format** : 1920 × 1080, 30 i/s, ~89 secondes.
 **Composition** : `LexenegalPromo` (`npx remotion studio` pour prévisualiser, `npx remotion render LexenegalPromo` pour rendre).
 **Direction artistique** : la charte du site telle quelle — fond blanc / `#F8F9FB`, émeraude `#047857`, or `#D4AF37`, titres Playfair Display, corps Georgia, UI Inter. Les écrans sont rendus par les **composants et feuilles de style réels de l'application** (aucune maquette redessinée) et affichent des **données réelles de la base de production** (art. 45 CPC et ses 3 versions, arrêt n° 67 du 27 novembre 2025, décomptes exacts du corpus).
 
 **Fil rouge narratif** : une seule question de praticien — *« licenciement d'un délégué du personnel »* — traverse la vidéo : la recherche la comprend (S1), le code y répond (S2–S3), la jurisprudence l'illustre (S4), les liens la complètent (S5–S6), l'export la livre (S7), l'IA la synthétise (S8).
 
-**Les 8 fonctionnalités différenciantes retenues**
+**Les 9 fonctionnalités différenciantes retenues**
 
 | # | Fonctionnalité | Pourquoi différenciante |
 |---|---|---|
@@ -16,8 +16,9 @@
 | 4 | 13 000+ décisions de justice | Cour suprême, Conseil constitutionnel, cours d'appel — résumés structurés |
 | 5 | Renvois cliquables (legal graph) | Décision → articles cités ; article → décisions citantes ; loi ↔ décret d'application |
 | 6 | Doctrine liée article par article | Commentaires rattachés au texte exact qu'ils commentent |
-| 7 | Export PDF premium | Document prestige prêt pour le dossier de plaidoirie |
-| 8 | Connecteur IA (MCP) | Brancher Claude sur le droit sénégalais : réponses sourcées |
+| 7 | Dossiers & annotations | Classer les décisions par affaire, annoter — et des codes déjà annotés (CGI + circulaires) |
+| 8 | Export PDF premium | Document prestige prêt pour le dossier de plaidoirie |
+| 9 | Connecteur IA (MCP) | Brancher Claude sur le droit sénégalais : réponses sourcées |
 
 ---
 
@@ -78,19 +79,26 @@ Transitions : sauf mention contraire, **fondu croisé 0,5 s** (`@remotion/transi
 - **Animation** : 2 cartes doctrine glissent depuis la droite (stagger), l'icône 📚 pulse ; **zoom** ×1,12 sur la première carte.
 - **Transition sortante** : slide gauche.
 
-### S7 — 07 · Export PDF (0:57,7 → 1:04,7 · 210 frames)
+### S6 bis — 07 · Dossiers & annotations (0:54,2 → 1:04,2 · 300 frames)
+- **Écran** : deux temps, fondu croisé interne.
+  1. **Dossiers** (0 → 5 s) : carte de la décision (arrêt n° 67) avec les boutons réels `DecisionActions` (`action-btn`, `folder-dropdown`) ; le menu `Ajouter au dossier` s'ouvre (dossiers : « Contentieux social — CBAO », « Licenciements 2026 », « Veille fiscale ») ; le curseur clique le premier → coche émeraude (`in-folder`) + toast `Décision classée — retrouvez-la dans Mon Cabinet`.
+  2. **Codes annotés** (5 → 10 s) : page **article 217 du CGI** (contenu réel) avec sa **pastille grise réelle** dépliée — `Circulaire d'application n° 0000504 du 15 janvier 2016` (classes `pastille`/`pastille-corps`) ; puis un encart émeraude « Mon annotation » (note personnelle de l'utilisateur) glisse sous l'article ; **zoom** ×1,12.
+- **Texte cartouche** : kicker `07 — DOSSIERS & ANNOTATIONS` ; titre `Votre cabinet, dans LEXENEGAL.` ; sous-texte `Classez les décisions par dossier, annotez-les — et travaillez sur des codes déjà annotés, comme le Code général des Impôts.`
+- **Transition sortante** : slide gauche.
+
+### S7 — 08 · Export PDF (1:04,2 → 1:10,7 · 210 frames)
 - **Écran** : colonne d'outils réelle de la page décision (ActionButton réels : `Télécharger le PDF`, `Imprimer`, `Copier Référence`, `Mes Annotations`).
-- **Texte cartouche** : kicker `07 — EXPORT PDF` ; titre `Prêt pour le dossier de plaidoirie.` ; sous-texte `Un document soigné : en-tête prestige, synthèse, texte intégral certifié.`
+- **Texte cartouche** : kicker `08 — EXPORT PDF` ; titre `Prêt pour le dossier de plaidoirie.` ; sous-texte `Un document soigné : en-tête prestige, synthèse, texte intégral certifié.`
 - **Animation** : clic sur `Télécharger le PDF` (état `Génération…` réel) → une **page A4 stylisée** (bordures doubles émeraude, en-tête Playfair — le gabarit print réel) se matérialise et pivote légèrement en 3D (rotateY 8°) ; **zoom** sur l'en-tête du PDF.
 - **Transition sortante** : fondu vers fond sombre — rupture visuelle avant la scène IA.
 
-### S8 — 08 · Connecteur IA / MCP (1:04,7 → 1:14,7 · 300 frames)
+### S8 — 09 · Connecteur IA / MCP (1:10,2 → 1:20,2 · 300 frames)
 - **Écran** : sur fond `#0B1220` (seule scène sombre — signal « techno »), une fenêtre de chat IA : l'utilisateur demande `Quelles conditions pour licencier un délégué du personnel au Sénégal ?` ; la réponse se compose en streaming avec **3 puces sources** qui s'attachent : `⚖️ CS, arrêt n° 67 du 27 nov. 2025` · `📖 Code du travail` · `📖 Art. 45 CPC` — chacune estampillée `lexenegal.sn`.
-- **Texte cartouche** (clair sur sombre) : kicker `08 — CONNECTEUR IA` ; titre `Branchez votre IA sur le droit sénégalais.` ; sous-texte `Serveur MCP officiel : Claude répond avec les vraies sources — 12 outils de recherche juridique.`
+- **Texte cartouche** (clair sur sombre) : kicker `09 — CONNECTEUR IA` ; titre `Branchez votre IA sur le droit sénégalais.` ; sous-texte `Serveur MCP officiel : Claude répond avec les vraies sources — 12 outils de recherche juridique.`
 - **Animation** : logo Claude ∗ + logo LEXENEGAL reliés par une ligne pulsante ; frappe streaming mot à mot ; les puces sources glissent depuis la réponse vers une pile « Sources vérifiées ». **Zoom** ×1,1 sur les puces.
 - **Transition sortante** : le fond sombre s'éclaircit en iris vers le blanc.
 
-### S9 — Appel à l'action (1:14,7 → 1:24 · 280 frames)
+### S9 — Appel à l'action (1:19,7 → 1:29 · 280 frames)
 - **Visuel** : retour au blanc + grille émeraude, emblème centré.
 - **Textes affichés** (séquencés) :
   1. `Le droit sénégalais, enfin organisé.` (Playfair 72 px)
@@ -108,6 +116,8 @@ Transitions : sauf mention contraire, **fondu croisé 0,5 s** (`@remotion/transi
 |---|---|
 | Arbre du code (S2) | `src/components/CodeNavTree/CodeNavTree.tsx` + son CSS — composant importé tel quel, données réelles CPC |
 | Boutons d'action (S3, S7, S9) | `src/components/ui/ActionButton.tsx` + CSS — importé tel quel |
+| Boutons Favori / Dossier (S6 bis) | markup exact + `src/components/DecisionActions/DecisionActions.css` |
+| Pastilles grises d'annotation (S6 bis) | classes réelles `pastille`/`pastille-corps` + `ArticlePage.css`, contenu réel CGI art. 217 |
 | Libellés d'articles | `src/lib/articleLabel.ts` (règle « pas de préfixe Article pour le préambule ») |
 | Types + formatage de l'arbre | `src/lib/codeTree.ts` (`HierarchyNode`, `formatNodeLabel`, `NODE_KIND`) |
 | Barre de recherche (S1) | markup exact du Spotlight + `src/components/Hero/Hero.css` |

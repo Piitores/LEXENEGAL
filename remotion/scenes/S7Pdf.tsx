@@ -36,7 +36,7 @@ const S7Pdf: React.FC = () => {
     <div className="rv-scene" style={{ background: '#F8F9FB' }}>
       <div className="rv-grid" style={{ opacity: 0.4 }} />
       <Caption
-        kicker="07 — Export PDF"
+        kicker="08 — Export PDF"
         title="Prêt pour le dossier de plaidoirie."
         sub="Un document soigné : en-tête prestige, synthèse, texte intégral certifié."
       />

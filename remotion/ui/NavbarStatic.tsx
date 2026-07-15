@@ -35,7 +35,18 @@ const NavbarStatic: React.FC = () => (
             </button>
           </div>
         ))}
-        <button className="navbar__cta">Connexion</button>
+        {/* Dégradé émeraude clair forcé : le --color-accent réduit + compressé
+            vidéo lisait presque noir à l'écran. */}
+        <button
+          className="navbar__cta"
+          style={{
+            background: 'linear-gradient(135deg, #059669 0%, #10B981 100%)',
+            color: '#FFFFFF',
+            border: 'none',
+          }}
+        >
+          Connexion
+        </button>
       </div>
     </div>
   </nav>

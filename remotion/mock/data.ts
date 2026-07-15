@@ -163,3 +163,8 @@ export const SEARCH_RESULTS = [
     subtitle: 'Code de Procédure civile',
   },
 ];
+
+// Article 217 du CGI (réel) : alinéas + pastille grise « circulaire d'application »
+// (details.pastille forcé ouvert pour la vidéo).
+export const CGI_ART217_HTML = `<p class="alinea">Le contribuable qui estime que, pour un exercice, le montant de l’acompte déjà versé est égal ou supérieur à la cotisation dont il sera finalement redevable pour cet exercice, peut se dispenser d’effectuer le versement du deuxième acompte, en remettant au comptable public compétent, au plus tard le 30 avril, une lettre datée et signée.</p>
+<details class="pastille" open><summary><span class="pastille-tete">📎 Circulaire d’application n° 0000504 du 15 janvier 2016</span></summary><div class="pastille-corps"><p>La lettre doit être accompagnée des justificatifs nécessaires de l’effectivité des retenues et de leurs montants.</p><p>Si, par la suite, cette déclaration est reconnue inexacte, l’infraction est sanctionnée dans les conditions fixées aux articles <a class="article-link">665</a> à <a class="article-link">691</a> du CGI.</p></div></details>`;
