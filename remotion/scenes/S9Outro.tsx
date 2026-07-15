@@ -22,9 +22,9 @@ const S9Outro: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const titleIn = spring({ frame: frame - 8, fps, config: { damping: 200 } });
-  const ctaIn = spring({ frame: frame - 70, fps, config: { damping: 12 } });
-  const urlIn = spring({ frame: frame - 95, fps, config: { damping: 200 } });
+  const titleIn = spring({ frame: frame - 5, fps, config: { damping: 200 } });
+  const ctaIn = spring({ frame: frame - 42, fps, config: { damping: 12 } });
+  const urlIn = spring({ frame: frame - 58, fps, config: { damping: 200 } });
 
   // Double pulsation du CTA.
   const pulse =
@@ -32,16 +32,16 @@ const S9Outro: React.FC = () => {
     0.04 *
       Math.max(
         0,
-        Math.sin(((frame - 110) / 22) * Math.PI) * (frame > 110 && frame < 155 ? 1 : 0)
+        Math.sin(((frame - 72) / 20) * Math.PI) * (frame > 72 && frame < 112 ? 1 : 0)
       );
 
-  const underline = interpolate(frame, [100, 125], [0, 100], {
+  const underline = interpolate(frame, [62, 84], [0, 100], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
 
   // Fondu final : tout s'efface sauf l'emblème.
-  const fadeOthers = interpolate(frame, [245, 268], [1, 0], {
+  const fadeOthers = interpolate(frame, [140, 160], [1, 0], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
@@ -72,7 +72,7 @@ const S9Outro: React.FC = () => {
 
         <div style={{ display: 'flex', gap: 42, marginTop: 44, fontFamily: FONT_UI }}>
           {PILLARS.map((p, i) => {
-            const pIn = spring({ frame: frame - 34 - i * 7, fps, config: { damping: 200 } });
+            const pIn = spring({ frame: frame - 20 - i * 5, fps, config: { damping: 200 } });
             return (
               <div
                 key={p.label}

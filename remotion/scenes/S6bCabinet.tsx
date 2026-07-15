@@ -12,8 +12,8 @@ import '../../src/pages/Code/ArticlePage.css';
 import '../../src/pages/Decision/DecisionPage.css';
 
 const FOLDERS = ['Contentieux social — CBAO', 'Licenciements 2026', 'Veille fiscale'];
-const CLICK_AT = 70; // clic sur « Contentieux social »
-const SWITCH_AT = 150; // bascule vers le CGI annoté
+const CLICK_AT = 42; // clic sur « Contentieux social »
+const SWITCH_AT = 95; // bascule vers le CGI annoté
 
 // S6b — 07 · Dossiers & annotations : classer une décision, codes annotés (CGI).
 const S6bCabinet: React.FC = () => {
@@ -21,7 +21,7 @@ const S6bCabinet: React.FC = () => {
   const { fps } = useVideoConfig();
 
   const frameIn = spring({ frame, fps, config: { damping: 16 } });
-  const menuIn = spring({ frame: frame - 30, fps, config: { damping: 15 } });
+  const menuIn = spring({ frame: frame - 18, fps, config: { damping: 15 } });
   const added = frame >= CLICK_AT;
   const toastIn = spring({ frame: frame - CLICK_AT - 4, fps, config: { damping: 12 } });
 
@@ -31,9 +31,9 @@ const S6bCabinet: React.FC = () => {
     extrapolateRight: 'clamp',
   });
   const beat2 = 1 - beat1;
-  const noteIn = spring({ frame: frame - SWITCH_AT - 70, fps, config: { damping: 15 } });
+  const noteIn = spring({ frame: frame - SWITCH_AT - 45, fps, config: { damping: 15 } });
 
-  const zoom = interpolate(frame, [SWITCH_AT + 40, SWITCH_AT + 110], [1, 1.12], {
+  const zoom = interpolate(frame, [SWITCH_AT + 30, SWITCH_AT + 80], [1, 1.12], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: (t) => t * t * (3 - 2 * t),
@@ -43,7 +43,7 @@ const S6bCabinet: React.FC = () => {
     <div className="rv-scene" style={{ background: '#FFFFFF' }}>
       <div className="rv-grid" style={{ opacity: 0.35 }} />
       <Caption
-        kicker="07 — Dossiers & annotations"
+        kicker="06 — Dossiers & annotations"
         title="Votre cabinet, dans LEXENEGAL."
         sub="Classez les décisions par dossier, annotez-les — et travaillez sur des codes déjà annotés, comme le Code général des Impôts."
       />
@@ -207,10 +207,10 @@ const S6bCabinet: React.FC = () => {
 
       <Cursor
         steps={[
-          { frame: 20, x: 1000, y: 830 },
+          { frame: 8, x: 1000, y: 830 },
           { frame: CLICK_AT - 3, x: 905, y: 555, click: true },
-          { frame: CLICK_AT + 30, x: 905, y: 555 },
-          { frame: SWITCH_AT + 30, x: 1240, y: 520 },
+          { frame: CLICK_AT + 20, x: 905, y: 555 },
+          { frame: SWITCH_AT + 22, x: 1240, y: 520 },
         ]}
       />
     </div>

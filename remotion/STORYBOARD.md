@@ -1,14 +1,15 @@
 # LEXENEGAL — Vidéo promotionnelle (Remotion)
 
-**Format** : 1920 × 1080, 30 i/s, ~89 secondes.
+**Format** : 1920 × 1080, 30 i/s, **~55 secondes** (montage V4 : coupes rapides, transitions 1/3 s).
+> V4 — le minutage scène par scène ci-dessous garde les proportions mais est compressé (~55 s au total) ; la scène Doctrine autonome a été fusionnée dans « 05 — Tout est relié ». Le code (`remotion/theme.ts`) fait foi pour les durées exactes.
 **Composition** : `LexenegalPromo` (`npx remotion studio` pour prévisualiser, `npx remotion render LexenegalPromo` pour rendre).
-**Bande-son** : voix off française (ElevenLabs `eleven_multilingual_v2`, voix George), un segment par scène (`public/promo-audio/s0…s9.mp3`, calage dans `remotion/AudioTrack.tsx`) + nappe d'ambiance bouclée à 11 % de volume (`ambience.mp3`), fondu d'entrée/sortie.
+**Bande-son** : voix off française (ElevenLabs `eleven_multilingual_v2`, voix George), un segment par scène (`public/promo-audio/s0…s9.mp3`, calage dans `remotion/AudioTrack.tsx`, réglages expressifs stability 0,35 / style 0,6) + lit musical rythmé bouclé à 16 % (`ambience.mp3`, pulsation douce 118 bpm) + whoosh à chaque coupe (`whoosh.mp3`).
 
 **Direction artistique** : la charte du site telle quelle — fond blanc / `#F8F9FB`, émeraude `#047857`, or `#D4AF37`, titres Playfair Display, corps Georgia, UI Inter. Les écrans sont rendus par les **composants et feuilles de style réels de l'application** (aucune maquette redessinée) et affichent des **données réelles de la base de production** (art. 45 CPC et ses 3 versions, arrêt n° 67 du 27 novembre 2025, décomptes exacts du corpus).
 
 **Fil rouge narratif** : une seule question de praticien — *« licenciement d'un délégué du personnel »* — traverse la vidéo : la recherche la comprend (S1), le code y répond (S2–S3), la jurisprudence l'illustre (S4), les liens la complètent (S5–S6), l'export la livre (S7), l'IA la synthétise (S8).
 
-**Les 9 fonctionnalités différenciantes retenues**
+**Les 8 fonctionnalités différenciantes retenues** (doctrine intégrée au n° 5)
 
 | # | Fonctionnalité | Pourquoi différenciante |
 |---|---|---|
@@ -16,11 +17,10 @@
 | 2 | Codes consolidés fidèles au JO | 25 codes, 16 770 articles, extraits des Journaux officiels et vérifiés |
 | 3 | Comparateur de versions | Historique article par article (1964 → 2001 → 2013), diff mot à mot |
 | 4 | 13 000+ décisions de justice | Cour suprême, Conseil constitutionnel, cours d'appel — résumés structurés |
-| 5 | Renvois cliquables (legal graph) | Décision → articles cités ; article → décisions citantes ; loi ↔ décret d'application |
-| 6 | Doctrine liée article par article | Commentaires rattachés au texte exact qu'ils commentent |
-| 7 | Dossiers & annotations | Classer les décisions par affaire, annoter — et des codes déjà annotés (CGI + circulaires) |
-| 8 | Export PDF premium | Document prestige prêt pour le dossier de plaidoirie |
-| 9 | Connecteur IA (MCP) | Brancher Claude sur le droit sénégalais : réponses sourcées |
+| 5 | Renvois cliquables (legal graph) | Décision ↔ articles ↔ doctrine rattachée à l'article ; loi ↔ décret d'application |
+| 6 | Dossiers & annotations | Classer les décisions par affaire, annoter — et des codes déjà annotés (CGI + circulaires) |
+| 7 | Export PDF premium | Document prestige prêt pour le dossier de plaidoirie |
+| 8 | Connecteur IA (MCP) | Brancher Claude sur le droit sénégalais : réponses sourcées |
 
 ---
 
@@ -131,20 +131,19 @@ Transitions : sauf mention contraire, **fondu croisé 0,5 s** (`@remotion/transi
 
 **Données réelles embarquées** (`remotion/mock/data.ts`, snapshot prod du 15 juillet 2026) : article 45 CPC et ses 3 versions datées, hiérarchie complète du CPC, pastilles 44 → 54-9 avec statuts d'abrogation réels, arrêt n° 67 du 27/11/2025 (référence, matière, mots-clés, résumé, références légales), décomptes du corpus.
 
-## Script de la voix off
+## Script de la voix off (V4 — phrases courtes, réglages expressifs)
 
 | Scène | Texte lu |
 |---|---|
-| S0 | LEXENEGAL. La mémoire juridique organisée du Sénégal. |
-| S1 | Posez votre question, en français. La recherche comprend le sens, et retrouve aussitôt les décisions et les articles pertinents. |
-| S2 | Vingt-cinq codes consolidés, plus de seize mille articles : chaque alinéa est vérifié au Journal officiel. |
-| S3 | Chaque article a une histoire. Comparez ses versions, de 1964 à aujourd'hui, mot à mot. |
-| S4 | Plus de treize mille décisions de justice : résumées, indexées, et certifiées à la source. |
-| S5 | Tout est relié : de la décision au texte, et du texte à la décision, en un clic. |
-| S6 | La doctrine, rattachée à l'article exact qu'elle commente. |
-| S6 bis | Classez vos décisions par dossier, ajoutez vos annotations, et travaillez sur des codes déjà annotés, comme le Code général des impôts. |
-| S7 | Exportez un PDF soigné, prêt pour le dossier de plaidoirie. |
-| S8 | Et branchez votre intelligence artificielle sur le droit sénégalais : Claude répond avec les vraies sources, grâce au serveur MCP de LEXENEGAL. |
-| S9 | LEXENEGAL. Le droit sénégalais, enfin organisé. Créez votre compte gratuit sur lexenegal.sn. |
+| S0 | LEXENEGAL. Le droit sénégalais, organisé. |
+| S1 | Posez votre question, en français. La recherche comprend le sens — et trouve la bonne réponse. |
+| S2 | Vingt-cinq codes consolidés, vérifiés au Journal officiel. |
+| S3 | Comparez les versions d'un article, mot à mot, depuis 1964. |
+| S4 | Treize mille décisions de justice, résumées et certifiées. |
+| S5 | Décisions, articles, doctrine : tout est relié, en un clic. |
+| S6 bis | Classez par dossier, annotez. Même le Code général des impôts est déjà annoté. |
+| S7 | Exportez un PDF prêt à plaider. |
+| S8 | Et branchez votre IA sur le droit sénégalais, avec notre serveur MCP. |
+| S9 | LEXENEGAL. Créez votre compte gratuit sur lexenegal.sn. |
 
 **Choix techniques** : les animations de framer-motion internes aux composants sont neutralisées au rendu (override CSS) — tout le mouvement est piloté par `useCurrentFrame()` pour un rendu déterministe image par image ; les `Link` react-router sont satisfaits par un `MemoryRouter`.

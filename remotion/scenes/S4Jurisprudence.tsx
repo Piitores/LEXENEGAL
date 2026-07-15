@@ -18,11 +18,11 @@ const S4Jurisprudence: React.FC = () => {
   const { fps } = useVideoConfig();
 
   const frameIn = spring({ frame, fps, config: { damping: 16 } });
-  const stampIn = spring({ frame: frame - 25, fps, config: { damping: 9, mass: 0.7 } });
-  const titleIn = spring({ frame: frame - 45, fps, config: { damping: 200 } });
-  const boxIn = spring({ frame: frame - 70, fps, config: { damping: 200 } });
+  const stampIn = spring({ frame: frame - 12, fps, config: { damping: 9, mass: 0.7 } });
+  const titleIn = spring({ frame: frame - 24, fps, config: { damping: 200 } });
+  const boxIn = spring({ frame: frame - 38, fps, config: { damping: 200 } });
 
-  const zoom = interpolate(frame, [130, 200], [1, 1.13], {
+  const zoom = interpolate(frame, [80, 140], [1, 1.13], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: (t) => t * t * (3 - 2 * t),
@@ -97,7 +97,7 @@ const S4Jurisprudence: React.FC = () => {
                   </span>
                   {DECISION_67.motsCles.map((kw, i) => {
                     const tIn = spring({
-                      frame: frame - 85 - i * 5,
+                      frame: frame - 48 - i * 4,
                       fps,
                       config: { damping: 200 },
                     });

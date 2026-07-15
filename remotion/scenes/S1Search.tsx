@@ -15,9 +15,9 @@ import { SEARCH_QUERY, SEARCH_RESULTS } from '../mock/data';
 // Markup et classes = Spotlight réel du Hero (src/components/Hero/Hero.tsx).
 import '../../src/components/Hero/Hero.css';
 
-const TYPE_START = 55;
-const TYPE_SPEED = 2.4; // frames par caractère
-const RESULTS_AT = TYPE_START + Math.ceil(SEARCH_QUERY.length * TYPE_SPEED) + 18;
+const TYPE_START = 26;
+const TYPE_SPEED = 1.35; // frames par caractère
+const RESULTS_AT = TYPE_START + Math.ceil(SEARCH_QUERY.length * TYPE_SPEED) + 10;
 
 // S1 — 01 · Recherche intelligente : frappe de la question, résultats mêlés.
 const S1Search: React.FC = () => {
@@ -30,17 +30,17 @@ const S1Search: React.FC = () => {
     Math.min(SEARCH_QUERY.length, Math.floor((frame - TYPE_START) / TYPE_SPEED))
   );
   const typed = SEARCH_QUERY.slice(0, chars);
-  const caretOn = Math.floor(frame / 14) % 2 === 0 && frame > 30;
+  const caretOn = Math.floor(frame / 12) % 2 === 0 && frame > 16;
   const previewOpen = frame >= RESULTS_AT;
   const previewIn = spring({ frame: frame - RESULTS_AT, fps, config: { damping: 18 } });
 
   // Zoom final sur le premier résultat.
-  const zoom = interpolate(frame, [RESULTS_AT + 55, RESULTS_AT + 90], [1, 1.15], {
+  const zoom = interpolate(frame, [RESULTS_AT + 35, RESULTS_AT + 65], [1, 1.15], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: (t) => t * t * (3 - 2 * t),
   });
-  const firstHover = frame >= RESULTS_AT + 60;
+  const firstHover = frame >= RESULTS_AT + 40;
 
   return (
     <div className="rv-scene" style={{ background: '#F8F9FB' }}>
@@ -84,7 +84,7 @@ const S1Search: React.FC = () => {
             </h1>
 
             {/* SPOTLIGHT — classes réelles */}
-            <div className={`spotlight ${frame > 40 ? 'spotlight--active' : ''}`}>
+            <div className={`spotlight ${frame > 20 ? 'spotlight--active' : ''}`}>
               <div className="spotlight__bar">
                 <Search className="spotlight__icon" size={22} />
                 <div
@@ -123,7 +123,7 @@ const S1Search: React.FC = () => {
                   <div className="spotlight__results">
                     {SEARCH_RESULTS.map((r, i) => {
                       const rIn = spring({
-                        frame: frame - RESULTS_AT - 6 - i * 5,
+                        frame: frame - RESULTS_AT - 4 - i * 4,
                         fps,
                         config: { damping: 200 },
                       });
@@ -174,10 +174,10 @@ const S1Search: React.FC = () => {
       </div>
       <Cursor
         steps={[
-          { frame: 20, x: 900, y: 720 },
-          { frame: 48, x: 1180, y: 452, click: true },
-          { frame: RESULTS_AT + 45, x: 1180, y: 452 },
-          { frame: RESULTS_AT + 62, x: 1150, y: 560, click: true },
+          { frame: 8, x: 900, y: 720 },
+          { frame: 22, x: 1180, y: 452, click: true },
+          { frame: RESULTS_AT + 25, x: 1180, y: 452 },
+          { frame: RESULTS_AT + 42, x: 1150, y: 560, click: true },
         ]}
       />
     </div>

@@ -15,9 +15,9 @@ import { ART45_PATH, ART45_V1964, ART45_CURRENT, CPC_SLUG } from '../mock/data';
 import ActionButton from '../../src/components/ui/ActionButton';
 import '../../src/pages/Code/ArticlePage.css';
 
-const CLICK_AT = 50;
-const COLUMNS_AT = 85;
-const DIFF_AT = 130;
+const CLICK_AT = 28;
+const COLUMNS_AT = 50;
+const DIFF_AT = 80;
 
 // S3 — 03 · Comparateur de versions : art. 45 CPC, 1964 vs texte en vigueur (2013).
 const S3Compare: React.FC = () => {
@@ -29,7 +29,7 @@ const S3Compare: React.FC = () => {
   const showColumns = frame >= COLUMNS_AT;
   const diffOn = frame >= DIFF_AT;
 
-  const zoom = interpolate(frame, [175, 235], [1, 1.14], {
+  const zoom = interpolate(frame, [115, 165], [1, 1.14], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: (t) => t * t * (3 - 2 * t),
@@ -134,9 +134,9 @@ const S3Compare: React.FC = () => {
       </div>
       <Cursor
         steps={[
-          { frame: 15, x: 1000, y: 800 },
+          { frame: 6, x: 1000, y: 800 },
           { frame: CLICK_AT - 2, x: 985, y: 468, click: true },
-          { frame: CLICK_AT + 20, x: 985, y: 500 },
+          { frame: CLICK_AT + 14, x: 985, y: 500 },
         ]}
       />
     </div>

@@ -16,10 +16,10 @@ import '../../src/pages/Code/CodePage.css';
 
 // Déploiement séquencé : un niveau du chemin vers l'art. 45 toutes les 20 frames.
 const EXPANSION: Array<[number, string]> = [
-  [35, 'p1'],
-  [55, 'l2'],
-  [75, 't1'],
-  [95, 's5'],
+  [18, 'p1'],
+  [32, 'l2'],
+  [46, 't1'],
+  [60, 's5'],
 ];
 
 // S2 — 02 · Codes consolidés : l'arbre réel du CPC se déploie jusqu'à l'art. 45.
@@ -31,12 +31,12 @@ const S2Codes: React.FC = () => {
   const expanded = new Set(EXPANSION.filter(([at]) => frame >= at).map(([, id]) => id));
 
   // Zoom vers la Section 5 pendant le déploiement.
-  const zoom = interpolate(frame, [110, 190], [1, 1.24], {
+  const zoom = interpolate(frame, [70, 130], [1, 1.24], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: (t) => t * t * (3 - 2 * t),
   });
-  const badgeIn = spring({ frame: frame - 175, fps, config: { damping: 11 } });
+  const badgeIn = spring({ frame: frame - 110, fps, config: { damping: 11 } });
 
   return (
     <div className="rv-scene" style={{ background: '#FFFFFF' }}>
@@ -88,8 +88,8 @@ const S2Codes: React.FC = () => {
                 expandedNodes={expanded}
                 onToggle={() => undefined}
                 onSelect={() => undefined}
-                activeNodeId={frame >= 95 ? 's5' : null}
-                activeArticleSlug={frame >= 150 ? 'art-45' : null}
+                activeNodeId={frame >= 60 ? 's5' : null}
+                activeArticleSlug={frame >= 90 ? 'art-45' : null}
               />
             </div>
           </div>

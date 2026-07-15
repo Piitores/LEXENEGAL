@@ -16,14 +16,14 @@ const S0Intro: React.FC = () => {
   const { fps } = useVideoConfig();
 
   const logoIn = spring({ frame, fps, config: { damping: 12, mass: 0.8 } });
-  const titleIn = spring({ frame: frame - 18, fps, config: { damping: 200 } });
-  const subIn = spring({ frame: frame - 40, fps, config: { damping: 200 } });
-  const statsIn = spring({ frame: frame - 70, fps, config: { damping: 200 } });
-  const gridIn = interpolate(frame, [0, 50], [0, 1], { extrapolateRight: 'clamp' });
+  const titleIn = spring({ frame: frame - 10, fps, config: { damping: 200 } });
+  const subIn = spring({ frame: frame - 20, fps, config: { damping: 200 } });
+  const statsIn = spring({ frame: frame - 36, fps, config: { damping: 200 } });
+  const gridIn = interpolate(frame, [0, 30], [0, 1], { extrapolateRight: 'clamp' });
 
   const counter = (target: number) =>
     Math.round(
-      interpolate(frame, [70, 130], [0, target], {
+      interpolate(frame, [36, 85], [0, target], {
         extrapolateLeft: 'clamp',
         extrapolateRight: 'clamp',
         easing: (t) => 1 - Math.pow(1 - t, 4),

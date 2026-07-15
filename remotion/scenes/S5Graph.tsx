@@ -14,8 +14,8 @@ import { DECISION_67 } from '../mock/data';
 import '../../src/pages/Decision/DecisionPage.css';
 import '../../src/pages/Code/ArticlePage.css';
 
-const PREVIEW_AT = 70;
-const CARD_AT = 150;
+const PREVIEW_AT = 40;
+const CARD_AT = 92;
 
 // S5 — 05 · Renvois cliquables : références légales ↔ décisions citantes.
 const S5Graph: React.FC = () => {
@@ -27,7 +27,7 @@ const S5Graph: React.FC = () => {
   const cardIn = spring({ frame: frame - CARD_AT, fps, config: { damping: 200 } });
 
   // Fils émeraude animés (dash-offset piloté par frame).
-  const dash = interpolate(frame, [PREVIEW_AT, PREVIEW_AT + 60], [400, 0], {
+  const dash = interpolate(frame, [PREVIEW_AT, PREVIEW_AT + 40], [400, 0], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
@@ -44,7 +44,7 @@ const S5Graph: React.FC = () => {
             Du texte à la décision.
           </>
         }
-        sub="Articles cités cliquables, décisions citantes, loi ↔ décret d'application : le droit en graphe."
+        sub="Articles cités cliquables, décisions citantes, doctrine rattachée à l'article, loi ↔ décret : le droit en graphe."
       />
       <div
         style={{
@@ -169,9 +169,9 @@ const S5Graph: React.FC = () => {
 
       <Cursor
         steps={[
-          { frame: 20, x: 950, y: 760 },
+          { frame: 8, x: 950, y: 760 },
           { frame: PREVIEW_AT - 5, x: 1000, y: 508, click: true },
-          { frame: PREVIEW_AT + 40, x: 1000, y: 508 },
+          { frame: PREVIEW_AT + 28, x: 1000, y: 508 },
         ]}
       />
     </div>

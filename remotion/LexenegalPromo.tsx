@@ -16,7 +16,6 @@ import S2Codes from './scenes/S2Codes';
 import S3Compare from './scenes/S3Compare';
 import S4Jurisprudence from './scenes/S4Jurisprudence';
 import S5Graph from './scenes/S5Graph';
-import S6Doctrine from './scenes/S6Doctrine';
 import S6bCabinet from './scenes/S6bCabinet';
 import S7Pdf from './scenes/S7Pdf';
 import S8Mcp from './scenes/S8Mcp';
@@ -60,10 +59,6 @@ const LexenegalPromo: React.FC = () => (
         </TransitionSeries.Sequence>
         <TransitionSeries.Transition presentation={fade()} timing={timing} />
 
-        <TransitionSeries.Sequence durationInFrames={SCENES.doctrine}>
-          <S6Doctrine />
-        </TransitionSeries.Sequence>
-        <TransitionSeries.Transition presentation={fade()} timing={timing} />
 
         <TransitionSeries.Sequence durationInFrames={SCENES.cabinet}>
           <S6bCabinet />

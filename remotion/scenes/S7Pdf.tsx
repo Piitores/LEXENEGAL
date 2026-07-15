@@ -14,8 +14,8 @@ import { DECISION_67 } from '../mock/data';
 import ActionButton from '../../src/components/ui/ActionButton';
 import '../../src/pages/Decision/DecisionPage.css';
 
-const CLICK_AT = 45;
-const PDF_AT = 80;
+const CLICK_AT = 22;
+const PDF_AT = 44;
 
 // S7 — 07 · Export PDF premium.
 const S7Pdf: React.FC = () => {
@@ -26,7 +26,7 @@ const S7Pdf: React.FC = () => {
   const pdfIn = spring({ frame: frame - PDF_AT, fps, config: { damping: 13 } });
   const busy = frame >= CLICK_AT && frame < PDF_AT + 10;
 
-  const zoom = interpolate(frame, [PDF_AT + 40, PDF_AT + 90], [1, 1.16], {
+  const zoom = interpolate(frame, [PDF_AT + 25, PDF_AT + 65], [1, 1.16], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: (t) => t * t * (3 - 2 * t),
@@ -36,7 +36,7 @@ const S7Pdf: React.FC = () => {
     <div className="rv-scene" style={{ background: '#F8F9FB' }}>
       <div className="rv-grid" style={{ opacity: 0.4 }} />
       <Caption
-        kicker="08 — Export PDF"
+        kicker="07 — Export PDF"
         title="Prêt pour le dossier de plaidoirie."
         sub="Un document soigné : en-tête prestige, synthèse, texte intégral certifié."
       />
@@ -147,9 +147,9 @@ const S7Pdf: React.FC = () => {
 
       <Cursor
         steps={[
-          { frame: 10, x: 780, y: 830 },
+          { frame: 5, x: 780, y: 830 },
           { frame: CLICK_AT - 3, x: 700, y: 452, click: true },
-          { frame: CLICK_AT + 25, x: 700, y: 452 },
+          { frame: CLICK_AT + 16, x: 700, y: 452 },
         ]}
       />
     </div>

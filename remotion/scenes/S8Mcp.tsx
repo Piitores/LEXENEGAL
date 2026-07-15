@@ -20,7 +20,7 @@ const SOURCES = [
   { icon: 'book', label: 'Loi organique n° 2017-09' },
 ];
 
-const ANSWER_AT = 90;
+const ANSWER_AT = 46;
 
 // S8 — 08 · Connecteur IA (MCP) : Claude répond avec les vraies sources LEXENEGAL.
 const S8Mcp: React.FC = () => {
@@ -28,18 +28,18 @@ const S8Mcp: React.FC = () => {
   const { fps } = useVideoConfig();
 
   const frameIn = spring({ frame, fps, config: { damping: 16 } });
-  const qIn = spring({ frame: frame - 30, fps, config: { damping: 15 } });
+  const qIn = spring({ frame: frame - 14, fps, config: { damping: 15 } });
   const linkPulse = 0.45 + 0.3 * Math.sin(frame / 7);
 
   // Réponse en streaming mot à mot.
   const words = ANSWER.split(' ');
   const shown = Math.max(
     0,
-    Math.min(words.length, Math.floor((frame - ANSWER_AT) / 1.6))
+    Math.min(words.length, Math.floor((frame - ANSWER_AT) / 1.05))
   );
   const answerText = words.slice(0, shown).join(' ');
 
-  const zoom = interpolate(frame, [230, 285], [1, 1.1], {
+  const zoom = interpolate(frame, [150, 190], [1, 1.1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: (t) => t * t * (3 - 2 * t),
@@ -66,7 +66,7 @@ const S8Mcp: React.FC = () => {
 
       <Caption
         dark
-        kicker="09 — Connecteur IA"
+        kicker="08 — Connecteur IA"
         title="Branchez votre IA sur le droit sénégalais."
         sub="Serveur MCP officiel : Claude répond avec les vraies sources — 12 outils de recherche juridique."
       />
@@ -152,7 +152,7 @@ const S8Mcp: React.FC = () => {
                 <div style={{ marginTop: 14 }}>
                   {SOURCES.map((s, i) => {
                     const sIn = spring({
-                      frame: frame - (ANSWER_AT + words.length * 1.6 + 8) - i * 7,
+                      frame: frame - (ANSWER_AT + words.length * 1.05 + 6) - i * 7,
                       fps,
                       config: { damping: 14 },
                     });

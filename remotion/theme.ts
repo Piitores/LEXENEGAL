@@ -28,20 +28,19 @@ export const FPS = 30;
 
 // Durées de scène en frames (hors chevauchement des transitions).
 export const SCENES = {
-  intro: 170,
-  search: 300,
-  codes: 270,
-  compare: 270,
-  jurisprudence: 270,
-  graph: 270,
-  doctrine: 180,
-  cabinet: 300,
-  pdf: 210,
-  mcp: 300,
-  outro: 280,
+  intro: 110,
+  search: 200,
+  codes: 185,
+  compare: 190,
+  jurisprudence: 170,
+  graph: 180,
+  cabinet: 200,
+  pdf: 130,
+  mcp: 200,
+  outro: 170,
 };
 
-export const TRANSITION = 15; // fondu croisé 0,5 s
+export const TRANSITION = 10; // coupes rapides (1/3 s)
 
 const order = [
   SCENES.intro,
@@ -50,7 +49,6 @@ const order = [
   SCENES.compare,
   SCENES.jurisprudence,
   SCENES.graph,
-  SCENES.doctrine,
   SCENES.cabinet,
   SCENES.pdf,
   SCENES.mcp,
