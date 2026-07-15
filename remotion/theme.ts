@@ -60,3 +60,15 @@ const order = [
 // TransitionSeries : durée totale = somme des scènes − somme des chevauchements.
 export const TOTAL_DURATION =
   order.reduce((a, b) => a + b, 0) - TRANSITION * (order.length - 1);
+
+// Frame de début de chaque scène dans la timeline (chevauchements déduits).
+export const SCENE_STARTS = (() => {
+  const keys = Object.keys(SCENES) as Array<keyof typeof SCENES>;
+  const starts = {} as Record<keyof typeof SCENES, number>;
+  let cursor = 0;
+  for (const k of keys) {
+    starts[k] = cursor;
+    cursor += SCENES[k] - TRANSITION;
+  }
+  return starts;
+})();

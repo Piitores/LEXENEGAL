@@ -9,6 +9,7 @@ import '../src/styles/tokens.css';
 import './video.css';
 
 import { SCENES, TRANSITION } from './theme';
+import AudioTrack from './AudioTrack';
 import S0Intro from './scenes/S0Intro';
 import S1Search from './scenes/S1Search';
 import S2Codes from './scenes/S2Codes';
@@ -25,6 +26,7 @@ const timing = linearTiming({ durationInFrames: TRANSITION });
 
 const LexenegalPromo: React.FC = () => (
   <AbsoluteFill style={{ background: '#FFFFFF' }}>
+    <AudioTrack />
     {/* MemoryRouter : satisfait les <Link> des composants applicatifs réels. */}
     <MemoryRouter>
       <TransitionSeries>

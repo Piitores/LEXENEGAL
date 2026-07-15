@@ -52,13 +52,9 @@ const S9Outro: React.FC = () => {
     >
       <div className="rv-grid" style={{ opacity: 0.7 * fadeOthers }} />
       <img
-        src={staticFile('icon-512.png')}
-        width={110}
-        style={{
-          borderRadius: 24,
-          border: '1px solid #E5E7EB',
-          boxShadow: '0 16px 40px rgba(4,120,87,0.16)',
-        }}
+        src={staticFile('Logo.png')}
+        width={230}
+        style={{ mixBlendMode: 'multiply' }}
       />
       <div style={{ opacity: fadeOthers, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <h1

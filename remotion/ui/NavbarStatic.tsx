@@ -9,7 +9,12 @@ const NavbarStatic: React.FC = () => (
   <nav className="navbar navbar--scrolled" style={{ position: 'absolute' }}>
     <div className="navbar__container container">
       <a className="navbar__logo">
-        <img src={staticFile('icon-512.png')} alt="" className="navbar__logo-img" />
+        <img
+          src={staticFile('Logo.png')}
+          alt=""
+          className="navbar__logo-img"
+          style={{ mixBlendMode: 'multiply' }}
+        />
         <span>LEXENEGAL</span>
       </a>
       <div className="navbar__search-icon">

@@ -39,29 +39,16 @@ const S0Intro: React.FC = () => {
       }}
     >
       <div className="rv-grid" style={{ opacity: gridIn * 0.9 }} />
+      {/* Logo officiel (emblème + libellé intégrés) — fond blanc, fondu au décor. */}
       <img
-        src={staticFile('icon-512.png')}
-        width={150}
+        src={staticFile('Logo.png')}
+        width={430}
         style={{
-          transform: `scale(${logoIn})`,
-          borderRadius: 32,
-          border: '1px solid #E5E7EB',
-          boxShadow: '0 20px 50px rgba(4,120,87,0.18)',
+          transform: `scale(${0.85 + 0.15 * logoIn})`,
+          opacity: Math.min(1, logoIn + titleIn),
+          mixBlendMode: 'multiply',
         }}
       />
-      <h1
-        style={{
-          fontFamily: FONT_DISPLAY,
-          fontSize: 96,
-          letterSpacing: '0.04em',
-          color: COLORS.text,
-          margin: '34px 0 0',
-          opacity: titleIn,
-          transform: `translateY(${interpolate(titleIn, [0, 1], [30, 0])}px)`,
-        }}
-      >
-        LEXENEGAL
-      </h1>
       <p
         style={{
           fontFamily: FONT_DISPLAY,

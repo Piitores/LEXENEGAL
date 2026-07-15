@@ -111,7 +111,7 @@ const S8Mcp: React.FC = () => {
             />
           </svg>
           <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <img src={staticFile('icon-512.png')} width={30} style={{ borderRadius: 6 }} />
+            <img src={staticFile('Logo.png')} width={34} style={{ borderRadius: 6 }} />
             LEXENEGAL <span style={{ color: '#6EE7B7', fontWeight: 400 }}>· serveur MCP</span>
           </span>
         </div>

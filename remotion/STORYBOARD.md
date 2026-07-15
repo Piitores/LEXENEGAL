@@ -2,6 +2,8 @@
 
 **Format** : 1920 × 1080, 30 i/s, ~89 secondes.
 **Composition** : `LexenegalPromo` (`npx remotion studio` pour prévisualiser, `npx remotion render LexenegalPromo` pour rendre).
+**Bande-son** : voix off française (ElevenLabs `eleven_multilingual_v2`, voix George), un segment par scène (`public/promo-audio/s0…s9.mp3`, calage dans `remotion/AudioTrack.tsx`) + nappe d'ambiance bouclée à 11 % de volume (`ambience.mp3`), fondu d'entrée/sortie.
+
 **Direction artistique** : la charte du site telle quelle — fond blanc / `#F8F9FB`, émeraude `#047857`, or `#D4AF37`, titres Playfair Display, corps Georgia, UI Inter. Les écrans sont rendus par les **composants et feuilles de style réels de l'application** (aucune maquette redessinée) et affichent des **données réelles de la base de production** (art. 45 CPC et ses 3 versions, arrêt n° 67 du 27 novembre 2025, décomptes exacts du corpus).
 
 **Fil rouge narratif** : une seule question de praticien — *« licenciement d'un délégué du personnel »* — traverse la vidéo : la recherche la comprend (S1), le code y répond (S2–S3), la jurisprudence l'illustre (S4), les liens la complètent (S5–S6), l'export la livre (S7), l'IA la synthétise (S8).
@@ -128,5 +130,21 @@ Transitions : sauf mention contraire, **fondu croisé 0,5 s** (`@remotion/transi
 | Logos | `public/icon-512.png`, `public/lexenegal_new_logo.svg` |
 
 **Données réelles embarquées** (`remotion/mock/data.ts`, snapshot prod du 15 juillet 2026) : article 45 CPC et ses 3 versions datées, hiérarchie complète du CPC, pastilles 44 → 54-9 avec statuts d'abrogation réels, arrêt n° 67 du 27/11/2025 (référence, matière, mots-clés, résumé, références légales), décomptes du corpus.
+
+## Script de la voix off
+
+| Scène | Texte lu |
+|---|---|
+| S0 | LEXENEGAL. La mémoire juridique organisée du Sénégal. |
+| S1 | Posez votre question, en français. La recherche comprend le sens, et retrouve aussitôt les décisions et les articles pertinents. |
+| S2 | Vingt-cinq codes consolidés, plus de seize mille articles : chaque alinéa est vérifié au Journal officiel. |
+| S3 | Chaque article a une histoire. Comparez ses versions, de 1964 à aujourd'hui, mot à mot. |
+| S4 | Plus de treize mille décisions de justice : résumées, indexées, et certifiées à la source. |
+| S5 | Tout est relié : de la décision au texte, et du texte à la décision, en un clic. |
+| S6 | La doctrine, rattachée à l'article exact qu'elle commente. |
+| S6 bis | Classez vos décisions par dossier, ajoutez vos annotations, et travaillez sur des codes déjà annotés, comme le Code général des impôts. |
+| S7 | Exportez un PDF soigné, prêt pour le dossier de plaidoirie. |
+| S8 | Et branchez votre intelligence artificielle sur le droit sénégalais : Claude répond avec les vraies sources, grâce au serveur MCP de LEXENEGAL. |
+| S9 | LEXENEGAL. Le droit sénégalais, enfin organisé. Créez votre compte gratuit sur lexenegal.sn. |
 
 **Choix techniques** : les animations de framer-motion internes aux composants sont neutralisées au rendu (override CSS) — tout le mouvement est piloté par `useCurrentFrame()` pour un rendu déterministe image par image ; les `Link` react-router sont satisfaits par un `MemoryRouter`.
