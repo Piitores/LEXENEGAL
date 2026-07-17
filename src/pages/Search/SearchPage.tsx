@@ -94,6 +94,9 @@ const SearchPage: React.FC = () => {
         setExpandedJuridictions(prev => ({ ...prev, [juri]: !prev[juri] }));
     };
 
+    // Panneau de filtres replié par défaut (mobile ET desktop, style Lexis 360)
+    const [filtersOpen, setFiltersOpen] = useState(false);
+
     // --- FILTERS STATE ---
     const [selectedMatiere, setSelectedMatiere] = useState<string[]>([]);
     const [selectedChambre, setSelectedChambre] = useState<string[]>([]);
@@ -104,6 +107,11 @@ const SearchPage: React.FC = () => {
     const [datePreset, setDatePreset] = useState<'3y' | '5y' | 'custom' | null>(null);
     const [customYearStart, setCustomYearStart] = useState<string>('');
     const [customYearEnd, setCustomYearEnd] = useState<string>('');
+
+    // Nombre de filtres actifs (pastille sur l'onglet « Filtres »)
+    const activeFilterCount =
+        selectedMatiere.length + selectedChambre.length + selectedJuridiction.length +
+        ((datePreset || customYearStart || customYearEnd) ? 1 : 0);
 
     // --- CONTEXTUAL PILLS (MATIERE SHORTCUTS) ---
     const CONTEXTUAL_PILLS = [
@@ -631,21 +639,44 @@ const SearchPage: React.FC = () => {
         </div>
     );
 
+    // Compteur affiché pour l'onglet actif (toolbar + bouton « Voir les X résultats »)
+    const currentTabCount = activeTab === 'tout'
+        ? totalHits + articleResults.length + doctrineResults.length
+        : activeTab === 'decisions' ? totalHits
+        : activeTab === 'articles' ? articleResults.length
+        : doctrineResults.length;
+
     return (
         <div className="searchPage linear-theme">
-            <aside className="searchSidebar ghost-sidebar">
+            {/* Onglet vertical « Filtres » (desktop, panneau replié) */}
+            {!filtersOpen && (
+                <button
+                    className="filtersTab"
+                    onClick={() => setFiltersOpen(true)}
+                    aria-expanded={false}
+                    aria-controls="search-filters"
+                >
+                    <span className="filtersTab__label">Filtres</span>
+                    {activeFilterCount > 0 && <span className="filtersTab__badge">{activeFilterCount}</span>}
+                </button>
+            )}
+
+            <aside id="search-filters" className={`searchSidebar ghost-sidebar ${filtersOpen ? 'is-open' : ''}`}>
                 <div className="sidebarTop">
                     <h2 className="sidebarTitle">Filtres</h2>
-                    {(selectedMatiere.length > 0 || selectedChambre.length > 0 || selectedJuridiction.length > 0 || datePreset) && (
-                        <motion.button
-                            onClick={clearFilters}
-                            className="clearFiltersBtn"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                        >
-                            Effacer tout
-                        </motion.button>
-                    )}
+                    <div className="sidebarTopActions">
+                        {(selectedMatiere.length > 0 || selectedChambre.length > 0 || selectedJuridiction.length > 0 || datePreset) && (
+                            <motion.button
+                                onClick={clearFilters}
+                                className="clearFiltersBtn"
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                            >
+                                Effacer tout
+                            </motion.button>
+                        )}
+                        <button className="filtersClose" onClick={() => setFiltersOpen(false)} aria-label="Fermer les filtres">✕</button>
+                    </div>
                 </div>
 
                 {/* DATE */}
@@ -778,6 +809,12 @@ const SearchPage: React.FC = () => {
                         ))}
                     </ul>
                 </FilterAccordion>
+
+                <div className="filtersApplyBar">
+                    <button className="filtersApplyBtn" onClick={() => setFiltersOpen(false)}>
+                        Voir les {currentTabCount} résultats
+                    </button>
+                </div>
             </aside>
 
             {/* RESULTS */}
@@ -789,7 +826,7 @@ const SearchPage: React.FC = () => {
                         placeholder="Rechercher une décision, une loi..."
                         value={query}
                         onChange={handleSearchInput}
-                        autoFocus
+                        autoFocus={!queryParam}
                     />
 
                     {/* CONTEXTUAL PILLS */}
@@ -880,10 +917,13 @@ const SearchPage: React.FC = () => {
 
                 <div className="resultsToolbar">
                     <div className="resultsCount">
-                        <span className="count-number">{activeTab === 'tout' ? (totalHits + articleResults.length + doctrineResults.length) : activeTab === 'decisions' ? totalHits : activeTab === 'articles' ? articleResults.length : doctrineResults.length}</span> résultats
+                        <span className="count-number">{currentTabCount}</span> résultats
                     </div>
-                    {activeTab === 'decisions' && (
-                        <div className="sortControls">
+                    <div className="toolbarActions">
+                        <button className="filtersToggle" onClick={() => setFiltersOpen(true)}>
+                            Filtres{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
+                        </button>
+                        {activeTab === 'decisions' && (
                             <select
                                 className="sortSelect"
                                 value={sortOption}
@@ -893,8 +933,8 @@ const SearchPage: React.FC = () => {
                                 <option value="date_desc">Plus récent</option>
                                 <option value="date_asc">Plus ancien</option>
                             </select>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
 
                 {error && <div className="errorBanner"><strong>Erreur technique :</strong> {error}</div>}
