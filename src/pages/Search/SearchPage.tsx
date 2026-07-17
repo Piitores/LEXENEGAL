@@ -97,6 +97,14 @@ const SearchPage: React.FC = () => {
     // Panneau de filtres replié par défaut (mobile ET desktop, style Lexis 360)
     const [filtersOpen, setFiltersOpen] = useState(false);
 
+    // Fermeture du panneau à la touche Échap
+    useEffect(() => {
+        if (!filtersOpen) return;
+        const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setFiltersOpen(false); };
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [filtersOpen]);
+
     // --- FILTERS STATE ---
     const [selectedMatiere, setSelectedMatiere] = useState<string[]>([]);
     const [selectedChambre, setSelectedChambre] = useState<string[]>([]);
@@ -653,7 +661,7 @@ const SearchPage: React.FC = () => {
                 <button
                     className="filtersTab"
                     onClick={() => setFiltersOpen(true)}
-                    aria-expanded={false}
+                    aria-expanded={filtersOpen}
                     aria-controls="search-filters"
                 >
                     <span className="filtersTab__label">Filtres</span>
@@ -812,7 +820,7 @@ const SearchPage: React.FC = () => {
 
                 <div className="filtersApplyBar">
                     <button className="filtersApplyBtn" onClick={() => setFiltersOpen(false)}>
-                        Voir les {currentTabCount} résultats
+                        {currentTabCount === 1 ? 'Voir le résultat' : `Voir les ${currentTabCount} résultats`}
                     </button>
                 </div>
             </aside>
@@ -917,10 +925,15 @@ const SearchPage: React.FC = () => {
 
                 <div className="resultsToolbar">
                     <div className="resultsCount">
-                        <span className="count-number">{currentTabCount}</span> résultats
+                        <span className="count-number">{currentTabCount}</span> résultat{currentTabCount > 1 ? 's' : ''}
                     </div>
                     <div className="toolbarActions">
-                        <button className="filtersToggle" onClick={() => setFiltersOpen(true)}>
+                        <button
+                            className="filtersToggle"
+                            onClick={() => setFiltersOpen(true)}
+                            aria-expanded={filtersOpen}
+                            aria-controls="search-filters"
+                        >
                             Filtres{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}
                         </button>
                         {activeTab === 'decisions' && (

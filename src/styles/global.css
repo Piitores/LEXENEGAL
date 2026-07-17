@@ -50,7 +50,9 @@ body {
   background-color: var(--color-bg);
   color: var(--color-text-main);
   line-height: 1.7;
-  overflow-x: hidden;
+  /* PAS de overflow-x ici : combiné au clip de html, un overflow sur body
+     stoppe la propagation au viewport → body devient le scrollport et tous
+     les position:sticky du site meurent. Un seul point de clipping : html. */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

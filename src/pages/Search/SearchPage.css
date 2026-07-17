@@ -88,6 +88,8 @@
     height: calc(100vh - 80px);
     position: sticky;
     top: 80px;
+    /* Replié : sorti de l'ordre de tabulation et des lecteurs d'écran */
+    visibility: hidden;
     /* No border-right: true ghost style rely on whitespace */
     background: transparent;
 }
@@ -96,6 +98,7 @@
     width: 300px;
     padding: 2rem 1.5rem;
     overflow-y: auto;
+    visibility: visible;
 }
 
 /* Sidebar Scrollbar hidden or minimal */
@@ -730,7 +733,8 @@
         background: #fff;
         z-index: 1200;
         transform: translateY(100%);
-        transition: transform 0.3s ease;
+        /* visibility bascule APRÈS la glissade de sortie (0.3s) */
+        transition: transform 0.3s ease, visibility 0s linear 0.3s;
         overflow-y: auto;
         display: flex;
         flex-direction: column;
@@ -738,6 +742,7 @@
 
     .ghost-sidebar.is-open {
         transform: translateY(0);
+        transition: transform 0.3s ease;
         /* réaffirme les valeurs mobile face au .is-open desktop */
         width: 100%;
         padding: 1.25rem 1.25rem 0;
