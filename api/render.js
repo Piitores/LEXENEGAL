@@ -684,6 +684,14 @@ export default async function handler(req, res) {
       res.setHeader('Cache-Control', 'public, s-maxage=86400');
       return res.end();
     };
+    // Erreur passagère (Supabase indisponible) : 503 SANS noindex ni cache, pour que
+    // Google réessaie plus tard au lieu de désindexer une page valide sur un incident.
+    const serve503 = () => {
+      res.statusCode = 503;
+      res.setHeader('Retry-After', '300');
+      res.setHeader('Cache-Control', 'no-store');
+      return res.end('Service momentanément indisponible');
+    };
 
     if (type === 'home') {
       const codes = await fetchHomeCodes();
@@ -699,7 +707,7 @@ export default async function handler(req, res) {
       const slug = q.slug;
       if (!slug) return serveShell();
       let d = null;
-      try { d = await fetchDoctrine(slug); } catch (e) { /* */ }
+      try { d = await fetchDoctrine(slug); } catch (e) { return serve503(); }
       if (!d) {
         // Slug inconnu : peut-être un ancien slug → 301 vers le nouveau avant de renoncer.
         let redir = null;
@@ -722,7 +730,7 @@ export default async function handler(req, res) {
       const slug = q.slug;
       if (!slug) return serveShell();
       let gd = null;
-      try { gd = await fetchGuide(slug); } catch (e) { /* */ }
+      try { gd = await fetchGuide(slug); } catch (e) { return serve503(); }
       if (!gd) return serveShell(60, true);
       const canonical = `${SITE}/guides/${slug}`;
       return serveHtml(buildGuideHead(gd, canonical), buildGuideBody(gd));
@@ -737,7 +745,7 @@ export default async function handler(req, res) {
       const slug = q.slug;
       if (!slug) return serveShell();
       let data = null;
-      try { data = await fetchThemePage(slug); } catch (e) { /* */ }
+      try { data = await fetchThemePage(slug); } catch (e) { return serve503(); }
       if (!data) return serveShell(60, true);
       const canonical = `${SITE}/jurisprudence/theme/${slug}`;
       return serveHtml(buildThemeHead(data, canonical), buildThemeBody(data));
@@ -747,7 +755,7 @@ export default async function handler(req, res) {
       const slug = q.slug;
       if (!slug) return serveShell();
       let law = null;
-      try { law = await fetchLaw(slug); } catch (e) { /* */ }
+      try { law = await fetchLaw(slug); } catch (e) { return serve503(); }
       if (!law) return serveShell(60, true);
       let articles = [];
       try { articles = await fetchCodeArticles(law.id); } catch (e) { /* */ }
@@ -758,12 +766,26 @@ export default async function handler(req, res) {
     if (type === 'article') {
       const codeSlug = q.code, artSlug = q.slug;
       if (!codeSlug || !artSlug) return serveShell();
+      // Anciens slugs avec espaces (ex. « article-307 bis ») : 301 vers la forme tiretée.
+      if (/\s/.test(artSlug)) {
+        return serve301(`${SITE}/code/${encodeURIComponent(codeSlug)}/${encodeURIComponent(artSlug.replace(/\s+/g, '-'))}`);
+      }
       let law = null;
-      try { law = await fetchLaw(codeSlug); } catch (e) { /* */ }
+      try { law = await fetchLaw(codeSlug); } catch (e) { return serve503(); }
       if (!law) return serveShell(60, true);
       let art = null;
-      try { art = await fetchArticle(law.id, artSlug); } catch (e) { /* */ }
-      if (!art) return serveShell(60, true);
+      try { art = await fetchArticle(law.id, artSlug); } catch (e) { return serve503(); }
+      if (!art) {
+        // Ancien schéma d'URL où le slug d'article était préfixé par le slug du texte
+        // (« X/X-art-8 ») : 301 vers le slug court si celui-ci existe en base.
+        if (artSlug.startsWith(`${codeSlug}-`)) {
+          const short = artSlug.slice(codeSlug.length + 1);
+          let alt = null;
+          try { alt = await fetchArticle(law.id, short); } catch (e) { /* */ }
+          if (alt) return serve301(`${SITE}/code/${encodeURIComponent(codeSlug)}/${encodeURIComponent(short)}`);
+        }
+        return serveShell(60, true);
+      }
       const [content, citing] = await Promise.all([
         art.content_html ? Promise.resolve(art.content_html) : fetchCurrentVersion(art.id),
         fetchCitingDecisions(art.id),
@@ -776,7 +798,7 @@ export default async function handler(req, res) {
     const slug = q.slug || (req.url || '').replace(/^.*\/decision\//, '').replace(/[?#].*$/, '');
     if (!slug) return serveShell();
     let decision = null;
-    try { decision = await fetchDecision(slug); } catch (e) { /* */ }
+    try { decision = await fetchDecision(slug); } catch (e) { return serve503(); }
     if (!decision) {
       // Décision masquée (existe mais is_active=false) → 410 Gone ; sinon coquille noindex.
       let gone = false;
