@@ -820,7 +820,9 @@ const SearchPage: React.FC = () => {
 
                 <div className="filtersApplyBar">
                     <button className="filtersApplyBtn" onClick={() => setFiltersOpen(false)}>
-                        {currentTabCount === 1 ? 'Voir le résultat' : `Voir les ${currentTabCount} résultats`}
+                        {currentTabCount === 0 ? 'Voir les résultats'
+                            : currentTabCount === 1 ? 'Voir le résultat'
+                            : `Voir les ${currentTabCount} résultats`}
                     </button>
                 </div>
             </aside>
