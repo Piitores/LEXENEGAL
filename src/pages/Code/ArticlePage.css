@@ -204,6 +204,9 @@
 /* Actions */
 .article-actions {
     display: flex;
+    /* Mobile : les 3 boutons (Imprimer/Comparer/Signaler) passent à la ligne
+       au lieu de déborder du viewport */
+    flex-wrap: wrap;
     gap: 12px;
     margin-bottom: 24px;
 }

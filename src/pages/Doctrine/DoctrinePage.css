@@ -328,6 +328,17 @@
     .doctrine-reader-sidebar {
         max-width: 100%;
     }
+
+    /* La ligne de méta (date + référence longue type MEFP/DGID/DLEC/BL)
+       passe à la ligne au lieu de déborder de la carte */
+    .doctrine-card__meta {
+        flex-wrap: wrap;
+        gap: 0.35rem 1rem;
+    }
+
+    .doctrine-card__ref {
+        overflow-wrap: anywhere;
+    }
 }
 
 /* ── Carte-lien doctrine (chaque carte mène à /doctrine-fiscale/:slug) ── */
