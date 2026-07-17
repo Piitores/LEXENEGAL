@@ -856,6 +856,11 @@
    RESPONSIVE - LAYOUT
    ═══════════════════════════════════════════════════════════════════ */
 
+/* Barre d'actions mobile/tablette : masquée sur desktop (la colonne droite suffit) */
+.tools-mobile {
+    display: none;
+}
+
 @media screen and (max-width: 1200px) {
     .elite-grid {
         grid-template-columns: 1fr;
@@ -869,6 +874,31 @@
 
     .content-main {
         padding: 1.5rem;
+    }
+
+    /* Actions sous le titre en grille 2 colonnes ; favoris/dossiers et le
+       bouton principal (Télécharger) sur toute la largeur */
+    .tools-mobile {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.6rem;
+        margin: 1.25rem 0 1.5rem;
+    }
+
+    .tools-mobile > .decision-actions,
+    .tools-mobile > .action-btn--primary {
+        grid-column: 1 / -1;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .tools-mobile {
+        gap: 0.5rem;
+    }
+
+    .tools-mobile .action-btn {
+        padding: 0.6rem 0.5rem;
+        font-size: 0.8rem;
     }
 }
 

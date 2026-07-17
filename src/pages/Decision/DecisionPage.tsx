@@ -376,6 +376,65 @@ const DecisionPage: React.FC = () => {
         ? new Date(decision.date_decision).toLocaleDateString('fr-FR', { dateStyle: 'long' })
         : '';
 
+    // Boutons d'action (favoris, PDF, impression…) — rendus deux fois : colonne
+    // droite (desktop) et barre sous le titre (<1200px, où la colonne est masquée)
+    const decisionTools = (
+        <>
+            {/* Decision Actions (Favorites & Folders) */}
+            {decision.id && (
+                <DecisionActions
+                    decisionId={decision.id}
+                    onNeedUpgrade={() => setShowConversionModal(true)}
+                />
+            )}
+
+            {/* Export PDF/impression réservés au compte connecté (levier d'acquisition ; lecture libre). */}
+            <ActionButton
+                variant="primary"
+                icon={<Download size={18} />}
+                onClick={handleDownloadPdf}
+                disabled={pdfBusy}
+                aria-busy={pdfBusy}
+            >
+                {pdfBusy ? 'Génération…' : 'Télécharger le PDF'}
+            </ActionButton>
+
+            <ActionButton
+                variant="secondary"
+                icon={<Printer size={16} />}
+                onClick={() => { if (isConnected) { handlePrint(); } else { setShowConversionModal(true); } }}
+            >
+                Imprimer
+            </ActionButton>
+
+            <ActionButton variant="secondary" icon={<Copy size={16} />} onClick={handleCopyRef}>
+                Copier Référence
+            </ActionButton>
+
+            <ActionButton
+                variant="secondary"
+                icon={<FileText size={16} />}
+                onClick={() => {
+                    if (isConnected) {
+                        setIsAnnotationOpen(true);
+                    } else {
+                        setShowConversionModal(true);
+                    }
+                }}
+            >
+                Mes Annotations
+            </ActionButton>
+
+            <ActionButton
+                variant="ghost"
+                icon={<AlertCircle size={16} />}
+                onClick={() => setIsReportModalOpen(true)}
+            >
+                Signaler une erreur
+            </ActionButton>
+        </>
+    );
+
     return (
         <div className="decisionPage">
             {/* DYNAMIC SEO */}
@@ -434,6 +493,11 @@ const DecisionPage: React.FC = () => {
 
                     <h1 className="decision-title">{[decision.juridiction, decision.reference, decision.chambre].filter(Boolean).join(' — ') || 'Décision'}</h1>
                     <div className="decision-ref">{decision.date_decision ? new Date(decision.date_decision).toLocaleDateString('fr-FR', { dateStyle: 'long' }) : 'Date N/D'}</div>
+
+                    {/* Barre d'actions mobile/tablette (la colonne droite est masquée <1200px) */}
+                    <div className="tools-mobile">
+                        {decisionTools}
+                    </div>
 
                     {/* EXPERT BLOCK */}
                     <div id="expert-block" className="expert-box">
@@ -512,58 +576,7 @@ const DecisionPage: React.FC = () => {
                 {/* 3. RIGHT SIDEBAR */}
                 <aside className="sidebar-right">
                     <div className="tools-sticky">
-                        {/* Decision Actions (Favorites & Folders) */}
-                        {decision.id && (
-                            <DecisionActions
-                                decisionId={decision.id}
-                                onNeedUpgrade={() => setShowConversionModal(true)}
-                            />
-                        )}
-
-                        {/* Export PDF/impression réservés au compte connecté (levier d'acquisition ; lecture libre). */}
-                        <ActionButton
-                            variant="primary"
-                            icon={<Download size={18} />}
-                            onClick={handleDownloadPdf}
-                            disabled={pdfBusy}
-                            aria-busy={pdfBusy}
-                        >
-                            {pdfBusy ? 'Génération…' : 'Télécharger le PDF'}
-                        </ActionButton>
-
-                        <ActionButton
-                            variant="secondary"
-                            icon={<Printer size={16} />}
-                            onClick={() => { if (isConnected) { handlePrint(); } else { setShowConversionModal(true); } }}
-                        >
-                            Imprimer
-                        </ActionButton>
-
-                        <ActionButton variant="secondary" icon={<Copy size={16} />} onClick={handleCopyRef}>
-                            Copier Référence
-                        </ActionButton>
-
-                        <ActionButton
-                            variant="secondary"
-                            icon={<FileText size={16} />}
-                            onClick={() => {
-                                if (isConnected) {
-                                    setIsAnnotationOpen(true);
-                                } else {
-                                    setShowConversionModal(true);
-                                }
-                            }}
-                        >
-                            Mes Annotations
-                        </ActionButton>
-
-                        <ActionButton
-                            variant="ghost"
-                            icon={<AlertCircle size={16} />}
-                            onClick={() => setIsReportModalOpen(true)}
-                        >
-                            Signaler une erreur
-                        </ActionButton>
+                        {decisionTools}
                     </div>
                 </aside>
             </div>

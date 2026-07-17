@@ -97,12 +97,29 @@ const SearchPage: React.FC = () => {
     // Panneau de filtres replié par défaut (mobile ET desktop, style Lexis 360)
     const [filtersOpen, setFiltersOpen] = useState(false);
 
-    // Fermeture du panneau à la touche Échap
+    // Panneau ouvert : fermeture à Échap, focus déplacé dans le panneau puis
+    // restauré au déclencheur ; sur mobile (bottom sheet plein écran) le fond
+    // (résultats + navbar) est rendu inerte pour les utilisateurs clavier/AT.
     useEffect(() => {
         if (!filtersOpen) return;
+        const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        const panel = document.getElementById('search-filters');
+        (panel?.querySelector('.filtersClose') as HTMLElement | null)?.focus();
+
+        const inerted: HTMLElement[] = [];
+        if (window.matchMedia('(max-width: 1023px)').matches) {
+            document.querySelectorAll<HTMLElement>('.resultsArea, .navbar').forEach((el) => {
+                if (!el.inert) { el.inert = true; inerted.push(el); }
+            });
+        }
+
         const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setFiltersOpen(false); };
         window.addEventListener('keydown', onKey);
-        return () => window.removeEventListener('keydown', onKey);
+        return () => {
+            window.removeEventListener('keydown', onKey);
+            inerted.forEach((el) => { el.inert = false; });
+            opener?.focus();
+        };
     }, [filtersOpen]);
 
     // --- FILTERS STATE ---

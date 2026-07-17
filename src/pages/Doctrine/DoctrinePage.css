@@ -336,8 +336,25 @@
         gap: 0.35rem 1rem;
     }
 
+    /* Référence brute parfois très longue : bornée à 2 lignes (complète
+       dans la page de lecture de la lettre) */
     .doctrine-card__ref {
         overflow-wrap: anywhere;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    /* Les objets bruts très longs ne dominent plus la carte : 3 lignes max */
+    .doctrine-card__body h3 {
+        font-size: 1.05rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
     }
 }
 
