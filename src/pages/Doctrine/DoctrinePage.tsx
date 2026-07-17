@@ -36,8 +36,10 @@ const DoctrinePage: React.FC = () => {
             const { data, error } = await supabase
                 .from('doctrine')
                 .select(TEASER_COLUMNS)
-                .order('annee', { ascending: false })
-                .order('date', { ascending: false });
+                // nullsFirst: false — sinon Postgres met les NULL en tête en ordre
+                // descendant et les 5 lettres sans date trônent en haut de la liste
+                .order('annee', { ascending: false, nullsFirst: false })
+                .order('date', { ascending: false, nullsFirst: false });
 
             if (error) throw error;
             setDoctrines(data || []);
