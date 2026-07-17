@@ -386,6 +386,9 @@
 /* --- RESULTS AREA & PILLS --- */
 .resultsArea {
     flex-grow: 1;
+    /* Item flex : autorise le rétrécissement sous la largeur min du contenu
+       (sinon les onglets non-rétrécissables élargissent toute la page en mobile) */
+    min-width: 0;
     padding: 2rem 4rem;
     /* Spacious */
     max-width: 860px;

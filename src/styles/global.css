@@ -39,6 +39,10 @@
 
 html {
   scroll-behavior: smooth;
+  /* Coupe le débordement horizontal (menu burger/dropdowns plus larges que le
+     viewport mobile) ; `clip` ne crée pas de conteneur de scroll, contrairement
+     à `hidden`, et préserve donc les position:sticky descendants. */
+  overflow-x: clip;
 }
 
 body {
