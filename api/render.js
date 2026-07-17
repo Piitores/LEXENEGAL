@@ -608,6 +608,10 @@ async function fetchDoctrine(slug) {
 async function fetchDoctrineRedirect(oldSlug) {
   return one(await sb(`doctrine_slug_redirects?old_slug=eq.${encodeURIComponent(oldSlug)}&select=new_slug&limit=1`));
 }
+// Anciennes URLs de décisions fusionnées (dédoublonnage sommaire/intégrale) → décision gardée.
+async function fetchDecisionRedirect(oldSlug) {
+  return one(await sb(`decision_slug_redirects?old_slug=eq.${encodeURIComponent(oldSlug)}&select=new_slug&limit=1`));
+}
 async function fetchGuide(slug) {
   return one(await sb(`guides?slug=eq.${encodeURIComponent(slug)}&is_active=eq.true&select=slug,title,h1,description,content_html,faq,theme_slug,published_at,updated_at&limit=1`));
 }
@@ -800,6 +804,12 @@ export default async function handler(req, res) {
     let decision = null;
     try { decision = await fetchDecision(slug); } catch (e) { return serve503(); }
     if (!decision) {
+      // Décision fusionnée lors d'un dédoublonnage : 301 vers la décision gardée.
+      let redir = null;
+      try { redir = await fetchDecisionRedirect(slug); } catch (e) { /* */ }
+      if (redir && redir.new_slug && redir.new_slug !== slug) {
+        return serve301(`${SITE}/decision/${encodeURIComponent(redir.new_slug)}`);
+      }
       // Décision masquée (existe mais is_active=false) → 410 Gone ; sinon coquille noindex.
       let gone = false;
       try { gone = (await sbRpc('rpc_decision_gone', { p_slug: slug })) === true; } catch (e) { /* */ }
