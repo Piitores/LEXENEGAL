@@ -693,3 +693,76 @@
   background: var(--accent, #1a4d8f);
   color: #fff;
 }
+
+/* ============================================
+   MOBILE / TABLETTE (< 1024px) — panneau de
+   filtres en bottom sheet plein écran
+   ============================================ */
+@media (max-width: 1023px) {
+    .filtersTab {
+        display: none;
+    }
+
+    .filtersToggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #fff;
+        border: 1px solid var(--color-border, #E5E7EB);
+        border-radius: 8px;
+        padding: 0.45rem 0.9rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--color-text, #111827);
+        cursor: pointer;
+    }
+
+    .ghost-sidebar {
+        position: fixed;
+        inset: 0;
+        top: 0;
+        width: 100%;
+        height: 100dvh;
+        padding: 1.25rem 1.25rem 0;
+        background: #fff;
+        z-index: 1200;
+        transform: translateY(100%);
+        transition: transform 0.3s ease;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .ghost-sidebar.is-open {
+        transform: translateY(0);
+        /* réaffirme les valeurs mobile face au .is-open desktop */
+        width: 100%;
+        padding: 1.25rem 1.25rem 0;
+    }
+
+    /* Verrouille le scroll de la page derrière le panneau */
+    body:has(.ghost-sidebar.is-open) {
+        overflow: hidden;
+    }
+
+    .filtersApplyBar {
+        display: block;
+        position: sticky;
+        bottom: 0;
+        margin-top: auto;
+        padding: 0.75rem 0 calc(0.75rem + env(safe-area-inset-bottom));
+        background: linear-gradient(to top, #fff 70%, rgba(255, 255, 255, 0));
+    }
+
+    .filtersApplyBtn {
+        width: 100%;
+        padding: 0.85rem;
+        border: none;
+        border-radius: 10px;
+        background: var(--color-accent, #047857);
+        color: #fff;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+    }
+}
