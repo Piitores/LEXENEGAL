@@ -766,3 +766,60 @@
         cursor: pointer;
     }
 }
+
+/* ============================================
+   MOBILE (< 768px) — résultats et en-tête
+   ============================================ */
+@media (max-width: 768px) {
+    .resultsArea {
+        padding: 1.25rem 1rem;
+    }
+
+    .searchInput {
+        font-size: 1.15rem;
+        padding: 0.75rem 0;
+        margin-bottom: 1rem;
+    }
+
+    .searchTabs {
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    .searchTabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .searchTab {
+        padding: 0.55rem 0.7rem;
+        font-size: 0.88rem;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .resultsToolbar {
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.25rem;
+    }
+
+    .cardHeader {
+        flex-wrap: wrap;
+        gap: 0.4rem;
+    }
+
+    .cardTitle {
+        font-size: 1rem;
+    }
+
+    .cardSnippet {
+        font-size: 0.9rem;
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+    }
+
+    .best-match {
+        padding: 12px 14px;
+    }
+}
