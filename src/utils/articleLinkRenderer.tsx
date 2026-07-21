@@ -3,7 +3,8 @@
  * 
  * Utilitaire pour transformer les citations d'articles dans le texte
  * en liens cliquables avec preview au survol.
- * Supporte 10 codes: Travail, COCC, CP, CPP, CPC, CF, CSS, CMP, AU Sûretés, AU Commercial
+ * Supporte 13 codes: Travail, COCC, CP, CPP, CPC, CF, CSS, CMP, AU Sûretés, AU Commercial,
+ * Urbanisme (L. + R.), Construction (L. + R.), Pétrolier
  */
 
 import React from 'react';
@@ -97,7 +98,57 @@ const CODE_CONFIG: { code: string; prefixes: string[]; patterns: RegExp[] }[] = 
             /Art(?:icle)?[.\s]*(\d+)\s+(?:de\s+l[''])?OHADA\s+[Cc]ommercial/gi,
         ]
     },
+    // Urbanisme — partie législative (articles L.) et réglementaire (articles R.),
+    // rangées dans deux codes distincts : le préfixe L./R. cité route vers le bon.
+    {
+        code: 'code-de-l-urbanisme',
+        prefixes: ['L.'],
+        patterns: [
+            /Art(?:icle)?[.\s]*L[.\s]*(\d+)\s+(?:du\s+)?Code\s+de\s+l['']?\s*[Uu]rbanisme/gi,
+        ]
+    },
+    {
+        code: 'code-de-l-urbanisme-reglementaire',
+        prefixes: ['R.'],
+        patterns: [
+            /Art(?:icle)?[.\s]*R[.\s]*(\d+)\s+(?:du\s+)?Code\s+de\s+l['']?\s*[Uu]rbanisme/gi,
+        ]
+    },
+    // Construction — partie législative (L.) et réglementaire (R.)
+    {
+        code: 'code-de-la-construction',
+        prefixes: ['L.'],
+        patterns: [
+            /Art(?:icle)?[.\s]*L[.\s]*(\d+)\s+(?:du\s+)?Code\s+de\s+la\s+[Cc]onstruction/gi,
+        ]
+    },
+    {
+        code: 'code-de-la-construction-reglementaire',
+        prefixes: ['R.'],
+        patterns: [
+            /Art(?:icle)?[.\s]*R[.\s]*(\d+)\s+(?:du\s+)?Code\s+de\s+la\s+[Cc]onstruction/gi,
+        ]
+    },
+    // Pétrolier — numérotation à plat (pas de préfixe) ; on route vers la partie
+    // législative par défaut (les deux parties partagent la même numérotation).
+    {
+        code: 'code-petrolier',
+        prefixes: [''],
+        patterns: [
+            /Art(?:icle)?[.\s]*(\d+)\s+(?:du\s+)?Code\s+[Pp][ée]trolier/gi,
+        ]
+    },
 ];
+
+// Préfixe à prépendre au numéro capturé lors de la résolution, par code.
+// (Les codes L./R. exigent le préfixe pour retrouver l'article ; les autres = '' .)
+const PREFIX_BY_CODE: Record<string, string> = {
+    'code-travail': 'L.',
+    'code-de-l-urbanisme': 'L.',
+    'code-de-l-urbanisme-reglementaire': 'R.',
+    'code-de-la-construction': 'L.',
+    'code-de-la-construction-reglementaire': 'R.',
+};
 
 interface ArticleInfo {
     id: string;
@@ -195,7 +246,7 @@ export function renderTextWithArticleLinks(
 
         // Chercher l'article
         const codeMap = articleMaps[citation.codeSlug];
-        const prefix = citation.codeSlug === 'code-travail' ? 'L.' : '';
+        const prefix = PREFIX_BY_CODE[citation.codeSlug] || '';
         const articleKey = normalizeArticleNumber(`${prefix}${citation.articleNum}`);
         const article = codeMap?.get(articleKey);
 
@@ -264,7 +315,7 @@ export function textToHtmlWithLinks(
     for (let i = citations.length - 1; i >= 0; i--) {
         const c = citations[i];
         const codeMap = articleMaps[c.codeSlug];
-        const prefix = c.codeSlug === 'code-travail' ? 'L.' : '';
+        const prefix = PREFIX_BY_CODE[c.codeSlug] || '';
         const articleKey = normalizeArticleNumber(`${prefix}${c.articleNum}`);
         const article = codeMap?.get(articleKey);
 
@@ -298,7 +349,7 @@ export function extractCitedArticles(text: string): { code: string; article: str
         const key = `${c.codeSlug}:${c.articleNum}`;
         if (!seen.has(key)) {
             seen.add(key);
-            const prefix = c.codeSlug === 'code-travail' ? 'L.' : '';
+            const prefix = PREFIX_BY_CODE[c.codeSlug] || '';
             result.push({ code: c.codeSlug, article: `${prefix}${c.articleNum}` });
         }
     }
