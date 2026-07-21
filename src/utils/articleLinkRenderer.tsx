@@ -39,7 +39,7 @@ const CODE_CONFIG: { code: string; prefixes: string[]; patterns: RegExp[] }[] = 
         ]
     },
     {
-        code: 'code-procedure-penale',
+        code: 'code-de-procedure-penale',
         prefixes: [''],
         patterns: [
             /Art(?:icle)?[.\s]*(\d+)\s+(?:du\s+)?C\.?P\.?P\.?/gi,
@@ -47,7 +47,7 @@ const CODE_CONFIG: { code: string; prefixes: string[]; patterns: RegExp[] }[] = 
         ]
     },
     {
-        code: 'code-procedure-civile',
+        code: 'code-de-procedure-civile',
         prefixes: [''],
         patterns: [
             /Art(?:icle)?[.\s]*(\d+)\s+(?:du\s+)?C\.?P\.?C\.?/gi,
@@ -55,7 +55,7 @@ const CODE_CONFIG: { code: string; prefixes: string[]; patterns: RegExp[] }[] = 
         ]
     },
     {
-        code: 'code-famille',
+        code: 'code-de-la-famille',
         prefixes: [''],
         patterns: [
             /Art(?:icle)?[.\s]*(\d+)\s+du\s+Code\s+de\s+la\s+Famille/gi,
@@ -142,7 +142,7 @@ const CODE_CONFIG: { code: string; prefixes: string[]; patterns: RegExp[] }[] = 
 
 // Préfixe à prépendre au numéro capturé lors de la résolution, par code.
 // (Les codes L./R. exigent le préfixe pour retrouver l'article ; les autres = '' .)
-const PREFIX_BY_CODE: Record<string, string> = {
+export const PREFIX_BY_CODE: Record<string, string> = {
     'code-travail': 'L.',
     'code-de-l-urbanisme': 'L.',
     'code-de-l-urbanisme-reglementaire': 'R.',
@@ -163,7 +163,7 @@ interface RenderOptions {
     codeSlug?: string;
 }
 
-interface MatchResult {
+export interface MatchResult {
     index: number;
     length: number;
     fullMatch: string;
@@ -174,7 +174,7 @@ interface MatchResult {
 /**
  * Trouve toutes les citations d'articles dans un texte
  */
-function findAllArticleCitations(text: string): MatchResult[] {
+export function findAllArticleCitations(text: string): MatchResult[] {
     const results: MatchResult[] = [];
     const usedRanges: { start: number; end: number }[] = [];
 

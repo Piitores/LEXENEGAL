@@ -1,9 +1,12 @@
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Scale, ExternalLink } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { articleLabel } from '../../lib/articleLabel';
+import { normalizeArticleNumber } from '../../lib/articleRefResolver';
+import { getCodeArticleIndex } from '../../lib/codeArticleIndex';
+import { findAllArticleCitations, PREFIX_BY_CODE } from '../../utils/articleLinkRenderer';
 import '../ArticleHoverPreview/ArticleHoverPreview.css';
 
 /**
@@ -81,6 +84,66 @@ const LinkedLegalContent: React.FC<{ html: string; className?: string }> = ({ ht
     const onOut = useCallback((e: React.MouseEvent) => {
         if (findLink(e.target)) hideTimer.current = setTimeout(() => setPv(null), 160);
     }, []);
+
+    // Linkification des citations tapées EN CLAIR dans le corps (« article L.12 du Code
+    // de l'urbanisme »). On parcourt les nœuds texte hors <a> déjà présents, on ne résout
+    // que les codes réellement cités (index paresseux caché), et on enveloppe les renvois
+    // résolus dans un <a> /code/…/… — que le survol délégué ci-dessus allume comme les autres.
+    // Idempotent : le texte déjà linkifié se retrouve dans un <a> et est ignoré au re-run.
+    useEffect(() => {
+        const root = ref.current;
+        if (!root) return;
+        let cancelled = false;
+
+        (async () => {
+            const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+                acceptNode: (n) =>
+                    (n.parentElement?.closest('a') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT),
+            });
+            const jobs: { tn: Text; cites: ReturnType<typeof findAllArticleCitations> }[] = [];
+            let cur: Node | null;
+            while ((cur = walker.nextNode())) {
+                const tn = cur as Text;
+                const cites = findAllArticleCitations(tn.nodeValue || '');
+                if (cites.length) jobs.push({ tn, cites });
+            }
+            if (!jobs.length) return;
+
+            const codeSlugs = new Set<string>();
+            jobs.forEach((j) => j.cites.forEach((c) => codeSlugs.add(c.codeSlug)));
+            const indexes = new Map<string, Awaited<ReturnType<typeof getCodeArticleIndex>>>();
+            await Promise.all(
+                [...codeSlugs].map(async (cs) => { indexes.set(cs, await getCodeArticleIndex(cs)); })
+            );
+            if (cancelled) return;
+
+            for (const { tn, cites } of jobs) {
+                if (!tn.parentNode) continue;
+                const text = tn.nodeValue || '';
+                const frag = document.createDocumentFragment();
+                let last = 0;
+                for (const c of cites) {
+                    const prefix = PREFIX_BY_CODE[c.codeSlug] || '';
+                    const hit = indexes.get(c.codeSlug)?.get(normalizeArticleNumber(`${prefix}${c.articleNum}`));
+                    if (!hit) continue; // citation non résolue : on laisse le texte tel quel
+                    if (c.index > last) frag.appendChild(document.createTextNode(text.slice(last, c.index)));
+                    const a = document.createElement('a');
+                    a.href = `/code/${c.codeSlug}/${hit.slug}`;
+                    a.className = 'article-link';
+                    a.setAttribute('data-code-name', hit.codeName);
+                    a.setAttribute('data-linkified', '1');
+                    a.textContent = c.fullMatch;
+                    frag.appendChild(a);
+                    last = c.index + c.length;
+                }
+                if (last === 0) continue; // rien de résolu dans ce nœud
+                if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+                tn.parentNode.replaceChild(frag, tn);
+            }
+        })();
+
+        return () => { cancelled = true; };
+    }, [html]);
 
     const headerLabel = pv ? articleLabel({ article_number: pv.number }) : '';
 
