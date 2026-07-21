@@ -127,6 +127,8 @@ const ArticlePage: React.FC = () => {
 
     const [article, setArticle] = useState<Article | null>(null);
     const [law, setLaw] = useState<Law | null>(null);
+    // Parties d'un même code (législative / réglementaire) pour la bascule.
+    const [parties, setParties] = useState<{ slug: string; partie: string | null }[]>([]);
 
     // Toute copie de texte de l'article emporte la référence LexeSenegal + le lien.
     useCopyAttribution(codeSlug, law?.title);
@@ -205,12 +207,27 @@ const ArticlePage: React.FC = () => {
             // Get law info
             const { data: lawData } = await supabase
                 .from('laws_and_codes')
-                .select('id, title, slug, category, publication_date, reference, abrogation_note, abrogated_by_slug')
+                .select('id, title, slug, category, publication_date, reference, abrogation_note, abrogated_by_slug, code_famille, partie')
                 .eq('slug', codeSlug)
                 .single();
 
             if (lawData) {
                 setLaw(lawData);
+
+                // Parties sœurs (option A) pour la bascule Législative / Réglementaire.
+                const famille = (lawData as any).code_famille as string | null;
+                if (famille) {
+                    const { data: sib } = await supabase
+                        .from('laws_and_codes')
+                        .select('slug, partie')
+                        .eq('code_famille', famille)
+                        .eq('is_active', true);
+                    setParties((sib || []).sort(
+                        (a, b) => (a.partie === 'legislative' ? 0 : 1) - (b.partie === 'legislative' ? 0 : 1)
+                    ));
+                } else {
+                    setParties([]);
+                }
 
                 // Get article
                 const { data: articleData } = await supabase
@@ -505,6 +522,20 @@ const ArticlePage: React.FC = () => {
                     <ChevronRight size={13} />
                     <span className="bc-current">{articleLabel(article)}</span>
                 </nav>
+
+                {parties.length > 1 && (
+                    <div className="partie-toggle" role="tablist" aria-label="Partie du code">
+                        {parties.map((p) => {
+                            const actif = p.slug === codeSlug;
+                            const label = p.partie === 'reglementaire' ? 'Réglementaire' : 'Législative';
+                            return actif ? (
+                                <span key={p.slug} className="partie-toggle__btn actif" role="tab" aria-selected="true">{label}</span>
+                            ) : (
+                                <Link key={p.slug} to={`${basePath}/${p.slug}`} className="partie-toggle__btn" role="tab" aria-selected="false">{label}</Link>
+                            );
+                        })}
+                    </div>
+                )}
 
                 {/* BANDEAU ABROGATION (texte entier abrogé par un autre texte) */}
                 {law?.abrogation_note && (
