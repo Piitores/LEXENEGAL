@@ -149,6 +149,8 @@ const CodePage: React.FC = () => {
     const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
     const [selectedNode, setSelectedNode] = useState<HierarchyNode | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    // Parties d'un même code (législative / réglementaire) pour la bascule d'en-tête.
+    const [parties, setParties] = useState<{ slug: string; partie: string | null }[]>([]);
 
     // Toute copie de texte d'un article emporte la référence LexeSenegal + le lien.
     useCopyAttribution(slug, law?.title);
@@ -214,6 +216,22 @@ const CodePage: React.FC = () => {
 
             if (!lawData) { setLoading(false); return; }
             setLaw(lawData);
+
+            // Parties du même code (option A) : si le code appartient à une famille
+            // (législative + réglementaire), on charge ses parties sœurs pour la bascule.
+            const famille = (lawData as any).code_famille as string | null;
+            if (famille) {
+                const { data: sib } = await supabase
+                    .from('laws_and_codes')
+                    .select('slug, partie')
+                    .eq('code_famille', famille)
+                    .eq('is_active', true);
+                setParties((sib || []).sort(
+                    (a, b) => (a.partie === 'legislative' ? 0 : 1) - (b.partie === 'legislative' ? 0 : 1)
+                ));
+            } else {
+                setParties([]);
+            }
 
             // Fetch articles
             const { data: articlesData } = await supabase
@@ -403,6 +421,19 @@ const CodePage: React.FC = () => {
                         <div className="sidebar-code-header">
                             <div className="surtitre">Code sénégalais</div>
                             <div className="code-title">{law.title}</div>
+                            {parties.length > 1 && (
+                                <div className="partie-toggle" role="tablist" aria-label="Partie du code">
+                                    {parties.map((p) => {
+                                        const actif = p.slug === slug;
+                                        const label = p.partie === 'reglementaire' ? 'Réglementaire' : 'Législative';
+                                        return actif ? (
+                                            <span key={p.slug} className="partie-toggle__btn actif" role="tab" aria-selected="true">{label}</span>
+                                        ) : (
+                                            <Link key={p.slug} to={`${basePath}/${p.slug}`} className="partie-toggle__btn" role="tab" aria-selected="false">{label}</Link>
+                                        );
+                                    })}
+                                </div>
+                            )}
                         </div>
 
                         {/* Search */}
