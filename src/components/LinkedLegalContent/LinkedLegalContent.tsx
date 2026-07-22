@@ -93,6 +93,18 @@ const LinkedLegalContent: React.FC<{ html: string; className?: string }> = ({ ht
     useEffect(() => {
         const root = ref.current;
         if (!root) return;
+
+        // Tout renvoi d'article s'ouvre dans un NOUVEL onglet (l'utilisateur ne perd
+        // pas sa page). S'applique aux liens déjà présents (CGI, COCC…) comme à ceux
+        // injectés par linkify ci-dessous.
+        const openInNewTab = (a: HTMLAnchorElement) => {
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+        };
+        const isRenvoi = (a: HTMLAnchorElement) =>
+            !!a.getAttribute('data-article-id') || /\/code\/[^/?#]+\/[^/?#]+/.test(a.getAttribute('href') || '');
+        root.querySelectorAll('a').forEach((a) => { if (isRenvoi(a)) openInNewTab(a); });
+
         let cancelled = false;
 
         (async () => {
@@ -133,6 +145,7 @@ const LinkedLegalContent: React.FC<{ html: string; className?: string }> = ({ ht
                     a.setAttribute('data-code-name', hit.codeName);
                     a.setAttribute('data-linkified', '1');
                     a.textContent = c.fullMatch;
+                    openInNewTab(a);
                     frag.appendChild(a);
                     last = c.index + c.length;
                 }
@@ -169,7 +182,7 @@ const LinkedLegalContent: React.FC<{ html: string; className?: string }> = ({ ht
                             <div className="preview-content">
                                 {pv.loading ? <div className="preview-loading">Chargement...</div> : <p>{pv.text}</p>}
                             </div>
-                            {pv.href && <a href={pv.href} className="preview-link">Voir l'article complet <ExternalLink size={12} /></a>}
+                            {pv.href && <a href={pv.href} className="preview-link" target="_blank" rel="noopener noreferrer">Voir l'article complet <ExternalLink size={12} /></a>}
                         </motion.div>
                     )}
                 </AnimatePresence>,
