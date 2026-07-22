@@ -39,7 +39,7 @@ interface LawCode {
 
 // Bases du hub (pilotées par la catégorie BDD `dbCategory`).
 const LODA_CATEGORIES = ['loi', 'ordonnance', 'decret', 'arrete', 'circulaire'];
-const COMMUNAUTAIRE_CATEGORIES = ['ohada', 'uemoa', 'cedeao'];
+const COMMUNAUTAIRE_CATEGORIES = ['ohada', 'uemoa', 'cedeao', 'cima'];
 const LODA_TYPE_LABELS: Record<string, string> = {
     loi: 'Lois', ordonnance: 'Ordonnances', decret: 'Décrets', arrete: 'Arrêtés', circulaire: 'Circulaires',
 };

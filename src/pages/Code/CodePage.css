@@ -436,9 +436,12 @@
 .article-body .alinea.niv2 { margin-left: 2.8rem; }
 .article-body .alinea.niv3 { margin-left: 4.2rem; }
 .article-body .alinea .marqueur { font-weight: 600; color: #166534; margin-right: 0.25rem; }
-.article-body .art-tableau { width: 100%; border-collapse: collapse; margin: 1rem 0; display: block; overflow-x: auto; font-size: 0.95rem; }
-.article-body .art-tableau th, .article-body .art-tableau td { border: 1px solid #e5e7eb; padding: 0.5rem 0.7rem; text-align: left; vertical-align: top; }
-.article-body .art-tableau th { background: #f0fdf4; font-weight: 600; }
+.article-body .art-tableau, .article-body .bareme-table, .article-body .alinea-tableau { width: 100%; border-collapse: collapse; margin: 1rem 0; display: block; overflow-x: auto; font-size: 0.95rem; }
+.article-body .art-tableau th, .article-body .art-tableau td,
+.article-body .bareme-table th, .article-body .bareme-table td,
+.article-body .alinea-tableau th, .article-body .alinea-tableau td { border: 1px solid #e5e7eb; padding: 0.5rem 0.7rem; text-align: left; vertical-align: top; }
+.article-body .art-tableau th, .article-body .bareme-table th, .article-body .alinea-tableau th { background: #f0fdf4; font-weight: 600; }
+.article-body .art-tableau caption, .article-body .bareme-table caption, .article-body .alinea-tableau caption { caption-side: top; text-align: left; font-weight: 600; font-size: 0.9rem; color: #374151; margin-bottom: 0.4rem; }
 .article-body .abrogation-banner { background: #fef2f2; border: 1px solid #fca5a5; border-left: 4px solid #dc2626; color: #991b1b; padding: 0.7rem 1rem; border-radius: 8px; margin: 0 0 1rem; }
 .article-body .note-disclaimer { background: #eef2ff; border: 1px solid #c7d2fe; border-left: 4px solid #4f46e5; color: #3730a3; padding: 0.7rem 1rem; border-radius: 8px; margin: 0 0 1rem; font-size: 0.95rem; }
 
