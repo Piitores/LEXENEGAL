@@ -177,7 +177,7 @@ const CodePage: React.FC = () => {
 
     // À chaque changement de section : ramener la PAGE en haut APRÈS que le nouveau
     // contenu (potentiellement plus court) soit posé dans le DOM, mais AVANT le rendu
-    // visuel — sinon la page raccourcit, le navigateur « clampe » le scroll vers le bas
+    // visuel - sinon la page raccourcit, le navigateur « clampe » le scroll vers le bas
     // et on atterrit au footer. En instantané, donc aucune frame « footer » n'est peinte.
     // On en profite pour amener le nœud actif dans la zone visible de l'arbre, SANS
     // bouger la page (on ne touche qu'au scroll interne de la sidebar).
@@ -335,7 +335,7 @@ const CodePage: React.FC = () => {
             if (node.children.length > 0) next.add(node.id);
             return next;
         });
-        // (scroll géré par le useLayoutEffect sur selectedNode — voir plus haut)
+        // (scroll géré par le useLayoutEffect sur selectedNode - voir plus haut)
     };
 
     const expandAll = () => { preserveScrollY.current = window.scrollY; setExpandedNodes(new Set(collectAllNodeIds(hierarchy))); };
@@ -411,7 +411,7 @@ const CodePage: React.FC = () => {
 
     return (
         <div className="code-page">
-            <SEO title={`${law.title} | Lexenegal`} description={`${law.title} — texte intégral consolidé (${totalArticles} articles). Droit sénégalais sur Lexenegal.`} url={`https://www.lexenegal.sn${basePath}/${slug}`} />
+            <SEO title={`${law.title} | Lexenegal`} description={`${law.title} - texte intégral consolidé (${totalArticles} articles). Droit sénégalais sur Lexenegal.`} url={`https://www.lexenegal.sn${basePath}/${slug}`} />
 
             <div className="code-layout">
                 {/* ═══════ SIDEBAR ═══════ */}
@@ -536,14 +536,14 @@ const CodePage: React.FC = () => {
                                 (affiché dans la sidebar à l'écran, masquée sur papier). */}
                             <div className="code-print-header">
                                 <div className="cph-title">{law?.title}</div>
-                                <div className="cph-meta">Source : www.lexenegal.sn — édité le {new Date().toLocaleDateString('fr-FR')}</div>
+                                <div className="cph-meta">Source : www.lexenegal.sn - édité le {new Date().toLocaleDateString('fr-FR')}</div>
                             </div>
 
                             {/* Breadcrumb */}
                             <div className="code-breadcrumb">
                                 {breadcrumbs.map((bc, i) => {
                                     const f = formatNodeLabel(bc);
-                                    const disp = f.badge ? `${f.badge} — ${f.label}` : f.label;
+                                    const disp = f.badge ? `${f.badge} - ${f.label}` : f.label;
                                     return (
                                         <React.Fragment key={bc.id}>
                                             {i > 0 && <span className="breadcrumb-sep">›</span>}

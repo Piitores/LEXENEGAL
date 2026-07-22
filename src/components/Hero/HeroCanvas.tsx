@@ -6,12 +6,12 @@ import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js';
 import gsap from 'gsap';
 
 /* ───────────────────────────────────────────────────────────────────
-   HeroCanvas — Afrique holographique qui « s'éclate » pour mettre en
+   HeroCanvas - Afrique holographique qui « s'éclate » pour mettre en
    valeur le Sénégal dans sa sous-région (Afrique de l'Ouest).
    Carte réelle pays-par-pays (SVG). Choreo GSAP (déclenchée à l'entrée
    dans l'écran) : 1) la carte se matérialise, 2) les pays hors zone
    explosent et s'effacent, 3) zoom sur l'Ouest, le Sénégal s'illumine.
-   Décoratif (aria-hidden) — le texte indexable reste dans le DOM.
+   Décoratif (aria-hidden) - le texte indexable reste dans le DOM.
    ─────────────────────────────────────────────────────────────────── */
 
 const AFRICA_URL = '/Africa-countries-western.svg';
@@ -29,7 +29,7 @@ const COUNTRY_IDS = new Set([
   'Zentralafrikanische_Republik',
 ]);
 
-// Sous-région Afrique de l'Ouest — conservée comme contexte (n'explose pas).
+// Sous-région Afrique de l'Ouest - conservée comme contexte (n'explose pas).
 const WEST_AFRICA = new Set([
   'Senegal', 'Mauretanien', 'Mali', 'Niger', 'Guinea', 'Guinea-Bissau',
   'Gambia', 'Sierra_Leone', 'Liberia', 'Elfenbeinkueste', 'Ghana', 'Togo',
@@ -39,7 +39,7 @@ const WEST_AFRICA = new Set([
 // Blueprint palette (normal blending, on a pearl-grey #F9FAFB panel)
 const COL_OTHER = '#7CB3A2';   // muted emerald-grey (fades out anyway)
 const COL_WEST = '#10B981';    // West-Africa context
-const COL_SENEGAL = '#047857'; // the subject — deep brand emerald
+const COL_SENEGAL = '#047857'; // the subject - deep brand emerald
 
 interface Country {
   id: string;

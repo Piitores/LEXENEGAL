@@ -76,7 +76,7 @@ const DoctrineDetailPage: React.FC = () => {
     useEffect(() => {
         if (doctrine) {
             const ref = doctrine.reference_complete || (doctrine.numero ? `Lettre n° ${doctrine.numero}` : 'Doctrine fiscale');
-            document.title = `${doctrine.objet ? `${doctrine.objet} — ` : ''}${ref} | Doctrine fiscale | Lexenegal`;
+            document.title = `${doctrine.objet ? `${doctrine.objet} - ` : ''}${ref} | Doctrine fiscale | Lexenegal`;
         }
         return () => { document.title = 'Lexenegal'; };
     }, [doctrine]);

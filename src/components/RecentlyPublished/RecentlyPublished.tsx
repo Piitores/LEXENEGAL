@@ -28,7 +28,7 @@ const RecentlyPublished: React.FC = () => (
                 <div>
                     <h2 className="recent__title">Récemment publié &amp; mis à jour</h2>
                     <p className="recent__subtitle">
-                        Le corpus du droit sénégalais s'enrichit en continu — codes consolidés, lois et décrets.
+                        Le corpus du droit sénégalais s'enrichit en continu - codes consolidés, lois et décrets.
                     </p>
                 </div>
                 <Link to="/codes" className="recent__all">

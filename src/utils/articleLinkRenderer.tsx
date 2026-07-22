@@ -98,7 +98,7 @@ const CODE_CONFIG: { code: string; prefixes: string[]; patterns: RegExp[] }[] = 
             /Art(?:icle)?[.\s]*(\d+)\s+(?:de\s+l[''])?OHADA\s+[Cc]ommercial/gi,
         ]
     },
-    // Urbanisme — partie législative (articles L.) et réglementaire (articles R.),
+    // Urbanisme - partie législative (articles L.) et réglementaire (articles R.),
     // rangées dans deux codes distincts : le préfixe L./R. cité route vers le bon.
     {
         code: 'code-de-l-urbanisme',
@@ -114,7 +114,7 @@ const CODE_CONFIG: { code: string; prefixes: string[]; patterns: RegExp[] }[] = 
             /Art(?:icle)?[.\s]*R[.\s]*(\d+)\s+(?:du\s+)?Code\s+de\s+l['']?\s*[Uu]rbanisme/gi,
         ]
     },
-    // Construction — partie législative (L.) et réglementaire (R.)
+    // Construction - partie législative (L.) et réglementaire (R.)
     {
         code: 'code-de-la-construction',
         prefixes: ['L.'],
@@ -129,7 +129,7 @@ const CODE_CONFIG: { code: string; prefixes: string[]; patterns: RegExp[] }[] = 
             /Art(?:icle)?[.\s]*R[.\s]*(\d+)\s+(?:du\s+)?Code\s+de\s+la\s+[Cc]onstruction/gi,
         ]
     },
-    // Pétrolier — numérotation à plat (pas de préfixe) ; on route vers la partie
+    // Pétrolier - numérotation à plat (pas de préfixe) ; on route vers la partie
     // législative par défaut (les deux parties partagent la même numérotation).
     {
         code: 'code-petrolier',

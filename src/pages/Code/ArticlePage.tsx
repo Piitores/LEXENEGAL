@@ -119,7 +119,7 @@ const ArticlePage: React.FC = () => {
 
     // « Retour au code » : on revient TOUJOURS à la page du code en cours de
     // consultation. (Auparavant un retour navigateur « intelligent » renvoyait vers
-    // la page d'où l'on venait — souvent l'accueil du Corpus national — ce qui était
+    // la page d'où l'on venait - souvent l'accueil du Corpus national - ce qui était
     // déroutant : le bouton est libellé « Retour au code », il doit mener au code.)
     const goBack = (fallback: string) => {
         navigate(fallback);
@@ -474,13 +474,13 @@ const ArticlePage: React.FC = () => {
     return (
         <div className="article-page">
             <SEO
-                title={`${articleLabel(article)} — ${law?.title} | Lexenegal`}
-                description={`${articleLabel(article)} du ${law?.title} — texte intégral. Droit sénégalais consolidé sur Lexenegal.`}
+                title={`${articleLabel(article)} - ${law?.title} | Lexenegal`}
+                description={`${articleLabel(article)} du ${law?.title} - texte intégral. Droit sénégalais consolidé sur Lexenegal.`}
                 url={`https://www.lexenegal.sn${basePath}/${codeSlug}/${articleSlug}`}
             />
 
             <div className="article-layout">
-                {/* ARBRE DE NAVIGATION (gauche) — même composant que la page Code.
+                {/* ARBRE DE NAVIGATION (gauche) - même composant que la page Code.
                     Desktop : colonne fixe. Mobile : tiroir « Sommaire » ouvrable. */}
                 {hierarchy.length > 0 && (
                     <>
@@ -514,7 +514,7 @@ const ArticlePage: React.FC = () => {
                         <BookOpen size={16} /> Sommaire
                     </button>
                 )}
-                {/* BREADCRUMB — minimal et raffiné */}
+                {/* BREADCRUMB - minimal et raffiné */}
                 <nav className="article-breadcrumb">
                     <Link to="/codes">Codes</Link>
                     <ChevronRight size={13} />

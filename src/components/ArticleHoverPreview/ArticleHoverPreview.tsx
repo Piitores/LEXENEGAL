@@ -40,7 +40,7 @@ const ArticleHoverPreview: React.FC<ArticleHoverPreviewProps> = ({
         setLoading(true);
         try {
             // Résolution de l'id : direct si fourni, sinon via le couple (code, slug)
-            // — les renvois COCC ne portent qu'un slug dans leur href.
+            // - les renvois COCC ne portent qu'un slug dans leur href.
             let resolvedId = articleId;
             if (!resolvedId && articleSlug && codeSlug) {
                 const { data: code } = await supabase

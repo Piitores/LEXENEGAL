@@ -20,7 +20,7 @@ const RevealHeader: React.FC<{ translate: number | MotionValue<number> }> = ({ t
         </h2>
         <p className="scroll-reveal__subtitle">
             De la première instance à la Cour suprême, de l'OHADA au Conseil constitutionnel.
-            Jurisprudence et textes fondateurs — deux piliers, une seule plateforme.
+            Jurisprudence et textes fondateurs - deux piliers, une seule plateforme.
         </p>
     </motion.div>
 );
@@ -36,7 +36,7 @@ const RevealCard: React.FC<{
 );
 
 /* ═══════════════════════════════════════════════════════════════════
-   LEFT PANEL — Jurisprudence Filter UI  (données réelles)
+   LEFT PANEL - Jurisprudence Filter UI  (données réelles)
    ═══════════════════════════════════════════════════════════════════ */
 
 const CHAMBRES = ['Sociale', 'Civile', 'Pénale', 'Commerciale'];
@@ -119,7 +119,7 @@ const JurisprudencePanel: React.FC = () => {
                 </div>
                 <div className="result-card">
                     <div className="result-card__ref">Arrêt n° 40</div>
-                    <div className="result-card__subject">Licenciement collectif — Contrôleurs (CDG)</div>
+                    <div className="result-card__subject">Licenciement collectif - Contrôleurs (CDG)</div>
                     <div className="result-card__meta">
                         <span>Cour suprême · Sociale</span>
                         <span>2024</span>
@@ -131,7 +131,7 @@ const JurisprudencePanel: React.FC = () => {
 };
 
 /* ═══════════════════════════════════════════════════════════════════
-   RIGHT PANEL — Code Tree Navigator  (Code du Travail réel)
+   RIGHT PANEL - Code Tree Navigator  (Code du Travail réel)
    ═══════════════════════════════════════════════════════════════════ */
 
 interface TreeItemProps {
@@ -179,24 +179,24 @@ const CodeTreePanel: React.FC = () => (
 
         {/* Tree structure (réelle) */}
         <div className="code-tree">
-            <TreeItem label="Titre II — Des syndicats professionnels" level={1} />
-            <TreeItem label="Titre III — Du contrat de travail" level={1} expanded>
-                <TreeItem label="Chapitre I — Dispositions générales" level={2} count="6 art." />
-                <TreeItem label="Chapitre II — De l'engagement à l'essai" level={2} count="5 art." />
-                <TreeItem label="Chapitre III — Du contrat à durée déterminée" level={2} count="8 art." />
-                <TreeItem label="Chapitre IV — Du contrat à durée indéterminée" level={2} expanded active>
-                    <TreeItem label="Art. L.49 — Définition du CDI" level={3} />
-                    <TreeItem label="Art. L.50 — Résiliation & préavis" level={3} />
-                    <TreeItem label="Art. L.51 — Licenciement irrégulier" level={3} active />
+            <TreeItem label="Titre II - Des syndicats professionnels" level={1} />
+            <TreeItem label="Titre III - Du contrat de travail" level={1} expanded>
+                <TreeItem label="Chapitre I - Dispositions générales" level={2} count="6 art." />
+                <TreeItem label="Chapitre II - De l'engagement à l'essai" level={2} count="5 art." />
+                <TreeItem label="Chapitre III - Du contrat à durée déterminée" level={2} count="8 art." />
+                <TreeItem label="Chapitre IV - Du contrat à durée indéterminée" level={2} expanded active>
+                    <TreeItem label="Art. L.49 - Définition du CDI" level={3} />
+                    <TreeItem label="Art. L.50 - Résiliation & préavis" level={3} />
+                    <TreeItem label="Art. L.51 - Licenciement irrégulier" level={3} active />
                 </TreeItem>
             </TreeItem>
-            <TreeItem label="Titre IV — De l'apprentissage et la formation" level={1} />
+            <TreeItem label="Titre IV - De l'apprentissage et la formation" level={1} />
         </div>
     </div>
 );
 
 /* ═══════════════════════════════════════════════════════════════════
-   DUAL PILLAR MOSAIC — convergence des deux piliers au scroll
+   DUAL PILLAR MOSAIC - convergence des deux piliers au scroll
    ═══════════════════════════════════════════════════════════════════ */
 
 interface MosaicProps {

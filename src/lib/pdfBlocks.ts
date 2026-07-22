@@ -2,7 +2,7 @@
 /**
  * Convertit le HTML (contrôlé) d'une décision en blocs typés pour le PDF.
  * PUR (pas de DOM) : tokenizer regex tolérant. Toute balise inconnue est
- * ignorée mais son TEXTE est conservé — 0 fabrication, 0 perte.
+ * ignorée mais son TEXTE est conservé - 0 fabrication, 0 perte.
  */
 export type PdfRun = { text: string; bold?: boolean; italic?: boolean };
 export type BlockVariant =

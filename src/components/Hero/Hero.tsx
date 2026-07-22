@@ -262,7 +262,7 @@ function Hero() {
             ))}
           </div>
 
-          {/* 3D stage — fragments épars → territoire Sénégal (décoratif, SEO-safe) */}
+          {/* 3D stage - fragments épars → territoire Sénégal (décoratif, SEO-safe) */}
           <div className="hero__stage" aria-hidden="true">
             {enable3D ? (
               <CanvasBoundary fallback={<HeroSenegalStatic />}>

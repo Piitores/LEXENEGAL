@@ -54,7 +54,7 @@ const TextPresentation: React.FC<Props> = ({ law, articleCount }) => {
         <section className="text-presentation" aria-label="Présentation du texte">
             <div className="text-presentation__meta">
                 <span className="tp-nature">{nature}</span>
-                {law.reference && <span className="tp-chip">{law.reference}</span>}
+                {law.reference && hasDescription && <span className="tp-chip">{law.reference}</span>}
                 {showDateChip && <span className="tp-chip">Publié le {date}</span>}
                 {typeof articleCount === 'number' && articleCount > 0 && (
                     <span className="tp-chip">{articleCount.toLocaleString('fr-FR')} articles</span>
@@ -71,8 +71,9 @@ const TextPresentation: React.FC<Props> = ({ law, articleCount }) => {
                 </>
             ) : (
                 <p className="text-presentation__fallback">
-                    {law.short_title || law.title} — texte intégral consolidé, à jour et structuré
+                    {law.short_title || law.title} - texte intégral consolidé, à jour et structuré
                     article par article, dans le corpus du droit sénégalais sur Lexenegal.
+                    {law.reference ? ` Texte institué par : ${law.reference}.` : ''}
                 </p>
             )}
         </section>

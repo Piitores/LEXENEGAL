@@ -297,7 +297,7 @@ const SearchPage: React.FC = () => {
 
     // Analytics requêtable (search_events) : on logge chaque recherche UNE fois, une fois
     // les compteurs des 4 piliers stabilisés (1,2 s sans changement). Fire-and-forget :
-    // n'attend rien, ignore les erreurs — ne doit jamais gêner la recherche.
+    // n'attend rien, ignore les erreurs - ne doit jamais gêner la recherche.
     useEffect(() => {
         const term = (query || '').trim();
         if (term.length < 3) return;
@@ -557,7 +557,7 @@ const SearchPage: React.FC = () => {
 
             setTotalHits(totalCount);
 
-            // 3.B — "Vouliez-vous dire" : si la recherche texte ne renvoie rien, proposer des décisions proches
+            // 3.B - "Vouliez-vous dire" : si la recherche texte ne renvoie rien, proposer des décisions proches
             if (!append && searchTerm.length > 0 && decisions.length === 0) {
                 const { data: sugg } = await supabase.rpc('search_decisions_suggest', {
                     search_query: searchTerm,
@@ -875,7 +875,7 @@ const SearchPage: React.FC = () => {
                     </div>
                 </div>
 
-                {/* MEILLEUR RÉSULTAT (référence structurée) — en tête, n'occulte pas la liste */}
+                {/* MEILLEUR RÉSULTAT (référence structurée) - en tête, n'occulte pas la liste */}
                 {bestMatch && (
                     <div
                         className="best-match"
@@ -1059,7 +1059,7 @@ const SearchPage: React.FC = () => {
                                                 : 'Date N/D'}
                                         </span>
                                     </div>
-                                    <h2 className="cardTitle">{[hit.matiere_principale || hit.juridiction, hit.chambre].filter(Boolean).join(' — ') || 'Décision'}</h2>
+                                    <h2 className="cardTitle">{[hit.matiere_principale || hit.juridiction, hit.chambre].filter(Boolean).join(' - ') || 'Décision'}</h2>
                                     <p className="cardSnippet">{hit.resume || 'Aucun aperçu disponible pour ce document.'}</p>
                                     <div className="cardTags">
                                         {hit.mots_cles && hit.mots_cles.slice(0, 3).map(tag => (

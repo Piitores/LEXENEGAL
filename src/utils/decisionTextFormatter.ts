@@ -276,7 +276,7 @@ export function getDecisionHtml(decision: any): string {
 
     // Fallback : texte_integral en texte brut (ni HTML structuré reconnu, ni texte_brut).
     // On le passe dans le MÊME formateur que texte_brut (découpe en paragraphes via
-    // parseDecisionBody, échappement HTML) au lieu de le renvoyer tel quel — sinon le texte
+    // parseDecisionBody, échappement HTML) au lieu de le renvoyer tel quel - sinon le texte
     // s'affiche en un seul gros bloc non formaté dans dangerouslySetInnerHTML.
     if (decision.texte_integral) {
         return decisionTextToHtml(decision.texte_integral);

@@ -8,7 +8,7 @@ import './ThemePage.css';
  * Page-thème de jurisprudence (/jurisprudence/theme/:slug).
  * Le SSR (api/render.js type=theme) sert le même contenu aux crawlers ;
  * cette page prend le relais après hydratation. Données : RPC get_theme_page
- * (table seo_themes — chantier Strategie-SEO-Contenu-Topical).
+ * (table seo_themes - chantier Strategie-SEO-Contenu-Topical).
  */
 
 interface ThemeFaqItem { q: string; a: string; }
@@ -130,7 +130,7 @@ const ThemePage: React.FC = () => {
                             {articles.map((a) => (
                                 <li key={`${a.code_slug}/${a.article_slug}`}>
                                     <Link to={`/code/${a.code_slug}/${a.article_slug}`}>
-                                        {a.article_label} — {a.code_title}
+                                        {a.article_label} - {a.code_title}
                                     </Link>
                                     <span className="theme-page__article-count">
                                         cité par {a.n} décision{a.n > 1 ? 's' : ''}
@@ -142,11 +142,11 @@ const ThemePage: React.FC = () => {
                 )}
 
                 <section className="theme-page__section">
-                    <h2><FileText size={18} /> Décisions récentes — {theme.label}</h2>
+                    <h2><FileText size={18} /> Décisions récentes - {theme.label}</h2>
                     <ul className="theme-page__decisions">
                         {decisions.map((d) => {
                             const meta = [d.juridiction, d.chambre, formatDateFr(d.date_decision)]
-                                .filter(Boolean).join(' — ');
+                                .filter(Boolean).join(' - ');
                             return (
                                 <li key={d.slug}>
                                     <Link to={`/decision/${d.slug}`} className="theme-page__decision-ref">
@@ -162,7 +162,7 @@ const ThemePage: React.FC = () => {
 
                 {faq.length > 0 && (
                     <section className="theme-page__section theme-page__faq">
-                        <h2><HelpCircle size={18} /> Questions fréquentes — {theme.label}</h2>
+                        <h2><HelpCircle size={18} /> Questions fréquentes - {theme.label}</h2>
                         {faq.map((f) => (
                             <details key={f.q}>
                                 <summary>{f.q}</summary>

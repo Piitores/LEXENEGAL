@@ -1,5 +1,5 @@
 /*
- * api/render.js — Rendu SEO côté serveur (Vercel) pour les pages dynamiques.
+ * api/render.js - Rendu SEO côté serveur (Vercel) pour les pages dynamiques.
  *
  * Pourquoi : la SPA Vite ne renvoie qu'une coquille vide au crawler Google
  * (<div id="app"></div>) → décisions/codes/articles invisibles. Cette fonction
@@ -91,7 +91,7 @@ export function buildDecisionHead(d, canonical) {
   const ref = d.reference || 'Décision';
   const court = d.chambre || d.juridiction || 'Cour Suprême du Sénégal';
   const dateFr = formatDateFr(d.date_decision);
-  const heading = [d.juridiction, ref, d.chambre].filter(Boolean).join(' — ');
+  const heading = [d.juridiction, ref, d.chambre].filter(Boolean).join(' - ');
   const title = `${heading} | Lexenegal`;
   const description = d.resume
     ? `${stripHtml(d.resume).slice(0, 150)}... | ${d.matiere_principale || 'Jurisprudence'} - ${court}, Sénégal.`
@@ -130,11 +130,11 @@ export function buildDecisionBody(d, cited) {
     ? `<section class="ssr-cited"><h2>Textes et articles cités</h2><ul>${cited.map((c) => {
         const a = c.article; if (!a || !a.code || !a.code.slug || !a.slug) return '';
         const label = a.num || a.num_court || (a.article_number != null ? `Article ${a.article_number}` : 'Article');
-        return `<li><a href="/code/${esc(a.code.slug)}/${esc(a.slug)}">${esc(label)} — ${esc(a.code.title)}</a></li>`;
+        return `<li><a href="/code/${esc(a.code.slug)}/${esc(a.slug)}">${esc(label)} - ${esc(a.code.title)}</a></li>`;
       }).filter(Boolean).join('')}</ul></section>`
     : '';
   return wrapContent(`<article>
-    <h1>${esc([d.juridiction, ref, d.chambre].filter(Boolean).join(' — '))}</h1>
+    <h1>${esc([d.juridiction, ref, d.chambre].filter(Boolean).join(' - '))}</h1>
     <ul class="ssr-meta">${meta}</ul>
     ${motscles}${resume}
     <section class="ssr-corps"><h2>Texte intégral</h2>${corps}</section>
@@ -144,7 +144,7 @@ export function buildDecisionBody(d, cited) {
 
 /* ---------- CODE (loi entière) ---------- */
 /*
- * Règle SEO générique et FIDÈLE au type de texte (catégorie laws_and_codes) —
+ * Règle SEO générique et FIDÈLE au type de texte (catégorie laws_and_codes) -
  * voir docs/SEO-RENDU-SSR.md. À conserver pour tous les futurs déploiements.
  *  - « version consolidée » : RÉSERVÉ aux codes (category='code'). Un décret,
  *    arrêté, loi ou Acte uniforme est un texte unique → seulement « texte intégral ».
@@ -169,8 +169,8 @@ export function buildCodeHead(law, nArticles, canonical) {
   const m = codeSeoMeta(law);
   const refTxt = law.reference ? ` (${law.reference})` : '';
   const artTxt = nArticles ? `, ${nArticles} articles` : '';
-  const title = `${m.baseName}${m.geo} — ${m.descriptor} | Lexenegal`;
-  const tail = m.isOhada ? ' — droit uniforme OHADA.' : ' — la mémoire juridique du Sénégal.';
+  const title = `${m.baseName}${m.geo} - ${m.descriptor} | Lexenegal`;
+  const tail = m.isOhada ? ' - droit uniforme OHADA.' : ' - la mémoire juridique du Sénégal.';
   const description = `${m.baseName}${m.geo}${refTxt} : ${m.descriptor}${artTxt}. `
     + `Consultation gratuite, article par article, avec la jurisprudence et les textes liés, sur Lexenegal${tail}`;
   const nameHasJur = new RegExp(m.jurisdiction, 'i').test(m.baseName);
@@ -208,9 +208,9 @@ export function buildCodeBody(law, articles) {
   const refLine = [
     law.reference ? esc(law.reference) : '',
     law.publication_date ? `publié le ${esc(formatDateFr(law.publication_date))}` : '',
-  ].filter(Boolean).join(' — ');
+  ].filter(Boolean).join(' - ');
   const descriptorCap = m.descriptor.charAt(0).toUpperCase() + m.descriptor.slice(1);
-  const intro = `<p class="ssr-code-intro">${esc(m.baseName)}${refLine ? ` — ${refLine}` : ''}. `
+  const intro = `<p class="ssr-code-intro">${esc(m.baseName)}${refLine ? ` - ${refLine}` : ''}. `
     + `${descriptorCap}${n ? `, ${n} articles` : ''}, consultable gratuitement article par article, `
     + `avec la jurisprudence et les textes liés.</p>`;
   // Bloc de présentation éditorial (contenu de confiance, rédigé/vérifié) si renseigné
@@ -219,7 +219,7 @@ export function buildCodeBody(law, articles) {
     : '';
   return wrapContent(`<article>
     ${abrogationBanner(law)}
-    <h1>${esc(m.baseName)}${esc(m.geo)} — ${esc(m.descriptor)}</h1>
+    <h1>${esc(m.baseName)}${esc(m.geo)} - ${esc(m.descriptor)}</h1>
     ${intro}
     ${presentation}
     <nav class="ssr-toc" aria-label="Articles"><h2>Articles · ${esc(m.baseName)}</h2><ul>${links}</ul></nav>
@@ -229,12 +229,12 @@ export function buildCodeBody(law, articles) {
 /* ---------- ARTICLE de loi ---------- */
 export function buildArticleHead(law, art, canonical, plain) {
   const numLabel = art.num || art.num_court || (art.article_number != null ? `Article ${art.article_number}` : 'Article');
-  const title = `${numLabel} — ${law.title} | Lexenegal`;
+  const title = `${numLabel} - ${law.title} | Lexenegal`;
   const description = plain
     ? `${plain.slice(0, 155)}…`
     : `Texte intégral de l'${numLabel.toLowerCase()} du ${law.title}. Droit sénégalais consolidé sur Lexenegal.`;
   const schema = {
-    '@context': 'https://schema.org', '@type': 'Legislation', name: `${numLabel} — ${law.title}`,
+    '@context': 'https://schema.org', '@type': 'Legislation', name: `${numLabel} - ${law.title}`,
     legislationIdentifier: String(art.article_number != null ? art.article_number : numLabel),
     inLanguage: 'fr',
     isPartOf: { '@type': 'Legislation', name: law.title, url: `${SITE}/code/${law.slug}` },
@@ -247,7 +247,7 @@ export function buildArticleBody(law, art, contentHtml, citing) {
   const citingHtml = (citing && citing.length)
     ? `<section class="ssr-citing"><h2>Décisions citant cet article</h2><ul>${citing.map((c) => {
         const d = c.decision; if (!d || !d.slug) return '';
-        return `<li><a href="/decision/${esc(d.slug)}">${esc(d.reference || 'Décision')}</a>${d.chambre ? ` — ${esc(d.chambre)}` : ''}${d.date_decision ? ` (${esc(formatDateFr(d.date_decision))})` : ''}</li>`;
+        return `<li><a href="/decision/${esc(d.slug)}">${esc(d.reference || 'Décision')}</a>${d.chambre ? ` - ${esc(d.chambre)}` : ''}${d.date_decision ? ` (${esc(formatDateFr(d.date_decision))})` : ''}</li>`;
       }).filter(Boolean).join('')}</ul></section>`
     : '';
   // contentHtml = HTML déjà généré par notre pipeline (de confiance) -> injecté tel quel
@@ -295,7 +295,7 @@ function injectIntoShell(shell, headHtml, bodyHtml) {
 
 /* ---------- ACCUEIL & INDEX DES CODES ---------- */
 export function buildHomeHead(canonical) {
-  const title = 'Lexenegal — Codes, lois et jurisprudence du Sénégal en texte intégral';
+  const title = 'Lexenegal - Codes, lois et jurisprudence du Sénégal en texte intégral';
   const description = 'Lexenegal, la mémoire juridique du Sénégal : codes, lois, décrets, arrêtés et décisions de justice en texte intégral et version consolidée. Recherche et consultation gratuites.';
   const keywords = 'droit sénégalais, codes Sénégal, lois Sénégal, jurisprudence Sénégal, Code pénal Sénégal, Constitution du Sénégal, législation Sénégal, Lexenegal';
   const schema = {
@@ -308,7 +308,7 @@ export function buildHomeBody(codes) {
   const items = (codes || []).map((c) => `<li><a href="/code/${esc(c.slug)}">${esc(c.short_title || c.title)}</a></li>`).join('\n');
   const nav = items ? `<nav class="ssr-home-codes" aria-label="Codes"><h2>Codes et textes en consultation</h2><ul>${items}</ul></nav>` : '';
   return wrapContent(`<article>
-    <h1>Lexenegal — la mémoire juridique du Sénégal</h1>
+    <h1>Lexenegal - la mémoire juridique du Sénégal</h1>
     <p>Consultez gratuitement les <strong>codes, lois, décrets et arrêtés</strong> ainsi que la <strong>jurisprudence du Sénégal</strong> en texte intégral et version consolidée : Code pénal, Code de procédure pénale, Constitution du Sénégal, Code du travail, Code général des impôts, Actes uniformes OHADA, et les décisions de la Cour suprême, de la CCJA et du Conseil constitutionnel.</p>
     <p><a href="/codes">Tous les codes et textes</a> · <a href="/search">Rechercher dans la base</a></p>
     ${nav}
@@ -317,7 +317,7 @@ export function buildHomeBody(codes) {
 const CAT_LABELS = { code: 'Codes', loi: 'Lois', decret: 'Décrets', arrete: 'Arrêtés', ohada: 'Actes uniformes OHADA' };
 export function buildCodesHead(canonical) {
   const title = 'Tous les codes et textes juridiques du Sénégal | Lexenegal';
-  const description = 'Liste complète des codes, lois, décrets, arrêtés et Actes uniformes OHADA consultables en texte intégral sur Lexenegal — la mémoire juridique du Sénégal.';
+  const description = 'Liste complète des codes, lois, décrets, arrêtés et Actes uniformes OHADA consultables en texte intégral sur Lexenegal - la mémoire juridique du Sénégal.';
   const keywords = 'codes Sénégal, textes juridiques Sénégal, lois Sénégal, décrets Sénégal, OHADA, droit sénégalais, Lexenegal';
   const schema = { '@context': 'https://schema.org', '@type': 'CollectionPage', name: title, url: canonical, inLanguage: 'fr' };
   return headBlock({ title, description, keywords, canonical, ogType: 'website', schema });
@@ -353,10 +353,10 @@ export function buildDoctrineHead(d, canonical) {
   const ref = (d.reference_complete || (d.numero ? `Lettre n° ${d.numero}` : 'Doctrine fiscale')).trim();
   const dateFr = formatDateFr(d.date);
   const service = d.service_emetteur || 'DGID';
-  const titleCore = objet ? `${objet} — ${ref}` : ref;
+  const titleCore = objet ? `${objet} - ${ref}` : ref;
   const title = `${titleCore} | Doctrine fiscale | Lexenegal`;
   const description = `Doctrine fiscale de la DGID (Sénégal) : ${ref}. `
-    + `${objet ? `Objet : ${objet}. ` : ''}${service}${dateFr ? ` — ${dateFr}` : ''}. `
+    + `${objet ? `Objet : ${objet}. ` : ''}${service}${dateFr ? ` - ${dateFr}` : ''}. `
     + `Référence et objet en accès libre ; texte intégral réservé aux membres sur Lexenegal.`;
   const keywords = [
     objet || null, ref, 'doctrine fiscale Sénégal', 'DGID', 'circulaire fiscale',
@@ -399,7 +399,7 @@ export function buildDoctrineBody(d) {
 
 /* ---------- PAGE-THÈME de jurisprudence ---------- */
 /*
- * /jurisprudence/theme/:slug — hub thématique généré depuis la base (table
+ * /jurisprudence/theme/:slug - hub thématique généré depuis la base (table
  * seo_themes + RPC get_theme_page) : chapô rédigé, décisions récentes avec
  * résumés, articles de codes les plus cités, FAQ. Chantier
  * Strategie-SEO-Contenu-Topical (pages-thèmes). Données 100 % issues du corpus.
@@ -437,20 +437,20 @@ export function buildThemeBody(data) {
   const jurisTxt = (data.juridictions || [])
     .slice(0, 6).map((j) => `${j.juridiction} (${j.n})`).join(', ');
   const decs = (data.decisions || []).map((d) => {
-    const meta = [d.juridiction, d.chambre, formatDateFr(d.date_decision)].filter(Boolean).join(' — ');
+    const meta = [d.juridiction, d.chambre, formatDateFr(d.date_decision)].filter(Boolean).join(' - ');
     const snippet = stripHtml(d.resume || '');
     return `<li class="ssr-theme-dec">
       <a href="/decision/${esc(d.slug)}"><strong>${esc(d.reference || 'Décision')}</strong></a>
-      ${meta ? `<span class="ssr-theme-dec-meta"> — ${esc(meta)}</span>` : ''}
+      ${meta ? `<span class="ssr-theme-dec-meta"> - ${esc(meta)}</span>` : ''}
       ${snippet ? `<p>${esc(snippet)}</p>` : ''}
     </li>`;
   }).join('\n');
   const arts = (data.articles || []).map((a) =>
-    `<li><a href="/code/${esc(a.code_slug)}/${esc(a.article_slug)}">${esc(a.article_label)} — ${esc(a.code_title)}</a> <span class="ssr-theme-art-n">(cité par ${a.n} décision${a.n > 1 ? 's' : ''})</span></li>`
+    `<li><a href="/code/${esc(a.code_slug)}/${esc(a.article_slug)}">${esc(a.article_label)} - ${esc(a.code_title)}</a> <span class="ssr-theme-art-n">(cité par ${a.n} décision${a.n > 1 ? 's' : ''})</span></li>`
   ).join('\n');
   const faq = Array.isArray(t.faq) ? t.faq.filter((f) => f && f.q && f.a) : [];
   const faqHtml = faq.length
-    ? `<section class="ssr-theme-faq"><h2>Questions fréquentes — ${esc(t.label)}</h2>
+    ? `<section class="ssr-theme-faq"><h2>Questions fréquentes - ${esc(t.label)}</h2>
        ${faq.map((f) => `<h3>${esc(f.q)}</h3><p>${esc(f.a)}</p>`).join('\n')}</section>`
     : '';
   return wrapContent(`<article>
@@ -459,7 +459,7 @@ export function buildThemeBody(data) {
     <p class="ssr-theme-chapo">${esc(t.chapo)}</p>
     <p class="ssr-theme-stats"><strong>${total} décisions</strong> sur ce thème dans la base${jurisTxt ? ` : ${esc(jurisTxt)}.` : '.'}</p>
     ${arts ? `<section class="ssr-theme-arts"><h2>Articles de codes les plus cités</h2><ul>${arts}</ul></section>` : ''}
-    <section class="ssr-theme-decs"><h2>Décisions récentes — ${esc(t.label)}</h2><ul>${decs}</ul></section>
+    <section class="ssr-theme-decs"><h2>Décisions récentes - ${esc(t.label)}</h2><ul>${decs}</ul></section>
     ${faqHtml}
     <p class="ssr-theme-more"><a href="/search?q=${encodeURIComponent(t.label)}">Rechercher « ${esc(t.label)} » dans toute la base →</a></p>
   </article>`);
@@ -509,7 +509,7 @@ export function buildGuideBody(gd) {
   return wrapContent(`<article>
     <nav class="ssr-bc" aria-label="Fil d'Ariane"><a href="/guides">Guides pratiques</a> › ${esc(gd.title)}</nav>
     <h1>${esc(gd.h1 || gd.title)}</h1>
-    ${dateFr ? `<p class="ssr-guide-date">Publié le ${esc(dateFr)} — Lexenegal, la mémoire juridique du Sénégal.</p>` : ''}
+    ${dateFr ? `<p class="ssr-guide-date">Publié le ${esc(dateFr)} - Lexenegal, la mémoire juridique du Sénégal.</p>` : ''}
     <div class="ssr-guide-body">${gd.content_html || ''}</div>
     ${faqHtml}
     ${themeLink}
@@ -539,10 +539,10 @@ export function buildGuidesBody(guides) {
 /* ---------- HUB JURISPRUDENCE (/jurisprudence) ---------- */
 /*
  * Page pilier distincte de /search (qui reste la page de RÉSULTATS de recherche) :
- * porte d'entrée SEO de la jurisprudence — matières + thèmes (pages seo_themes).
+ * porte d'entrée SEO de la jurisprudence - matières + thèmes (pages seo_themes).
  */
 export function buildJurisprudenceHead(canonical) {
-  const title = 'Jurisprudence du Sénégal — décisions de justice en texte intégral | Lexenegal';
+  const title = 'Jurisprudence du Sénégal - décisions de justice en texte intégral | Lexenegal';
   const description = 'Toute la jurisprudence du Sénégal et de l’OHADA : Cour suprême, Cour de cassation, CCJA, Conseil constitutionnel, cours d’appel. Décisions en texte intégral, classées par matière et par thème.';
   const keywords = 'jurisprudence Sénégal, décisions de justice Sénégal, Cour suprême Sénégal, CCJA, arrêts Sénégal, droit sénégalais, Lexenegal';
   const schema = {

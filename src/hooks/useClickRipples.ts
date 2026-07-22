@@ -7,7 +7,7 @@ interface Ripple {
 }
 
 /**
- * 🏛️ LEXENEGAL — Hook d'ondulations au clic
+ * 🏛️ LEXENEGAL - Hook d'ondulations au clic
  * Génère des cercles éphémères émeraude à chaque clic.
  * Chaque ripple vit 800ms avant d'être nettoyée.
  */

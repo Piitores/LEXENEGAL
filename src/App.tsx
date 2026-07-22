@@ -138,7 +138,7 @@ function App() {
               <Route path="/codes" element={<CodesListPage />} />
               <Route path="/code/:slug" element={<CodePage />} />
               <Route path="/code/:codeSlug/:articleSlug" element={<ArticlePage />} />
-              {/* Conventions collectives (menu « Autour de la loi ») — réutilise le lecteur
+              {/* Conventions collectives (menu « Autour de la loi ») - réutilise le lecteur
                   générique ; les routes /code restent un fallback valide pour tout slug. */}
               <Route path="/conventions-collectives" element={<ConventionsListPage />} />
               <Route path="/convention/:slug" element={<CodePage />} />

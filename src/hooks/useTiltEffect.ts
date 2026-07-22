@@ -13,7 +13,7 @@ interface UseTiltEffectReturn {
 }
 
 /**
- * 🏛️ LEXENEGAL — Hook d'effet tilt 3D
+ * 🏛️ LEXENEGAL - Hook d'effet tilt 3D
  * Applique une rotation perspective au survol de la souris.
  * 
  * @param maxRotation - Degrés max de rotation (default: 6)

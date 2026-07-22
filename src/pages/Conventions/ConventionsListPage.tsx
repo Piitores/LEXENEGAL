@@ -43,7 +43,7 @@ const ConventionsListPage: React.FC = () => {
         <div className="corpus-page">
             <SEO
                 title="Conventions collectives | Lexenegal"
-                description="Conventions collectives applicables au Sénégal — texte intégral consolidé, articles reliés au Code du travail. Droit du travail sénégalais sur Lexenegal."
+                description="Conventions collectives applicables au Sénégal - texte intégral consolidé, articles reliés au Code du travail. Droit du travail sénégalais sur Lexenegal."
                 url="https://www.lexenegal.sn/conventions-collectives"
             />
 

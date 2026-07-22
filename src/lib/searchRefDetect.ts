@@ -43,7 +43,7 @@ export function detectArticleRef(query: string, codeIndex: Map<string, string>):
   }
 
   // 2) Repli (recherche) : « article <num> <nom de code EN CLAIR> » SANS « du »
-  //    — ex. « article L.97 code du travail ». On isole le numéro, puis on résout le
+  //    - ex. « article L.97 code du travail ». On isole le numéro, puis on résout le
   //    reste (entier, puis sans un connecteur de tête) contre l'index des codes. Reste
   //    conservateur : si le reste ne correspond pas EXACTEMENT à un code connu → null.
   const m = upper.match(/\bART(?:ICLE)?\.?\s+(L\.?\s?\d+[\w.-]*|\d+[\w-]*)\s+(.+)$/);

@@ -12,7 +12,7 @@ interface OhadaText {
 }
 
 /**
- * Page « Droit communautaire » — entrée autonome (hors Corpus National).
+ * Page « Droit communautaire » - entrée autonome (hors Corpus National).
  * Liste les actes uniformes & textes OHADA dont on dispose (données réelles).
  * UEMOA et Union africaine (UA) : à venir.
  */

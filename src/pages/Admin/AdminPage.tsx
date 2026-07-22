@@ -348,7 +348,7 @@ const AdminPage: React.FC = () => {
                             </tbody>
                         </table>
                     </div>
-                    <p className="admin-note">La gestion des décisions (volume élevé) se fait via la recherche — à venir dans cet onglet.</p>
+                    <p className="admin-note">La gestion des décisions (volume élevé) se fait via la recherche - à venir dans cet onglet.</p>
                 </section>
             )}
 

@@ -4,7 +4,7 @@ import { useClickRipples } from '../../hooks/useClickRipples';
 import './AmbientEffects.css';
 
 /**
- * 🏛️ LEXENEGAL — Ambient Effects Layer
+ * 🏛️ LEXENEGAL - Ambient Effects Layer
  *
  * Couche d'animations globales non-intrusives :
  * 1. Halo émeraude qui suit le curseur (desktop only)

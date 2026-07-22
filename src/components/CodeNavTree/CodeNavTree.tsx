@@ -1,5 +1,5 @@
 // Arbre de navigation d'un code (Titre > Chapitre > Section + pastilles d'articles).
-// Partagé entre la page Code et la page Article — rendu et classes CSS identiques.
+// Partagé entre la page Code et la page Article - rendu et classes CSS identiques.
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';

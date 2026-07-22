@@ -97,7 +97,7 @@ const GuideDetailPage: React.FC = () => {
                     <h1>{guide.h1 || guide.title}</h1>
                     {guide.published_at && (
                         <p className="guide-detail__date">
-                            Publié le {formatDateFr(guide.published_at)} — Lexenegal
+                            Publié le {formatDateFr(guide.published_at)} - Lexenegal
                         </p>
                     )}
                 </header>

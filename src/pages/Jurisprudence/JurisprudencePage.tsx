@@ -5,7 +5,7 @@ import { Loader2, Scale, Search, Landmark, Tags } from 'lucide-react';
 import './JurisprudencePage.css';
 
 /*
- * Hub Jurisprudence (/jurisprudence) — porte d'entrée du pilier, DISTINCTE de la
+ * Hub Jurisprudence (/jurisprudence) - porte d'entrée du pilier, DISTINCTE de la
  * page de résultats de recherche (/search). Présente les matières et les
  * pages-thèmes (seo_themes). SSR : api/render.js type=jurisprudence.
  */
@@ -40,7 +40,7 @@ const JurisprudencePage: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        document.title = 'Jurisprudence du Sénégal — décisions de justice en texte intégral | Lexenegal';
+        document.title = 'Jurisprudence du Sénégal - décisions de justice en texte intégral | Lexenegal';
         return () => { document.title = 'Lexenegal'; };
     }, []);
 

@@ -2,7 +2,7 @@ import React from 'react';
 
 /**
  * Catches any render/WebGL error from the lazy 3D backdrop and shows the
- * provided static fallback instead — the hero must never break on a device
+ * provided static fallback instead - the hero must never break on a device
  * without WebGL or under GPU pressure.
  */
 class CanvasBoundary extends React.Component<

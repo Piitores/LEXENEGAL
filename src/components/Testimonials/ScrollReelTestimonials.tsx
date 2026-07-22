@@ -2,7 +2,7 @@ import * as React from 'react';
 import './ScrollReelTestimonials.css';
 
 /* ----------------------------------------------------------------
- * ScrollReelTestimonials — adapté à la stack Lexenegal (React + CSS
+ * ScrollReelTestimonials - adapté à la stack Lexenegal (React + CSS
  * classique, thème émeraude). Inspiré d'un composant shadcn/Tailwind,
  * réécrit SANS Tailwind. Bobine contra-rotative + texte qui monte
  * caractère par caractère. Pas de photos → tuiles monogramme.
@@ -24,7 +24,7 @@ export interface ScrollReelTestimonialsProps {
   className?: string;
 }
 
-/* Geometry — middle column pitch between tile centers:
+/* Geometry - middle column pitch between tile centers:
  * 3 * (cell 121.33px + gap 8px) = 388px */
 const CELL = 121.33;
 const STEP = 3 * (CELL + 8);

@@ -4,7 +4,7 @@ import React from 'react';
  * Static, motion-free end-state of the hero scene: the African continent
  * with Senegal spotlighted in West Africa. Serves as Suspense fallback,
  * reduced-motion replacement, and no-WebGL / error fallback.
- * Purely decorative (aria-hidden) — the indexable text lives in the DOM.
+ * Purely decorative (aria-hidden) - the indexable text lives in the DOM.
  */
 const HeroSenegalStatic: React.FC = () => (
   <div className="hero__canvas hero__canvas--static" aria-hidden="true">

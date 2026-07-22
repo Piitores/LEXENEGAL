@@ -66,7 +66,7 @@ const ConversionModal: React.FC<ConversionModalProps> = ({ isOpen, onClose }) =>
                                 <li><Sparkles size={14} /> Téléchargement PDF &amp; comparateur de versions</li>
                             </ul>
 
-                            {/* CTA BUTTON — création de compte */}
+                            {/* CTA BUTTON - création de compte */}
                             <button
                                 className="modal-cta"
                                 onClick={() => {
@@ -77,7 +77,7 @@ const ConversionModal: React.FC<ConversionModalProps> = ({ isOpen, onClose }) =>
                                 Créer un compte gratuit
                             </button>
 
-                            {/* SECONDARY — déjà inscrit */}
+                            {/* SECONDARY - déjà inscrit */}
                             <button
                                 className="modal-secondary"
                                 onClick={() => {
@@ -85,10 +85,10 @@ const ConversionModal: React.FC<ConversionModalProps> = ({ isOpen, onClose }) =>
                                     window.location.href = '/login';
                                 }}
                             >
-                                J'ai déjà un compte — Connexion
+                                J'ai déjà un compte - Connexion
                             </button>
 
-                            {/* TERTIARY — continuer sans compte */}
+                            {/* TERTIARY - continuer sans compte */}
                             <button
                                 className="modal-secondary"
                                 onClick={onClose}

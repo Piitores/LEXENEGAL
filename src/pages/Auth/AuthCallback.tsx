@@ -9,7 +9,7 @@ import './AuthPage.css';
 type Status = 'loading' | 'success' | 'error' | 'recovery';
 
 /**
- * AuthCallback — point de retour unique pour :
+ * AuthCallback - point de retour unique pour :
  *  - la confirmation d'e-mail (inscription)
  *  - la connexion Google (OAuth)
  *  - le lien magique (connexion sans mot de passe)
@@ -154,7 +154,7 @@ const AuthCallback: React.FC = () => {
             </div>
 
             <div className="auth-footer">
-                LEXENEGAL — L'autorité du droit, l'exigence de la précision.
+                LEXENEGAL - L'autorité du droit, l'exigence de la précision.
             </div>
         </div>
     );

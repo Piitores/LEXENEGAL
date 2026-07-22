@@ -9,7 +9,7 @@ import './AuthPage.css';
 
 type AuthMode = 'login' | 'register' | 'magic' | 'forgot' | 'verify' | 'success';
 
-// Bouton « Continuer avec Google » — logo officiel.
+// Bouton « Continuer avec Google » - logo officiel.
 const GoogleButton: React.FC<{ label: string; onClick: () => void; disabled?: boolean }> = ({ label, onClick, disabled }) => (
     <button type="button" className="auth-btn-google" onClick={onClick} disabled={disabled}>
         <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
@@ -441,7 +441,7 @@ const AuthPage: React.FC = () => {
             </motion.div>
 
             <div className="auth-footer">
-                LEXENEGAL — L'autorité du droit, l'exigence de la précision.
+                LEXENEGAL - L'autorité du droit, l'exigence de la précision.
             </div>
         </div>
     );

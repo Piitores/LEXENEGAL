@@ -376,7 +376,7 @@ const DecisionPage: React.FC = () => {
         ? new Date(decision.date_decision).toLocaleDateString('fr-FR', { dateStyle: 'long' })
         : '';
 
-    // Boutons d'action (favoris, PDF, impression…) — rendus deux fois : colonne
+    // Boutons d'action (favoris, PDF, impression…) - rendus deux fois : colonne
     // droite (desktop) et barre sous le titre (<1200px, où la colonne est masquée)
     const decisionTools = (
         <>
@@ -491,7 +491,7 @@ const DecisionPage: React.FC = () => {
                         <Scale size={14} /> Source Certifiée : Lexenegal.sn
                     </div>
 
-                    <h1 className="decision-title">{[decision.juridiction, decision.reference, decision.chambre].filter(Boolean).join(' — ') || 'Décision'}</h1>
+                    <h1 className="decision-title">{[decision.juridiction, decision.reference, decision.chambre].filter(Boolean).join(' - ') || 'Décision'}</h1>
                     <div className="decision-ref">{decision.date_decision ? new Date(decision.date_decision).toLocaleDateString('fr-FR', { dateStyle: 'long' }) : 'Date N/D'}</div>
 
                     {/* Barre d'actions mobile/tablette (la colonne droite est masquée <1200px) */}
@@ -627,7 +627,7 @@ const DecisionPage: React.FC = () => {
 
                     {/* FOOTER */}
                     <div className="print-footer">
-                        <div>Source : www.lexenegal.sn — édité le {new Date().toLocaleDateString('fr-FR')}</div>
+                        <div>Source : www.lexenegal.sn - édité le {new Date().toLocaleDateString('fr-FR')}</div>
                     </div>
                 </div>
             </div>

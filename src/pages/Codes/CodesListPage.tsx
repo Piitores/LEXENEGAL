@@ -32,7 +32,7 @@ interface LawCode {
     short_name: string;
     description: string;
     brancheSlug: string;   // 'autres' si non rattaché
-    dbCategory: string;    // vraie catégorie BDD (code|loi|decret|ohada…) — pilote le rangement en bases
+    dbCategory: string;    // vraie catégorie BDD (code|loi|decret|ohada…) - pilote le rangement en bases
     articles_count?: number;
     publication_date?: string | null;  // pour le tri LODA par date
 }
@@ -117,7 +117,7 @@ const CodesListPage: React.FC = () => {
 
             setBranches((branchesRes.data as Branche[]) || []);
 
-            // La branche vient désormais de la base (branche_slug) — plus de mapping codé en dur.
+            // La branche vient désormais de la base (branche_slug) - plus de mapping codé en dur.
             const transformedCodes: LawCode[] = (codesRes.data || []).map((code: any) => ({
                 id: code.id,
                 name: code.title,
@@ -274,7 +274,7 @@ const CodesListPage: React.FC = () => {
 
                         {activeBase === 'codes' && (
                         <div className="base-panel">
-                            <p className="base-panel__sous-titre">le droit en vigueur — codes consolidés, à jour</p>
+                            <p className="base-panel__sous-titre">le droit en vigueur - codes consolidés, à jour</p>
                         <div className="corpus-bento">
                             {branches.filter((b) => b.slug !== 'autres').map((b) => {
                                 const themeCodes = codesByBranche[b.slug] || [];
@@ -325,7 +325,7 @@ const CodesListPage: React.FC = () => {
 
                         {activeBase === 'loda' && (
                         <div className="base-panel">
-                            <p className="base-panel__sous-titre">textes source — lois, ordonnances, décrets, arrêtés &amp; circulaires (version d'origine)</p>
+                            <p className="base-panel__sous-titre">textes source - lois, ordonnances, décrets, arrêtés &amp; circulaires (version d'origine)</p>
                             {lodaTextes.length > 0
                                 ? renderLodaBase()
                                 : <p className="base-vide">Aucun texte publié pour l'instant.</p>}

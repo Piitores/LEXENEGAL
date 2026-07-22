@@ -88,7 +88,7 @@ const LinkedLegalContent: React.FC<{ html: string; className?: string }> = ({ ht
     // Linkification des citations tapées EN CLAIR dans le corps (« article L.12 du Code
     // de l'urbanisme »). On parcourt les nœuds texte hors <a> déjà présents, on ne résout
     // que les codes réellement cités (index paresseux caché), et on enveloppe les renvois
-    // résolus dans un <a> /code/…/… — que le survol délégué ci-dessus allume comme les autres.
+    // résolus dans un <a> /code/…/… - que le survol délégué ci-dessus allume comme les autres.
     // Idempotent : le texte déjà linkifié se retrouve dans un <a> et est ignoré au re-run.
     useEffect(() => {
         const root = ref.current;

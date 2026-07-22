@@ -107,7 +107,7 @@ function runFont(r: PdfRun, variant: PdfBlock['variant']): string {
 
 const DecisionPdfDocument: React.FC<{ data: DecisionPdfData }> = ({ data }) => (
     <Document
-        title={`${data.juridiction} — ${data.reference}`}
+        title={`${data.juridiction} - ${data.reference}`}
         author="LEXENEGAL"
         subject={data.matiere || 'Décision de justice'}
         creator="www.lexenegal.sn"
@@ -117,14 +117,14 @@ const DecisionPdfDocument: React.FC<{ data: DecisionPdfData }> = ({ data }) => (
             <Text
                 fixed
                 style={styles.runningHeader}
-                render={({ pageNumber }) => (pageNumber > 1 ? `LEXENEGAL — ${data.reference}` : '')}
+                render={({ pageNumber }) => (pageNumber > 1 ? `LEXENEGAL - ${data.reference}` : '')}
             />
 
             {/* En-tête première page (dans le flux) */}
             <View style={styles.headerRow}>
                 <View>
                     <Text style={styles.brand}>LEXENEGAL</Text>
-                    <Text style={styles.brandSub}>Base de jurisprudence — www.lexenegal.sn</Text>
+                    <Text style={styles.brandSub}>Base de jurisprudence - www.lexenegal.sn</Text>
                 </View>
                 <View>
                     <Text style={styles.rep}>RÉPUBLIQUE DU SÉNÉGAL</Text>
@@ -132,7 +132,7 @@ const DecisionPdfDocument: React.FC<{ data: DecisionPdfData }> = ({ data }) => (
                 </View>
             </View>
 
-            {/* Titre — certaines références (juricaf) contiennent déjà « du [date] » : ne pas dupliquer. */}
+            {/* Titre - certaines références (juricaf) contiennent déjà « du [date] » : ne pas dupliquer. */}
             <View style={styles.titleBlock}>
                 <Text style={styles.title}>
                     {data.reference}
@@ -166,7 +166,7 @@ const DecisionPdfDocument: React.FC<{ data: DecisionPdfData }> = ({ data }) => (
             <View fixed style={styles.footer}>
                 <View style={styles.footerRow}>
                     <Text style={styles.footerText}>
-                        {`Source : www.lexenegal.sn — édité le ${data.editionDate}`}
+                        {`Source : www.lexenegal.sn - édité le ${data.editionDate}`}
                     </Text>
                     <Text
                         style={styles.footerText}

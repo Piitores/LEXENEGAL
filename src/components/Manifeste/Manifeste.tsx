@@ -3,7 +3,7 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import './Manifeste.css';
 
 /**
- * 🏛️ LEXENEGAL — MagicWord
+ * 🏛️ LEXENEGAL - MagicWord
  * Chaque mot s'illumine progressivement au scroll.
  * Version réécrite sans Tailwind, fidèle à la DA Lexenegal.
  */
@@ -28,7 +28,7 @@ const MagicWord: React.FC<MagicWordProps> = ({ children, progress, range, isStro
 };
 
 /**
- * MagicParagraph — Un paragraphe entier dont les mots se révèlent au scroll
+ * MagicParagraph - Un paragraphe entier dont les mots se révèlent au scroll
  */
 interface MagicParagraphProps {
     text: string;
@@ -68,7 +68,7 @@ const MagicParagraph: React.FC<MagicParagraphProps> = ({
 };
 
 /**
- * 🏛️ MANIFESTE — L'Équité par la Clarté
+ * 🏛️ MANIFESTE - L'Équité par la Clarté
  * Animation MagicText : chaque mot se révèle au scroll
  */
 const Manifeste: React.FC = () => {

@@ -17,7 +17,7 @@ const PILIERS: Pilier[] = [
         icon: <Scale size={26} strokeWidth={1.6} />,
         title: 'Jurisprudence',
         count: '11 325 décisions',
-        desc: "Arrêts et décisions des juridictions sénégalaises — Cour suprême, cours d'appel, tribunaux et CCJA.",
+        desc: "Arrêts et décisions des juridictions sénégalaises - Cour suprême, cours d'appel, tribunaux et CCJA.",
     },
     {
         to: '/codes',
@@ -31,7 +31,7 @@ const PILIERS: Pilier[] = [
         icon: <Globe2 size={26} strokeWidth={1.6} />,
         title: 'Droit communautaire',
         count: '11 actes uniformes',
-        desc: 'Le droit OHADA et UEMOA applicable au Sénégal — actes uniformes, traité et jurisprudence CCJA.',
+        desc: 'Le droit OHADA et UEMOA applicable au Sénégal - actes uniformes, traité et jurisprudence CCJA.',
     },
     {
         to: '/doctrine-fiscale',
@@ -50,7 +50,7 @@ const PiliersAccess: React.FC = () => (
                     Tout le droit sénégalais, <span className="text-gradient">en quatre piliers</span>
                 </h2>
                 <p className="piliers__subtitle">
-                    Jurisprudence, codes et lois, droit communautaire et doctrine — réunis, vérifiés et reliés entre eux.
+                    Jurisprudence, codes et lois, droit communautaire et doctrine - réunis, vérifiés et reliés entre eux.
                 </p>
             </header>
 

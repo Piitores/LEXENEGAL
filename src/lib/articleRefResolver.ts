@@ -54,7 +54,7 @@ export function buildCodeIndex(
   aliases: CodeAlias[] = [],
 ): Map<string, string> {
   const idx = new Map<string, string>();
-  // alias d'acronymes — SOURCE UNIQUE = vue DB `code_aliases` (dérivée de ref_code), passés par l'appelant
+  // alias d'acronymes - SOURCE UNIQUE = vue DB `code_aliases` (dérivée de ref_code), passés par l'appelant
   for (const a of aliases) {
     if (a?.alias && a?.code_slug) idx.set(normalizeToken(a.alias), a.code_slug);
   }

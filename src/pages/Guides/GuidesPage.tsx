@@ -6,7 +6,7 @@ import './GuidesPage.css';
 
 /*
  * Liste des guides pratiques (/guides). SSR : api/render.js type=guides.
- * Chantier B — Strategie-SEO-Contenu-Topical.
+ * Chantier B - Strategie-SEO-Contenu-Topical.
  */
 
 interface GuideIndexItem {

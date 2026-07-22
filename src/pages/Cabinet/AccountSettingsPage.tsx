@@ -222,7 +222,7 @@ const AccountSettingsPage: React.FC = () => {
                     <h2><BadgeCheck size={18} /> Compte</h2>
                     <div className="set-readonly-grid">
                         <div><span className="set-label">Statut</span><span className={`set-badge ${isPro ? 'set-badge--pro' : ''}`}>{isPro ? 'PRO' : 'Gratuit'}</span></div>
-                        <div><span className="set-label">Membre depuis</span><span>{createdAt ? new Date(createdAt).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' }) : '—'}</span></div>
+                        <div><span className="set-label">Membre depuis</span><span>{createdAt ? new Date(createdAt).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' }) : '-'}</span></div>
                     </div>
                 </motion.section>
 

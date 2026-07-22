@@ -7,7 +7,7 @@ interface MouseGradientState {
 }
 
 /**
- * 🏛️ LEXENEGAL — Hook de suivi du curseur
+ * 🏛️ LEXENEGAL - Hook de suivi du curseur
  * Crée un halo lumineux émeraude qui suit la souris.
  * Désactivé automatiquement sur les écrans tactiles.
  */
@@ -23,7 +23,7 @@ export function useMouseGradient(): MouseGradientState {
   }, []);
 
   useEffect(() => {
-    // Skip on touch devices — no point tracking a cursor that doesn't exist
+    // Skip on touch devices - no point tracking a cursor that doesn't exist
     if (window.matchMedia('(pointer: coarse)').matches) return;
 
     document.addEventListener('mousemove', handleMove);
