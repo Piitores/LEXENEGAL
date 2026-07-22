@@ -411,7 +411,7 @@ const CodePage: React.FC = () => {
 
     return (
         <div className="code-page">
-            <SEO title={`${law.title} | Lexenegal`} description={`${law.title} - texte intégral consolidé (${totalArticles} articles). Droit sénégalais sur Lexenegal.`} url={`https://www.lexenegal.sn${basePath}/${slug}`} />
+            <SEO title={`${law.title} | Lexenegal`} description={`${law.title} - texte intégral consolidé (${totalArticles} articles). ${['ohada', 'uemoa', 'cedeao', 'cima'].includes((law as any).category) ? 'Droit communautaire applicable au Sénégal' : 'Droit sénégalais'} sur Lexenegal.`} url={`https://www.lexenegal.sn${basePath}/${slug}`} />
 
             <div className="code-layout">
                 {/* ═══════ SIDEBAR ═══════ */}

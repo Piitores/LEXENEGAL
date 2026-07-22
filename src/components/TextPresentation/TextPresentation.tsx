@@ -23,6 +23,7 @@ const CATEGORY_LABELS: Record<string, string> = {
     circulaire: 'Circulaire',
     ohada: 'Acte uniforme OHADA',
     uemoa: 'Texte UEMOA',
+    cima: 'Texte CIMA (assurances)',
     convention: 'Convention collective',
     jors: 'Journal officiel',
 };
