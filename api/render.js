@@ -197,7 +197,27 @@ function abrogationBanner(law) {
   return `<div class="ssr-abrogation" style="background:#fef2f2;border:1px solid #fca5a5;border-left:4px solid #dc2626;color:#991b1b;padding:0.85rem 1.1rem;border-radius:8px;margin:0 0 1.25rem;">⛔ ${esc(law.abrogation_note)}${link}</div>`;
 }
 
-export function buildCodeBody(law, articles) {
+// Bloc SSR « Textes & codes liés » — mêmes classes que le composant client
+// (RelatedTexts.tsx) pour que le CSS s'applique et que l'hydratation soit cohérente.
+function buildRelatedBlock(related) {
+  if (!related || !related.length) return '';
+  const CAT = { code: 'Code', loi: 'Loi', decret: 'Décret', arrete: 'Arrêté', circulaire: 'Circulaire',
+    ohada: 'OHADA', uemoa: 'UEMOA', cima: 'CIMA', convention_collective: 'Convention', jors: 'JO' };
+  const pathFor = (cat, slug) => (cat === 'convention_collective' ? `/convention/${slug}` : `/code/${slug}`);
+  const card = (i) => `<a href="${esc(pathFor(i.category, i.slug))}" class="related-card">`
+    + `<span class="related-card__badge">${esc(CAT[i.category] || 'Texte')}</span>`
+    + `<span class="related-card__title">${esc(i.short_title || i.title)}</span></a>`;
+  const grp = (title, items) => (items.length
+    ? `<div class="related-group"><h3 class="related-group__title">${title}</h3><div class="related-grid">${items.map(card).join('')}</div></div>`
+    : '');
+  const codes = related.filter((i) => i.category === 'code');
+  const textes = related.filter((i) => i.category !== 'code');
+  return `<section class="related-texts" aria-label="Textes et codes liés">`
+    + `<h2 class="related-texts__label">Textes &amp; codes liés</h2>`
+    + `${grp('Codes liés', codes)}${grp('Textes liés', textes)}</section>`;
+}
+
+export function buildCodeBody(law, articles, related) {
   const m = codeSeoMeta(law);
   const links = (articles || []).map((a) => {
     const label = a.num || a.num_court || (a.article_number != null ? `Article ${a.article_number}` : a.slug);
@@ -223,6 +243,7 @@ export function buildCodeBody(law, articles) {
     ${intro}
     ${presentation}
     <nav class="ssr-toc" aria-label="Articles"><h2>Articles · ${esc(m.baseName)}</h2><ul>${links}</ul></nav>
+    ${buildRelatedBlock(related)}
   </article>`);
 }
 
@@ -634,6 +655,15 @@ async function fetchLaw(slug) {
 async function fetchCodeArticles(codeId) {
   return sb(`articles?code_id=eq.${codeId}&select=num,num_court,article_number,slug&order=display_order&limit=3000`);
 }
+// Textes & codes liés (legal_edge relation lie_a, bidirectionnel) pour le SSR/SEO.
+async function fetchRelatedTexts(codeId) {
+  try {
+    const edges = await sb(`legal_edge?relation=eq.lie_a&or=(src_id.eq.${codeId},dst_id.eq.${codeId})&select=src_id,dst_id`);
+    const others = [...new Set((edges || []).flatMap((e) => [e.src_id, e.dst_id]).filter((id) => id && id !== codeId))];
+    if (!others.length) return [];
+    return await sb(`laws_and_codes?id=in.(${others.join(',')})&is_active=eq.true&select=slug,title,short_title,category`);
+  } catch (e) { return []; }
+}
 async function fetchArticle(codeId, artSlug) {
   return one(await sb(`articles?code_id=eq.${codeId}&slug=eq.${encodeURIComponent(artSlug)}&select=id,num,num_court,article_number,slug,content_html&limit=1`));
 }
@@ -763,8 +793,9 @@ export default async function handler(req, res) {
       if (!law) return serveShell(60, true);
       let articles = [];
       try { articles = await fetchCodeArticles(law.id); } catch (e) { /* */ }
+      const related = await fetchRelatedTexts(law.id);
       const canonical = `${SITE}/code/${slug}`;
-      return serveHtml(buildCodeHead(law, articles.length, canonical), buildCodeBody(law, articles));
+      return serveHtml(buildCodeHead(law, articles.length, canonical), buildCodeBody(law, articles, related));
     }
 
     if (type === 'article') {
