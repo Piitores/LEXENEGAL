@@ -9,6 +9,7 @@ import { supabase } from '../../lib/supabase';
 import SEO from '../../components/SEO/SEO';
 import CodeNavTree from '../../components/CodeNavTree/CodeNavTree';
 import TextPresentation from '../../components/TextPresentation/TextPresentation';
+import RelatedTexts from '../../components/RelatedTexts/RelatedTexts';
 import LinkedLegalContent from '../../components/LinkedLegalContent/LinkedLegalContent';
 import ReportErrorModal from '../../components/ReportError/ReportErrorModal';
 import ActionButton from '../../components/ui/ActionButton';
@@ -664,6 +665,7 @@ const CodePage: React.FC = () => {
                             </div>
                         </>
                     )}
+                    {law && <RelatedTexts codeId={law.id} />}
                 </main>
             </div>
 
