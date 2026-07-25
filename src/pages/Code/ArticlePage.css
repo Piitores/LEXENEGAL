@@ -1183,6 +1183,9 @@
 .article-text .alinea.niv1 { margin-left: 1.5rem; }
 .article-text .alinea.niv2 { margin-left: 3rem; }
 .article-text .alinea.niv3 { margin-left: 4.5rem; }
+.article-text .alinea.niv4 { margin-left: 6rem; }
+.article-text .alinea.niv5 { margin-left: 7.5rem; }
+.article-text .alinea.niv6 { margin-left: 9rem; }
 .article-text .alinea .marqueur {
     font-weight: 600;
     color: var(--cp-green, #166534);
