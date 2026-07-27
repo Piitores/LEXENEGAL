@@ -275,9 +275,80 @@ export function buildArticleHead(law, art, canonical, plain) {
     isPartOf: { '@type': 'Legislation', name: law.title, url: `${SITE}/code/${law.slug}` },
     legislationJurisdiction: { '@type': 'AdministrativeArea', name: 'Sénégal' }, url: canonical,
   };
-  return headBlock({ title, description, keywords: `${numLabel}, ${law.title}, Droit sénégalais, Lexenegal`, canonical, ogType: 'article', schema });
+  /*
+   * BreadcrumbList : trois niveaux seulement (Codes › Code › Article). Les
+   * niveaux du plan sont volontairement exclus car Google exige une URL « item »
+   * pour tout maillon intermédiaire, et un chapitre n'a pas d'URL propre.
+   */
+  const filAriane = {
+    '@context': 'https://schema.org', '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Codes et textes', item: `${SITE}/codes` },
+      { '@type': 'ListItem', position: 2, name: law.title, item: `${SITE}/code/${law.slug}` },
+      { '@type': 'ListItem', position: 3, name: numLabel, item: canonical },
+    ],
+  };
+  return headBlock({ title, description, keywords: `${numLabel}, ${law.title}, Droit sénégalais, Lexenegal`, canonical, ogType: 'article', schema: [schema, filAriane] });
 }
-export function buildArticleBody(law, art, contentHtml, citing) {
+/*
+ * Place de l'article dans le plan du code (livre / titre / chapitre / section…).
+ *
+ * 96,5 % des articles portent un node_id : c'est la seule donnée de contexte
+ * disponible à grande échelle, et elle n'était pas exploitée dans la page servie
+ * au crawler — qui ne montrait que « Code › Article N ».
+ *
+ * Rendu en TEXTE, volontairement pas en liens : la seule URL de chapitre qui
+ * existe est /code/:slug?node=… , or ces URL sont des doublons de la page du
+ * code (elles figurent telles quelles dans le rapport « Duplicate without
+ * user-selected canonical » de Search Console). Y pousser 17 000 liens
+ * aggraverait le problème qu'on vient de corriger. Seuls « précédent » et
+ * « suivant » sont cliquables : ce sont de vraies URL canoniques.
+ */
+const MOTS_NIVEAU = {
+  partie: 'Partie', livre: 'Livre', titre: 'Titre', chapitre: 'Chapitre',
+  section: 'Section', sous_section: 'Sous-section', 'sous-section': 'Sous-section',
+  paragraphe: 'Paragraphe', annexe: 'Annexe',
+};
+// Ordinaux susceptibles d'ouvrir un intitulé dont le mot de niveau a été perdu
+// à l'extraction (ex. « DEUXIEME EFFETS DES OBLIGATIONS » pour un livre).
+const ORDINAUX = /^(PREMIER|PREMIERE|PREMIÈRE|SECOND|SECONDE|DEUXIEME|DEUXIÈME|TROISIEME|TROISIÈME|QUATRIEME|QUATRIÈME|CINQUIEME|CINQUIÈME|SIXIEME|SIXIÈME|SEPTIEME|SEPTIÈME|HUITIEME|HUITIÈME|NEUVIEME|NEUVIÈME|DIXIEME|DIXIÈME)\b\s*(.*)$/i;
+
+function libelleNiveau(n) {
+  const mot = MOTS_NIVEAU[n.type] || (n.type ? n.type.charAt(0).toUpperCase() + n.type.slice(1) : '');
+  const num = (n.numero || '').trim();
+  const intitule = (n.intitule || n.label || '').trim();
+  if (num) return `${mot} ${num}${intitule ? ` — ${intitule}` : ''}`;
+  if (!intitule) return mot;
+  /*
+   * Sans numéro : l'intitulé se suffit en général à lui-même (« PREMIERE
+   * PARTIE », « PRELIMINAIRE »). Seule exception, l'intitulé qui commence par
+   * un ordinal SANS porter son mot de niveau — séquelle d'extraction. On
+   * réinsère alors le mot, sinon le fil d'Ariane affiche « DEUXIEME EFFETS DES
+   * OBLIGATIONS » au lieu de « Livre DEUXIEME — EFFETS DES OBLIGATIONS ».
+   */
+  const m = intitule.match(ORDINAUX);
+  if (m && mot && !new RegExp(`\\b${mot}\\b`, 'i').test(intitule) && m[2]) {
+    return `${mot} ${m[1]} — ${m[2].replace(/^[\s.:—–-]+/, '')}`;
+  }
+  return intitule;
+}
+// Remonte la chaîne des parents jusqu'à la racine, puis remet dans l'ordre de lecture.
+export function cheminDansLePlan(nodeId, noeuds) {
+  if (!nodeId || !noeuds || !noeuds.length) return [];
+  const parId = new Map(noeuds.map((n) => [n.id, n]));
+  const chemin = [];
+  let courant = parId.get(nodeId);
+  // Garde-fou : une donnée cyclique ne doit pas boucler à l'infini côté serveur.
+  const vus = new Set();
+  while (courant && !vus.has(courant.id) && chemin.length < 12) {
+    vus.add(courant.id);
+    chemin.push(courant);
+    courant = courant.parent_id ? parId.get(courant.parent_id) : null;
+  }
+  return chemin.reverse();
+}
+
+export function buildArticleBody(law, art, contentHtml, citing, chemin, voisins) {
   const numLabel = art.num || art.num_court || (art.article_number != null ? `Article ${art.article_number}` : 'Article');
   const citingHtml = (citing && citing.length)
     ? `<section class="ssr-citing"><h2>Décisions citant cet article</h2><ul>${citing.map((c) => {
@@ -285,13 +356,29 @@ export function buildArticleBody(law, art, contentHtml, citing) {
         return `<li><a href="/decision/${esc(d.slug)}">${esc(d.reference || 'Décision')}</a>${d.chambre ? ` - ${esc(d.chambre)}` : ''}${d.date_decision ? ` (${esc(formatDateFr(d.date_decision))})` : ''}</li>`;
       }).filter(Boolean).join('')}</ul></section>`
     : '';
+  // Niveaux du plan intercalés dans le fil d'Ariane (texte, cf. commentaire ci-dessus).
+  const cheminHtml = (chemin || [])
+    .map((n) => ` › <span class="ssr-bc-niveau">${esc(libelleNiveau(n))}</span>`).join('');
+
+  // Précédent / suivant : chaîne les articles entre eux. Sans ça la page est un
+  // cul-de-sac, atteignable seulement depuis la liste de la page du code.
+  const lien = (a, sens, fleche) => (a && a.slug)
+    ? `<a href="/code/${esc(law.slug)}/${esc(a.slug)}" rel="${sens}">${esc(fleche === 'g' ? '← ' : '')}${esc(a.num || a.num_court || (a.article_number != null ? `Article ${a.article_number}` : 'Article'))}${esc(fleche === 'd' ? ' →' : '')}</a>`
+    : '';
+  const prec = lien(voisins && voisins.prec, 'prev', 'g');
+  const suiv = lien(voisins && voisins.suiv, 'next', 'd');
+  const navHtml = (prec || suiv)
+    ? `<nav class="ssr-artnav" aria-label="Article précédent et suivant">${prec}${prec && suiv ? ' · ' : ''}${suiv}</nav>`
+    : '';
+
   // contentHtml = HTML déjà généré par notre pipeline (de confiance) -> injecté tel quel
   return wrapContent(`<article>
-    <nav class="ssr-bc" aria-label="Fil d'Ariane"><a href="/code/${esc(law.slug)}">${esc(law.title)}</a> › ${esc(numLabel)}</nav>
+    <nav class="ssr-bc" aria-label="Fil d'Ariane"><a href="/code/${esc(law.slug)}">${esc(law.title)}</a>${cheminHtml} › ${esc(numLabel)}</nav>
     ${abrogationBanner(law)}
     <h1>${esc(numLabel)}</h1>
     <div class="ssr-article-body">${contentHtml || `<p>Texte de l'article non disponible.</p>`}</div>
     ${citingHtml}
+    ${navHtml}
   </article>`);
 }
 
@@ -679,7 +766,27 @@ async function fetchRelatedTexts(codeId) {
   } catch (e) { return []; }
 }
 async function fetchArticle(codeId, artSlug) {
-  return one(await sb(`articles?code_id=eq.${codeId}&slug=eq.${encodeURIComponent(artSlug)}&select=id,num,num_court,article_number,slug,content_html&limit=1`));
+  return one(await sb(`articles?code_id=eq.${codeId}&slug=eq.${encodeURIComponent(artSlug)}&select=id,num,num_court,article_number,slug,content_html,node_id,display_order&limit=1`));
+}
+// Plan du code (structure_nodes) : sert à situer l'article dans sa hiérarchie.
+// Chargé en une requête puis parcouru en mémoire — un code compte quelques
+// centaines de nœuds tout au plus.
+async function fetchStructureNodes(codeId) {
+  try {
+    return await sb(`structure_nodes?code_id=eq.${codeId}&select=id,parent_id,type,numero,intitule,label&limit=5000`);
+  } catch (e) { return []; }
+}
+// Article précédent et suivant, selon l'ordre d'affichage du code.
+async function fetchVoisins(codeId, ordre) {
+  if (ordre == null) return { prec: null, suiv: null };
+  const champs = 'slug,num,num_court,article_number';
+  try {
+    const [prec, suiv] = await Promise.all([
+      sb(`articles?code_id=eq.${codeId}&display_order=lt.${ordre}&select=${champs}&order=display_order.desc&limit=1`),
+      sb(`articles?code_id=eq.${codeId}&display_order=gt.${ordre}&select=${champs}&order=display_order.asc&limit=1`),
+    ]);
+    return { prec: one(prec), suiv: one(suiv) };
+  } catch (e) { return { prec: null, suiv: null }; }
 }
 async function fetchCurrentVersion(artId) {
   try {
@@ -835,12 +942,18 @@ export default async function handler(req, res) {
         }
         return serveShell(60, true);
       }
-      const [content, citing] = await Promise.all([
+      // Tout en parallèle : le contexte enrichi ne doit pas rallonger le rendu.
+      // Les trois requêtes ajoutées échouent en silence (contexte = bonus), le
+      // texte de l'article reste servi quoi qu'il arrive.
+      const [content, citing, noeuds, voisins] = await Promise.all([
         art.content_html ? Promise.resolve(art.content_html) : fetchCurrentVersion(art.id),
         fetchCitingDecisions(art.id),
+        art.node_id ? fetchStructureNodes(law.id) : Promise.resolve([]),
+        fetchVoisins(law.id, art.display_order),
       ]);
+      const chemin = cheminDansLePlan(art.node_id, noeuds);
       const canonical = `${SITE}/code/${codeSlug}/${artSlug}`;
-      return serveHtml(buildArticleHead(law, art, canonical, stripHtml(content)), buildArticleBody(law, art, content, citing));
+      return serveHtml(buildArticleHead(law, art, canonical, stripHtml(content)), buildArticleBody(law, art, content, citing, chemin, voisins));
     }
 
     // decision (défaut)
