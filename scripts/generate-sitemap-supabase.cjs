@@ -1,11 +1,22 @@
 /**
  * LEXENEGAL - Sitemap Generator (Supabase Edition)
- * Generates a sitemap.xml with all decisions, codes, and articles from Supabase.
+ *
+ * ⚠️ CE SCRIPT N'ALIMENTE PLUS LE SITE. Le sitemap est désormais DYNAMIQUE :
+ * il est produit à la demande par `api/sitemap.js` (index + enfants), branché
+ * dans vercel.json sur /sitemap.xml et /sitemap-*.xml.
+ *
+ * Il est conservé comme outil d'AUDIT hors ligne (comparer, compter, inspecter).
+ * Sa sortie va donc dans un fichier temporaire, JAMAIS dans public/ : un
+ * public/sitemap.xml réapparu masquerait la route dynamique, car sur Vercel le
+ * filesystem est prioritaire sur les rewrites — et le site repartirait
+ * silencieusement sur un sitemap figé.
+ *
  * Run: node scripts/generate-sitemap-supabase.cjs
  */
 
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 
 // Load environment variables from .env file manually
 const envPath = path.resolve(__dirname, '../.env');
@@ -234,11 +245,12 @@ async function generateSitemap() {
         process.exit(1);
     }
 
-    // Write to public folder
-    const outputPath = path.join(__dirname, '..', 'public', 'sitemap.xml');
+    // Sortie d'AUDIT uniquement — surtout pas public/sitemap.xml (cf. en-tête).
+    const outputPath = path.join(os.tmpdir(), 'lexenegal-sitemap-audit.xml');
     fs.writeFileSync(outputPath, xml);
 
-    console.log(`✅ Sitemap saved to ${outputPath}`);
+    console.log(`✅ Dump d'audit écrit dans ${outputPath}`);
+    console.log('ℹ️  Le sitemap servi en production est dynamique (api/sitemap.js) — ce fichier ne sert qu\'à comparer.');
     console.log(`📊 Total URLs generated: ${staticPages.length + codes.length + activeArticles.length + decisions.length + doctrines.length + seoThemes.length + guides.length}`);
 }
 

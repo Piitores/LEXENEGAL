@@ -5,6 +5,9 @@
     "functions": {
         "api/render.js": {
             "includeFiles": ".env"
+        },
+        "api/sitemap.js": {
+            "includeFiles": ".env"
         }
     },
     "redirects": [
@@ -36,6 +39,14 @@
         }
     ],
     "rewrites": [
+        {
+            "source": "/sitemap.xml",
+            "destination": "/api/sitemap?seg=index"
+        },
+        {
+            "source": "/sitemap-:seg.xml",
+            "destination": "/api/sitemap?seg=:seg"
+        },
         {
             "source": "/codes",
             "destination": "/api/render?type=codes"
