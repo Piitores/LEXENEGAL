@@ -228,21 +228,35 @@ interface MosaicProps {
     connector: MotionValue<number>;
 }
 
+/**
+ * ⚠️ Quand l'animation est désactivée (mobile, ou « réduire les animations »),
+ * il faut passer des valeurs de repos EXPLICITES et non `undefined`.
+ *
+ * Bug corrigé le 2026-07-27 : `isMobile` n'est calculé que dans un `useEffect`,
+ * donc au PREMIER rendu il vaut `false` → l'animation démarrait et framer-motion
+ * inscrivait `opacity: 0` dans le DOM (état de départ au défilement 0). L'effet
+ * passait ensuite `isMobile` à true, le style devenait `undefined`… mais
+ * **l'`opacity: 0` déjà écrite restait**, et plus rien ne la remettait à 1.
+ * Résultat sur mobile : les deux panneaux invisibles, on ne voyait que le fond
+ * vert de la carte. Vérifié dans le DOM : `style="opacity: 0; transform: none;"`.
+ */
+const AU_REPOS = { x: 0, opacity: 1 } as const;
+
 const DualPillarMosaic: React.FC<MosaicProps> = ({ animate, leftX, rightX, opacity, hubScale, connector }) => (
     <div className="dual-pillar">
-        <motion.div className="pillar-wrap" style={animate ? { x: leftX, opacity } : undefined}>
+        <motion.div className="pillar-wrap" style={animate ? { x: leftX, opacity } : AU_REPOS}>
             <JurisprudencePanel />
         </motion.div>
 
         <div className="dual-pillar__divider">
-            <motion.div className="dual-pillar__connector" style={animate ? { scaleX: connector } : undefined} />
-            <motion.div className="dual-pillar__hub" style={animate ? { scale: hubScale } : undefined}>
+            <motion.div className="dual-pillar__connector" style={animate ? { scaleX: connector } : { scaleX: 1 }} />
+            <motion.div className="dual-pillar__hub" style={animate ? { scale: hubScale } : { scale: 1 }}>
                 <div className="dual-pillar__hub-ring" />
                 <div className="dual-pillar__hub-core"><span>L</span></div>
             </motion.div>
         </div>
 
-        <motion.div className="pillar-wrap" style={animate ? { x: rightX, opacity } : undefined}>
+        <motion.div className="pillar-wrap" style={animate ? { x: rightX, opacity } : AU_REPOS}>
             <CodeTreePanel />
         </motion.div>
     </div>
@@ -252,8 +266,15 @@ const DualPillarMosaic: React.FC<MosaicProps> = ({ animate, leftX, rightX, opaci
 
 const ScrollReveal: React.FC = () => {
     const containerRef = useRef<HTMLDivElement>(null);
-    const [isMobile, setIsMobile] = useState(false);
-    const [reduced, setReduced] = useState(false);
+    // Initialisation PAREsseuse depuis la fenêtre : sans cela, le premier rendu
+    // croyait être sur ordinateur et lançait l'animation (cf. AU_REPOS ci-dessus).
+    // `typeof window` : le rendu serveur (api/render.js) n'a pas de fenêtre.
+    const [isMobile, setIsMobile] = useState(
+        () => typeof window !== 'undefined' && window.innerWidth <= 768,
+    );
+    const [reduced, setReduced] = useState(
+        () => typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches,
+    );
 
     useEffect(() => {
         const checkMobile = () => setIsMobile(window.innerWidth <= 768);
