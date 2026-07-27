@@ -1,6 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Scale, BookOpen, Globe2, FileText, ArrowRight } from 'lucide-react';
+import {
+    fetchPublicStats, formatFr, libelleArticles, libelleDecisions, type PublicStats,
+} from '../../lib/homeStats';
 import './PiliersAccess.css';
 
 interface Pilier {
@@ -11,26 +14,31 @@ interface Pilier {
     desc: string;
 }
 
-const PILIERS: Pilier[] = [
+/**
+ * Les compteurs des piliers viennent de `get_public_stats` (cf. lib/homeStats).
+ * Ils étaient codés en dur et faux : « 11 325 décisions » (10 922 réelles) et
+ * surtout « 11 codes · 8 131 articles » pour 27 codes et 17 169 articles.
+ */
+const piliersAvec = (s: PublicStats | null): Pilier[] => [
     {
         to: '/jurisprudence',
         icon: <Scale size={26} strokeWidth={1.6} />,
         title: 'Jurisprudence',
-        count: '11 325 décisions',
+        count: s ? `${libelleDecisions(s)} décisions` : '',
         desc: "Arrêts et décisions des juridictions sénégalaises - Cour suprême, cours d'appel, tribunaux et CCJA.",
     },
     {
         to: '/codes',
         icon: <BookOpen size={26} strokeWidth={1.6} />,
         title: 'Corpus National',
-        count: '11 codes · 8 131 articles',
+        count: s ? `${formatFr(s.codes)} codes · ${libelleArticles(s)} articles` : '',
         desc: 'Codes consolidés et LODA (lois, ordonnances, décrets, arrêtés, circulaires) du Sénégal. Journaux officiels à venir.',
     },
     {
         to: '/search?q=OHADA',
         icon: <Globe2 size={26} strokeWidth={1.6} />,
         title: 'Droit communautaire',
-        count: '11 actes uniformes',
+        count: s ? `${formatFr(s.ohada)} actes uniformes` : '',
         desc: 'Le droit OHADA et UEMOA applicable au Sénégal - actes uniformes, traité et jurisprudence CCJA.',
     },
     {
@@ -42,7 +50,15 @@ const PILIERS: Pilier[] = [
     },
 ];
 
-const PiliersAccess: React.FC = () => (
+const PiliersAccess: React.FC = () => {
+    const [s, setS] = useState<PublicStats | null>(null);
+    useEffect(() => {
+        let vivant = true;
+        fetchPublicStats().then((v) => { if (vivant) setS(v); });
+        return () => { vivant = false; };
+    }, []);
+
+    return (
     <section id="piliers" className="piliers">
         <div className="container">
             <header className="piliers__header">
@@ -55,7 +71,7 @@ const PiliersAccess: React.FC = () => (
             </header>
 
             <div className="piliers__grid">
-                {PILIERS.map((p) => (
+                {piliersAvec(s).map((p) => (
                     <Link key={p.title} to={p.to} className="pilier-card">
                         <span className="pilier-card__icon">{p.icon}</span>
                         <span className="pilier-card__count">{p.count}</span>
@@ -69,6 +85,7 @@ const PiliersAccess: React.FC = () => (
             </div>
         </div>
     </section>
-);
+    );
+};
 
 export default PiliersAccess;

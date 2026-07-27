@@ -4,6 +4,7 @@ import {
     Sparkles, Scale, BookOpen, Landmark,
     Briefcase, ChevronDown, ChevronRight, Search
 } from 'lucide-react';
+import { fetchPublicStats, formatFr, libelleDecisions, type PublicStats } from '../../lib/homeStats';
 import './ScrollReveal.css';
 
 /* ─── Header ─── */
@@ -41,8 +42,24 @@ const RevealCard: React.FC<{
 
 const CHAMBRES = ['Sociale', 'Civile', 'Pénale', 'Commerciale'];
 
+/**
+ * Compteur vivant partagé par les deux piliers de la démo. Les valeurs étaient
+ * codées en dur (« 11 325 décisions », « 11 codes ») et périmées ; `fetchPublicStats`
+ * est mis en cache au niveau du module, donc un seul appel par chargement de page.
+ */
+const useCompteurs = () => {
+    const [s, setS] = useState<PublicStats | null>(null);
+    useEffect(() => {
+        let vivant = true;
+        fetchPublicStats().then((v) => { if (vivant) setS(v); });
+        return () => { vivant = false; };
+    }, []);
+    return s;
+};
+
 const JurisprudencePanel: React.FC = () => {
     const [activeChambres, setActiveChambres] = useState(['Sociale']);
+    const stats = useCompteurs();
 
     const toggleChambre = (c: string) =>
         setActiveChambres(prev =>
@@ -54,7 +71,7 @@ const JurisprudencePanel: React.FC = () => {
             <div className="pillar__header">
                 <Scale size={13} />
                 <span>Jurisprudence</span>
-                <span className="pillar__count">11 325 décisions</span>
+                <span className="pillar__count">{stats ? `${libelleDecisions(stats)} décisions` : ''}</span>
             </div>
 
             {/* Search bar */}
@@ -159,12 +176,14 @@ const TreeItem: React.FC<TreeItemProps> = ({ label, level, expanded, active, cou
     </div>
 );
 
-const CodeTreePanel: React.FC = () => (
+const CodeTreePanel: React.FC = () => {
+  const stats = useCompteurs();
+  return (
     <div className="pillar pillar--corpus">
         <div className="pillar__header pillar__header--corpus">
             <BookOpen size={13} />
             <span>Corpus National</span>
-            <span className="pillar__count">11 codes</span>
+            <span className="pillar__count">{stats ? `${formatFr(stats.codes)} codes` : ''}</span>
         </div>
 
         {/* Code selector */}
@@ -193,7 +212,8 @@ const CodeTreePanel: React.FC = () => (
             <TreeItem label="Titre IV - De l'apprentissage et la formation" level={1} />
         </div>
     </div>
-);
+  );
+};
 
 /* ═══════════════════════════════════════════════════════════════════
    DUAL PILLAR MOSAIC - convergence des deux piliers au scroll

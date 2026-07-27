@@ -102,6 +102,16 @@
   color: #111827;
   line-height: 1.35;
   margin: 0 0 6px;
+  /* Les titres viennent désormais de la base (coalesce short_title/title) et
+     leur longueur varie beaucoup : 121 des 158 textes actifs n'ont pas de
+     short_title, on retombe alors sur l'intitulé officiel complet. Écrêtage à
+     deux lignes + hauteur réservée pour que les cartes restent alignées. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: calc(2 * 1.35em);
 }
 
 .recent-card__meta {
