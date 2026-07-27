@@ -17,11 +17,30 @@ interface SEOProps {
     chambre?: string;
 }
 
+// Origine canonique du site (jamais location.origin : sur un déploiement de
+// prévisualisation Vercel cela publierait un canonical vers le domaine de test).
+const CANONICAL_ORIGIN = 'https://www.lexenegal.sn';
+
+/*
+ * URL canonique de repli quand une page n'en fournit pas : la page se déclare
+ * ELLE-MÊME (origine canonique + chemin courant).
+ *
+ * ⛔ Ne jamais remettre l'accueil en valeur par défaut : toute page qui oubliait
+ * la prop « url » déclarait l'accueil comme canonical, ce qui entrait en conflit
+ * avec le canonical auto-référent du rendu serveur (api/render.js). Deux
+ * canonical contradictoires = Google les ignore tous les deux et range la page
+ * en « Duplicate without user-selected canonical » (constaté en Search Console).
+ */
+function selfCanonicalUrl(): string {
+    if (typeof window === 'undefined') return CANONICAL_ORIGIN;
+    return CANONICAL_ORIGIN + window.location.pathname;
+}
+
 const SEO: React.FC<SEOProps> = ({
     title = 'Lexenegal | La Mémoire Juridique du Sénégal',
     description = 'La référence numérique du droit sénégalais. Jurisprudence certifiée du TGI Dakar, Cour d\'Appel, Cour Suprême. Barreau du Sénégal.',
     image = '/og-image.svg',
-    url = 'https://www.lexenegal.sn',
+    url,
     type = 'website',
     juridiction,
     reference,
@@ -31,6 +50,9 @@ const SEO: React.FC<SEOProps> = ({
     motsCles,
     chambre
 }) => {
+    // URL canonique effective : celle fournie par la page, sinon la page elle-même.
+    const canonicalUrl = url || selfCanonicalUrl();
+
     // Determine if this is a decision page
     const isDecisionPage = !!(reference && juridiction);
 
@@ -115,7 +137,7 @@ const SEO: React.FC<SEOProps> = ({
             <meta name="keywords" content={pageKeywords} />
 
             {/* Canonical URL - Prevent duplicate content */}
-            <link rel="canonical" href={url} />
+            <link rel="canonical" href={canonicalUrl} />
 
             {/* Geo Targeting */}
             <meta name="geo.region" content="SN" />
@@ -124,7 +146,7 @@ const SEO: React.FC<SEOProps> = ({
 
             {/* Open Graph / Facebook */}
             <meta property="og:type" content={isDecisionPage ? 'article' : type} />
-            <meta property="og:url" content={url} />
+            <meta property="og:url" content={canonicalUrl} />
             <meta property="og:title" content={pageTitle} />
             <meta property="og:description" content={pageDescription} />
             <meta property="og:image" content={image} />
@@ -133,7 +155,7 @@ const SEO: React.FC<SEOProps> = ({
 
             {/* Twitter / X */}
             <meta property="twitter:card" content="summary_large_image" />
-            <meta property="twitter:url" content={url} />
+            <meta property="twitter:url" content={canonicalUrl} />
             <meta property="twitter:title" content={pageTitle} />
             <meta property="twitter:description" content={pageDescription} />
             <meta property="twitter:image" content={image} />

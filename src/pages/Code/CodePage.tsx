@@ -383,10 +383,15 @@ const CodePage: React.FC = () => {
 
     // ── Loading / Not found ──
 
+    /* ⛔ Aucun <SEO> dans les états transitoires ci-dessous.
+       Monter Helmet ici écraserait l'en-tête du rendu serveur (api/render.js) —
+       déjà correct et spécifique à l'URL — par un titre « Chargement... » ou
+       « Code non trouvé ». Si le crawler photographie la page avant la fin du
+       chargement, on préfère qu'il garde le titre et le canonical du serveur.
+       Le vrai <SEO url=...> est monté plus bas, une fois les données arrivées. */
     if (loading) {
         return (
             <div className="code-page">
-                <SEO title="Chargement..." />
                 <div className="code-loading">
                     <div className="loading-spinner" />
                     <p>Chargement du code...</p>
@@ -398,7 +403,6 @@ const CodePage: React.FC = () => {
     if (!law) {
         return (
             <div className="code-page">
-                <SEO title="Code non trouvé" />
                 <div className="code-not-found">
                     <BookOpen size={48} />
                     <h2>Code non trouvé</h2>

@@ -27,7 +27,6 @@ import AdminPage from './pages/Admin/AdminPage';
 import NotFoundPage from './pages/Error/NotFoundPage';
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
 import { useBlockSelectAll } from './hooks/useBlockSelectAll';
-import SEO from './components/SEO/SEO';
 import AmbientEffects from './components/AmbientEffects/AmbientEffects';
 import AccountNudge from './components/AccountNudge/AccountNudge';
 import { recordOrigin } from './lib/authRedirect';
@@ -119,7 +118,13 @@ function App() {
       <Router>
         <BotBlocker>
           <ScrollManager />
-          <SEO />
+          {/* ⛔ Pas de <SEO /> global ici. Sans prop « url » il déclarait l'accueil
+              comme canonical sur TOUTES les routes, en conflit avec le canonical
+              auto-référent du rendu serveur (api/render.js) → Google ignorait les
+              deux et classait les pages en « Duplicate without user-selected
+              canonical ». Chaque page porte désormais son propre <SEO url=... > ;
+              tant qu'aucune page n'en monte, l'en-tête du rendu serveur (déjà
+              correct et spécifique à l'URL) fait autorité. */}
           <div className="app">
             <AmbientEffects />
             <Navbar scrolled={scrolled} />

@@ -52,26 +52,40 @@ function formatDateFr(d) {
   catch (e) { return ''; }
 }
 function ldjson(obj) { return `<script type="application/ld+json">${JSON.stringify(obj)}</script>`; }
+/*
+ * data-rh="true" : marque de propriété de react-helmet-async.
+ *
+ * Helmet ne supprime que les balises portant cet attribut avant d'insérer les
+ * siennes. Sans lui, le <link rel="canonical"> du rendu serveur SURVIVAIT et
+ * celui de Helmet s'ajoutait à côté : deux canonical dans le DOM final, que
+ * Google ignore tous les deux (« Duplicate without user-selected canonical »).
+ * En marquant les balises que <SEO> réémet, Helmet les REMPLACE proprement.
+ *
+ * ⚠️ Volontairement PAS appliqué au JSON-LD : le schéma du serveur est
+ * spécifique à la page (Legislation / LegalCase) et vaut mieux que le schéma
+ * générique du composant React — on le laisse hors du périmètre de Helmet.
+ */
+const RH = 'data-rh="true"';
 function headBlock({ title, description, keywords, canonical, ogType, schema }) {
   return `
-  <title>${esc(title)}</title>
-  <meta name="description" content="${attr(description)}" />
-  ${keywords ? `<meta name="keywords" content="${attr(keywords)}" />` : ''}
-  <link rel="canonical" href="${attr(canonical)}" />
-  <meta name="geo.region" content="SN" />
-  <meta name="language" content="fr" />
-  <meta property="og:type" content="${ogType || 'article'}" />
-  <meta property="og:url" content="${attr(canonical)}" />
-  <meta property="og:title" content="${attr(title)}" />
-  <meta property="og:description" content="${attr(description)}" />
-  <meta property="og:image" content="${attr(OG_IMAGE)}" />
-  <meta property="og:locale" content="fr_SN" />
-  <meta property="og:site_name" content="Lexenegal" />
-  <meta property="twitter:card" content="summary_large_image" />
-  <meta property="twitter:url" content="${attr(canonical)}" />
-  <meta property="twitter:title" content="${attr(title)}" />
-  <meta property="twitter:description" content="${attr(description)}" />
-  <meta property="twitter:image" content="${attr(OG_IMAGE)}" />
+  <title ${RH}>${esc(title)}</title>
+  <meta ${RH} name="description" content="${attr(description)}" />
+  ${keywords ? `<meta ${RH} name="keywords" content="${attr(keywords)}" />` : ''}
+  <link ${RH} rel="canonical" href="${attr(canonical)}" />
+  <meta ${RH} name="geo.region" content="SN" />
+  <meta ${RH} name="language" content="fr" />
+  <meta ${RH} property="og:type" content="${ogType || 'article'}" />
+  <meta ${RH} property="og:url" content="${attr(canonical)}" />
+  <meta ${RH} property="og:title" content="${attr(title)}" />
+  <meta ${RH} property="og:description" content="${attr(description)}" />
+  <meta ${RH} property="og:image" content="${attr(OG_IMAGE)}" />
+  <meta ${RH} property="og:locale" content="fr_SN" />
+  <meta ${RH} property="og:site_name" content="Lexenegal" />
+  <meta ${RH} property="twitter:card" content="summary_large_image" />
+  <meta ${RH} property="twitter:url" content="${attr(canonical)}" />
+  <meta ${RH} property="twitter:title" content="${attr(title)}" />
+  <meta ${RH} property="twitter:description" content="${attr(description)}" />
+  <meta ${RH} property="twitter:image" content="${attr(OG_IMAGE)}" />
   ${ldjson(schema)}`;
 }
 
