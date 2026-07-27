@@ -35,6 +35,29 @@ Changer le modèle ou la dimension = **réembedder tout le corpus** (`doc_embedd
 
 Enveloppe `{ results, total }`. Métadonnées + lien profond uniquement — **jamais** de contenu gaté (`content_raw`, texte intégral réservé). Les RPC hybrides respectent déjà ça.
 
+## Appel FÉDÉRÉ multi-surfaces (2026-07-27) — à privilégier côté front
+
+L'edge function accepte **deux contrats d'entrée** :
+
+| Contrat | Corps | Réponse |
+|---|---|---|
+| **Mono-surface** (historique, toujours supporté) | `{ surface:"articles", query, limit, offset, sort, filters }` | `{ results:[…], total, mode }` |
+| **Multi-surfaces** (recommandé) | `{ query, surfaces:[ {surface,limit,offset,sort,filters}, … ] }` | `{ results:{ articles:{results,total}, doctrine:{…}, decisions:{…} }, mode }` |
+
+**Pourquoi** : le front lançait **3 appels séparés** (un par pilier) pour une seule recherche
+utilisateur → **3 embeddings Voyage du même texte**, 3 préflights CORS et 3 requêtes lourdes
+concurrentes sur la même instance Postgres. Le contrat multi n'embedde **qu'une fois** et lance les
+RPC **en parallèle** côté serveur.
+
+**Mesuré** (ordres alternés, requêtes distinctes, 2026-07-27) : **~3,7 s → ~1,3 s** de médiane.
+
+**Repli par pilier** : une surface qui échoue revient en `{results:[], total:0, fallback:true, error}`
+sans abattre les autres ; l'appelant fait alors son FTS pour **ce pilier seul**
+(`applyArticles` / `applyDoctrine` dans `SearchPage.tsx`).
+
+**Règle d'usage front** : l'appel fédéré ne sert que quand **la requête change**. Un changement de
+**filtre / tri / pagination** ne concerne que les décisions → appel mono-surface, **sans réembedder**.
+
 ## Dégradation gracieuse
 
 Si l'embedding échoue (pas de clé, Voyage indisponible) : l'appelant **retombe sur le FTS** (`search_doctrine` / `search_articles` / `search_decisions_fts`). Une recherche ne doit jamais planter faute d'embedding.

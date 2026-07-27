@@ -167,55 +167,64 @@ const SearchPage: React.FC = () => {
         userPickedTab.current = false; // nouvelle requête → on laissera l'onglet se choisir automatiquement
     }, [queryParam]);
 
-    // RECHERCHE "CODES & ARTICLES" (en parallèle des décisions)
-    useEffect(() => {
-        const term = query?.trim() || '';
-        if (term.length < 2) {
-            setArticleResults([]);
-            return;
-        }
-        let cancelled = false;
-        setArticlesLoading(true);
-        const timer = setTimeout(async () => {
-            try {
-                // HYBRIDE via l'edge function `search` ; fallback FTS (search_articles).
-                let data: any[] = [];
-                let mode: 'hybrid' | 'fts' = 'fts';
-                const { data: ef, error: efErr } = await supabase.functions.invoke('search', {
-                    body: { surface: 'articles', query: term, limit: 50 },
+    // Piliers « Codes & articles » et « Doctrine ».
+    // Ils sont désormais servis par l'appel FÉDÉRÉ de `performSearch` (un seul
+    // appel edge, un seul embedding Voyage pour les 3 piliers) — cf. diagnostic
+    // perf 2026-07-27. Chaque pilier garde son repli FTS INDÉPENDANT : si
+    // l'hybride échoue pour lui seul, on retombe sur sa RPC FTS sans pénaliser
+    // les autres. `hybridRows === null` = pas de résultat hybride → repli.
+    const applyArticles = async (term: string, hybridRows: any[] | null) => {
+        try {
+            let rows = hybridRows;
+            let mode: 'hybrid' | 'fts' = 'hybrid';
+            if (rows === null) {
+                mode = 'fts';
+                const { data, error } = await supabase.rpc('search_articles', {
+                    search_query: term,
+                    result_limit: 50
                 });
-                if (!efErr && ef && !ef.fallback && Array.isArray(ef.results)) {
-                    data = ef.results;
-                    mode = 'hybrid';
-                } else {
-                    const { data: ftsData, error: artErr } = await supabase.rpc('search_articles', {
-                        search_query: term,
-                        result_limit: 50
-                    });
-                    if (artErr) throw artErr;
-                    data = ftsData || [];
-                    mode = 'fts';
-                }
-                if (cancelled) return;
-                articleModeRef.current = mode;
-                const arr: ArticleHit[] = data.map((a: any) => ({
-                    id: a.id,
-                    article_number: a.article_number,
-                    slug: a.slug,
-                    code_slug: a.code_slug || 'code-travail',
-                    code_title: a.code_title || 'Code',
-                    content: a.content || ''
-                }));
-                setArticleResults(arr);
-            } catch (e) {
-                if (!cancelled) setArticleResults([]);
-                console.warn('search articles error:', e);
-            } finally {
-                if (!cancelled) setArticlesLoading(false);
+                if (error) throw error;
+                rows = data || [];
             }
-        }, 300);
-        return () => { cancelled = true; clearTimeout(timer); };
-    }, [query]);
+            articleModeRef.current = mode;
+            setArticleResults((rows || []).map((a: any) => ({
+                id: a.id,
+                article_number: a.article_number,
+                slug: a.slug,
+                code_slug: a.code_slug || 'code-travail',
+                code_title: a.code_title || 'Code',
+                content: a.content || ''
+            })));
+        } catch (e) {
+            setArticleResults([]);
+            console.warn('search articles error:', e);
+        } finally {
+            setArticlesLoading(false);
+        }
+    };
+
+    const applyDoctrine = async (term: string, hybridRows: any[] | null) => {
+        try {
+            let rows = hybridRows;
+            let mode: 'hybrid' | 'fts' = 'hybrid';
+            if (rows === null) {
+                mode = 'fts';
+                const { data, error } = await supabase.rpc('search_doctrine', {
+                    search_query: term,
+                    result_limit: 30
+                });
+                if (error) throw error;
+                rows = data || [];
+            }
+            doctrineModeRef.current = mode;
+            setDoctrineResults((rows || []) as DoctrineHit[]);
+        } catch (e) {
+            setDoctrineResults([]);
+            console.warn('search doctrine error:', e);
+        } finally {
+            setDoctrineLoading(false);
+        }
+    };
 
     // Défaut « Tout » (fédéré) : plus de re-forçage automatique vers la jurisprudence
     // (dé-biaisage demandé). L'utilisateur choisit son périmètre via les onglets.
@@ -257,44 +266,6 @@ const SearchPage: React.FC = () => {
         return () => { active = false; };
     }, [query]);
 
-    // Pilier DOCTRINE (fédération) : recherche HYBRIDE via l'edge function `search`
-    // (contrat canonique, cf. docs/RECHERCHE-HYBRIDE.md). Fallback FTS (search_doctrine)
-    // si l'embedding n'est pas disponible (fallback:true) ou en cas d'erreur.
-    useEffect(() => {
-        const term = (query || '').trim();
-        if (term.length < 3) { setDoctrineResults([]); return; }
-        let cancelled = false;
-        setDoctrineLoading(true);
-        const timer = setTimeout(async () => {
-            let rows: DoctrineHit[] = [];
-            let mode: 'hybrid' | 'fts' = 'fts';
-            try {
-                const { data: ef, error: efErr } = await supabase.functions.invoke('search', {
-                    body: { surface: 'doctrine', query: term, limit: 30 },
-                });
-                if (!efErr && ef && !ef.fallback && Array.isArray(ef.results)) {
-                    rows = ef.results as DoctrineHit[];
-                    mode = 'hybrid';
-                } else {
-                    // Pas d'hybride dispo → FTS
-                    const { data, error: dErr } = await supabase.rpc('search_doctrine', { search_query: term, result_limit: 30 });
-                    if (dErr) throw dErr;
-                    rows = (data || []) as DoctrineHit[];
-                    mode = 'fts';
-                }
-                if (cancelled) return;
-                doctrineModeRef.current = mode;
-                setDoctrineResults(rows);
-            } catch (e) {
-                if (!cancelled) setDoctrineResults([]);
-                console.warn('search doctrine error:', e);
-            } finally {
-                if (!cancelled) setDoctrineLoading(false);
-            }
-        }, 300);
-        return () => { cancelled = true; clearTimeout(timer); };
-    }, [query]);
-
     // Analytics requêtable (search_events) : on logge chaque recherche UNE fois, une fois
     // les compteurs des 4 piliers stabilisés (1,2 s sans changement). Fire-and-forget :
     // n'attend rien, ignore les erreurs - ne doit jamais gêner la recherche.
@@ -333,17 +304,35 @@ const SearchPage: React.FC = () => {
         setActiveTab(tab);
     };
 
-    // TRIGGER SEARCH
+    // TRIGGER SEARCH — la requête a changé : recherche FÉDÉRÉE (1 appel edge pour
+    // les 3 piliers, 1 seul embedding Voyage au lieu de 3).
     useEffect(() => {
+        const term = query?.trim() || '';
+        // Seuils par pilier : articles ≥ 2 caractères, doctrine ≥ 3. En dessous,
+        // le pilier est vidé et n'est pas demandé à l'edge function.
+        if (term.length < 2) { setArticleResults([]); setArticlesLoading(false); }
+        if (term.length < 3) { setDoctrineResults([]); setDoctrineLoading(false); }
         const timer = setTimeout(() => {
-            performSearch(false);
+            performSearch(false, true);
         }, 300);
         return () => clearTimeout(timer);
-    }, [query, selectedMatiere, selectedChambre, selectedJuridiction, sortOption, datePreset, customYearStart, customYearEnd]);
+    }, [query]);
 
-    // LOAD MORE
+    // Filtres / tri / dates : SEULES les décisions sont concernées (articles et
+    // doctrine ne sont pas filtrés) → on ne rejoue qu'elles, sans réembedder.
+    // Le montage initial est déjà couvert par l'effet ci-dessus, on le saute.
+    const filtersMountedRef = useRef(false);
     useEffect(() => {
-        if (offset > 0) performSearch(true);
+        if (!filtersMountedRef.current) { filtersMountedRef.current = true; return; }
+        const timer = setTimeout(() => {
+            performSearch(false, false);
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [selectedMatiere, selectedChambre, selectedJuridiction, sortOption, datePreset, customYearStart, customYearEnd]);
+
+    // LOAD MORE — pagination : décisions seules.
+    useEffect(() => {
+        if (offset > 0) performSearch(true, false);
     }, [offset]);
 
     // Load facets once on mount (static counts for all decisions)
@@ -407,7 +396,9 @@ const SearchPage: React.FC = () => {
         loadFacets();
     }, []);
 
-    const performSearch = async (append: boolean) => {
+    // `federated` : la requête vient de changer → on demande les 3 piliers en UN
+    // appel (un seul embedding). Sinon (filtres, tri, pagination) → décisions seules.
+    const performSearch = async (append: boolean, federated = false) => {
         setLoading(true);
         setError(null);
         try {
@@ -456,24 +447,60 @@ const SearchPage: React.FC = () => {
                 const sortArg = sortOption === 'relevance' ? 'relevance' : sortOption === 'date_asc' ? 'date_asc' : 'date_desc';
                 // HYBRIDE via l'edge function `search` (tri + pagination + filtres) ; fallback FTS.
                 let data: any[] = [];
-                const { data: ef, error: efErr } = await supabase.functions.invoke('search', {
-                    body: {
-                        surface: 'decisions',
-                        query: searchTerm,
-                        limit: pageSize,
-                        offset: currentOffset,
-                        sort: sortArg,
-                        filters: {
-                            matiere: matiereFilter,
-                            chambre: chambreFilter,
-                            juridiction: finalJuridictionFilter,
-                            date_from: dateFrom,
-                            date_to: dateTo,
-                        },
+                const decisionSpec = {
+                    surface: 'decisions',
+                    limit: pageSize,
+                    offset: currentOffset,
+                    sort: sortArg,
+                    filters: {
+                        matiere: matiereFilter,
+                        chambre: chambreFilter,
+                        juridiction: finalJuridictionFilter,
+                        date_from: dateFrom,
+                        date_to: dateTo,
                     },
-                });
-                if (!efErr && ef && !ef.fallback && Array.isArray(ef.results)) {
-                    data = ef.results;
+                };
+
+                // Mode fédéré : un seul appel pour décisions + articles + doctrine.
+                // Les piliers secondaires sont servis depuis CETTE réponse ; chacun
+                // garde son repli FTS indépendant via applyArticles/applyDoctrine.
+                const wantArticles = federated && searchTerm.length >= 2;
+                const wantDoctrine = federated && searchTerm.length >= 3;
+                if (wantArticles) setArticlesLoading(true);
+                if (wantDoctrine) setDoctrineLoading(true);
+
+                const body = federated
+                    ? {
+                        query: searchTerm,
+                        surfaces: [
+                            decisionSpec,
+                            ...(wantArticles ? [{ surface: 'articles', limit: 50 }] : []),
+                            ...(wantDoctrine ? [{ surface: 'doctrine', limit: 30 }] : []),
+                        ],
+                    }
+                    : { ...decisionSpec, query: searchTerm };
+
+                const { data: ef, error: efErr } = await supabase.functions.invoke('search', { body });
+
+                // Réponse fédérée = { results: { <surface>: {results,total} } } ;
+                // réponse mono-surface (historique) = { results: [...] }.
+                const bag =
+                    federated && !efErr && ef && !ef.fallback && ef.results && !Array.isArray(ef.results)
+                        ? (ef.results as Record<string, any>)
+                        : null;
+
+                if (federated) {
+                    // On sert les piliers secondaires sans attendre les décisions.
+                    if (wantArticles) void applyArticles(searchTerm, bag?.articles && !bag.articles.fallback ? bag.articles.results : null);
+                    if (wantDoctrine) void applyDoctrine(searchTerm, bag?.doctrine && !bag.doctrine.fallback ? bag.doctrine.results : null);
+                }
+
+                const hybridDecisions = federated
+                    ? (bag?.decisions && !bag.decisions.fallback ? bag.decisions.results : null)
+                    : (!efErr && ef && !ef.fallback && Array.isArray(ef.results) ? ef.results : null);
+
+                if (hybridDecisions) {
+                    data = hybridDecisions;
                     decisionsModeRef.current = 'hybrid';
                 } else {
                     const { data: ftsData, error: rpcError } = await supabase.rpc('search_decisions_fts', {
