@@ -2,7 +2,8 @@
  * LEXENEGAL - Admin Command Center
  *
  * Onglets : Tableau de bord (stats) · Utilisateurs (tier/suspension/suppression)
- * · Contenu (publication is_active) · Signalements · Sécurité (audit + suspects).
+ * · Contenu (publication is_active) · Signalements · Sécurité (audit + suspects)
+ * · API (clés de l'API REST publique api.lexenegal.sn).
  * Tout passe par des RPC/Edge Functions gardées par is_admin().
  */
 
@@ -13,7 +14,7 @@ import {
     LayoutDashboard, Users, FileText, BookOpen, Shield,
     AlertTriangle, Crown, Loader2, LogOut, History, X, Star,
     Flag, Check, RotateCcw, Trash2, ExternalLink, FolderOpen,
-    Ban, Eye, EyeOff
+    Ban, Eye, EyeOff, KeyRound, Plus, Copy
 } from 'lucide-react';
 import './AdminPage.css';
 
@@ -38,7 +39,16 @@ interface DashStats {
     by_category: { category: string; n: number }[];
 }
 
-type Tab = 'dashboard' | 'users' | 'content' | 'reports' | 'security';
+/** Une clé de l'API REST publique. `key_prefix` sert à la reconnaître : la clé
+ *  complète n'est affichée qu'une fois, à la création (seule son empreinte est stockée). */
+interface ApiKey {
+    id: string; key_prefix: string; client_name: string; contact_email: string | null;
+    plan: string; daily_quota: number; daily_quota_semantic: number; is_active: boolean;
+    expires_at: string | null; created_at: string; last_used_at: string | null;
+    calls_7d: number; calls_today: number;
+}
+
+type Tab = 'dashboard' | 'users' | 'content' | 'reports' | 'security' | 'api';
 
 const AdminPage: React.FC = () => {
     const navigate = useNavigate();
@@ -54,6 +64,14 @@ const AdminPage: React.FC = () => {
     const [audit, setAudit] = useState<AuditLogEntry[]>([]);
     const [auditAction, setAuditAction] = useState<string>('all');
     const [currentUser, setCurrentUser] = useState<any>(null);
+
+    const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
+    // Clé fraîchement émise, EN CLAIR. Affichée une seule fois puis oubliée :
+    // la base ne conserve que son empreinte, elle est donc irrécupérable ensuite.
+    const [nouvelleCle, setNouvelleCle] = useState<string | null>(null);
+    const [cleCopiee, setCleCopiee] = useState(false);
+    const [formCle, setFormCle] = useState({ client_name: '', contact_email: '', plan: 'essai' });
+    const [creationEnCours, setCreationEnCours] = useState(false);
 
     const [showJournal, setShowJournal] = useState(false);
     const [journalUser, setJournalUser] = useState<User | null>(null);
@@ -112,9 +130,53 @@ const AdminPage: React.FC = () => {
             const { data: statsData } = await supabase.rpc('admin_dashboard_stats');
             setDash(statsData as DashStats);
 
+            await loadApiKeys();
             await loadAudit('all');
         } catch (e) { console.error('Dashboard load error:', e); }
         finally { setLoading(false); }
+    };
+
+    const loadApiKeys = async () => {
+        const { data, error } = await supabase.rpc('admin_api_key_list');
+        if (error) { console.error('API keys load error:', error); return; }
+        setApiKeys((data as ApiKey[]) || []);
+    };
+
+    /**
+     * Émet une clé. La RPC la génère EN BASE et ne la renvoie qu'ici, une fois :
+     * seule son empreinte sha256 est conservée. Si le client la perd, on n'en
+     * fabrique pas de copie — on en émet une nouvelle et on révoque l'ancienne.
+     */
+    const creerApiKey = async () => {
+        if (!formCle.client_name.trim()) { window.alert('Le nom du client est obligatoire.'); return; }
+        setCreationEnCours(true);
+        try {
+            const { data, error } = await supabase.rpc('admin_api_key_create', {
+                p_client_name: formCle.client_name.trim(),
+                p_contact_email: formCle.contact_email.trim() || null,
+                p_plan: formCle.plan,
+            });
+            if (error) { window.alert("Échec de la création : " + error.message); return; }
+            setNouvelleCle((data as { api_key: string }).api_key);
+            setCleCopiee(false);
+            setFormCle({ client_name: '', contact_email: '', plan: 'essai' });
+            await loadApiKeys();
+        } finally { setCreationEnCours(false); }
+    };
+
+    const copierCle = async () => {
+        if (!nouvelleCle) return;
+        try { await navigator.clipboard.writeText(nouvelleCle); setCleCopiee(true); }
+        catch { window.alert('Copie impossible — sélectionnez la clé et copiez-la à la main.'); }
+    };
+
+    const basculerApiKey = async (k: ApiKey) => {
+        if (k.is_active && !window.confirm(
+            `Révoquer la clé de « ${k.client_name} » ? Ses appels seront refusés immédiatement.`
+        )) return;
+        const { error } = await supabase.rpc('admin_api_key_set_active', { p_id: k.id, p_active: !k.is_active });
+        if (error) { window.alert("Échec : " + error.message); return; }
+        setApiKeys(ks => ks.map(x => x.id === k.id ? { ...x, is_active: !k.is_active } : x));
     };
 
     const loadAudit = async (action: string) => {
@@ -195,6 +257,7 @@ const AdminPage: React.FC = () => {
         { id: 'content', label: 'Contenu', icon: <BookOpen size={16} />, badge: drafts || undefined },
         { id: 'reports', label: 'Signalements', icon: <Flag size={16} />, badge: pendingReports || undefined },
         { id: 'security', label: 'Sécurité', icon: <Shield size={16} />, badge: suspicious.length || undefined },
+        { id: 'api', label: 'API', icon: <KeyRound size={16} />, badge: apiKeys.filter(k => k.is_active).length || undefined },
     ];
     const maxSignup = dash ? Math.max(1, ...dash.signups_by_month.map(s => s.n)) : 1;
 
@@ -426,6 +489,105 @@ const AdminPage: React.FC = () => {
                                 </tbody>
                             </table>
                         </div>
+                    </section>
+                </>
+            )}
+
+            {/* API — clés de l'API REST publique (api.lexenegal.sn) */}
+            {activeTab === 'api' && (
+                <>
+                    {/* La clé en clair n'existe QU'ICI et QU'UNE FOIS : la base n'en
+                        garde que l'empreinte. D'où l'avertissement explicite. */}
+                    {nouvelleCle && (
+                        <section className="admin-section admin-card api-nouvelle">
+                            <h2><KeyRound size={20} /> Nouvelle clé — à copier maintenant</h2>
+                            <p className="api-avertissement">
+                                Cette clé ne sera <strong>plus jamais affichée</strong>. Transmettez-la au client
+                                par un canal sûr. Si elle est perdue, il faudra en émettre une nouvelle et révoquer celle-ci.
+                            </p>
+                            <div className="api-cle-boite">
+                                <code className="api-cle">{nouvelleCle}</code>
+                                <button className="btn-action btn-action--pro" onClick={copierCle}>
+                                    <Copy size={14} /> {cleCopiee ? 'Copiée' : 'Copier'}
+                                </button>
+                            </div>
+                            <button className="btn-action btn-action--journal" onClick={() => setNouvelleCle(null)}>
+                                <Check size={14} /> J'ai noté la clé
+                            </button>
+                        </section>
+                    )}
+
+                    <section className="admin-section admin-card">
+                        <h2><Plus size={20} /> Émettre une clé</h2>
+                        <div className="api-form">
+                            <input
+                                type="text" placeholder="Nom du client (obligatoire)"
+                                value={formCle.client_name}
+                                onChange={e => setFormCle({ ...formCle, client_name: e.target.value })}
+                            />
+                            <input
+                                type="email" placeholder="E-mail de contact (facultatif)"
+                                value={formCle.contact_email}
+                                onChange={e => setFormCle({ ...formCle, contact_email: e.target.value })}
+                            />
+                            <select
+                                value={formCle.plan}
+                                onChange={e => setFormCle({ ...formCle, plan: e.target.value })}
+                            >
+                                <option value="essai">Essai — 500 appels/jour, expire à 30 jours</option>
+                                <option value="standard">Standard — 10 000 appels/jour</option>
+                            </select>
+                            <button className="btn-action btn-action--pro" onClick={creerApiKey} disabled={creationEnCours}>
+                                {creationEnCours ? <Loader2 size={14} className="spinner" /> : <Plus size={14} />} Créer la clé
+                            </button>
+                        </div>
+                    </section>
+
+                    <section className="admin-section">
+                        <h2><KeyRound size={20} /> Clés d'API
+                            <span className="admin-hint">({apiKeys.filter(k => k.is_active).length} active(s) sur {apiKeys.length})</span>
+                        </h2>
+                        {apiKeys.length === 0 ? <p className="admin-empty">Aucune clé émise pour le moment.</p> : (
+                            <div className="admin-table-wrapper">
+                                <table className="admin-table">
+                                    <thead><tr>
+                                        <th>Client</th><th>Clé</th><th>Plan</th><th>Aujourd'hui</th>
+                                        <th>7 jours</th><th>Expire</th><th>Statut</th><th>Action</th>
+                                    </tr></thead>
+                                    <tbody>
+                                        {apiKeys.map(k => (
+                                            <tr key={k.id} className={k.is_active ? '' : 'row-suspended'}>
+                                                <td>
+                                                    {k.client_name}
+                                                    {k.contact_email && <><br /><span className="admin-hint">{k.contact_email}</span></>}
+                                                </td>
+                                                <td><code>{k.key_prefix}…</code></td>
+                                                <td><span className="cat-badge">{k.plan}</span></td>
+                                                <td>{k.calls_today} / {k.daily_quota}</td>
+                                                <td>{k.calls_7d}</td>
+                                                <td>{k.expires_at ? new Date(k.expires_at).toLocaleDateString('fr-FR') : '—'}</td>
+                                                <td>{k.is_active
+                                                    ? <span className="report-status report-status--resolved">Active</span>
+                                                    : <span className="report-status report-status--pending">Révoquée</span>}</td>
+                                                <td>
+                                                    <button
+                                                        className={`btn-action ${k.is_active ? 'btn-action--danger' : 'btn-action--pro'}`}
+                                                        onClick={() => basculerApiKey(k)}
+                                                        title={k.is_active ? 'Révoquer' : 'Réactiver'}
+                                                    >
+                                                        {k.is_active ? <><Ban size={14} /> Révoquer</> : <><RotateCcw size={14} /> Réactiver</>}
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                        <p className="admin-note">
+                            Documentation pour les clients : <code>https://api.lexenegal.sn/v1/openapi.json</code>.
+                            Une révocation prend effet immédiatement ; une réactivation peut demander une minute.
+                        </p>
                     </section>
                 </>
             )}
