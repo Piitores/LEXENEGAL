@@ -32,6 +32,7 @@ function Footer() {
           <div className="footer__col">
             <h4>Contact</h4>
             <a href="mailto:contact@lexenegal.sn">contact@lexenegal.sn</a>
+            <Link to="/developpeurs">API pour développeurs</Link>
             <span>Dakar, Sénégal</span>
           </div>
         </div>
