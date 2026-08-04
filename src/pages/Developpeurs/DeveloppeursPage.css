@@ -182,6 +182,30 @@
     margin: 1rem 0 0;
 }
 
+/* Section « dans ChatGPT » — mise en avant : c'est le chemin sans code, donc
+   celui qui parle au lecteur non technicien. */
+.dev-section--ia {
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 1.5rem 1.6rem;
+}
+
+.dev-section--ia h2 {
+    border-bottom-color: #CBD5E1;
+}
+
+.dev-etapes {
+    margin: 0 0 1rem;
+    padding-left: 1.3rem;
+    line-height: 1.9;
+    color: #374151;
+}
+
+.dev-etapes li {
+    margin-bottom: 0.3rem;
+}
+
 .dev-section--citation {
     background: #F0FDF4;
     border-radius: 12px;

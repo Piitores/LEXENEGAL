@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Plug, KeyRound, Terminal, Gauge, AlertCircle, Quote, ExternalLink } from 'lucide-react';
+import { Plug, KeyRound, Terminal, Gauge, AlertCircle, Quote, ExternalLink, Sparkles } from 'lucide-react';
 import SEO from '../../components/SEO/SEO';
 import './DeveloppeursPage.css';
 
@@ -147,6 +147,45 @@ const DeveloppeursPage: React.FC = () => {
                             {API_BASE}/openapi.json <ExternalLink size={13} />
                         </a>
                     </div>
+                </section>
+
+                {/* ── ChatGPT et assistants ───────────────────────────────── */}
+                <section className="dev-section dev-section--ia">
+                    <h2><Sparkles size={20} /> Utiliser LEXENEGAL dans ChatGPT</h2>
+                    <p>
+                        Vous pouvez interroger le fonds LEXENEGAL depuis ChatGPT <strong>sans écrire
+                        une ligne de code</strong>, en créant un GPT personnalisé qui utilise votre
+                        clé. Comptez cinq minutes.
+                    </p>
+                    <ol className="dev-etapes">
+                        <li>
+                            Dans ChatGPT : <em>Explorer les GPT → Créer</em>, puis l’onglet{' '}
+                            <em>Configurer</em>.
+                        </li>
+                        <li>
+                            En bas, <strong>Créer une action</strong>, puis{' '}
+                            <em>Importer depuis une URL</em>.
+                        </li>
+                        <li>
+                            Collez notre fiche technique :{' '}
+                            <code>{`${API_BASE}/openapi.json`}</code> — les opérations apparaissent
+                            toutes seules.
+                        </li>
+                        <li>
+                            Dans <em>Authentification</em>, choisissez <em>Clé d’API</em>, type{' '}
+                            <em>Bearer</em>, et collez votre clé LEXENEGAL.
+                        </li>
+                        <li>
+                            Enregistrez, puis essayez :{' '}
+                            <em>« Que dit le droit sénégalais sur la rupture abusive du contrat de
+                            travail ? »</em>
+                        </li>
+                    </ol>
+                    <p className="dev-note">
+                        Votre GPT consomme le quota de votre clé, et vous en suivez l’usage. La même
+                        fiche technique fonctionne avec les autres assistants qui acceptent une
+                        description OpenAPI.
+                    </p>
                 </section>
 
                 {/* ── Les opérations ──────────────────────────────────────── */}
