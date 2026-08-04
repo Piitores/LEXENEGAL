@@ -699,4 +699,28 @@
 .admin-filter { margin-left: auto; font-size: 0.8rem; padding: 5px 10px; border: 1px solid #E5E7EB; border-radius: 8px; background: #fff; color: #374151; }
 .admin-section h2 { display: flex; align-items: center; gap: 8px; }
 
-@media (max-width: 900px) { .admin-dash-grid { grid-template-columns: 1fr; } }
+/* ── Onglet API : clés de l'API REST publique ─────────────────────────────── */
+
+.api-form { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.api-form input,
+.api-form select {
+    font-size: 0.85rem; padding: 8px 12px; border: 1px solid #E5E7EB;
+    border-radius: 8px; background: #fff; color: #374151; min-width: 220px;
+}
+.api-form input:focus, .api-form select:focus { outline: none; border-color: #047857; }
+
+/* Encart d'affichage unique de la clé : volontairement voyant — c'est la seule
+   occasion de la copier, la base n'en garde que l'empreinte. */
+.api-nouvelle { border: 2px solid #F59E0B; background: #FFFBEB; }
+.api-avertissement { font-size: 0.85rem; color: #92400E; margin: 0 0 12px; }
+.api-cle-boite { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.api-cle {
+    flex: 1; min-width: 260px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.85rem; word-break: break-all; background: #fff; color: #111827;
+    border: 1px solid #FDE68A; border-radius: 8px; padding: 10px 12px; user-select: all;
+}
+
+@media (max-width: 900px) {
+    .admin-dash-grid { grid-template-columns: 1fr; }
+    .api-form input, .api-form select { min-width: 100%; }
+}
