@@ -10,6 +10,7 @@ import DecisionPage from './pages/Decision/DecisionPage';
 import ThemePage from './pages/Jurisprudence/ThemePage';
 import JurisprudencePage from './pages/Jurisprudence/JurisprudencePage';
 import GuidesPage from './pages/Guides/GuidesPage';
+import DeveloppeursPage from './pages/Developpeurs/DeveloppeursPage';
 import GuideDetailPage from './pages/Guides/GuideDetailPage';
 import AuthPage from './pages/Auth/AuthPage';
 import AuthCallback from './pages/Auth/AuthCallback';
@@ -153,6 +154,7 @@ function App() {
               <Route path="/droit-communautaire" element={<CommunautairePage />} />
               <Route path="/guides" element={<GuidesPage />} />
               <Route path="/guides/:slug" element={<GuideDetailPage />} />
+              <Route path="/developpeurs" element={<DeveloppeursPage />} />
 
               {/* Espace Pro */}
               <Route path="/login" element={<AuthPage />} />

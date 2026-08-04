@@ -1,0 +1,243 @@
+/* Page développeurs (/developpeurs) — documentation publique de l'API REST.
+   Reprend les tokens et la largeur de lecture des pages éditoriales (guides). */
+
+.dev-page {
+    background: var(--color-bg);
+    min-height: 100vh;
+    padding: 7rem 1.5rem 4rem;
+}
+
+.dev-page__container {
+    max-width: 780px;
+    margin: 0 auto;
+}
+
+/* ── En-tête ──────────────────────────────────────────────────────────── */
+
+.dev-page__header {
+    margin-bottom: 3rem;
+}
+
+.dev-page__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    margin-bottom: 0.75rem;
+}
+
+.dev-page__header h1 {
+    font-family: var(--font-display);
+    font-size: clamp(1.9rem, 4.5vw, 2.6rem);
+    line-height: 1.2;
+    color: var(--color-text-main);
+    margin: 0 0 1rem;
+}
+
+.dev-page__lede {
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: var(--color-text-muted, #4B5563);
+    margin: 0 0 1.25rem;
+}
+
+.dev-page__adresse code {
+    display: inline-block;
+    font-size: 0.95rem;
+    padding: 0.5rem 0.9rem;
+    background: #F0FDF4;
+    border: 1px solid #A7F3D0;
+    border-radius: 8px;
+    color: #065F46;
+}
+
+/* ── Sections ─────────────────────────────────────────────────────────── */
+
+.dev-section {
+    margin-bottom: 3rem;
+}
+
+.dev-section h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-display);
+    font-size: 1.45rem;
+    color: var(--color-text-main);
+    margin: 0 0 0.9rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.dev-section h3 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-accent);
+    margin: 1.6rem 0 0.6rem;
+}
+
+.dev-section p {
+    line-height: 1.7;
+    color: #374151;
+    margin: 0 0 1rem;
+}
+
+.dev-section code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.88em;
+    background: #F3F4F6;
+    padding: 0.12em 0.4em;
+    border-radius: 4px;
+    color: #111827;
+}
+
+/* ── Bloc de code ─────────────────────────────────────────────────────── */
+
+.dev-code {
+    background: #0F172A;
+    color: #E2E8F0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.83rem;
+    line-height: 1.6;
+    padding: 1rem 1.15rem;
+    border-radius: 10px;
+    overflow-x: auto;          /* le code ne doit jamais élargir la page */
+    margin: 0 0 1.25rem;
+    white-space: pre;
+}
+
+/* ── Liste des opérations ─────────────────────────────────────────────── */
+
+.dev-ops {
+    margin: 0;
+    padding: 0;
+}
+
+.dev-op {
+    padding: 0.7rem 0;
+    border-bottom: 1px solid #F3F4F6;
+}
+
+.dev-op:last-child {
+    border-bottom: none;
+}
+
+.dev-op dt {
+    margin: 0 0 0.25rem;
+}
+
+.dev-op dt code {
+    background: #F0FDF4;
+    color: #065F46;
+    font-size: 0.83rem;
+    word-break: break-word;
+}
+
+.dev-op dd {
+    margin: 0;
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: #4B5563;
+}
+
+/* ── Encarts, listes, notes ───────────────────────────────────────────── */
+
+.dev-encart {
+    background: #F9FAFB;
+    border-left: 3px solid var(--color-accent);
+    border-radius: 0 10px 10px 0;
+    padding: 1.1rem 1.25rem;
+    margin: 1.5rem 0 0;
+}
+
+.dev-encart strong {
+    display: block;
+    color: var(--color-text-main);
+    margin-bottom: 0.4rem;
+}
+
+.dev-encart p {
+    margin: 0 0 0.6rem;
+    font-size: 0.92rem;
+}
+
+.dev-liste {
+    margin: 0 0 1rem;
+    padding-left: 1.2rem;
+    line-height: 1.8;
+    color: #374151;
+}
+
+.dev-note {
+    font-size: 0.88rem;
+    line-height: 1.65;
+    color: #6B7280;
+    background: #FAFAFA;
+    border-radius: 8px;
+    padding: 0.85rem 1rem;
+    margin: 1rem 0 0;
+}
+
+.dev-section--citation {
+    background: #F0FDF4;
+    border-radius: 12px;
+    padding: 1.5rem 1.6rem;
+}
+
+.dev-section--citation h2 {
+    border-bottom-color: #A7F3D0;
+}
+
+/* ── Liens et bouton ──────────────────────────────────────────────────── */
+
+.dev-cta {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    background: var(--color-accent);
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.dev-cta:hover {
+    background: #065F46;
+}
+
+.dev-lien {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.85rem;
+    color: var(--color-accent);
+    text-decoration: none;
+    word-break: break-all;
+}
+
+.dev-lien:hover {
+    text-decoration: underline;
+}
+
+.dev-page__pied {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #E5E7EB;
+    font-size: 0.92rem;
+    color: #6B7280;
+}
+
+.dev-page__pied a {
+    color: var(--color-accent);
+}
+
+@media (max-width: 640px) {
+    .dev-page { padding-top: 5.5rem; }
+    .dev-code { font-size: 0.76rem; }
+}

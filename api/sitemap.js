@@ -149,6 +149,7 @@ const PAGES_STATIQUES = [
   { url: '/codes', priority: '0.9', changefreq: 'daily' },
   { url: '/droit-communautaire', priority: '0.8', changefreq: 'weekly' },
   { url: '/doctrine-fiscale', priority: '0.8', changefreq: 'weekly' },
+  { url: '/developpeurs', priority: '0.6', changefreq: 'monthly' },
 ];
 
 // Articles : filtrés par le code parent publié (jointure interne), comme le
