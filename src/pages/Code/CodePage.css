@@ -507,3 +507,38 @@
 /* Bouton « Imprimer cette division » sous le titre de section */
 .section-print-action { margin-top: 10px; }
 .section-print-action .action-btn { width: auto; }
+
+/* Tableaux d'alinéa dans la page CODE : mêmes rôles de ligne que sur la page article
+   (cellules fusionnées, sous-titres, totaux), en version sobre. */
+.article-body .alinea-tableau td[rowspan] {
+    vertical-align: middle;
+    font-weight: 600;
+    background: rgba(4, 120, 87, 0.035);
+}
+.article-body .alinea-tableau thead tr.groupes th {
+    text-align: center;
+    font-size: 0.85rem;
+}
+.article-body .alinea-tableau tbody tr.sous-titre td {
+    background: #f0fdf4;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+}
+.article-body .alinea-tableau tbody tr.total td {
+    font-weight: 700;
+    text-transform: uppercase;
+    border-top: 2px solid #047857;
+}
+/* les nombres se lisent en colonne : alignés à droite, chiffres de même chasse.
+   ⚠️ On cible la CLASSE posée à l'export, jamais la position (td + td) : avec des cellules
+   fusionnées, la position se décale sur les lignes où l'ancre est absorbée. */
+.article-body .alinea-tableau thead th.num {
+    text-align: right;
+}
+
+.article-body .alinea-tableau td.num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}

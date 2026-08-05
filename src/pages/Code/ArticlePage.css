@@ -1373,3 +1373,138 @@
     color: #9ca3af;
     font-style: italic;
 }
+
+/* ─────────────────────────────────────────────────────
+   TABLEAUX D'ALINÉA (.alinea-tableau) — rendu premium
+   Ces tableaux n'avaient AUCUN style sur la page article : ils s'affichaient bruts.
+   On aligne leur rendu sur celui des barèmes (.bareme-table) pour n'avoir qu'un seul
+   système visuel, en ajoutant ce dont les tableaux du Journal officiel ont besoin :
+     · cellules FUSIONNÉES (td[rowspan]) — la colonne des régions, comme au JO ;
+     · lignes de SOUS-TITRE (tr.sous-titre) — « DÉPARTEMENT DE … » ;
+     · lignes de TOTAL (tr.total) — qui ne se lisent pas comme une ligne de données ;
+     · en-tête COIFFANT (tr.groupes) — « Répartition des sièges … » sur 2 colonnes.
+   ───────────────────────────────────────────────────── */
+.article-text .alinea-tableau {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 2rem 0;
+    font-family: Georgia, serif;
+    font-size: 0.95rem;
+    background: linear-gradient(135deg, #FAFBFC 0%, #FFFFFF 100%);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(4, 120, 87, 0.06);
+}
+
+.article-text .alinea-tableau caption {
+    caption-side: top;
+    text-align: left;
+    font-family: Georgia, serif;
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--emerald-dark, #065f46);
+    padding-bottom: 0.6rem;
+}
+
+.article-text .alinea-tableau thead {
+    background: linear-gradient(135deg, var(--emerald-prestige) 0%, var(--emerald-dark) 100%);
+}
+
+.article-text .alinea-tableau thead th {
+    padding: 0.85rem 1.25rem;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #FFFFFF;
+    text-align: left;
+    border: none;
+    vertical-align: bottom;
+}
+
+/* en-tête coiffant : centré sur les colonnes qu'il regroupe, séparé de la ligne du dessous */
+.article-text .alinea-tableau thead tr.groupes th {
+    text-align: center;
+    font-size: 0.75rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+}
+.article-text .alinea-tableau thead tr.groupes th:empty {
+    border-bottom: none;
+}
+
+.article-text .alinea-tableau td {
+    padding: 0.6rem 1.25rem;
+    border-bottom: 1px solid var(--gris-clair);
+    color: var(--noir-charbon);
+}
+
+.article-text .alinea-tableau tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* les nombres se lisent en colonne : alignés à droite, chiffres de même chasse.
+   ⚠️ On cible la CLASSE posée à l'export, jamais la position (td + td) : avec des cellules
+   fusionnées, la position se décale sur les lignes où l'ancre est absorbée. */
+.article-text .alinea-tableau thead th.num {
+    text-align: right;
+}
+
+.article-text .alinea-tableau td.num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+/* CELLULE FUSIONNÉE (colonne des régions au JO) : centrée sur sa hauteur, détachée du reste */
+.article-text .alinea-tableau td[rowspan] {
+    vertical-align: middle;
+    text-align: left;
+    font-weight: 600;
+    background: rgba(4, 120, 87, 0.035);
+    border-right: 1px solid var(--gris-clair);
+}
+
+/* SOUS-TITRE interne (« DÉPARTEMENT DE … ») : c'est un intertitre, pas une donnée */
+.article-text .alinea-tableau tbody tr.sous-titre td {
+    background: rgba(4, 120, 87, 0.07);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.82rem;
+    letter-spacing: 0.4px;
+    color: var(--emerald-dark, #065f46);
+    border-top: 1px solid rgba(4, 120, 87, 0.18);
+}
+
+/* TOTAL : en capitales, détaché par un filet haut, jamais confondu avec une commune */
+.article-text .alinea-tableau tbody tr.total td {
+    background: rgba(4, 120, 87, 0.05);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    border-top: 2px solid var(--emerald-prestige);
+}
+
+.article-text .alinea-tableau tbody tr:not(.total):not(.sous-titre):hover {
+    background: rgba(4, 120, 87, 0.04);
+}
+
+/* petits écrans : le tableau défile SEUL (jamais la page — cf. règle responsive) */
+@media (max-width: 640px) {
+    .article-text .alinea-tableau {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .article-text .alinea-tableau thead th,
+    .article-text .alinea-tableau td {
+        padding: 0.5rem 0.75rem;
+    }
+    /* ⚠️ ne PAS empêcher le retour à la ligne sur les cellules de texte : certains
+       tableaux (code de l'urbanisme R. 409) portent des phrases entières, qui
+       deviendraient illisiblement larges. Seuls les nombres restent insécables. */
+    .article-text .alinea-tableau td {
+        min-width: 8rem;
+    }
+}
