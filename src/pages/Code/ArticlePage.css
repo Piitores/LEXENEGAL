@@ -1360,11 +1360,18 @@
 }
 
 /* Bandeau « article abrogé » (article individuel) — réutilise la palette d'abrogation */
+/* Article abrogé : bandeau ROUGE, comme celui d'un texte entier abrogé
+   (.law-abrogation-banner). Il était gris, donc peu lisible comme un avertissement —
+   or depuis le 07/08/2026 les articles abrogés REMONTENT dans la recherche
+   (décision du proprio : les garder visibles, mais signalés « de façon assez visible »).
+   Un lecteur qui arrive par la recherche doit voir immédiatement que l'article ne
+   s'applique plus. */
 .article-abrogation-banner {
     display: flex; gap: 0.6rem; align-items: flex-start;
-    background: #f9fafb; border: 1px solid #d1d5db; border-left: 4px solid #6b7280;
-    color: #4b5563; padding: 0.85rem 1.1rem; border-radius: 8px;
+    background: #fef2f2; border: 1px solid #fca5a5; border-left: 4px solid #dc2626;
+    color: #991b1b; padding: 0.85rem 1.1rem; border-radius: 8px;
     margin: 0.5rem 0 1.25rem; font-size: 0.95rem; line-height: 1.5;
+    font-weight: 500;
 }
 .article-abrogation-banner .lab-icon { font-size: 1.05rem; line-height: 1.4; }
 
