@@ -30,6 +30,12 @@ interface ArticleHit {
     code_slug: string;
     code_title: string;
     content: string;
+    // Abrogation : NON renvoyée par les RPC de recherche (search_articles /
+    // search_articles_hybrid). On la récupère en UNE requête complémentaire sur
+    // `articles` à partir des ids déjà obtenus — volontairement SANS toucher aux
+    // fonctions de recherche (les étendre imposerait un DROP+CREATE, donc un risque
+    // de coupure ; écarté par le proprio le 07/08/2026).
+    est_abroge?: boolean;
 }
 
 type BestMatch =
@@ -187,14 +193,35 @@ const SearchPage: React.FC = () => {
                 rows = data || [];
             }
             articleModeRef.current = mode;
-            setArticleResults((rows || []).map((a: any) => ({
+            const hits: ArticleHit[] = (rows || []).map((a: any) => ({
                 id: a.id,
                 article_number: a.article_number,
                 slug: a.slug,
                 code_slug: a.code_slug || 'code-travail',
                 code_title: a.code_title || 'Code',
                 content: a.content || ''
-            })));
+            }));
+
+            // Marquage des articles ABROGÉS : une seule requête sur les ids déjà trouvés.
+            // Sans ce signal, un article abrogé se lit dans les résultats comme du droit
+            // en vigueur. Si la requête échoue, on affiche les résultats sans badge
+            // plutôt que de perdre la recherche.
+            if (hits.length) {
+                try {
+                    const { data: st } = await supabase
+                        .from('articles')
+                        .select('id,status')
+                        .in('id', hits.map(h => h.id))
+                        .eq('status', 'abrogé');
+                    if (st?.length) {
+                        const abroges = new Set(st.map((r: any) => r.id));
+                        hits.forEach(h => { h.est_abroge = abroges.has(h.id); });
+                    }
+                } catch (e) {
+                    console.warn('statut abrogation non récupéré:', e);
+                }
+            }
+            setArticleResults(hits);
         } catch (e) {
             setArticleResults([]);
             console.warn('search articles error:', e);
@@ -1030,6 +1057,7 @@ const SearchPage: React.FC = () => {
                                         <div key={art.id} className="resultCard linear-card" onClick={() => window.open(`/code/${art.code_slug}/${art.slug}`, '_blank')}>
                                             <div className="cardHeader">
                                                 <span className="cardRef">{articleLabel({ article_number: art.article_number })}</span>
+                                                {art.est_abroge && <span className="badge-abroge" title="Cet article a été abrogé">Abrogé</span>}
                                                 <span className="cardDate">{art.code_title}</span>
                                             </div>
                                             <p className="cardSnippet">{stripHtml(art.content).slice(0, 200)}</p>
@@ -1143,6 +1171,7 @@ const SearchPage: React.FC = () => {
                             >
                                 <div className="cardHeader">
                                     <span className="cardRef">{articleLabel({ article_number: art.article_number })}</span>
+                                    {art.est_abroge && <span className="badge-abroge" title="Cet article a été abrogé">Abrogé</span>}
                                     <span className="cardDate">{art.code_title}</span>
                                 </div>
                                 <p className="cardSnippet">{stripHtml(art.content).slice(0, 240) || 'Voir l’article complet.'}</p>

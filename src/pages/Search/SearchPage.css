@@ -547,6 +547,23 @@
     border-radius: 4px;
 }
 
+/* Article ABROGÉ dans les résultats de recherche.
+   Sans ce badge, l'extrait affiché est le texte de l'article et se lit comme du
+   droit en vigueur. Rouge, comme le bandeau de la page article, pour que le signal
+   soit le même partout. */
+.badge-abroge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: #991b1b;
+    background: #fef2f2;
+    border: 1px solid #fca5a5;
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
 .cardDate {
     font-size: 0.8rem;
     color: #9CA3AF;
