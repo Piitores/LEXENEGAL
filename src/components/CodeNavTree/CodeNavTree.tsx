@@ -11,6 +11,10 @@ import './CodeNavTree.css';
 interface CodeNavTreeProps {
     nodes: HierarchyNode[];
     slug: string | undefined;
+    // Préfixe d'URL du texte : « /convention » pour les conventions collectives,
+    // « /code » pour tout le reste. Sans lui, les pastilles d'article d'une convention
+    // sortaient du préfixe de la page qui les affiche.
+    basePath?: string;
     expandedNodes: Set<string>;
     onToggle: (id: string) => void;
     onSelect: (node: HierarchyNode) => void;
@@ -23,6 +27,7 @@ interface CodeNavTreeProps {
 const CodeNavTree: React.FC<CodeNavTreeProps> = ({
     nodes,
     slug,
+    basePath = '/code',
     expandedNodes,
     onToggle,
     onSelect,
@@ -100,7 +105,7 @@ const CodeNavTree: React.FC<CodeNavTreeProps> = ({
                                     {node.articles.map(art => (
                                         <Link
                                             key={art.id}
-                                            to={`/code/${slug}/${art.slug}`}
+                                            to={`${basePath}/${slug}/${art.slug}`}
                                             className={`tree-article-chip ${activeArticleSlug && art.slug === activeArticleSlug ? 'is-active' : ''} ${(art.status === 'abrogé' || art.is_active === false) ? 'is-abroge' : ''}`}
                                             title={(art.status === 'abrogé' || art.is_active === false) ? 'Article abrogé' : undefined}
                                         >

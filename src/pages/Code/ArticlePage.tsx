@@ -497,6 +497,7 @@ const ArticlePage: React.FC = () => {
                             <CodeNavTree
                                 nodes={hierarchy}
                                 slug={codeSlug}
+                                basePath={basePath}
                                 expandedNodes={expandedNodes}
                                 onToggle={toggleNode}
                                 onSelect={(node) => { setMobileNavOpen(false); navigate(`${basePath}/${codeSlug}?node=${encodeURIComponent(node.name)}`); }}

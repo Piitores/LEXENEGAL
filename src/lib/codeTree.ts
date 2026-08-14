@@ -157,6 +157,19 @@ export function formatNodeLabel(
 }
 
 // Arbre depuis structure_nodes (parent_id + ordre des nœuds déjà trié par `position`).
+// Préambule : rendu à part (en tête de page), donc jamais dans l'arbre.
+export const isPreambule = (art: Article): boolean =>
+    !!art.tags?.includes('preambule') ||
+    art.num === 'Préambule' ||
+    art.num_court === 'Préambule';
+
+// Identifiant du nœud de repli. Sert de garde-fou : un article dont le node_id est
+// absent (ou pointe vers un nœud inexistant) n'appartient à aucune division et serait
+// donc AFFICHÉ NULLE PART - panne silencieuse, sans erreur. On le regroupe ici plutôt
+// que de le perdre. Voir aussi la règle : masquer/omettre = mesurer ce qu'on rend
+// inatteignable.
+export const NOEUD_ORPHELINS = '__sans-division';
+
 export const buildTreeFromNodes = (nodes: StructureNode[], arts: Article[]): HierarchyNode[] => {
     const map = new Map<string, HierarchyNode>();
     const root: HierarchyNode[] = [];
@@ -183,10 +196,38 @@ export const buildTreeFromNodes = (nodes: StructureNode[], arts: Article[]): Hie
         }
     }
 
+    const orphelins: Article[] = [];
     for (const art of arts) {
         if (art.node_id && map.has(art.node_id)) {
             map.get(art.node_id)!.articles.push(art);
+        } else if (!isPreambule(art)) {
+            orphelins.push(art);
         }
+    }
+
+    // Garde-fou : ces articles existent, sont en vigueur et sortent dans la recherche,
+    // mais aucune division ne les porte. Plutôt que de les laisser hors de l'arbre (donc
+    // introuvables en navigation), on les regroupe dans un nœud de repli, placé selon
+    // leur rang de lecture : en tête s'ils précèdent tout le reste, sinon en fin.
+    if (orphelins.length > 0) {
+        orphelins.sort((a, b) => a.display_order - b.display_order);
+        const noeud: HierarchyNode = {
+            id: NOEUD_ORPHELINS,
+            name: 'Autres dispositions',
+            type: 'division',
+            numero: null,
+            intitule: 'Autres dispositions',
+            note: null,
+            articles: orphelins,
+            children: [],
+        };
+        const rangsRattaches = arts
+            .filter(a => a.node_id && map.has(a.node_id))
+            .map(a => a.display_order);
+        const avantTout = rangsRattaches.length > 0 &&
+            orphelins[orphelins.length - 1].display_order < Math.min(...rangsRattaches);
+        if (avantTout) root.unshift(noeud);
+        else root.push(noeud);
     }
 
     return root;

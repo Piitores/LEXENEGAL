@@ -17,6 +17,7 @@ import {
     Law, Article, HierarchyNode,
     buildTreeFromNodes, buildTreeLegacy, countArticles, getArticlesForNode,
     getBreadcrumb, collectAllNodeIds, computeMaxArticlesInLevel, formatNodeLabel, NODE_KIND,
+    isPreambule,
 } from '../../lib/codeTree';
 import { useCopyAttribution, attributionFooter, articleUrl } from '../../hooks/useCopyAttribution';
 import './CodePage.css';
@@ -24,11 +25,8 @@ import '../../styles/legal-content.css';
 
 
 // ── Helpers article ──
-
-const isPreambule = (art: Article): boolean =>
-    !!art.tags?.includes('preambule') ||
-    art.num === 'Préambule' ||
-    art.num_court === 'Préambule';
+// (isPreambule vit dans lib/codeTree : l'arbre doit appliquer EXACTEMENT le même
+//  critère que cette page, sinon un article échappe aux deux.)
 
 // Texte lisible pour le presse-papiers : on privilégie content_raw, sinon on
 // dérive un texte propre depuis content_html (suppression des balises + décodage
@@ -538,6 +536,7 @@ const CodePage: React.FC = () => {
                         <CodeNavTree
                             nodes={hierarchy}
                             slug={slug}
+                            basePath={basePath}
                             expandedNodes={expandedNodes}
                             onToggle={toggleNode}
                             onSelect={selectNode}
