@@ -158,10 +158,14 @@ export function formatNodeLabel(
 
 // Arbre depuis structure_nodes (parent_id + ordre des nœuds déjà trié par `position`).
 // Préambule : rendu à part (en tête de page), donc jamais dans l'arbre.
+// Le libellé est toléré préfixé (« Article Préambule », « Art. Préambule ») : 27 entrées CIMA
+// étaient formées ainsi et n'étaient reconnues NI comme préambule NI comme article rattaché.
+// Les données ont été alignées, ce test reste comme filet.
+const RE_PREAMBULE = /^\s*(?:articles?\s+|art\.\s*)?pr[ée]ambule\s*$/i;
 export const isPreambule = (art: Article): boolean =>
     !!art.tags?.includes('preambule') ||
-    art.num === 'Préambule' ||
-    art.num_court === 'Préambule';
+    RE_PREAMBULE.test(art.num || '') ||
+    RE_PREAMBULE.test(art.num_court || '');
 
 // Identifiant du nœud de repli. Sert de garde-fou : un article dont le node_id est
 // absent (ou pointe vers un nœud inexistant) n'appartient à aucune division et serait
