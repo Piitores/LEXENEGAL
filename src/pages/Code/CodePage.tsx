@@ -2,7 +2,7 @@ import React, { useState, useEffect, useLayoutEffect, useMemo, useCallback, useR
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    ArrowLeft, ChevronRight, Search,
+    ArrowLeft, ChevronLeft, ChevronRight, Search, X,
     BookOpen, FileText, ChevronDown, ExternalLink, Copy, Check, AlertCircle, Printer
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
@@ -137,6 +137,14 @@ const ArticleCard: React.FC<{ art: Article; slug: string | undefined; codeTitle?
     );
 };
 
+// Défilement INSTANTANÉ. `html { scroll-behavior: smooth }` est posé globalement
+// (styles/global.css) : sans ce forçage, un window.scrollTo(0, 0) s'anime sur plusieurs
+// frames et se fait donc écraser en vol par le rétablissement de position que
+// framer-motion opère quand il mesure l'arbre - le lecteur restait alors au milieu de
+// la division qu'il venait d'ouvrir.
+const remonterEnHaut = () => window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+const allerA = (y: number) => window.scrollTo({ top: y, left: 0, behavior: 'instant' as ScrollBehavior });
+
 // ── Composant principal ──
 
 const CodePage: React.FC = () => {
@@ -159,6 +167,9 @@ const CodePage: React.FC = () => {
     // le reste sous /code (la route /code reste un fallback valide pour tout slug).
     const basePath = (law as any)?.category === 'convention_collective' ? '/convention' : '/code';
     const [activeTab, setActiveTab] = useState<'articles' | 'structure'>('articles');
+    // Tiroir « Sommaire » : sous 1024px la colonne de gauche sort du flux et
+    // s'ouvre par-dessus la page (même dispositif que la page Article).
+    const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
     // Stats
     const [totalArticles, setTotalArticles] = useState(0);
@@ -183,7 +194,7 @@ const CodePage: React.FC = () => {
     // On en profite pour amener le nœud actif dans la zone visible de l'arbre, SANS
     // bouger la page (on ne touche qu'au scroll interne de la sidebar).
     useLayoutEffect(() => {
-        window.scrollTo(0, 0);
+        remonterEnHaut();
         const cont = sidebarRef.current;
         const el = activeNodeRef.current;
         if (cont && el) {
@@ -199,7 +210,7 @@ const CodePage: React.FC = () => {
     // « clamper » le défilement vers le footer).
     useLayoutEffect(() => {
         if (preserveScrollY.current != null) {
-            window.scrollTo(0, preserveScrollY.current);
+            allerA(preserveScrollY.current);
             preserveScrollY.current = null;
         }
     }, [expandedNodes]);
@@ -322,7 +333,16 @@ const CodePage: React.FC = () => {
     };
 
     const selectNode = (node: HierarchyNode) => {
+        // Remonter DÈS LE CLIC, avant le rendu : quand l'arbre déplie un nœud, framer-motion
+        // mesure les hauteurs et, pour cela, mémorise puis RESTAURE window.scrollY - ce qui
+        // annulait le window.scrollTo(0, 0) du useLayoutEffect ci-dessous et laissait le
+        // lecteur au milieu de la division suivante. En remontant avant, la valeur que
+        // framer-motion mémorise vaut 0 et sa restauration devient inoffensive.
+        remonterEnHaut();
         setSelectedNode(node);
+        // Sur mobile, choisir une division referme le tiroir : on veut lire, pas rester
+        // devant le sommaire.
+        setMobileNavOpen(false);
         // Onglet intelligent : si le nœud a des articles directs (ou est une feuille),
         // on ouvre « Articles » ; s'il n'a que des sous-divisions, on ouvre « Structure »
         // (évite un panneau « Articles » vide invitant à re-cliquer).
@@ -381,6 +401,46 @@ const CodePage: React.FC = () => {
         return getBreadcrumb(selectedNode.id, hierarchy) || [];
     }, [selectedNode, hierarchy, getBreadcrumb]);
 
+    // ── Division précédente / suivante ──
+    // L'arbre à plat, dans l'ordre de lecture (parcours préfixe).
+    const flatNodes = useMemo(() => {
+        const out: HierarchyNode[] = [];
+        const walk = (ns: HierarchyNode[]) => ns.forEach(n => { out.push(n); walk(n.children); });
+        walk(hierarchy);
+        return out;
+    }, [hierarchy]);
+
+    // On ne propose que les divisions qui portent des articles EN PROPRE : les
+    // divisions « contenants » (un titre qui n'a que des chapitres) n'apportent
+    // rien de plus que leurs enfants. On saute aussi les descendants du nœud
+    // courant (déjà affichés sous lui) et ses ancêtres en arrière.
+    const { prevNode, nextNode } = useMemo(() => {
+        const vide = { prevNode: null as HierarchyNode | null, nextNode: null as HierarchyNode | null };
+        if (!selectedNode) return vide;
+        const i = flatNodes.findIndex(n => n.id === selectedNode.id);
+        if (i < 0) return vide;
+        const descendants = new Set(collectAllNodeIds(selectedNode.children));
+        const ancetres = new Set(breadcrumbs.map(b => b.id));
+        const porteDesArticles = (n: HierarchyNode) => n.articles.length > 0;
+
+        let suivant: HierarchyNode | null = null;
+        for (let j = i + 1; j < flatNodes.length; j++) {
+            if (descendants.has(flatNodes[j].id)) continue;
+            if (porteDesArticles(flatNodes[j])) { suivant = flatNodes[j]; break; }
+        }
+        let precedent: HierarchyNode | null = null;
+        for (let j = i - 1; j >= 0; j--) {
+            if (ancetres.has(flatNodes[j].id)) continue;
+            if (porteDesArticles(flatNodes[j])) { precedent = flatNodes[j]; break; }
+        }
+        return { prevNode: precedent, nextNode: suivant };
+    }, [selectedNode, flatNodes, breadcrumbs]);
+
+    const labelDivision = (n: HierarchyNode) => {
+        const { badge, label } = formatNodeLabel(n);
+        return badge ? `${badge} - ${label}` : label;
+    };
+
     // ── Loading / Not found ──
 
     /* ⛔ Aucun <SEO> dans les états transitoires ci-dessous.
@@ -419,9 +479,25 @@ const CodePage: React.FC = () => {
             <SEO title={`${law.title} | Lexenegal`} description={`${law.title} - texte intégral consolidé (${totalArticles} articles). ${['ohada', 'uemoa', 'cedeao', 'cima'].includes((law as any).category) ? 'Droit communautaire applicable au Sénégal' : 'Droit sénégalais'} sur Lexenegal.`} url={`https://www.lexenegal.sn${basePath}/${slug}`} />
 
             <div className="code-layout">
-                {/* ═══════ SIDEBAR ═══════ */}
-                <aside className="code-sidebar" ref={sidebarRef}>
+                {/* ═══════ SIDEBAR ═══════
+                    Desktop : colonne fixe. Sous 1024px : tiroir « Sommaire » ouvrable
+                    (sans lui, l'arbre disparaissait et le texte devenait un cul-de-sac). */}
+                {mobileNavOpen && (
+                    <div className="code-nav-backdrop" onClick={() => setMobileNavOpen(false)} />
+                )}
+                <aside
+                    className={`code-sidebar ${mobileNavOpen ? 'is-open' : ''}`}
+                    ref={sidebarRef}
+                    aria-label="Sommaire du texte"
+                >
                     <div className="sidebar-inner">
+                        <div className="code-sidebar__mhead">
+                            <span>Sommaire</span>
+                            <button type="button" onClick={() => setMobileNavOpen(false)} aria-label="Fermer le sommaire">
+                                <X size={18} />
+                            </button>
+                        </div>
+
                         {/* Header */}
                         <div className="sidebar-code-header">
                             <div className="surtitre">Code sénégalais</div>
@@ -486,6 +562,13 @@ const CodePage: React.FC = () => {
 
                 {/* ═══════ MAIN ═══════ */}
                 <main className="code-main">
+                    {/* Bouton « Sommaire » (mobile / tablette uniquement) pour ouvrir l'arbre */}
+                    {hierarchy.length > 0 && (
+                        <button type="button" className="code-nav-toggle" onClick={() => setMobileNavOpen(true)}>
+                            <BookOpen size={16} /> Sommaire
+                        </button>
+                    )}
+
                     {/* BANDEAU ABROGATION (texte entier abrogé par un autre texte) */}
                     {law.abrogation_note && (
                         <div className="law-abrogation-banner" role="note">
@@ -645,6 +728,31 @@ const CodePage: React.FC = () => {
                                         );
                                     })}
                                 </div>
+                            )}
+
+                            {/* Suite de lecture : sans ça, la fin d'une division était un
+                                cul-de-sac dès que l'arbre n'était pas à l'écran. */}
+                            {(prevNode || nextNode) && (
+                                <nav className="code-division-nav" aria-label="Division précédente ou suivante">
+                                    {prevNode ? (
+                                        <button type="button" className="cdn-btn cdn-prev" onClick={() => selectNode(prevNode)}>
+                                            <ChevronLeft size={16} />
+                                            <span className="cdn-txt">
+                                                <span className="cdn-sens">Division précédente</span>
+                                                <span className="cdn-nom">{labelDivision(prevNode)}</span>
+                                            </span>
+                                        </button>
+                                    ) : <span />}
+                                    {nextNode && (
+                                        <button type="button" className="cdn-btn cdn-next" onClick={() => selectNode(nextNode)}>
+                                            <span className="cdn-txt">
+                                                <span className="cdn-sens">Division suivante</span>
+                                                <span className="cdn-nom">{labelDivision(nextNode)}</span>
+                                            </span>
+                                            <ChevronRight size={16} />
+                                        </button>
+                                    )}
+                                </nav>
                             )}
                         </>
                     ) : (
