@@ -15,6 +15,17 @@
   <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
+  <!-- PWA : installation sur l'écran d'accueil.
+       Ces balises sont reprises telles quelles par le rendu serveur, qui réutilise
+       dist/index.html comme coquille (api/render.js) : elles valent donc sur toutes
+       les pages, y compris celles rendues côté serveur. -->
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#047857" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Lexenegal" />
+
   <title>Lexenegal | La mémoire juridique organisée du Sénégal</title>
 
   <!-- Open Graph / Social Media Preview -->

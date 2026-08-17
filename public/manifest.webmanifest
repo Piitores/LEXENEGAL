@@ -1,0 +1,57 @@
+{
+  "name": "Lexenegal — Droit sénégalais",
+  "short_name": "Lexenegal",
+  "description": "La mémoire juridique organisée du Sénégal : législation, jurisprudence et doctrine fiscale, recherchables et à jour.",
+  "lang": "fr",
+  "dir": "ltr",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#047857",
+  "categories": ["books", "education", "productivity"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Rechercher",
+      "short_name": "Rechercher",
+      "description": "Rechercher dans la législation et la jurisprudence",
+      "url": "/search?source=pwa",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Codes et lois",
+      "short_name": "Codes",
+      "description": "Parcourir les codes et textes de loi",
+      "url": "/codes?source=pwa",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Jurisprudence",
+      "short_name": "Jurisprudence",
+      "description": "Parcourir les décisions de justice",
+      "url": "/jurisprudence?source=pwa",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

@@ -30,6 +30,8 @@ import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
 import { useBlockSelectAll } from './hooks/useBlockSelectAll';
 import AmbientEffects from './components/AmbientEffects/AmbientEffects';
 import AccountNudge from './components/AccountNudge/AccountNudge';
+import InstallPrompt from './components/Pwa/InstallPrompt';
+import UpdateBanner from './components/Pwa/UpdateBanner';
 import { recordOrigin } from './lib/authRedirect';
 import './App.css';
 
@@ -173,6 +175,8 @@ function App() {
           </ErrorBoundary>
           <Footer />
           <AccountNudge />
+          <InstallPrompt />
+          <UpdateBanner />
         </div>
         </BotBlocker>
       </Router>

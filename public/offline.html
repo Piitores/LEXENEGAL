@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="theme-color" content="#047857" />
+  <title>Hors connexion — Lexenegal</title>
+  <!--
+    Page volontairement autonome : aucune police distante, aucun script, aucune image
+    externe. Elle doit s'afficher quand il n'y a plus de réseau du tout.
+  -->
+  <style>
+    :root {
+      --vert: #047857;
+      --encre: #1f2937;
+      --gris: #6b7280;
+      --bordure: #e5e7eb;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: #ffffff;
+      color: var(--encre);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+    }
+
+    .carte {
+      width: 100%;
+      max-width: 440px;
+      text-align: center;
+    }
+
+    .marque {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--vert);
+      margin: 0 0 32px;
+    }
+
+    .rond {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 24px;
+      border-radius: 50%;
+      background: #ecfdf5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin: 0 0 12px;
+    }
+
+    p {
+      margin: 0 0 24px;
+      color: var(--gris);
+      font-size: 0.95rem;
+    }
+
+    button {
+      font: inherit;
+      font-weight: 600;
+      color: #ffffff;
+      background: var(--vert);
+      border: 0;
+      border-radius: 8px;
+      padding: 12px 24px;
+      cursor: pointer;
+      width: 100%;
+      max-width: 260px;
+    }
+
+    button:active { background: #036347; }
+
+    .note {
+      margin: 28px 0 0;
+      padding-top: 20px;
+      border-top: 1px solid var(--bordure);
+      font-size: 0.85rem;
+      color: var(--gris);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root { --encre: #f3f4f6; --gris: #9ca3af; --bordure: #374151; }
+      body { background: #111827; }
+      .rond { background: rgba(4, 120, 87, 0.18); }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="carte">
+    <p class="marque">LEXENEGAL</p>
+
+    <div class="rond" aria-hidden="true">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M1 1l22 22" />
+        <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55" />
+        <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39" />
+        <path d="M10.71 5.05A16 16 0 0 1 22.58 9" />
+        <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88" />
+        <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
+        <path d="M12 20h.01" />
+      </svg>
+    </div>
+
+    <h1>Vous êtes hors connexion</h1>
+    <p>
+      Cette page n'a pas encore été consultée sur cet appareil, elle n'est donc pas
+      disponible sans réseau. Les pages déjà ouvertes restent lisibles.
+    </p>
+
+    <button type="button" onclick="location.reload()">Réessayer</button>
+
+    <p class="note">
+      Vérifiez vos données mobiles ou votre connexion Wi-Fi, puis réessayez.
+    </p>
+  </main>
+</body>
+
+</html>
