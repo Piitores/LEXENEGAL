@@ -30,6 +30,13 @@ function Hero() {
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   // Gate the WebGL backdrop: client-only (avoids SSR/prerender), and disabled
   // when the user prefers reduced motion (→ static silhouette instead).
+  //
+  // Également coupé sur téléphone et sur connexion frugale : le chunk HeroCanvas
+  // pèse ~255 ko compressés (Three.js) pour un décor purement ornemental
+  // (aria-hidden), soit près de la moitié du poids de l'accueil. Sur le marché
+  // sénégalais, majoritairement mobile et compté en données, ce coût n'est pas
+  // justifiable. `HeroSenegalStatic` occupe exactement la même place.
+  // Le rendu 3D reste intact sur grand écran en bonne connexion.
   const [enable3D, setEnable3D] = useState(false);
 
   const suggestions = ['Licenciement', 'Article 5 COCC', 'Code pénal'];
@@ -37,10 +44,33 @@ function Hero() {
   useEffect(() => {
     if (typeof window === 'undefined' || !window.matchMedia) return;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const apply = () => setEnable3D(!reduce.matches);
+    const phone = window.matchMedia('(max-width: 768px)');
+
+    // `connection` n'est pas typé par le DOM standard et n'existe pas sur Safari.
+    const connection = (navigator as Navigator & {
+      connection?: { saveData?: boolean; effectiveType?: string; addEventListener?: EventListener };
+    }).connection;
+
+    const isFrugal = () => {
+      if (!connection) return false;
+      if (connection.saveData) return true;
+      return connection.effectiveType === 'slow-2g'
+        || connection.effectiveType === '2g'
+        || connection.effectiveType === '3g';
+    };
+
+    const apply = () => setEnable3D(!reduce.matches && !phone.matches && !isFrugal());
     apply();
+
     reduce.addEventListener?.('change', apply);
-    return () => reduce.removeEventListener?.('change', apply);
+    phone.addEventListener?.('change', apply);
+    (connection as unknown as EventTarget | undefined)?.addEventListener?.('change', apply);
+
+    return () => {
+      reduce.removeEventListener?.('change', apply);
+      phone.removeEventListener?.('change', apply);
+      (connection as unknown as EventTarget | undefined)?.removeEventListener?.('change', apply);
+    };
   }, []);
 
   // Handle search with debounce
