@@ -450,7 +450,17 @@ const DecisionPage: React.FC = () => {
                 motsCles={decision.mots_cles}
             />
 
-            {/* BREADCRUMBS (Schema.org) */}
+            {/*
+              * BREADCRUMBS (Schema.org)
+              *
+              * ⚠️ Doit rester IDENTIQUE au BreadcrumbList JSON-LD servi par
+              * api/render.js (buildDecisionHead) : mêmes libellés, mêmes URLs,
+              * même nombre de niveaux. Les deux balisages cohabitent dans le DOM.
+              *
+              * L'ancien maillon « chambre » pointait /search — la même URL
+              * générique pour toutes les décisions, sans rapport avec le libellé
+              * affiché. Supprimé : chaque maillon doit désigner sa propre page.
+              */}
             <nav className="breadcrumbs" aria-label="Fil d'Ariane">
                 <ol itemScope itemType="https://schema.org/BreadcrumbList">
                     <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
@@ -462,12 +472,8 @@ const DecisionPage: React.FC = () => {
                         <meta itemProp="position" content="2" />
                     </li>
                     <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
-                        <a itemProp="item" href="https://www.lexenegal.sn/search"><span itemProp="name">{decision.chambre || 'Chambre'}</span></a>
-                        <meta itemProp="position" content="3" />
-                    </li>
-                    <li itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
                         <a itemProp="item" href={`https://www.lexenegal.sn/decision/${slug}`}><span itemProp="name">{decision.reference || 'Décision'}</span></a>
-                        <meta itemProp="position" content="4" />
+                        <meta itemProp="position" content="3" />
                     </li>
                 </ol>
             </nav>

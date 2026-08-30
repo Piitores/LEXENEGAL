@@ -123,7 +123,28 @@ export function buildDecisionHead(d, canonical) {
     keywords: (d.mots_cles && d.mots_cles.join(', ')) || d.matiere_principale,
     isPartOf: { '@type': 'WebSite', name: 'Lexenegal', url: SITE }, url: canonical,
   };
-  return headBlock({ title, description, keywords, canonical, ogType: 'article', schema });
+  /*
+   * BreadcrumbList SERVEUR (Accueil > Jurisprudence > reference).
+   *
+   * Le fil d'Ariane de la page decision n'existait qu'en microdonnees, posees
+   * par React APRES le rendu : Google ne le voyait qu'au second passage, d'ou
+   * des rapports « Missing field item » instables. Il est desormais dans le
+   * HTML servi, comme sur les pages article. Les trois maillons ont une URL
+   * reelle : c'est l'exigence de Google pour « item ».
+   *
+   * ⚠️ Doit rester IDENTIQUE aux microdonnees de src/pages/Decision/DecisionPage.tsx
+   * (memes libelles, memes URLs, meme nombre de niveaux) : les deux balisages
+   * cohabitent dans le DOM final.
+   */
+  const filAriane = {
+    '@context': 'https://schema.org', '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Lexenegal', item: `${SITE}/` },
+      { '@type': 'ListItem', position: 2, name: 'Jurisprudence', item: `${SITE}/jurisprudence` },
+      { '@type': 'ListItem', position: 3, name: ref, item: canonical },
+    ],
+  };
+  return headBlock({ title, description, keywords, canonical, ogType: 'article', schema: [schema, filAriane] });
 }
 export function buildDecisionBody(d, cited) {
   const ref = d.reference || 'Décision';
