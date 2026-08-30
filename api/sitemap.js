@@ -152,12 +152,22 @@ const PAGES_STATIQUES = [
   { url: '/developpeurs', priority: '0.6', changefreq: 'monthly' },
 ];
 
-// Articles : filtrés par le code parent publié (jointure interne), comme le
-// faisait le script historique. Tri stable sur id, sinon la pagination profonde
-// peut dupliquer ou perdre des lignes entre deux requêtes.
-const Q_ARTICLES = 'articles?select=slug,laws_and_codes!inner(slug,is_active)&laws_and_codes.is_active=eq.true&order=id';
+/*
+ * Articles : filtrés par le code parent publié (jointure interne), comme le
+ * faisait le script historique. Tri stable sur id, sinon la pagination profonde
+ * peut dupliquer ou perdre des lignes entre deux requêtes.
+ *
+ * ⚠️ `is_active=eq.true` est EXPLICITE partout où la colonne existe, et doit le
+ * rester. La RLS de la clé anon masque déjà les lignes inactives, mais s'y fier
+ * revient à faire dépendre le sitemap d'une policy : le jour où elle bouge, on
+ * réannonce à Google des URLs qui répondent 410 Gone, sans la moindre erreur
+ * visible. Au 2026-08-30 : 2 746 décisions inactives (fusions de doublons),
+ * 0 article inactif — le filtre ne change donc rien aujourd'hui, il verrouille.
+ * `doctrine` n'a pas de colonne is_active : rien à filtrer.
+ */
+const Q_ARTICLES = 'articles?select=slug,laws_and_codes!inner(slug,is_active)&laws_and_codes.is_active=eq.true&is_active=eq.true&order=id';
 const Q_CODES = 'laws_and_codes?select=slug,updated_at&is_active=eq.true&order=id';
-const Q_DECISIONS = 'decisions?select=slug,date_decision&order=id';
+const Q_DECISIONS = 'decisions?select=slug,date_decision&is_active=eq.true&order=id';
 const Q_DOCTRINE = 'doctrine?select=slug,date&order=id';
 const Q_THEMES = 'seo_themes?select=slug&is_active=eq.true&order=id';
 const Q_GUIDES = 'guides?select=slug,published_at&is_active=eq.true&order=id';
