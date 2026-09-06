@@ -436,7 +436,10 @@ const CodePage: React.FC = () => {
 
     const labelDivision = (n: HierarchyNode) => {
         const { badge, label } = formatNodeLabel(n);
-        return badge ? `${badge} - ${label}` : label;
+        // Une division sans titre dans la source ne rend qu'un badge (« Livre PREMIER ») :
+        // sans ce test, le séparateur restait orphelin en fin de chaîne.
+        if (!badge) return label;
+        return label ? `${badge} - ${label}` : badge;
     };
 
     // ── Loading / Not found ──
@@ -630,7 +633,10 @@ const CodePage: React.FC = () => {
                             <div className="code-breadcrumb">
                                 {breadcrumbs.map((bc, i) => {
                                     const f = formatNodeLabel(bc);
-                                    const disp = f.badge ? `${f.badge} - ${f.label}` : f.label;
+                                    // même précaution que `labelDivision` : pas de séparateur
+                                    // orphelin quand la division n'a pas de titre.
+                                    const disp = f.badge && f.label ? `${f.badge} - ${f.label}`
+                                        : (f.badge || f.label);
                                     return (
                                         <React.Fragment key={bc.id}>
                                             {i > 0 && <span className="breadcrumb-sep">›</span>}

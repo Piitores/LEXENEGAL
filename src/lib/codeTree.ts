@@ -150,6 +150,36 @@ export function formatNodeLabel(
         }
     }
 
+    // Forme 4 : la division n'a PAS DE TITRE dans la source. `intitule` étant vide, on
+    // retombe sur le libellé, qui ne répète alors que le type et/ou le numéro. Sans ce cas,
+    // le code de l'hygiène affichait « SECTION 4 » suivi de « 4 », et le CPC « LIVRE
+    // PREMIER » en texte nu, sans badge, à côté de ses frères « LIVRE II ».
+    // ⛔ Deux garde-fous, parce qu'un titre d'un seul mot ne doit JAMAIS être avalé :
+    //   - avec un mot de niveau devant (« LIVRE PREMIER »), le jeton doit être un vrai
+    //     numéro — sinon « Chapitre unique » perdrait son « unique » ;
+    //   - sans mot de niveau, le jeton doit être un vrai numéro ET être EXACTEMENT celui
+    //     déjà connu (« 4 » pour la section 4) — sinon un nœud dont le numéro et
+    //     l'intitulé valent tous deux « Signature » se retrouverait sans texte, et une
+    //     section intitulée « CIVIL », dont toutes les lettres sont des chiffres romains,
+    //     passerait pour un numéro.
+    if (!stripped) {
+        const m4 = label.match(
+            new RegExp(`^\\s*(?:(${TYPE_WORDS})\\s*[.:°)\\]-]*\\s*)?([A-Za-zÀ-ÿ0-9]+)?\\s*$`, 'i'));
+        if (m4) {
+            const jeton = (m4[2] || '').trim();
+            const estNum = !!jeton && (!!numToArabicOrNull(jeton) || /^[A-Za-z]$/.test(jeton));
+            const memeQueNum = !!jeton && !!num && deburr(jeton) === deburr(num);
+            if ((m4[1] && (estNum || !jeton)) || (memeQueNum && estNum)) {
+                if (m4[1]) kind = NODE_KIND[deburr(m4[1])] ?? titleWord(m4[1]);
+                // ⚠️ `numero` porte parfois la CHAÎNE ENTIÈRE (« LIVRE PREMIER ») : elle
+                // n'est pas un numéro, il faut la remplacer par le jeton, sinon le badge
+                // retombe sur le seul mot de niveau et le numéro DISPARAÎT.
+                if (jeton && (!num || !numToArabicOrNull(num))) num = jeton;
+                label = '';                  // il ne dirait rien de plus que le badge
+            }
+        }
+    }
+
     // Badge : « Kind N » seulement si N est un vrai numéro (sinon on évite « Partie Législative »).
     // ⛔ ON AFFICHE LE NUMÉRO DE LA SOURCE, PAS SA CONVERSION. `numToArabicOrNull` ne sert
     // plus qu'à répondre « est-ce bien un numéro ? ». Signalé par le proprio le 2026-09-06 :
