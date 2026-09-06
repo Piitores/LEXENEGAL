@@ -63,6 +63,11 @@ export interface HierarchyNode {
 export const NODE_KIND: Record<string, string> = {
     partie: 'Partie', livre: 'Livre', titre: 'Titre', chapitre: 'Chapitre',
     section: 'Section', 'sous-section': 'Sous-section', paragraphe: 'Paragraphe', division: '',
+    // Sous-division LETTRÉE, sans mot-clé dans la source : « A / Limites du domaine public
+    // maritime » (Code de la Marine Marchande), « A. Exceptions au droit de communication
+    // au public » (loi 2008-09). Sans cette entrée, le badge affichait le type brut
+    // « POINT-LETTRE » et perdait la lettre.
+    'point-lettre': 'Point',
 };
 
 const TYPE_WORDS = 'titre|chapitre|sous-section|section|paragraphe|partie|livre|division';
@@ -110,8 +115,8 @@ function numToArabicOrNull(token: string): string | null {
  *  1) numero rempli + intitulé propre ;
  *  2) intitulé « TITRE II - … » (mot du niveau + chiffre collés) ;
  *  3) intitulé abîmé « DEUXIEME [PARTIE] … » (ordinal collé, mot du niveau parfois perdu).
- * Le mot du niveau vient de `type` (fiable) ; le numéro de `numero` ou du préfixe
- * de l'intitulé, converti en chiffre arabe pour un badge uniforme (« Titre 2 », « Livre 2 »).
+ * Le mot du niveau vient de `type` (fiable) ; le numéro de `numero` ou du préfixe de
+ * l'intitulé, et il est affiché TEL QUEL — « Titre II », « Chapitre premier », « Point A ».
  */
 export function formatNodeLabel(
     n: { type: string; numero?: string | null; intitule?: string | null; name?: string }
@@ -146,9 +151,18 @@ export function formatNodeLabel(
     }
 
     // Badge : « Kind N » seulement si N est un vrai numéro (sinon on évite « Partie Législative »).
+    // ⛔ ON AFFICHE LE NUMÉRO DE LA SOURCE, PAS SA CONVERSION. `numToArabicOrNull` ne sert
+    // plus qu'à répondre « est-ce bien un numéro ? ». Signalé par le proprio le 2026-09-06 :
+    // le Journal officiel écrit « PARAGRAPHE PREMIER » et « TITRE II », le site affichait
+    // « Paragraphe 1 » et « Titre 2 » — une réécriture du texte, sur tous les codes.
+    // Une lettre est aussi un numéro valide (« A / Limites du domaine public maritime » du
+    // Code de la Marine Marchande, « A. Exceptions… » de la loi 2008-09 sur le droit
+    // d'auteur) : sans ce cas, le badge tombait sur le repli et la LETTRE disparaissait.
+    // Les romains I, V et X passent par `arab`, qui est non nul pour eux — donc inchangés.
     const arab = numToArabicOrNull(num);
+    const lettre = /^[A-Za-z]$/.test(num);
     let badge = '';
-    if (kind && arab) badge = `${kind} ${arab}`;
+    if (kind && (arab || lettre)) badge = `${kind} ${num}`;
     else if (kind) {
         const hasKind = new RegExp(`\\b${kind}\\b`, 'i').test(label) || /\bPARTIE\b/i.test(label);
         badge = hasKind ? '' : kind;
