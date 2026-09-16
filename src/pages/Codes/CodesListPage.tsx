@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabase';
 import {
     Scale, BookOpen, Users, Building, Briefcase, Radio, Pickaxe,
     FileText, ChevronRight, Loader2, Gavel, Landmark,
-    Search, Map, Vote, Scroll, Leaf, FolderOpen, Car
+    Search, Map, Vote, Scroll, Leaf, FolderOpen, Car, Sprout
 } from 'lucide-react';
 import './CodesListPage.css';
 
@@ -12,7 +12,7 @@ import './CodesListPage.css';
 // Seule chose qui reste au front : une icône est un composant React, pas une valeur BDD.
 const ICONS: Record<string, React.ComponentType<any>> = {
     Scale, BookOpen, Users, Building, Briefcase, Radio, Pickaxe,
-    FileText, Gavel, Landmark, Map, Vote, Scroll, Leaf, FolderOpen, Car,
+    FileText, Gavel, Landmark, Map, Vote, Scroll, Leaf, FolderOpen, Car, Sprout,
 };
 const iconFor = (name?: string): React.ComponentType<any> => ICONS[name || ''] || FolderOpen;
 
