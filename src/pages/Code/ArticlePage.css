@@ -1447,6 +1447,35 @@
     color: var(--noir-charbon);
 }
 
+/* ─────────────────────────────────────────────────────
+   LA COLONNE DE LIBELLÉS NE DOIT PAS ÊTRE ÉCRASÉE
+   ⛔ Retour du propriétaire (2026-09-19) : « les colonnes A sont systématiquement réduites
+   de sorte que certains mots ont des césures ». Mesuré sur l'annexe 1 du Transport routier
+   d'hydrocarbures : `table-layout: auto` donne à chaque colonne sa largeur de contenu
+   MINIMALE, si bien qu'en face d'une colonne de prose la colonne des catégories tombait à
+   150 px utiles pour un libellé qui en demande jusqu'à 401 — 8 cellules cassées sur la seule
+   page. On lui garantit donc un plancher.
+   ⚠️ Réservé aux tableaux à DEUX ou TROIS colonnes (libellé + description), reconnus par le
+   nombre de cellules de leurs lignes : les grands tableaux de chiffres (les états du code CIMA
+   en comptent jusqu'à treize) ne doivent surtout pas voir leur première colonne élargie, ils
+   déborderaient. `:has()` est disponible sur tous les navigateurs visés.
+   ───────────────────────────────────────────────────── */
+.article-text .alinea-tableau:has(tbody tr > td:nth-child(2):last-child) tbody td:first-child,
+.article-text .alinea-tableau:has(tbody tr > td:nth-child(2):last-child) thead th:first-child,
+.article-text .alinea-tableau:has(tbody tr > td:nth-child(3):last-child) tbody td:first-child,
+.article-text .alinea-tableau:has(tbody tr > td:nth-child(3):last-child) thead th:first-child {
+    min-width: 15rem;
+}
+
+/* ⛔ Aucune césure automatique DANS UN TABLEAU, et aucune coupure en milieu de mot : une
+   cellule étroite doit passer à la ligne entre deux mots, jamais au milieu de l'un d'eux. */
+.article-text .alinea-tableau th,
+.article-text .alinea-tableau td {
+    hyphens: manual;
+    overflow-wrap: normal;
+    word-break: normal;
+}
+
 .article-text .alinea-tableau tbody tr:last-child td {
     border-bottom: none;
 }
@@ -1513,5 +1542,13 @@
        deviendraient illisiblement larges. Seuls les nombres restent insécables. */
     .article-text .alinea-tableau td {
         min-width: 8rem;
+    }
+    /* ⚠️ Le plancher de la colonne de libellés redescend sur mobile : là, le tableau défile
+       déjà seul, et 15rem y mangeraient tout l'écran. */
+    .article-text .alinea-tableau:has(tbody tr > td:nth-child(2):last-child) tbody td:first-child,
+    .article-text .alinea-tableau:has(tbody tr > td:nth-child(2):last-child) thead th:first-child,
+    .article-text .alinea-tableau:has(tbody tr > td:nth-child(3):last-child) tbody td:first-child,
+    .article-text .alinea-tableau:has(tbody tr > td:nth-child(3):last-child) thead th:first-child {
+        min-width: 9rem;
     }
 }
