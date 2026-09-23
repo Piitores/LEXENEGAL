@@ -146,7 +146,7 @@ export function buildDecisionHead(d, canonical) {
   };
   return headBlock({ title, description, keywords, canonical, ogType: 'article', schema: [schema, filAriane] });
 }
-export function buildDecisionBody(d, cited) {
+export function buildDecisionBody(d, cited, related) {
   const ref = d.reference || 'Décision';
   const court = d.chambre || d.juridiction || '';
   const dateFr = formatDateFr(d.date_decision);
@@ -168,12 +168,21 @@ export function buildDecisionBody(d, cited) {
         return `<li><a href="/code/${esc(a.code.slug)}/${esc(a.slug)}">${esc(label)} - ${esc(a.code.title)}</a></li>`;
       }).filter(Boolean).join('')}</ul></section>`
     : '';
+  // Décisions liées (decisions_similaires, deux sens) : cibles actives seulement.
+  const liees = (related && related.length)
+    ? `<section class="ssr-related"><h2>Décisions liées</h2><ul>${related.map((r) => {
+        if (!r || !r.slug) return '';
+        const label = [r.juridiction, r.reference, r.chambre].filter(Boolean).join(' - ') || 'Décision';
+        const dt = formatDateFr(r.date_decision);
+        return `<li><a href="/decision/${esc(r.slug)}">${esc(label)}</a>${dt ? ` (${esc(dt)})` : ''}</li>`;
+      }).filter(Boolean).join('')}</ul></section>`
+    : '';
   return wrapContent(`<article>
     <h1>${esc([d.juridiction, ref, d.chambre].filter(Boolean).join(' - '))}</h1>
     <ul class="ssr-meta">${meta}</ul>
     ${motscles}${resume}
     <section class="ssr-corps"><h2>Texte intégral</h2>${corps}</section>
-    ${cites}
+    ${cites}${liees}
   </article>`);
 }
 
@@ -735,7 +744,25 @@ async function fetchAllTexts() {
   catch (e) { return []; }
 }
 async function fetchDecision(slug) {
-  return one(await sb(`decisions?slug=eq.${encodeURIComponent(slug)}&select=id,reference,slug,date_decision,juridiction,chambre,matiere_principale,parties_principales,resume,mots_cles,texte_brut,texte_integral&limit=1`));
+  return one(await sb(`decisions?slug=eq.${encodeURIComponent(slug)}&select=id,reference,slug,date_decision,juridiction,chambre,matiere_principale,parties_principales,resume,mots_cles,texte_brut,texte_integral,decisions_similaires&limit=1`));
+}
+// Décisions liées dans les deux sens du champ decisions_similaires (actives seulement : jamais de lien mort).
+async function fetchRelatedDecisions(d) {
+  const cols = 'slug,reference,juridiction,chambre,date_decision';
+  const sortants = Array.from(new Set((Array.isArray(d.decisions_similaires) ? d.decisions_similaires : [])
+    .filter((s) => typeof s === 'string' && s && s !== d.slug)));
+  try {
+    const [out, inc] = await Promise.all([
+      sortants.length
+        ? sb(`decisions?slug=in.(${sortants.map((s) => encodeURIComponent(`"${s}"`)).join(',')})&is_active=eq.true&select=${cols}`)
+        : Promise.resolve([]),
+      sb(`decisions?decisions_similaires=cs.${encodeURIComponent(`{"${d.slug}"}`)}&is_active=eq.true&select=${cols}&limit=30`),
+    ]);
+    const seen = new Set([d.slug]);
+    return [...(out || []), ...(inc || [])]
+      .filter((r) => r && r.slug && !seen.has(r.slug) && seen.add(r.slug))
+      .sort((a, b) => String(b.date_decision || '').localeCompare(String(a.date_decision || '')));
+  } catch (e) { return []; }
 }
 async function fetchCitedArticles(decisionId) {
   try {
@@ -995,9 +1022,12 @@ export default async function handler(req, res) {
       if (gone) return serveGone();
       return serveShell(60, true);
     }
-    const cited = decision.id ? await fetchCitedArticles(decision.id) : [];
+    const [cited, related] = await Promise.all([
+      decision.id ? fetchCitedArticles(decision.id) : [],
+      fetchRelatedDecisions(decision),
+    ]);
     const canonical = `${SITE}/decision/${slug}`;
-    return serveHtml(buildDecisionHead(decision, canonical), buildDecisionBody(decision, cited));
+    return serveHtml(buildDecisionHead(decision, canonical), buildDecisionBody(decision, cited, related));
   } catch (e) {
     res.statusCode = 500;
     return res.end('Erreur de rendu');

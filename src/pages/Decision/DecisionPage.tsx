@@ -16,6 +16,7 @@ import { logViewDecision, logDownloadPdf } from '../../utils/auditLogger';
 import ReportErrorModal from '../../components/ReportError/ReportErrorModal';
 import AnnotationPanel from '../../components/AnnotationPanel/AnnotationPanel';
 import ActionButton from '../../components/ui/ActionButton';
+import RelatedDecisions from '../../components/RelatedDecisions/RelatedDecisions';
 
 import './DecisionPage.css';
 import '../Error/NotFoundPage.css';
@@ -577,6 +578,8 @@ const DecisionPage: React.FC = () => {
                             <div dangerouslySetInnerHTML={{ __html: enrichedText }} />
                         </div>
                     </div>
+
+                    <RelatedDecisions slug={decision.slug} similaires={decision.decisions_similaires} />
                 </main>
 
                 {/* 3. RIGHT SIDEBAR */}
