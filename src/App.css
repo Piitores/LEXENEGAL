@@ -4,6 +4,44 @@
   position: relative;
 }
 
+/* Tant que le contenu serveur (#ssr-keep, cf. src/index.tsx) est affiché, les états
+   « Chargement… » et le pied de page de React n'occupent aucune place : le lecteur
+   lit le texte serveur, puis React le remplace d'un bloc quand il est prêt. */
+body.ssr-live #app .app { min-height: 0; }
+body.ssr-live #app .route-fallback,
+body.ssr-live #app .code-loading,
+body.ssr-live #app .code-page:has(> .code-loading),
+body.ssr-live #app .article-loading,
+body.ssr-live #app .decisionPage:has(.loading-bar-container),
+body.ssr-live #app .theme-page:has(.theme-page__loading),
+body.ssr-live #app .guides-page:has(.guides-page__loading),
+body.ssr-live #app .footer {
+  height: 0;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  visibility: hidden;
+}
+
+/* Attente d'un morceau de page chargé à la demande (React.lazy) */
+.route-fallback {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 80px;
+}
+.route-fallback__spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(4, 120, 87, 0.18);
+  border-top-color: #047857;
+  border-radius: 50%;
+  animation: route-fallback-rot 0.8s linear infinite;
+}
+@keyframes route-fallback-rot { to { transform: rotate(360deg); } }
+
 main {
   position: relative;
   z-index: 1;

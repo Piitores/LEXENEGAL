@@ -1,31 +1,38 @@
-import React, { useEffect, useLayoutEffect, useState } from 'react';
+import React, { lazy, Suspense, useEffect, useLayoutEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, useNavigationType } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import Navbar from './components/Navbar/Navbar';
 import Footer from './components/Footer/Footer';
 import BotBlocker from './components/BotBlocker/BotBlocker';
-import Home from './pages/Home/Home';
-import SearchPage from './pages/Search/SearchPage';
-import DecisionPage from './pages/Decision/DecisionPage';
-import ThemePage from './pages/Jurisprudence/ThemePage';
-import JurisprudencePage from './pages/Jurisprudence/JurisprudencePage';
-import GuidesPage from './pages/Guides/GuidesPage';
-import DeveloppeursPage from './pages/Developpeurs/DeveloppeursPage';
-import GuideDetailPage from './pages/Guides/GuideDetailPage';
-import AuthPage from './pages/Auth/AuthPage';
-import AuthCallback from './pages/Auth/AuthCallback';
-import CabinetPage from './pages/Cabinet/CabinetPage';
-import AccountSettingsPage from './pages/Cabinet/AccountSettingsPage';
-import CodesListPage from './pages/Codes/CodesListPage';
-import CodePage from './pages/Code/CodePage';
-import ArticlePage from './pages/Code/ArticlePage';
-import ConventionsListPage from './pages/Conventions/ConventionsListPage';
-import DoctrinePage from './pages/Doctrine/DoctrinePage';
-import DoctrineDetailPage from './pages/Doctrine/DoctrineDetailPage';
-import CommunautairePage from './pages/Communautaire/CommunautairePage';
-import AccessRequestPage from './pages/AccessRequest/AccessRequestPage';
-import AdminPage from './pages/Admin/AdminPage';
-import NotFoundPage from './pages/Error/NotFoundPage';
+/*
+ * Pages chargées À LA DEMANDE (une par route). Avant, les 22 pages étaient
+ * importées statiquement : un seul bundle de 766 Ko (225 Ko gzip, 62 % inutilisé
+ * sur une page de texte) + une feuille CSS de 194 Ko, tous deux bloquants, soit
+ * un LCP mobile de 10 s en 4G lente (mesure Lighthouse du 2026-09-23). Chaque
+ * route ne charge désormais que son code et son CSS.
+ */
+const Home = lazy(() => import('./pages/Home/Home'));
+const SearchPage = lazy(() => import('./pages/Search/SearchPage'));
+const DecisionPage = lazy(() => import('./pages/Decision/DecisionPage'));
+const ThemePage = lazy(() => import('./pages/Jurisprudence/ThemePage'));
+const JurisprudencePage = lazy(() => import('./pages/Jurisprudence/JurisprudencePage'));
+const GuidesPage = lazy(() => import('./pages/Guides/GuidesPage'));
+const DeveloppeursPage = lazy(() => import('./pages/Developpeurs/DeveloppeursPage'));
+const GuideDetailPage = lazy(() => import('./pages/Guides/GuideDetailPage'));
+const AuthPage = lazy(() => import('./pages/Auth/AuthPage'));
+const AuthCallback = lazy(() => import('./pages/Auth/AuthCallback'));
+const CabinetPage = lazy(() => import('./pages/Cabinet/CabinetPage'));
+const AccountSettingsPage = lazy(() => import('./pages/Cabinet/AccountSettingsPage'));
+const CodesListPage = lazy(() => import('./pages/Codes/CodesListPage'));
+const CodePage = lazy(() => import('./pages/Code/CodePage'));
+const ArticlePage = lazy(() => import('./pages/Code/ArticlePage'));
+const ConventionsListPage = lazy(() => import('./pages/Conventions/ConventionsListPage'));
+const DoctrinePage = lazy(() => import('./pages/Doctrine/DoctrinePage'));
+const DoctrineDetailPage = lazy(() => import('./pages/Doctrine/DoctrineDetailPage'));
+const CommunautairePage = lazy(() => import('./pages/Communautaire/CommunautairePage'));
+const AccessRequestPage = lazy(() => import('./pages/AccessRequest/AccessRequestPage'));
+const AdminPage = lazy(() => import('./pages/Admin/AdminPage'));
+const NotFoundPage = lazy(() => import('./pages/Error/NotFoundPage'));
 import ErrorBoundary from './components/ErrorBoundary/ErrorBoundary';
 import { useBlockSelectAll } from './hooks/useBlockSelectAll';
 import AmbientEffects from './components/AmbientEffects/AmbientEffects';
@@ -55,6 +62,15 @@ const ScrollManager = () => {
   useEffect(() => {
     recordOrigin(location.pathname + location.search);
   }, [location.pathname, location.search]);
+
+  // Navigation interne (pushState) pendant que le contenu serveur (#ssr-keep) est
+  // encore affiché : il appartient à l'ancienne page, on le retire aussitôt.
+  const premiereCle = React.useRef(location.key);
+  useEffect(() => {
+    if (location.key === premiereCle.current) return;
+    document.getElementById('ssr-keep')?.remove();
+    document.body.classList.remove('ssr-live');
+  }, [location.key]);
 
   // Mémorise en continu la position de défilement de l'entrée d'historique courante
   useEffect(() => {
@@ -107,6 +123,29 @@ function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Contenu serveur conservé sous React (cf. src/index.tsx) : on le retire dès que
+  // plus aucun état « Chargement… » n'est monté dans #app, ou au bout de 20 s (filet
+  // de sécurité). Un MutationObserver, et non un minuteur : son rappel s'exécute
+  // dans la même tâche que la mise à jour du DOM par React, AVANT le rendu à l'écran.
+  // Le navigateur ne peint donc jamais l'état intermédiaire « contenu React + contenu
+  // serveur en dessous », qui comptait comme un décalage de mise en page de 0,5 à 1,0.
+  useEffect(() => {
+    const keep = document.getElementById('ssr-keep');
+    const app = document.getElementById('app');
+    if (!keep || !app) return;
+    const LOADING = '#app .route-fallback, #app .code-loading, #app .article-loading, #app .decisionPage .loading-bar-container, #app .theme-page__loading, #app .guides-page__loading';
+    const dismiss = () => {
+      document.getElementById('ssr-keep')?.remove();
+      document.body.classList.remove('ssr-live');
+    };
+    const check = () => { if (!document.querySelector(LOADING)) { observer.disconnect(); window.clearTimeout(timer); dismiss(); } };
+    const observer = new MutationObserver(check);
+    observer.observe(app, { childList: true, subtree: true });
+    const timer = window.setTimeout(() => { observer.disconnect(); dismiss(); }, 20000);
+    check();
+    return () => { observer.disconnect(); window.clearTimeout(timer); };
+  }, []);
+
   // Retire le splash anti-FOUC une fois l'app React montée (le design est prêt).
   useEffect(() => {
     const splash = document.getElementById('app-splash');
@@ -132,6 +171,9 @@ function App() {
             <AmbientEffects />
             <Navbar scrolled={scrolled} />
             <ErrorBoundary>
+              {/* Même hauteur que les états « Chargement… » des pages : le pied de page
+                  reste hors écran pendant le chargement du morceau de code (pas de CLS). */}
+              <Suspense fallback={<div className="route-fallback" aria-busy="true"><div className="route-fallback__spinner" /></div>}>
               <Routes>
                 {/* Landing Page Unique */}
               <Route path="/" element={<Home />} />
@@ -172,6 +214,7 @@ function App() {
               {/* 404 Catch-all */}
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
+              </Suspense>
           </ErrorBoundary>
           <Footer />
           <AccountNudge />

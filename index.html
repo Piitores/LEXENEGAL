@@ -40,23 +40,54 @@
   <meta property="twitter:title" content="Lexenegal | La mémoire juridique organisée du Sénégal" />
   <meta property="twitter:description" content="Plateforme Nationale d'Accès à la Jurisprudence et à la Législation Sénégalaise." />
 
-  <!-- Google Analytics 4 -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-NFS9K07ZQ8"></script>
+  <!-- Google Analytics 4, chargé après l'événement load : 171 Ko qui concurrençaient
+       le bundle et la feuille de style pendant le rendu (mesure Lighthouse 2026-09-23). -->
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag() { dataLayer.push(arguments); }
     gtag('js', new Date());
     gtag('config', 'G-NFS9K07ZQ8');
+    window.addEventListener('load', function () {
+      var s = document.createElement('script'); s.async = true;
+      s.src = 'https://www.googletagmanager.com/gtag/js?id=G-NFS9K07ZQ8';
+      document.head.appendChild(s);
+    });
   </script>
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
+  <!-- Feuille Google Fonts NON bloquante (preload puis bascule en stylesheet) : elle
+       coûtait ~0,9 s de rendu bloqué en 4G lente. Les polices restent en display=swap. -->
+  <link rel="preload" as="style"
     href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap"
-    rel="stylesheet">
+    onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap"></noscript>
 
-  <!-- Splash anti-FOUC : couvre le bref affichage du HTML serveur (SEO) avant que React ne prenne la main. -->
+  <!-- Contenu serveur (api/render.js, #ssr-content) : affiché IMMÉDIATEMENT et mis en forme,
+       conservé sous React jusqu'à ce que la page cliente soit prête (src/index.tsx + App.tsx).
+       Avant, il restait caché sous le splash puis était détruit : le plus grand bloc de texte
+       n'apparaissait qu'après le bundle, le morceau de route et les requêtes Supabase
+       (LCP mobile 10 s). Tailles alignées sur celles de React (ou un peu au-dessus) pour
+       que le premier rendu soit bien le « plus grand » retenu par la métrique LCP. -->
+  <style>
+    /* Polices SYSTÈME uniquement : le contenu serveur ne doit pas recouler à l'arrivée des
+       polices web (décalage de 0,08 mesuré), il sera remplacé par React de toute façon. */
+    #ssr-keep{max-width:980px;margin:0 auto;padding:104px 24px 48px;font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#1F2937;}
+    #ssr-keep h1{font-family:Georgia,'Times New Roman',serif;font-size:2rem;line-height:1.2;font-weight:700;color:#111827;margin:0 0 16px;}
+    #ssr-keep h2{font-family:Georgia,'Times New Roman',serif;font-size:1.25rem;font-weight:600;color:#111827;margin:32px 0 12px;}
+    #ssr-keep p{font-size:1.15rem;line-height:1.85;}
+    #ssr-keep .ssr-article-body,#ssr-keep .ssr-article-body p{font-family:Georgia,serif;font-size:1.15rem;line-height:1.95;}
+    #ssr-keep p{margin:0 0 14px;}
+    #ssr-keep a{color:#047857;text-decoration:none;}
+    #ssr-keep .ssr-bc,#ssr-keep .ssr-artnav{font-size:0.85rem;color:#6B7280;margin:0 0 20px;}
+    #ssr-keep .ssr-toc ul{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px 16px;font-size:0.92rem;}
+    #ssr-keep .ssr-presentation{padding:18px 20px;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:12px;}
+    @media (max-width:768px){#ssr-keep{padding:88px 12px 32px;}#ssr-keep h1{font-size:1.6rem;}}
+  </style>
+  <!-- Splash anti-FOUC : couvre le bref affichage du HTML serveur (SEO) avant que React ne prenne la main.
+       ⚠️ Retiré dès le démarrage par src/index.tsx quand un contenu serveur est présent (hors accueil). -->
   <style>
     #app-splash{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:#ffffff;transition:opacity .35s ease;}
     #app-splash.is-hidden{opacity:0;pointer-events:none;}
