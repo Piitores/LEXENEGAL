@@ -94,13 +94,13 @@ const SEO: React.FC<SEOProps> = ({
         "isPartOf": {
             "@type": "WebSite",
             "name": "Lexenegal",
-            "url": "https://lexenegal.sn"
+            "url": CANONICAL_ORIGIN
         },
         "provider": {
             "@type": "Organization",
             "name": "Lexenegal",
-            "url": "https://lexenegal.sn",
-            "logo": "https://lexenegal.sn/favicon.svg"
+            "url": CANONICAL_ORIGIN,
+            "logo": `${CANONICAL_ORIGIN}/favicon.svg`
         }
     } : null;
 
@@ -110,8 +110,8 @@ const SEO: React.FC<SEOProps> = ({
         "@type": "LegalService",
         "name": "Lexenegal",
         "description": "Base de jurisprudence sénégalaise certifiée",
-        "url": "https://lexenegal.sn",
-        "logo": "https://lexenegal.sn/favicon.svg",
+        "url": CANONICAL_ORIGIN,
+        "logo": `${CANONICAL_ORIGIN}/favicon.svg`,
         "areaServed": {
             "@type": "Country",
             "name": "Sénégal"
