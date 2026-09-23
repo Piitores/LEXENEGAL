@@ -1,77 +1,28 @@
 /**
  * LEXENEGAL - Bot Blocker Component
  * 
- * Détection des navigateurs headless et robots
- * Protection contre le scraping automatisé
+ * Détection des navigateurs headless et robots (heuristiques dans lib/botDetect.ts,
+ * testées sous vitest). Les robots d'indexation vérifiés ne sont jamais bloqués :
+ * le 2026-09-23, Google rendait TOUTES les pages avec cette modale.
  */
 
 import React, { useEffect, useState } from 'react';
 import { Shield, AlertTriangle } from 'lucide-react';
 import './BotBlocker.css';
+import { detectBot, readBotEnv, type BotDetection } from '../../lib/botDetect';
 
 interface BotBlockerProps {
     children: React.ReactNode;
 }
 
-/**
- * Détecte si le navigateur est probablement un bot/headless
- */
-function detectBot(): { isBot: boolean; reasons: string[] } {
-    const reasons: string[] = [];
-
-    // 1. Check navigator.webdriver (Selenium, Puppeteer)
-    if (navigator.webdriver) {
-        reasons.push('webdriver');
-    }
-
-    // 2. Check for automation frameworks
-    const windowAny = window as any;
-    if (windowAny._phantom || windowAny.__nightmare || windowAny.callPhantom) {
-        reasons.push('phantom');
-    }
-
-    // 3. Check for missing plugins (bots often have none)
-    if (navigator.plugins && navigator.plugins.length === 0) {
-        reasons.push('no_plugins');
-    }
-
-    // 4. Check for suspicious user agent
-    const ua = navigator.userAgent.toLowerCase();
-    const suspiciousUA = ['headless', 'phantom', 'selenium', 'puppeteer', 'playwright'];
-    if (suspiciousUA.some(s => ua.includes(s))) {
-        reasons.push('suspicious_ua');
-    }
-
-    // 5. Check for Chrome without Chrome global
-    if (ua.includes('chrome') && !windowAny.chrome) {
-        reasons.push('fake_chrome');
-    }
-
-    // 6. Check for abnormal screen dimensions
-    if (window.screen.width === 0 || window.screen.height === 0) {
-        reasons.push('no_screen');
-    }
-
-    // 7. Check for missing languages
-    if (!navigator.languages || navigator.languages.length === 0) {
-        reasons.push('no_languages');
-    }
-
-    // Threshold: 2+ suspicious signals = likely bot
-    return {
-        isBot: reasons.length >= 2,
-        reasons
-    };
-}
-
 const BotBlocker: React.FC<BotBlockerProps> = ({ children }) => {
-    const [detection, setDetection] = useState<{ isBot: boolean; reasons: string[] }>({ isBot: false, reasons: [] });
+    const [detection, setDetection] = useState<BotDetection>({ isBot: false, reasons: [] });
     const [dismissed, setDismissed] = useState(false);
 
     useEffect(() => {
         // Délai pour éviter les faux positifs lors du chargement
         const timer = setTimeout(() => {
-            const result = detectBot();
+            const result = detectBot(readBotEnv());
             setDetection(result);
 
             if (result.isBot) {
