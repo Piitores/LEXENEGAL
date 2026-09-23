@@ -1397,3 +1397,58 @@
     opacity: 1;
     transform: scale(1.1);
 }
+/* ─────────────────────────────────────────────────────
+   TABLEAUX (proclamations de résultats électoraux) —
+   même rendu que les barèmes des articles (bareme-table).
+   ───────────────────────────────────────────────────── */
+.legal-content .bareme-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 1.5rem 0;
+    font-family: Georgia, serif;
+    font-size: 0.95rem;
+    background: linear-gradient(135deg, #FAFBFC 0%, #FFFFFF 100%);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(4, 120, 87, 0.06);
+}
+
+.legal-content .bareme-table thead {
+    background: linear-gradient(135deg, var(--emerald-prestige) 0%, var(--emerald-dark) 100%);
+}
+
+.legal-content .bareme-table thead th {
+    padding: 0.8rem 1rem;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #FFFFFF;
+    text-align: left;
+}
+
+.legal-content .bareme-table tbody tr:nth-child(odd) {
+    background: rgba(4, 120, 87, 0.02);
+}
+
+.legal-content .bareme-table td {
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid var(--gris-clair);
+    color: var(--noir-charbon);
+    vertical-align: top;
+}
+
+.legal-content .bareme-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Colonne des nombres (la dernière) alignée à droite, chiffres à chasse fixe. */
+.legal-content .bareme-table td:last-child {
+    text-align: right;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 640px) {
+    .legal-content .bareme-table { font-size: 0.85rem; }
+    .legal-content .bareme-table td { padding: 0.5rem 0.6rem; }
+}
