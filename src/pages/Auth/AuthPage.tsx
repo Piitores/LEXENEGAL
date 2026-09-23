@@ -370,7 +370,7 @@ const AuthPage: React.FC = () => {
                                 <Lock size={18} className="input-icon" />
                                 <input type="password" placeholder="Mot de passe" value={password} onChange={(e) => setPassword(e.target.value)} minLength={8} required />
                             </div>
-                            <p className="auth-hint">8 caractères minimum, avec au moins une lettre et un chiffre.</p>
+                            <p className="auth-hint">8 caractères minimum, avec au moins une minuscule, une majuscule, un chiffre et un symbole.</p>
                             <button type="submit" className="auth-btn-primary" disabled={loading}>
                                 {loading ? <Loader2 size={20} className="spinner" /> : <>Créer mon accès <ArrowRight size={18} /></>}
                             </button>
