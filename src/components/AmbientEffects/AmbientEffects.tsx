@@ -52,8 +52,11 @@ const AmbientEffects: React.FC = () => {
       <div
         className="ambient-mouse-gradient"
         style={{
-          left: `${mouseGradient.x}px`,
-          top: `${mouseGradient.y}px`,
+          // Déplacé par transform, jamais par left/top : un changement de left/top
+          // est un « layout shift » compté dans le CLS à CHAQUE mouvement de souris
+          // (un mouvement de souris n'est pas une « entrée récente » pour l'API),
+          // ce qui plombait le CLS desktop des pages de textes (0,36 sur le terrain).
+          transform: `translate3d(${mouseGradient.x}px, ${mouseGradient.y}px, 0) translate(-50%, -50%)`,
           opacity: mouseGradient.opacity,
         }}
       />

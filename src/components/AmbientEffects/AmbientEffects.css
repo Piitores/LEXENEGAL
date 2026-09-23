@@ -16,9 +16,11 @@
     transparent 70%
   );
   pointer-events: none;
-  transform: translate(-50%, -50%);
-  will-change: left, top, opacity;
-  transition: left 60ms linear, top 60ms linear, opacity 300ms ease-out;
+  left: 0;
+  top: 0;
+  /* Position pilotée par transform (cf. AmbientEffects.tsx) : pas de layout shift. */
+  will-change: transform, opacity;
+  transition: transform 60ms linear, opacity 300ms ease-out;
   z-index: 9990;
   filter: blur(30px);
   mix-blend-mode: multiply;
