@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { popReturnPath } from '../../lib/authRedirect';
+import { traduireErreurAuth } from '../../lib/authErrors';
 import { Loader2, Check, X, Lock, ArrowRight } from 'lucide-react';
 import './AuthPage.css';
 
@@ -94,7 +95,7 @@ const AuthCallback: React.FC = () => {
             setMessage('Mot de passe mis à jour. Vous êtes connecté.');
             setTimeout(() => navigate(popReturnPath()), 1500);
         } catch (err: any) {
-            setMessage(err.message || 'Impossible de mettre à jour le mot de passe.');
+            setMessage(traduireErreurAuth(err));
         } finally {
             setSaving(false);
         }

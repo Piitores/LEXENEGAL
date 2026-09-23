@@ -6,6 +6,7 @@ import {
     BadgeCheck, LogOut, Trash2, Loader2, Check, AlertTriangle
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { traduireErreurAuth } from '../../lib/authErrors';
 import './AccountSettingsPage.css';
 
 type Feedback = { type: 'ok' | 'err'; text: string } | null;
@@ -101,7 +102,7 @@ const AccountSettingsPage: React.FC = () => {
         setPwdMsg(null);
         const { error } = await supabase.auth.updateUser({ password: pwd });
         if (error) {
-            setPwdMsg({ type: 'err', text: error.message || 'Échec de la modification.' });
+            setPwdMsg({ type: 'err', text: traduireErreurAuth(error) });
         } else {
             setPwdMsg({ type: 'ok', text: 'Mot de passe mis à jour.' });
             setPwd(''); setPwd2('');

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { popReturnPath } from '../../lib/authRedirect';
+import { traduireErreurAuth, estEmailNonConfirme } from '../../lib/authErrors';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, User, ArrowRight, Check, Loader2, Wand2, KeyRound } from 'lucide-react';
 import './AuthPage.css';
@@ -41,7 +42,10 @@ const AuthPage: React.FC = () => {
     // OTP State (code à 6 chiffres envoyé par e-mail)
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
     const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
-    const [resendIn, setResendIn] = useState(0); // compte à rebours avant de pouvoir renvoyer
+    // Compte à rebours avant de pouvoir renvoyer un code. 60 s = l'intervalle minimal
+    // entre deux e-mails au même utilisateur, imposé côté Supabase (réglage SMTP).
+    const RESEND_COOLDOWN = 60;
+    const [resendIn, setResendIn] = useState(0);
 
     // Suit la route : /login ↔ /signup (via la navbar) bascule le mode de base,
     // sans écraser un sous-mode en cours (magic/forgot/verify/success).
@@ -85,7 +89,7 @@ const AuthPage: React.FC = () => {
             if (error) throw error;
             // Redirection gérée par Google puis /auth/callback.
         } catch (err: any) {
-            setError(err.message || 'Connexion Google indisponible pour le moment.');
+            setError(traduireErreurAuth(err) || 'Connexion Google indisponible pour le moment.');
             setLoading(false);
         }
     };
@@ -103,7 +107,7 @@ const AuthPage: React.FC = () => {
             if (error) throw error;
             setMessage('Lien envoyé. Ouvrez votre boîte mail et cliquez sur « Se connecter à LEXENEGAL ».');
         } catch (err: any) {
-            setError(err.message || "Impossible d'envoyer le lien. Réessayez.");
+            setError(traduireErreurAuth(err));
         } finally {
             setLoading(false);
         }
@@ -121,7 +125,7 @@ const AuthPage: React.FC = () => {
             if (error) throw error;
             setMessage('Si un compte existe pour cette adresse, un e-mail de réinitialisation vient de partir.');
         } catch (err: any) {
-            setError(err.message || "Impossible d'envoyer l'e-mail. Réessayez.");
+            setError(traduireErreurAuth(err));
         } finally {
             setLoading(false);
         }
@@ -158,10 +162,10 @@ const AuthPage: React.FC = () => {
         try {
             const { error } = await supabase.auth.resend({ type: 'signup', email });
             if (error) throw error;
-            setMessage('Nouveau code envoyé.');
-            setResendIn(30);
+            setMessage('Nouveau code envoyé. Pensez à vérifier vos courriers indésirables.');
+            setResendIn(RESEND_COOLDOWN);
         } catch (err: any) {
-            setError(err.message || "Impossible de renvoyer le code.");
+            setError(traduireErreurAuth(err));
         }
     };
 
@@ -185,7 +189,7 @@ const AuthPage: React.FC = () => {
                 setTimeout(() => navigate(popReturnPath()), 1500);
             }
         } catch (err: any) {
-            setError('Code de vérification invalide ou expiré.');
+            setError(traduireErreurAuth(err));
         } finally {
             setLoading(false);
         }
@@ -216,11 +220,13 @@ const AuthPage: React.FC = () => {
                 setMessage('Bienvenue dans votre mémoire juridique.');
                 setTimeout(() => navigate(popReturnPath()), 1000);
             } else {
+                setOtp(['', '', '', '', '', '']);
                 setMode('verify');
+                setResendIn(RESEND_COOLDOWN);
                 setMessage('Saisissez le code de sécurité reçu par e-mail.');
             }
         } catch (err: any) {
-            setError(err.message || "Erreur lors de l'inscription");
+            setError(traduireErreurAuth(err));
         } finally {
             setLoading(false);
             isRegistering.current = false;
@@ -234,7 +240,22 @@ const AuthPage: React.FC = () => {
         setError(null);
         try {
             const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-            if (error) throw error;
+            if (error) {
+                // Compte créé mais e-mail jamais vérifié (ex. : code jamais saisi) :
+                // on renvoie un code et on ouvre directement l'écran de saisie.
+                if (estEmailNonConfirme(error)) {
+                    const { error: resendErr } = await supabase.auth.resend({ type: 'signup', email });
+                    setOtp(['', '', '', '', '', '']);
+                    setMode('verify');
+                    setResendIn(RESEND_COOLDOWN);
+                    setError(null);
+                    setMessage(resendErr
+                        ? "Votre adresse n'a pas encore été vérifiée. " + traduireErreurAuth(resendErr)
+                        : "Votre adresse n'a pas encore été vérifiée : un nouveau code vient de vous être envoyé par e-mail.");
+                    return;
+                }
+                throw error;
+            }
 
             // Blocage des comptes suspendus (levier admin).
             if (data.user) {
@@ -247,7 +268,7 @@ const AuthPage: React.FC = () => {
             }
             navigate(popReturnPath());
         } catch (err: any) {
-            setError(err.message || 'Identifiants incorrects');
+            setError(traduireErreurAuth(err));
         } finally {
             setLoading(false);
         }
@@ -266,7 +287,7 @@ const AuthPage: React.FC = () => {
         register: 'Créez votre accès à la mémoire juridique organisée du Sénégal',
         magic: 'Recevez un lien de connexion sécurisé, sans mot de passe',
         forgot: 'Indiquez votre e-mail : nous vous enverrons un lien pour en choisir un nouveau',
-        verify: 'Un code de sécurité a été envoyé à votre adresse e-mail.',
+        verify: 'Un code à 6 chiffres a été envoyé à votre adresse e-mail. Il est valable une heure.',
         success: 'Votre accès a été validé avec succès',
     };
 
@@ -347,8 +368,9 @@ const AuthPage: React.FC = () => {
                             </div>
                             <div className="input-group">
                                 <Lock size={18} className="input-icon" />
-                                <input type="password" placeholder="Mot de passe (min. 8 caractères)" value={password} onChange={(e) => setPassword(e.target.value)} minLength={8} required />
+                                <input type="password" placeholder="Mot de passe" value={password} onChange={(e) => setPassword(e.target.value)} minLength={8} required />
                             </div>
+                            <p className="auth-hint">8 caractères minimum, avec au moins une lettre et un chiffre.</p>
                             <button type="submit" className="auth-btn-primary" disabled={loading}>
                                 {loading ? <Loader2 size={20} className="spinner" /> : <>Créer mon accès <ArrowRight size={18} /></>}
                             </button>

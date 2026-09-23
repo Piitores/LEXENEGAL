@@ -131,6 +131,12 @@
     gap: 1rem;
 }
 
+.auth-hint {
+    margin: -0.35rem 0 0.25rem 0.25rem;
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
 .input-group {
     position: relative;
 }
