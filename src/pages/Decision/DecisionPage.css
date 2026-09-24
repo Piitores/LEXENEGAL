@@ -498,7 +498,9 @@
 /* Elite Grid Layout */
 .elite-grid {
     display: grid;
-    grid-template-columns: 220px 1fr 240px;
+    /* minmax(0, 1fr) : la colonne centrale ne s'élargit jamais pour un contenu large
+       (tableaux de résultats) — sinon la colonne de droite sort de l'écran. */
+    grid-template-columns: 220px minmax(0, 1fr) 240px;
     gap: 2rem;
     max-width: 1400px;
     margin: 0 auto;
@@ -863,7 +865,7 @@
 
 @media screen and (max-width: 1200px) {
     .elite-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
         padding: 1rem;
     }
 
@@ -1402,7 +1404,12 @@
    même rendu que les barèmes des articles (bareme-table).
    ───────────────────────────────────────────────────── */
 .legal-content .bareme-table {
-    width: 100%;
+    /* Tableaux très larges (annexes de résultats, jusqu'à 14 colonnes) : ils défilent
+       DANS leur cadre, jamais la page (display:block + overflow-x sur le tableau lui-même). */
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     border-collapse: separate;
     border-spacing: 0;
     margin: 1.5rem 0;
@@ -1451,4 +1458,9 @@
 @media (max-width: 640px) {
     .legal-content .bareme-table { font-size: 0.85rem; }
     .legal-content .bareme-table td { padding: 0.5rem 0.6rem; }
+}
+
+/* Colonne centrale : autorisée à rétrécir sous la largeur de son contenu (cf. .elite-grid). */
+.content-main {
+    min-width: 0;
 }
