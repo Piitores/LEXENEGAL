@@ -124,7 +124,7 @@ export function formatSemaine(semaine: string, avecAnnee = false): string {
 }
 
 /**
- * Côté MCP, les autres appels et les conversations ne sont connus que depuis
+ * Côté MCP, les autres appels et les connexions ne sont connus que depuis
  * `suiviDepuis` (premier enregistrement `mcp_usage` ; null = pas encore suivi).
  * Une semaine (lundi « 2026-06-08 », semaines UTC comme en base) est suivie si
  * le suivi a commencé avant sa fin : la semaine du démarrage est partielle.

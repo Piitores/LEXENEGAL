@@ -76,7 +76,7 @@ interface GraphiqueProps {
     titre: string;
     note?: string;
     /**
-     * MCP seulement : autres appels et conversations ne sont connus que depuis
+     * MCP seulement : autres appels et connexions ne sont connus que depuis
      * cette date (null = pas encore) ; avant, on affiche « - » et non 0.
      * Absent (API) : tout est suivi.
      */
@@ -91,7 +91,7 @@ const GraphiqueSemaines: React.FC<GraphiqueProps> = ({ semaines, titre, note, su
     const suivie = (semaine: string) => suiviDepuis === undefined || semaineSuivie(semaine, suiviDepuis);
     const lue = barres[actif ?? barres.length - 1];
     const autresLus = suivie(lue.semaine) ? accord(lue.autres, 'autre appel', 'autres appels') : 'autres appels non suivis';
-    const avecConversations = semaines.some(s => s.sessions !== undefined);
+    const avecConnexions = semaines.some(s => s.sessions !== undefined);
 
     return (
         <>
@@ -133,7 +133,7 @@ const GraphiqueSemaines: React.FC<GraphiqueProps> = ({ semaines, titre, note, su
                     <table className="admin-table">
                         <thead><tr>
                             <th>Semaine du</th>
-                            {avecConversations && <th>Conversations</th>}
+                            {avecConnexions && <th>Connexions</th>}
                             <th>Recherches</th><th>Autres appels</th><th>Total</th>
                         </tr></thead>
                         <tbody>
@@ -142,7 +142,7 @@ const GraphiqueSemaines: React.FC<GraphiqueProps> = ({ semaines, titre, note, su
                                 return (
                                     <tr key={s.week}>
                                         <td>{formatSemaine(s.week, true)}</td>
-                                        {avecConversations && <td>{ok ? (s.sessions ?? 0) : '-'}</td>}
+                                        {avecConnexions && <td>{ok ? (s.sessions ?? 0) : '-'}</td>}
                                         <td>{s.searches}</td>
                                         <td>{ok ? s.other_calls : '-'}</td>
                                         <td>{ok ? s.searches + s.other_calls : '-'}</td>
@@ -174,10 +174,12 @@ const UsageTab: React.FC<{ stats: UsageStats | null }> = ({ stats }) => {
                 <Info size={18} />
                 <p>
                     Le connecteur MCP est ouvert sans clé : on ne sait donc pas <strong>qui</strong> l'utilise.
-                    On compte les conversations où il est chargé et les appels qu'il reçoit, et on reconnaît
-                    le logiciel utilisé (Claude, ChatGPT...), mais pas les personnes. Les conversations de
-                    claude.ai passent toutes par les serveurs d'Anthropic : elles apparaissent sous le même
-                    logiciel, quel que soit l'utilisateur. L'API REST, elle, est à clé : chaque appel est
+                    On compte les connexions (un logiciel comme Claude ou ChatGPT qui charge le connecteur,
+                    en général à l'ouverture d'une conversation, puis la réutilise un moment) et les appels
+                    d'outils (chaque fois que l'IA consulte vraiment Lexenegal). On reconnaît le logiciel
+                    utilisé, mais pas les personnes : les connexions de claude.ai passent toutes par les
+                    serveurs d'Anthropic et apparaissent sous le même logiciel, quel que soit l'utilisateur.
+                    Le bon indicateur d'usage réel est donc le nombre d'appels d'outils. L'API REST, elle, est à clé : chaque appel est
                     rattaché à un client.
                 </p>
             </div>
@@ -190,14 +192,14 @@ const UsageTab: React.FC<{ stats: UsageStats | null }> = ({ stats }) => {
                     {mcp.tracking_since ? (
                         <>
                             <Tuile icone={<MessageSquare size={24} />} valeur={mcp.sessions_30d.toLocaleString('fr-FR')}
-                                libelle="Conversations (30 j)" detail={`${mcp.sessions_total.toLocaleString('fr-FR')} au total`} />
+                                libelle="Connexions (30 j)" detail={`${mcp.sessions_total.toLocaleString('fr-FR')} au total`} />
                             <Tuile icone={<Wrench size={24} />} valeur={mcp.calls_30d.toLocaleString('fr-FR')}
                                 libelle="Appels d'outils (30 j)"
                                 detail={mcp.errors_30d > 0 ? `dont ${accord(mcp.errors_30d, 'erreur', 'erreurs')}` : `${mcp.calls_total.toLocaleString('fr-FR')} au total`} />
                         </>
                     ) : (
                         <>
-                            <Tuile icone={<MessageSquare size={24} />} valeur="Non suivi" texte libelle="Conversations (30 j)" />
+                            <Tuile icone={<MessageSquare size={24} />} valeur="Non suivi" texte libelle="Connexions (30 j)" />
                             <Tuile icone={<Wrench size={24} />} valeur="Non suivi" texte libelle="Appels d'outils (30 j)" />
                         </>
                     )}
@@ -208,8 +210,8 @@ const UsageTab: React.FC<{ stats: UsageStats | null }> = ({ stats }) => {
                 </div>
                 <p className="admin-note">
                     {mcp.tracking_since
-                        ? `Conversations et appels suivis depuis le ${formatDateFr(mcp.tracking_since)}.`
-                        : 'Conversations et appels : suivi actif dès la mise en ligne du nouveau serveur MCP.'}
+                        ? `Connexions et appels suivis depuis le ${formatDateFr(mcp.tracking_since)}.`
+                        : 'Connexions et appels : suivi actif dès la mise en ligne du nouveau serveur MCP.'}
                     {mcp.searches_since && <><br />Recherches enregistrées depuis le {formatDateFr(mcp.searches_since)}.</>}
                 </p>
 
@@ -220,7 +222,7 @@ const UsageTab: React.FC<{ stats: UsageStats | null }> = ({ stats }) => {
                     suiviDepuis={mcp.tracking_since ?? null}
                     note={mcp.tracking_since
                         ? `Avant le ${formatDateFr(mcp.tracking_since)}, seules les recherches étaient enregistrées.`
-                        : "Pour l'instant, seules les recherches sont enregistrées : autres appels et conversations ne sont pas encore suivis."}
+                        : "Pour l'instant, seules les recherches sont enregistrées : autres appels et connexions ne sont pas encore suivis."}
                 />
 
                 <div className="admin-dash-grid usage-grid">
@@ -245,7 +247,7 @@ const UsageTab: React.FC<{ stats: UsageStats | null }> = ({ stats }) => {
                     </div>
                     <div className="admin-card">
                         <h3><Monitor size={16} /> Logiciels clients (90 jours)</h3>
-                        {(mcp.by_client ?? []).length === 0 ? <p className="admin-empty">Aucune conversation enregistrée pour l'instant.</p> : (
+                        {(mcp.by_client ?? []).length === 0 ? <p className="admin-empty">Aucune connexion enregistrée pour l'instant.</p> : (
                             <ul className="top-list">
                                 {mcp.by_client.map(c => {
                                     const libelle = libelleClient(c.client);
@@ -257,7 +259,7 @@ const UsageTab: React.FC<{ stats: UsageStats | null }> = ({ stats }) => {
                                                     {libelle !== c.client ? `${c.client} · ` : ''}dernière le {formatDateFr(c.last_at)}
                                                 </span>
                                             </span>
-                                            <span className="top-list__n">{accord(c.sessions, 'conversation', 'conversations')}</span>
+                                            <span className="top-list__n">{accord(c.sessions, 'connexion', 'connexions')}</span>
                                         </li>
                                     );
                                 })}
