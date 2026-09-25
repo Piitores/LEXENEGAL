@@ -1,8 +1,9 @@
 /**
  * LEXENEGAL - Admin Command Center
  *
- * Onglets : Tableau de bord (stats) · Utilisateurs (tier/suspension/suppression)
- * · Contenu (publication is_active) · Signalements · Sécurité (audit + suspects)
+ * Onglets : Tableau de bord (stats) · Usage (connecteur MCP + API, cf. UsageTab)
+ * · Utilisateurs (tier/suspension/suppression) · Contenu (publication is_active)
+ * · Signalements · Sécurité (audit + suspects)
  * · API (clés de l'API REST publique api.lexenegal.sn).
  * Tout passe par des RPC/Edge Functions gardées par is_admin().
  */
@@ -14,8 +15,10 @@ import {
     LayoutDashboard, Users, FileText, BookOpen, Shield,
     AlertTriangle, Crown, Loader2, LogOut, History, X, Star,
     Flag, Check, RotateCcw, Trash2, ExternalLink, FolderOpen,
-    Ban, Eye, EyeOff, KeyRound, Plus, Copy
+    Ban, Eye, EyeOff, KeyRound, Plus, Copy, Activity
 } from 'lucide-react';
+import UsageTab, { type UsageStats } from './UsageTab';
+import { STATUT_CLE, formatDateFr, statutCle } from './usageFormat';
 import './AdminPage.css';
 
 interface Stats { decisions: number; articles: number; users: number; downloads: number; }
@@ -48,7 +51,7 @@ interface ApiKey {
     calls_7d: number; calls_today: number;
 }
 
-type Tab = 'dashboard' | 'users' | 'content' | 'reports' | 'security' | 'api';
+type Tab = 'dashboard' | 'usage' | 'users' | 'content' | 'reports' | 'security' | 'api';
 
 const AdminPage: React.FC = () => {
     const navigate = useNavigate();
@@ -57,6 +60,7 @@ const AdminPage: React.FC = () => {
     const [activeTab, setActiveTab] = useState<Tab>('dashboard');
     const [stats, setStats] = useState<Stats>({ decisions: 0, articles: 0, users: 0, downloads: 0 });
     const [dash, setDash] = useState<DashStats | null>(null);
+    const [usage, setUsage] = useState<UsageStats | null>(null);
     const [users, setUsers] = useState<User[]>([]);
     const [suspicious, setSuspicious] = useState<SuspiciousDownload[]>([]);
     const [reports, setReports] = useState<UserReport[]>([]);
@@ -130,10 +134,18 @@ const AdminPage: React.FC = () => {
             const { data: statsData } = await supabase.rpc('admin_dashboard_stats');
             setDash(statsData as DashStats);
 
+            await loadUsage();
             await loadApiKeys();
             await loadAudit('all');
         } catch (e) { console.error('Dashboard load error:', e); }
         finally { setLoading(false); }
+    };
+
+    /** Usage du connecteur MCP et de l'API. En cas d'échec, l'onglet Usage le dit ; le reste de l'admin charge normalement. */
+    const loadUsage = async () => {
+        const { data, error } = await supabase.rpc('admin_usage_stats');
+        if (error) { console.error('Usage stats load error:', error); setUsage(null); return; }
+        setUsage((data as UsageStats) || null);
     };
 
     const loadApiKeys = async () => {
@@ -253,6 +265,7 @@ const AdminPage: React.FC = () => {
 
     const TABS: { id: Tab; label: string; icon: React.ReactNode; badge?: number }[] = [
         { id: 'dashboard', label: 'Tableau de bord', icon: <LayoutDashboard size={16} /> },
+        { id: 'usage', label: 'Usage', icon: <Activity size={16} /> },
         { id: 'users', label: 'Utilisateurs', icon: <Users size={16} /> },
         { id: 'content', label: 'Contenu', icon: <BookOpen size={16} />, badge: drafts || undefined },
         { id: 'reports', label: 'Signalements', icon: <Flag size={16} />, badge: pendingReports || undefined },
@@ -347,6 +360,9 @@ const AdminPage: React.FC = () => {
                     )}
                 </>
             )}
+
+            {/* USAGE (connecteur MCP + API) */}
+            {activeTab === 'usage' && <UsageTab stats={usage} />}
 
             {/* UTILISATEURS */}
             {activeTab === 'users' && (
@@ -552,7 +568,7 @@ const AdminPage: React.FC = () => {
                                 <table className="admin-table">
                                     <thead><tr>
                                         <th>Client</th><th>Clé</th><th>Plan</th><th>Aujourd'hui</th>
-                                        <th>7 jours</th><th>Expire</th><th>Statut</th><th>Action</th>
+                                        <th>7 jours</th><th>Dernier appel</th><th>Expire</th><th>Statut</th><th>Action</th>
                                     </tr></thead>
                                     <tbody>
                                         {apiKeys.map(k => (
@@ -565,10 +581,12 @@ const AdminPage: React.FC = () => {
                                                 <td><span className="cat-badge">{k.plan}</span></td>
                                                 <td>{k.calls_today} / {k.daily_quota}</td>
                                                 <td>{k.calls_7d}</td>
+                                                <td>{formatDateFr(k.last_used_at, 'Jamais')}</td>
                                                 <td>{k.expires_at ? new Date(k.expires_at).toLocaleDateString('fr-FR') : '—'}</td>
-                                                <td>{k.is_active
-                                                    ? <span className="report-status report-status--resolved">Active</span>
-                                                    : <span className="report-status report-status--pending">Révoquée</span>}</td>
+                                                {/* Active mais date passée = refusée par l'API : « Expirée ». */}
+                                                <td><span className={`report-status ${STATUT_CLE[statutCle(k.is_active, k.expires_at)].classe}`}>
+                                                    {STATUT_CLE[statutCle(k.is_active, k.expires_at)].libelle}
+                                                </span></td>
                                                 <td>
                                                     <button
                                                         className={`btn-action ${k.is_active ? 'btn-action--danger' : 'btn-action--pro'}`}
