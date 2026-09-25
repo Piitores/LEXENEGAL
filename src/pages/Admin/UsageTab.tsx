@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import {
     STATUT_CLE, accord, formatDateFr, formatDateHeureFr, formatSemaine, ilYA,
-    libelleClient, libelleDomaine, libelleOutil, preparerBarres,
+    libelleClient, libelleDomaine, libelleOutil, preparerBarres, semaineSuivie,
     type SemaineUsage, type StatutCle
 } from './usageFormat';
 
@@ -67,16 +67,30 @@ const Tuile: React.FC<{ icone: React.ReactNode; valeur: string; libelle: string;
 
 /**
  * Barres empilées par semaine : recherches en bas, autres appels au-dessus.
- * Survol ou focus clavier d'une barre -> le détail s'affiche sous le graphique
- * (par défaut : la semaine en cours). Le tableau repliable donne les mêmes
- * chiffres sans survol.
+ * Survol d'une barre -> le détail s'affiche sous le graphique (par défaut : la
+ * semaine en cours). Le tableau repliable donne les mêmes chiffres sans survol :
+ * c'est lui que le clavier et les lecteurs d'écran atteignent.
  */
-const GraphiqueSemaines: React.FC<{ semaines: SemaineUsage[]; titre: string; note?: string }> = ({ semaines, titre, note }) => {
+interface GraphiqueProps {
+    semaines: SemaineUsage[];
+    titre: string;
+    note?: string;
+    /**
+     * MCP seulement : autres appels et conversations ne sont connus que depuis
+     * cette date (null = pas encore) ; avant, on affiche « - » et non 0.
+     * Absent (API) : tout est suivi.
+     */
+    suiviDepuis?: string | null;
+}
+
+const GraphiqueSemaines: React.FC<GraphiqueProps> = ({ semaines, titre, note, suiviDepuis }) => {
     const [actif, setActif] = useState<number | null>(null);
     const barres = preparerBarres(semaines);
     if (barres.length === 0) return <p className="admin-empty">Aucune donnée pour le moment.</p>;
 
+    const suivie = (semaine: string) => suiviDepuis === undefined || semaineSuivie(semaine, suiviDepuis);
     const lue = barres[actif ?? barres.length - 1];
+    const autresLus = suivie(lue.semaine) ? accord(lue.autres, 'autre appel', 'autres appels') : 'autres appels non suivis';
     const avecConversations = semaines.some(s => s.sessions !== undefined);
 
     return (
@@ -85,16 +99,16 @@ const GraphiqueSemaines: React.FC<{ semaines: SemaineUsage[]; titre: string; not
                 <span><i className="usage-pastille usage-pastille--recherches" />Recherches</span>
                 <span><i className="usage-pastille usage-pastille--autres" />{LIBELLE_AUTRES}</span>
             </div>
-            <div className="usage-chart" role="group" aria-label={titre} onMouseLeave={() => setActif(null)}>
+            <div
+                className="usage-chart" role="img"
+                aria-label={`${titre}. Chiffres détaillés dans le tableau « Voir les chiffres semaine par semaine ».`}
+                onMouseLeave={() => setActif(null)}
+            >
                 {barres.map((b, i) => (
                     <div
                         key={b.semaine}
                         className={`usage-chart__col ${actif === i ? 'usage-chart__col--actif' : ''}`}
-                        tabIndex={0}
-                        aria-label={`Semaine du ${formatSemaine(b.semaine, true)} : ${accord(b.recherches, 'recherche', 'recherches')}, ${accord(b.autres, 'autre appel', 'autres appels')}`}
                         onMouseEnter={() => setActif(i)}
-                        onFocus={() => setActif(i)}
-                        onBlur={() => setActif(null)}
                     >
                         <div className="usage-chart__plot">
                             {b.total > 0 && (
@@ -110,7 +124,7 @@ const GraphiqueSemaines: React.FC<{ semaines: SemaineUsage[]; titre: string; not
                 ))}
             </div>
             <p className="usage-chart__lecture">
-                <strong>Semaine du {formatSemaine(lue.semaine, true)}</strong> : {accord(lue.recherches, 'recherche', 'recherches')}, {accord(lue.autres, 'autre appel', 'autres appels')}
+                <strong>Semaine du {formatSemaine(lue.semaine, true)}</strong> : {accord(lue.recherches, 'recherche', 'recherches')}, {autresLus}
             </p>
             {note && <p className="admin-note">{note}</p>}
             <details className="usage-details">
@@ -123,13 +137,18 @@ const GraphiqueSemaines: React.FC<{ semaines: SemaineUsage[]; titre: string; not
                             <th>Recherches</th><th>Autres appels</th><th>Total</th>
                         </tr></thead>
                         <tbody>
-                            {[...semaines].reverse().map(s => (
-                                <tr key={s.week}>
-                                    <td>{formatSemaine(s.week, true)}</td>
-                                    {avecConversations && <td>{s.sessions ?? 0}</td>}
-                                    <td>{s.searches}</td><td>{s.other_calls}</td><td>{s.searches + s.other_calls}</td>
-                                </tr>
-                            ))}
+                            {[...semaines].reverse().map(s => {
+                                const ok = suivie(s.week);
+                                return (
+                                    <tr key={s.week}>
+                                        <td>{formatSemaine(s.week, true)}</td>
+                                        {avecConversations && <td>{ok ? (s.sessions ?? 0) : '-'}</td>}
+                                        <td>{s.searches}</td>
+                                        <td>{ok ? s.other_calls : '-'}</td>
+                                        <td>{ok ? s.searches + s.other_calls : '-'}</td>
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
                 </div>
@@ -167,11 +186,21 @@ const UsageTab: React.FC<{ stats: UsageStats | null }> = ({ stats }) => {
             <section className="admin-section">
                 <h2><Plug size={20} /> Connecteur MCP</h2>
                 <div className="admin-stats usage-stats">
-                    <Tuile icone={<MessageSquare size={24} />} valeur={mcp.sessions_30d.toLocaleString('fr-FR')}
-                        libelle="Conversations (30 j)" detail={`${mcp.sessions_total.toLocaleString('fr-FR')} au total`} />
-                    <Tuile icone={<Wrench size={24} />} valeur={mcp.calls_30d.toLocaleString('fr-FR')}
-                        libelle="Appels d'outils (30 j)"
-                        detail={mcp.errors_30d > 0 ? `dont ${accord(mcp.errors_30d, 'erreur', 'erreurs')}` : `${mcp.calls_total.toLocaleString('fr-FR')} au total`} />
+                    {/* Tant que le suivi n'a pas démarré, 0 serait lu comme une mesure : « Non suivi ». */}
+                    {mcp.tracking_since ? (
+                        <>
+                            <Tuile icone={<MessageSquare size={24} />} valeur={mcp.sessions_30d.toLocaleString('fr-FR')}
+                                libelle="Conversations (30 j)" detail={`${mcp.sessions_total.toLocaleString('fr-FR')} au total`} />
+                            <Tuile icone={<Wrench size={24} />} valeur={mcp.calls_30d.toLocaleString('fr-FR')}
+                                libelle="Appels d'outils (30 j)"
+                                detail={mcp.errors_30d > 0 ? `dont ${accord(mcp.errors_30d, 'erreur', 'erreurs')}` : `${mcp.calls_total.toLocaleString('fr-FR')} au total`} />
+                        </>
+                    ) : (
+                        <>
+                            <Tuile icone={<MessageSquare size={24} />} valeur="Non suivi" texte libelle="Conversations (30 j)" />
+                            <Tuile icone={<Wrench size={24} />} valeur="Non suivi" texte libelle="Appels d'outils (30 j)" />
+                        </>
+                    )}
                     <Tuile icone={<Search size={24} />} valeur={mcp.searches_30d.toLocaleString('fr-FR')}
                         libelle="Recherches (30 j)" detail={`${mcp.searches_total.toLocaleString('fr-FR')} au total`} />
                     <Tuile icone={<Clock size={24} />} valeur={formatDateFr(mcp.last_activity_at, 'Aucune')} texte
@@ -188,7 +217,10 @@ const UsageTab: React.FC<{ stats: UsageStats | null }> = ({ stats }) => {
                 <GraphiqueSemaines
                     semaines={mcp.by_week ?? []}
                     titre="Connecteur MCP : recherches et autres appels par semaine"
-                    note={mcp.tracking_since ? `Avant le ${formatDateFr(mcp.tracking_since)}, seules les recherches étaient enregistrées.` : undefined}
+                    suiviDepuis={mcp.tracking_since ?? null}
+                    note={mcp.tracking_since
+                        ? `Avant le ${formatDateFr(mcp.tracking_since)}, seules les recherches étaient enregistrées.`
+                        : "Pour l'instant, seules les recherches sont enregistrées : autres appels et conversations ne sont pas encore suivis."}
                 />
 
                 <div className="admin-dash-grid usage-grid">
@@ -258,7 +290,7 @@ const UsageTab: React.FC<{ stats: UsageStats | null }> = ({ stats }) => {
                         <table className="admin-table">
                             <thead><tr>
                                 <th>Client</th><th>Clé</th><th>Plan</th><th>Statut</th><th>Total</th><th>30 j</th>
-                                <th>dont sémantiques</th><th>Premier appel</th><th>Dernier appel</th><th>Expire</th>
+                                <th>dont sémantiques (total)</th><th>Premier appel</th><th>Dernier appel</th><th>Expire</th>
                             </tr></thead>
                             <tbody>
                                 {api.by_key.map(k => {

@@ -173,6 +173,7 @@ const AdminPage: React.FC = () => {
             setCleCopiee(false);
             setFormCle({ client_name: '', contact_email: '', plan: 'essai' });
             await loadApiKeys();
+            void loadUsage();  // l'onglet Usage compte aussi les clés
         } finally { setCreationEnCours(false); }
     };
 
@@ -189,6 +190,7 @@ const AdminPage: React.FC = () => {
         const { error } = await supabase.rpc('admin_api_key_set_active', { p_id: k.id, p_active: !k.is_active });
         if (error) { window.alert("Échec : " + error.message); return; }
         setApiKeys(ks => ks.map(x => x.id === k.id ? { ...x, is_active: !k.is_active } : x));
+        void loadUsage();
     };
 
     const loadAudit = async (action: string) => {
@@ -263,6 +265,8 @@ const AdminPage: React.FC = () => {
     }
     if (!authorized) return null;
 
+    // « Utilisable » = active et non expirée, comme le statut affiché et l'onglet Usage.
+    const utilisable = (k: ApiKey) => statutCle(k.is_active, k.expires_at) === 'active';
     const TABS: { id: Tab; label: string; icon: React.ReactNode; badge?: number }[] = [
         { id: 'dashboard', label: 'Tableau de bord', icon: <LayoutDashboard size={16} /> },
         { id: 'usage', label: 'Usage', icon: <Activity size={16} /> },
@@ -270,7 +274,7 @@ const AdminPage: React.FC = () => {
         { id: 'content', label: 'Contenu', icon: <BookOpen size={16} />, badge: drafts || undefined },
         { id: 'reports', label: 'Signalements', icon: <Flag size={16} />, badge: pendingReports || undefined },
         { id: 'security', label: 'Sécurité', icon: <Shield size={16} />, badge: suspicious.length || undefined },
-        { id: 'api', label: 'API', icon: <KeyRound size={16} />, badge: apiKeys.filter(k => k.is_active).length || undefined },
+        { id: 'api', label: 'API', icon: <KeyRound size={16} />, badge: apiKeys.filter(utilisable).length || undefined },
     ];
     const maxSignup = dash ? Math.max(1, ...dash.signups_by_month.map(s => s.n)) : 1;
 
@@ -561,7 +565,7 @@ const AdminPage: React.FC = () => {
 
                     <section className="admin-section">
                         <h2><KeyRound size={20} /> Clés d'API
-                            <span className="admin-hint">({apiKeys.filter(k => k.is_active).length} active(s) sur {apiKeys.length})</span>
+                            <span className="admin-hint">({apiKeys.filter(utilisable).length} utilisable(s) sur {apiKeys.length})</span>
                         </h2>
                         {apiKeys.length === 0 ? <p className="admin-empty">Aucune clé émise pour le moment.</p> : (
                             <div className="admin-table-wrapper">
@@ -572,7 +576,7 @@ const AdminPage: React.FC = () => {
                                     </tr></thead>
                                     <tbody>
                                         {apiKeys.map(k => (
-                                            <tr key={k.id} className={k.is_active ? '' : 'row-suspended'}>
+                                            <tr key={k.id} className={utilisable(k) ? '' : 'row-suspended'}>
                                                 <td>
                                                     {k.client_name}
                                                     {k.contact_email && <><br /><span className="admin-hint">{k.contact_email}</span></>}
@@ -582,7 +586,7 @@ const AdminPage: React.FC = () => {
                                                 <td>{k.calls_today} / {k.daily_quota}</td>
                                                 <td>{k.calls_7d}</td>
                                                 <td>{formatDateFr(k.last_used_at, 'Jamais')}</td>
-                                                <td>{k.expires_at ? new Date(k.expires_at).toLocaleDateString('fr-FR') : '—'}</td>
+                                                <td>{formatDateFr(k.expires_at, 'Jamais')}</td>
                                                 {/* Active mais date passée = refusée par l'API : « Expirée ». */}
                                                 <td><span className={`report-status ${STATUT_CLE[statutCle(k.is_active, k.expires_at)].classe}`}>
                                                     {STATUT_CLE[statutCle(k.is_active, k.expires_at)].libelle}

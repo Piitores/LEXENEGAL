@@ -123,6 +123,20 @@ export function formatSemaine(semaine: string, avecAnnee = false): string {
     return avecAnnee ? `${m[3]}/${m[2]}/${m[1]}` : `${m[3]}/${m[2]}`;
 }
 
+/**
+ * Côté MCP, les autres appels et les conversations ne sont connus que depuis
+ * `suiviDepuis` (premier enregistrement `mcp_usage` ; null = pas encore suivi).
+ * Une semaine (lundi « 2026-06-08 », semaines UTC comme en base) est suivie si
+ * le suivi a commencé avant sa fin : la semaine du démarrage est partielle.
+ */
+export function semaineSuivie(semaine: string, suiviDepuis: string | null): boolean {
+    if (!suiviDepuis) return false;
+    const debut = Date.parse((semaine || '').slice(0, 10));
+    const depuis = Date.parse(suiviDepuis);
+    if (isNaN(debut) || isNaN(depuis)) return false;
+    return depuis < debut + 7 * 86_400_000;
+}
+
 /** Une semaine de `by_week` (MCP ou API) ; `sessions` n'existe que côté MCP. */
 export interface SemaineUsage { week: string; searches: number; other_calls: number; sessions?: number; }
 

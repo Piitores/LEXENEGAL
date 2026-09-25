@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
     STATUT_CLE, accord, formatDateFr, formatDateHeureFr, formatSemaine, ilYA,
-    libelleClient, libelleDomaine, libelleOutil, preparerBarres, statutCle,
+    libelleClient, libelleDomaine, libelleOutil, preparerBarres, semaineSuivie, statutCle,
 } from '../../pages/Admin/usageFormat';
 
 describe('libelleOutil', () => {
@@ -101,6 +101,26 @@ describe('dates', () => {
         expect(formatSemaine('2026-06-08')).toBe('08/06');
         expect(formatSemaine('2026-06-08', true)).toBe('08/06/2026');
         expect(formatSemaine('bizarre')).toBe('bizarre');
+    });
+});
+
+describe('semaineSuivie', () => {
+    it('rien n\'est suivi tant que le suivi n\'a pas démarré', () => {
+        expect(semaineSuivie('2026-09-22', null)).toBe(false);
+    });
+    it('la semaine du démarrage compte comme suivie, pas celles d\'avant', () => {
+        const depuis = '2026-09-24T10:00:00+00:00';
+        expect(semaineSuivie('2026-09-15', depuis)).toBe(false);
+        expect(semaineSuivie('2026-09-22', depuis)).toBe(true);
+        expect(semaineSuivie('2026-09-29', depuis)).toBe(true);
+    });
+    it('un démarrage le lundi suivant à minuit ne rend pas la semaine suivie', () => {
+        expect(semaineSuivie('2026-09-15', '2026-09-22T00:00:00+00:00')).toBe(false);
+        expect(semaineSuivie('2026-09-15', '2026-09-21T23:59:00+00:00')).toBe(true);
+    });
+    it('une date illisible n\'est pas prise pour un suivi', () => {
+        expect(semaineSuivie('bizarre', '2026-09-24T10:00:00+00:00')).toBe(false);
+        expect(semaineSuivie('2026-09-22', 'bizarre')).toBe(false);
     });
 });
 
