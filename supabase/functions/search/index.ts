@@ -25,7 +25,8 @@
 //   - délai maximal de 2 s sur Voyage → repli FTS de l'appelant ;
 //   - cache mémoire des embeddings de requête : pagination, tri et filtres ne rappellent plus
 //     Voyage pour le même texte ;
-//   - préflight CORS mis en cache 24 h (Access-Control-Max-Age).
+//   - préflight CORS mis en cache (Access-Control-Max-Age : 24 h demandées ; chaque navigateur
+//     plafonne, 24 h sur Firefox, 2 h sur Chrome et Edge).
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const VOYAGE_URL = "https://api.voyageai.com/v1/embeddings";
@@ -50,7 +51,8 @@ const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
-  // Le navigateur garde la réponse du préflight 24 h : un aller-retour de moins par recherche.
+  // Le navigateur garde la réponse du préflight jusqu'à 24 h (Firefox) ; Chrome et Edge la
+  // plafonnent à 2 h. Dans les deux cas, un aller-retour de moins pour les recherches suivantes.
   "Access-Control-Max-Age": "86400",
 };
 

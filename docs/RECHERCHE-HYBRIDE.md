@@ -66,7 +66,7 @@ sans abattre les autres ; l'appelant fait alors son FTS pour **ce pilier seul**
 | surface `decisions` | `total` = `count_decisions_fts` (total réel, compté en parallèle) avec `total_plafond: 1000` (un total égal au plafond veut dire « au moins »). `count: false` dans la spec le désactive : le site compte lui-même, en parallèle, pour ne pas dépendre de la version déployée. Sans `total_plafond`, `total` reste le nombre de lignes renvoyées (contrat historique). |
 | Voyage | délai maximal de 2 s (AbortController) → `fallback: true`, l'appelant fait du plein texte. |
 | Cache | embeddings de requête gardés en mémoire de l'instance (200 entrées, 10 min, clé = modèle + dimension + texte) : pagination, tri, filtres et changement de base ne rappellent pas Voyage ; la clé Voyage n'est lue qu'en cas d'appel réel. |
-| CORS | `Access-Control-Max-Age: 86400` : un préflight par jour et par navigateur au lieu d'un par recherche. |
+| CORS | `Access-Control-Max-Age: 86400` : le préflight est gardé jusqu'à 24 h sur Firefox et 2 h sur Chrome et Edge (plafonds propres aux navigateurs), au lieu d'être refait à chaque recherche. |
 
 ## Dégradation gracieuse
 
