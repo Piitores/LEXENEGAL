@@ -3,6 +3,8 @@ import {
   normalizeToken,
   normalizeArticleNumber,
   buildCodeIndex,
+  buildSuccessions,
+  codePourDecision,
   parseCitedString,
   resolveCitedString,
   type ResolvedArticle,
@@ -43,6 +45,41 @@ describe('buildCodeIndex', () => {
   it('mappe les acronymes OHADA et les noms de code', () => {
     expect(codeIndex.get('AUDCG')).toBe('ohada-droit-commercial-general');
     expect(codeIndex.get(normalizeToken('Code du travail'))).toBe('code-travail');
+  });
+
+  it('à titre égal, le texte en vigueur l’emporte sur celui qu’il a abrogé, quel que soit l’ordre', () => {
+    const idx = buildCodeIndex([
+      { slug: 'code-travail', title: 'Code du Travail', short_title: 'Code du Travail de 1997 (abrogé)', abrogated_by_slug: 'code-travail-2026' },
+      { slug: 'code-travail-2026', title: 'Code du Travail', short_title: 'Code du Travail' },
+    ]);
+    expect(idx.get(normalizeToken('Code du travail'))).toBe('code-travail-2026');
+    expect(idx.get(normalizeToken('Code du Travail de 1997 (abrogé)'))).toBe('code-travail');
+  });
+});
+
+describe('codePourDecision', () => {
+  const successions = buildSuccessions([
+    { slug: 'code-travail', abrogated_by_slug: 'code-travail-2026', publication_date: '1997-12-01' },
+    { slug: 'code-travail-2026', abrogated_by_slug: null, publication_date: '2026-09-03' },
+  ]);
+
+  it('une décision antérieure au nouveau code vise l’ancien, sans repli vers le récent', () => {
+    expect(codePourDecision('code-travail-2026', '2015-06-10', successions)).toEqual({ code: 'code-travail' });
+  });
+
+  it('une décision postérieure vise le code en vigueur, avec l’ancien en repli', () => {
+    expect(codePourDecision('code-travail-2026', '2026-10-01', successions)).toEqual({
+      code: 'code-travail-2026',
+      repli: 'code-travail',
+    });
+  });
+
+  it('date inconnue : prudence, le texte ancien', () => {
+    expect(codePourDecision('code-travail-2026', null, successions)).toEqual({ code: 'code-travail' });
+  });
+
+  it('un code sans prédécesseur est inchangé', () => {
+    expect(codePourDecision('cocc', '2015-06-10', successions)).toEqual({ code: 'cocc' });
   });
 });
 

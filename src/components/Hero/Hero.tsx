@@ -18,6 +18,8 @@ interface SearchResult {
   subtitle: string;
   slug: string;
   codeSlug?: string;
+  /** Article abrogé (d'après `articles.status`) : signalé dans l'aperçu comme sur /search. */
+  estAbroge?: boolean;
 }
 
 function Hero() {
@@ -28,6 +30,7 @@ function Hero() {
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const derniereRequeteRef = useRef(0);
   // Gate the WebGL backdrop: client-only (avoids SSR/prerender), and disabled
   // when the user prefers reduced motion (→ static silhouette instead).
   //
@@ -92,6 +95,8 @@ function Hero() {
   }, [query]);
 
   const performSearch = async (searchQuery: string) => {
+    // Chaque frappe relance une recherche : seule la plus récente a le droit d'afficher.
+    const requete = ++derniereRequeteRef.current;
     setLoading(true);
     const mixedResults: SearchResult[] = [];
 
@@ -132,14 +137,32 @@ function Hero() {
             });
 
           if (!error && articles) {
-            articles.forEach((hit: any) => {
+            // Sans code connu, pas de lien (l'ancien repli visait le Code du travail de 1997, abrogé).
+            const hits = articles.filter((hit: any) => hit.code_slug && hit.slug);
+            // Articles ABROGÉS : même requête complémentaire que la page /search. Sans ce
+            // signal, l'aperçu présente un article abrogé comme du droit en vigueur.
+            let abroges = new Set<string>();
+            if (hits.length) {
+              try {
+                const { data: st } = await supabase
+                  .from('articles')
+                  .select('id')
+                  .in('id', hits.map((h: any) => h.id))
+                  .eq('status', 'abrogé');
+                abroges = new Set((st || []).map((r: any) => r.id));
+              } catch (e) {
+                console.warn('statut abrogation non récupéré:', e);
+              }
+            }
+            hits.forEach((hit: any) => {
               mixedResults.push({
                 type: 'article',
                 id: hit.id,
                 title: articleLabel({ article_number: hit.article_number }),
                 subtitle: hit.code_title || 'Code',
                 slug: hit.slug,
-                codeSlug: hit.code_slug || 'code-travail'
+                codeSlug: hit.code_slug,
+                estAbroge: abroges.has(hit.id),
               });
             });
           }
@@ -148,11 +171,11 @@ function Hero() {
         }
       }
 
-      setResults(mixedResults);
+      if (requete === derniereRequeteRef.current) setResults(mixedResults);
     } catch (error) {
       console.error('Search error:', error);
     } finally {
-      setLoading(false);
+      if (requete === derniereRequeteRef.current) setLoading(false);
     }
   };
 
@@ -257,7 +280,12 @@ function Hero() {
                         </span>
                         <div className="spotlight__result-content">
                           <span className="spotlight__result-title">{result.title}</span>
-                          <span className="spotlight__result-subtitle">{result.subtitle}</span>
+                          <span className="spotlight__result-subtitle">
+                            {result.subtitle}
+                            {result.estAbroge && (
+                              <span className="spotlight__abroge" title="Cet article a été abrogé">Abrogé</span>
+                            )}
+                          </span>
                         </div>
                         <span className={`spotlight__result-badge ${result.type}`}>
                           {result.type === 'decision' ? '⚖️' : '📖'}

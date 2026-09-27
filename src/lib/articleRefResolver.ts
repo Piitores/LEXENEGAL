@@ -48,9 +48,20 @@ export function normalizeArticleNumber(s: string): string {
     .replace(/[\s.]+/g, ''); // insensible aux espaces ET aux points ("L. 69" = "L69" = "L.69")
 }
 
-/** Construit l'index générique token→slug à partir des codes (extensible : conventions collectives incluses dès qu'elles sont en base). */
+export interface LawRef {
+  slug: string;
+  title?: string | null;
+  short_title?: string | null;
+  /** Slug du texte qui a abrogé celui-ci (ex. code-travail → code-travail-2026). */
+  abrogated_by_slug?: string | null;
+  publication_date?: string | null;
+}
+
+/** Construit l'index générique token→slug à partir des codes (extensible : conventions collectives incluses dès qu'elles sont en base).
+ *  À titre égal, le texte EN VIGUEUR l'emporte sur celui qu'il a abrogé : depuis le 23/09/2026, deux textes
+ *  s'intitulent « Code du Travail » (1997 abrogé, 2026). La date de la décision fait le reste (cf. codePourDecision). */
 export function buildCodeIndex(
-  laws: { slug: string; title?: string | null; short_title?: string | null }[],
+  laws: LawRef[],
   aliases: CodeAlias[] = [],
 ): Map<string, string> {
   const idx = new Map<string, string>();
@@ -58,8 +69,9 @@ export function buildCodeIndex(
   for (const a of aliases) {
     if (a?.alias && a?.code_slug) idx.set(normalizeToken(a.alias), a.code_slug);
   }
-  // tokens dérivés des titres / short_title
-  for (const law of laws) {
+  // tokens dérivés des titres / short_title : textes en vigueur d'abord, puis textes abrogés
+  const enVigueurDabord = [...laws.filter((l) => !l?.abrogated_by_slug), ...laws.filter((l) => !!l?.abrogated_by_slug)];
+  for (const law of enVigueurDabord) {
     if (!law?.slug) continue;
     for (const name of [law.short_title, law.title]) {
       const t = normalizeToken(name || '');
@@ -67,6 +79,40 @@ export function buildCodeIndex(
     }
   }
   return idx;
+}
+
+/** Texte en vigueur → texte qu'il a abrogé, et date de publication du texte en vigueur. */
+export interface Succession { predecesseur: string; depuis: string | null }
+
+export function buildSuccessions(laws: LawRef[]): Map<string, Succession> {
+  const pub = new Map(laws.map((l) => [l.slug, l.publication_date ?? null]));
+  const out = new Map<string, Succession>();
+  for (const l of laws) {
+    if (l?.slug && l.abrogated_by_slug) {
+      out.set(l.abrogated_by_slug, { predecesseur: l.slug, depuis: pub.get(l.abrogated_by_slug) ?? null });
+    }
+  }
+  return out;
+}
+
+/**
+ * Code visé par une référence citée dans une décision DATÉE. Une décision rendue avant la
+ * publication du texte en vigueur cite forcément l'ancien (« art. L.97 CT » dans un arrêt de
+ * 2015 = Code du travail de 1997). Après, on garde le texte en vigueur, avec l'ancien en
+ * `repli` pour un numéro qui n'existe que dans celui-ci (« L.97 »). Jamais l'inverse : un
+ * arrêt ancien ne renvoie pas au texte récent.
+ */
+export function codePourDecision(
+  codeSlug: string,
+  dateDecision: string | null | undefined,
+  successions: Map<string, Succession>,
+): { code: string; repli?: string } {
+  const s = successions.get(codeSlug);
+  if (!s) return { code: codeSlug };
+  // Date inconnue (décision ou texte en vigueur) : prudence, le texte ancien, que cite l'immense
+  // majorité du fonds.
+  if (!dateDecision || !s.depuis || dateDecision < s.depuis) return { code: s.predecesseur };
+  return { code: codeSlug, repli: s.predecesseur };
 }
 
 /** Mots-vides FR à ne jamais prendre pour un acronyme de code. */

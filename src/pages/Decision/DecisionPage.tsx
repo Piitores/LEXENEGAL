@@ -10,7 +10,7 @@ import DecisionActions from '../../components/DecisionActions/DecisionActions';
 import ConversionModal from '../../components/ConversionModal/ConversionModal';
 import { textToHtmlWithLinks } from '../../utils/articleLinkRenderer';
 import ArticleHoverPreview from '../../components/ArticleHoverPreview/ArticleHoverPreview';
-import { buildCodeIndex, parseCitedString, normalizeToken, normalizeArticleNumber, type ResolvedArticle } from '../../lib/articleRefResolver';
+import { buildCodeIndex, buildSuccessions, codePourDecision, parseCitedString, normalizeToken, normalizeArticleNumber, type ResolvedArticle, type Succession } from '../../lib/articleRefResolver';
 import { getDecisionHtml, isNewFormat } from '../../utils/decisionTextFormatter';
 import { logViewDecision, logDownloadPdf } from '../../utils/auditLogger';
 import ReportErrorModal from '../../components/ReportError/ReportErrorModal';
@@ -47,6 +47,8 @@ const DecisionPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [articles, setArticles] = useState<ArticleInfo[]>([]);
     const [codeIndex, setCodeIndex] = useState<Map<string, string>>(new Map());
+    // Texte en vigueur → texte qu'il a abrogé (ex. Code du travail 2026 → 1997), pour dater les renvois.
+    const [successions, setSuccessions] = useState<Map<string, Succession>>(new Map());
     // Références citées résolues en liens fiables (raw → article présent en base).
     const [citedResolved, setCitedResolved] = useState<Record<string, ResolvedArticle>>({});
     // Auth : favoris/annotations/PDF ouverts à tout compte connecté (Pro reporté).
@@ -81,22 +83,35 @@ const DecisionPage: React.FC = () => {
         if (!cites.length || codeIndex.size === 0) return;
         let active = true;
         (async () => {
-            const candidates: { raw: string; codeSlug: string; articleNumber: string }[] = [];
+            const candidates: { raw: string; codeSlug: string; repli?: string; articleNumber: string }[] = [];
             for (const raw of cites) {
                 const refs = parseCitedString(raw);
                 if (refs.length !== 1) continue; // multi-réfs / aucune → texte (sécurité)
-                const codeSlug = codeIndex.get(normalizeToken(refs[0].codeToken));
-                if (!codeSlug) continue; // code hors corpus → texte
-                candidates.push({ raw, codeSlug, articleNumber: refs[0].articleNumber });
+                const trouve = codeIndex.get(normalizeToken(refs[0].codeToken));
+                if (!trouve) continue; // code hors corpus → texte
+                // Le code visé dépend de la DATE de la décision : « L.97 CT » dans un arrêt de 2015
+                // renvoie au Code du travail de 1997, pas à celui de 2026 (arbitrage du 27/09/2026).
+                const { code, repli } = codePourDecision(trouve, decision?.date_decision, successions);
+                candidates.push({ raw, codeSlug: code, repli, articleNumber: refs[0].articleNumber });
             }
             if (!candidates.length) return;
-            const codeSlugs = Array.from(new Set(candidates.map((c) => c.codeSlug)));
-            const { data } = await supabase
-                .from('articles')
-                .select('id, slug, article_number, laws_and_codes!inner(slug, short_title)')
-                .in('laws_and_codes.slug', codeSlugs);
+            const codeSlugs = Array.from(new Set(candidates.flatMap((c) => (c.repli ? [c.codeSlug, c.repli] : [c.codeSlug]))));
+            // Lecture PAGINÉE et ordonnée : PostgREST plafonne en silence à 1 000 lignes, et deux
+            // codes cités (ex. Code du travail + COCC) les dépassent.
+            const data: any[] = [];
+            for (let from = 0; active; from += 1000) {
+                const { data: page, error } = await supabase
+                    .from('articles')
+                    .select('id, slug, article_number, laws_and_codes!inner(slug, short_title)')
+                    .in('laws_and_codes.slug', codeSlugs)
+                    .order('id')
+                    .range(from, from + 999);
+                if (error || !page) break;
+                data.push(...page);
+                if (page.length < 1000) break;
+            }
             const byCode = new Map<string, ResolvedArticle[]>();
-            (data || []).forEach((a: any) => {
+            data.forEach((a: any) => {
                 const cs = a.laws_and_codes?.slug;
                 if (!cs) return;
                 const arr = byCode.get(cs) || [];
@@ -104,16 +119,18 @@ const DecisionPage: React.FC = () => {
                 byCode.set(cs, arr);
             });
             const resolved: Record<string, ResolvedArticle> = {};
-            for (const c of candidates) {
-                const hit = (byCode.get(c.codeSlug) || []).find(
-                    (a) => normalizeArticleNumber(a.article_number) === normalizeArticleNumber(c.articleNumber),
+            const chercher = (code: string, num: string) =>
+                (byCode.get(code) || []).find(
+                    (a) => normalizeArticleNumber(a.article_number) === normalizeArticleNumber(num),
                 );
+            for (const c of candidates) {
+                const hit = chercher(c.codeSlug, c.articleNumber) || (c.repli ? chercher(c.repli, c.articleNumber) : undefined);
                 if (hit) resolved[c.raw] = hit;
             }
             if (active) setCitedResolved(resolved);
         })();
         return () => { active = false; };
-    }, [decision, codeIndex]);
+    }, [decision, codeIndex, successions]);
 
     const fetchDecision = async () => {
         setLoading(true);
@@ -216,8 +233,8 @@ const DecisionPage: React.FC = () => {
                     id: art.id,
                     article_number: art.article_number,
                     slug: art.slug,
-                    code_slug: art.laws_and_codes?.slug || 'code-travail',
-                    code_name: art.laws_and_codes?.short_title || 'Code du Travail'
+                    code_slug: art.laws_and_codes?.slug,
+                    code_name: art.laws_and_codes?.short_title || art.laws_and_codes?.slug
                 }));
                 setArticles(formattedArticles);
                 console.log(`📚 Loaded ${formattedArticles.length} articles for hyperlinking`);
@@ -225,10 +242,15 @@ const DecisionPage: React.FC = () => {
             // Index générique des codes (extensible) pour résoudre les références citées en liens fiables.
             // Alias d'acronymes = vue DB `code_aliases` (source unique, dérivée de ref_code).
             const [{ data: laws }, { data: aliases }] = await Promise.all([
-                supabase.from('laws_and_codes').select('slug, title, short_title').eq('is_active', true),
+                supabase.from('laws_and_codes').select('slug, title, short_title, abrogated_by_slug, publication_date').eq('is_active', true),
                 supabase.from('code_aliases').select('code_slug, alias'),
             ]);
-            setCodeIndex(buildCodeIndex(laws || [], (aliases || []).map((a: any) => ({ alias: a.alias, code_slug: a.code_slug }))));
+            // Sans la liste des textes (et donc des successions), mieux vaut aucun lien qu'un lien
+            // faux : « CSS » d'un arrêt de 2015 pointerait vers le code de 2026, de même numérotation.
+            if (laws) {
+                setSuccessions(buildSuccessions(laws));
+                setCodeIndex(buildCodeIndex(laws, (aliases || []).map((a: any) => ({ alias: a.alias, code_slug: a.code_slug }))));
+            }
         } catch (error) {
             console.error('Error in fetchArticles:', error);
         }
