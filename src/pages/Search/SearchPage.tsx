@@ -481,9 +481,11 @@ const SearchPage: React.FC = () => {
     useEffect(() => {
         const term = query?.trim() || '';
         // Seuils par pilier : articles ≥ 2 caractères, doctrine ≥ 3. En dessous,
-        // le pilier est vidé et n'est pas demandé à l'edge function.
-        if (term.length < 2) { setArticleResults([]); setArticlesLoading(false); }
-        if (term.length < 3) { setDoctrineResults([]); setDoctrineLoading(false); }
+        // le pilier est vidé et n'est pas demandé à l'edge function. Son numéro de recherche
+        // avance aussi : une réponse encore en vol pour l'ancienne requête (« licenciement »
+        // effacé pendant l'appel) devient périmée et ne réaffiche rien.
+        if (term.length < 2) { ++articlesSeqRef.current; setArticleResults([]); setArticlesLoading(false); }
+        if (term.length < 3) { ++doctrineSeqRef.current; setDoctrineResults([]); setDoctrineLoading(false); }
         const timer = setTimeout(() => {
             performSearch(false, true);
         }, 300);
@@ -816,6 +818,13 @@ const SearchPage: React.FC = () => {
                 setError(err.message);
                 // Pas de « Voir plus » sur une recherche en échec.
                 setEncore(false);
+                // Première page en échec : la liste et le total de la recherche PRÉCÉDENTE ne
+                // restent pas affichés sous le bandeau d'erreur comme s'ils y répondaient.
+                if (!append) {
+                    setResults([]);
+                    setTotalReel(null);
+                    setSuggestions([]);
+                }
             }
             if (federated) {
                 const delai = err?.code === '57014' || /timeout|statement timeout|canceling statement/i.test(err?.message || '');
@@ -1345,7 +1354,8 @@ const SearchPage: React.FC = () => {
                                 </div>
                             </section>
                         )}
-                        {results.length === 0 && articlesAffiches.length === 0 && doctrineResults.length === 0 && !loading && !articlesLoading && !doctrineLoading && query.trim().length >= 3 && (
+                        {/* Pas de « Aucun résultat » sous un bandeau d'erreur : on ne sait pas. */}
+                        {results.length === 0 && articlesAffiches.length === 0 && doctrineResults.length === 0 && !loading && !articlesLoading && !doctrineLoading && !error && query.trim().length >= 3 && (
                             <div className="emptyState"><p>Aucun résultat pour «&nbsp;{query}&nbsp;».</p></div>
                         )}
                     </div>

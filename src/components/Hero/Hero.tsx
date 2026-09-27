@@ -70,7 +70,11 @@ function Hero() {
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
     if (query.length < 2) {
+      // Saisie effacée : une réponse encore en vol pour l'ancienne saisie devient périmée
+      // (sinon elle réaffichait ses résultats sous un champ vide) et le chargement s'arrête.
+      ++derniereRequeteRef.current;
       setResults([]);
+      setLoading(false);
       return;
     }
 
