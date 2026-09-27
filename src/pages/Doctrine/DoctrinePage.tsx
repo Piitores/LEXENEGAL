@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { Search, Loader2, BookOpen, ChevronRight, Building, Calendar, FileText } from 'lucide-react';
 import { formatDoctrineDate } from '../../lib/doctrineDate';
+import { contientSansAccents } from '../../lib/recherche';
 import './DoctrinePage.css';
 
 
@@ -22,6 +23,11 @@ interface DoctrineItem {
 // est lu sur la page détail (/doctrine-fiscale/:slug), à la demande, pour un connecté.
 const TEASER_COLUMNS = 'id, slug, numero, annee, date, service_emetteur, reference_complete, objet, destinataire, signataire';
 
+// PostgREST plafonne une réponse à 1 000 lignes, EN SILENCE : au-delà, la liste serait
+// tronquée sans message. Lecture par pages, ordonnée jusqu'à une clé unique (id) pour
+// qu'aucune lettre ne soit sautée ni doublée d'une page à l'autre.
+const TAILLE_PAGE = 1000;
+
 const DoctrinePage: React.FC = () => {
     const [doctrines, setDoctrines] = useState<DoctrineItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -33,16 +39,23 @@ const DoctrinePage: React.FC = () => {
 
     const fetchDoctrines = async () => {
         try {
-            const { data, error } = await supabase
-                .from('doctrine')
-                .select(TEASER_COLUMNS)
-                // nullsFirst: false - sinon Postgres met les NULL en tête en ordre
-                // descendant et les 5 lettres sans date trônent en haut de la liste
-                .order('annee', { ascending: false, nullsFirst: false })
-                .order('date', { ascending: false, nullsFirst: false });
+            const toutes: DoctrineItem[] = [];
+            for (let debut = 0; ; debut += TAILLE_PAGE) {
+                const { data, error } = await supabase
+                    .from('doctrine')
+                    .select(TEASER_COLUMNS)
+                    // nullsFirst: false - sinon Postgres met les NULL en tête en ordre
+                    // descendant et les 5 lettres sans date trônent en haut de la liste
+                    .order('annee', { ascending: false, nullsFirst: false })
+                    .order('date', { ascending: false, nullsFirst: false })
+                    .order('id', { ascending: true })
+                    .range(debut, debut + TAILLE_PAGE - 1);
 
-            if (error) throw error;
-            setDoctrines(data || []);
+                if (error) throw error;
+                toutes.push(...((data || []) as DoctrineItem[]));
+                if (!data || data.length < TAILLE_PAGE) break;
+            }
+            setDoctrines(toutes);
         } catch (error) {
             console.error('Error fetching doctrines:', error);
         } finally {
@@ -50,14 +63,11 @@ const DoctrinePage: React.FC = () => {
         }
     };
 
+    // Filtre local insensible aux accents et à la casse : « creance » trouve « créance »
+    // (60 % des recherches du site sont tapées sans accent, audit du 27/09/2026).
     const filteredDoctrines = useMemo(() => {
-        if (!searchQuery) return doctrines;
-        const query = searchQuery.toLowerCase();
-        return doctrines.filter(d =>
-            (d.objet && d.objet.toLowerCase().includes(query)) ||
-            (d.numero && d.numero.toLowerCase().includes(query)) ||
-            (d.reference_complete && d.reference_complete.toLowerCase().includes(query))
-        );
+        if (!searchQuery.trim()) return doctrines;
+        return doctrines.filter(d => contientSansAccents([d.objet, d.numero, d.reference_complete], searchQuery));
     }, [doctrines, searchQuery]);
 
     return (
