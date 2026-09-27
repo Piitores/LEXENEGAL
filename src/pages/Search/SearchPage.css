@@ -34,6 +34,13 @@
     font-size: 1rem;
     color: var(--color-text, #111827);
 }
+/* Titre + badge « Abrogé » sur une ligne (retour à la ligne sur mobile). */
+.best-match__titre {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
 .best-match__meta {
     font-size: 0.85rem;
     color: var(--color-text-secondary, #6B7280);
@@ -58,6 +65,11 @@ a.best-match {
     gap: 8px;
     margin: 6px 0 0;
     padding: 0;
+}
+.best-match__options li {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 .best-match__options a {
     display: inline-block;

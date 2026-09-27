@@ -9,7 +9,8 @@ import {
     construireArbreJuridictions, cleChambre, lireCleChambre, filtreChambres, filtreJuridictions,
     filtreOuChambres, libelleFacette, type GroupeJuridictions,
     PLAFOND_TOTAL_DECISIONS, totalDecisions, formatTotal, formatTotalCourt, ajouterAuTotal, totalAParcourir,
-    type TotalAffiche, carteMeilleurResultat, type MeilleurResultat, rechercheAvecRequete,
+    type TotalAffiche, carteMeilleurResultat, lecturesMeilleurResultat, completerMeilleurResultat,
+    type MeilleurResultat, rechercheAvecRequete,
 } from '../../lib/recherche';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
@@ -401,6 +402,11 @@ const SearchPage: React.FC = () => {
     // SANS occulter la liste FTS (condition proprio). Référence ambiguë (« article 10 du code
     // électoral » → L.10 | R.10) : petite liste de choix. « Non publié » : pas de carte.
     // Liens par la règle unique (urls.ts) : conventions sous /ccn/.
+    // resolve_citation ne dit pas si la cible est abrogée ni, pour une référence ambiguë, quel
+    // est le texte : deux petites lectures complémentaires (texte par son slug, statut des
+    // articles par leurs ids), avec la même règle que la liste. La carte n'apparaît qu'une fois
+    // complète (pas de badge qui surgit après coup) ; si ces lectures échouent, elle s'affiche
+    // sans badge plutôt que pas du tout.
     useEffect(() => {
         const q = (query || '').trim();
         setBestMatch(null);
@@ -409,7 +415,31 @@ const SearchPage: React.FC = () => {
         (async () => {
             const { data, error } = await supabase.rpc('resolve_citation', { q });
             if (error || !active) return;
-            setBestMatch(carteMeilleurResultat(data));
+            const carte = carteMeilleurResultat(data);
+            if (!carte) return;
+            let complete = carte;
+            const { codeSlug, articleIds } = lecturesMeilleurResultat(carte);
+            if (codeSlug) {
+                try {
+                    const [texte, articles] = await Promise.all([
+                        supabase.from('laws_and_codes').select('title, short_title, abrogated_by_slug').eq('slug', codeSlug).limit(1),
+                        articleIds.length
+                            ? supabase.from('articles').select('id').in('id', articleIds).eq('status', 'abrogé')
+                            : null,
+                    ]);
+                    if (texte.error) throw texte.error;
+                    if (articles?.error) throw articles.error;
+                    const t = (texte.data || [])[0] as { title?: string | null; short_title?: string | null; abrogated_by_slug?: string | null } | undefined;
+                    complete = completerMeilleurResultat(carte, {
+                        titreTexte: t ? (t.short_title || t.title || null) : null,
+                        texteAbroge: !!t?.abrogated_by_slug,
+                        articlesAbroges: (articles?.data || []).map((r: any) => String(r.id)),
+                    });
+                } catch (e) {
+                    console.warn('statut du meilleur résultat non récupéré:', e);
+                }
+            }
+            if (active) setBestMatch(complete);
         })();
         return () => { active = false; };
     }, [query]);
@@ -1208,7 +1238,13 @@ const SearchPage: React.FC = () => {
                     <Link to={bestMatch.href} className="best-match">
                         <span className="best-match__badge">★ Meilleur résultat</span>
                         <div className="best-match__body">
-                            <strong>{bestMatch.titre}</strong>
+                            <div className="best-match__titre">
+                                <strong>{bestMatch.titre}</strong>
+                                {/* Abrogé : trouvable, mais signalé même en tête (arbitrage du 27/09). */}
+                                {bestMatch.kind !== 'decision' && bestMatch.estAbroge && (
+                                    <span className="badge-abroge" title={bestMatch.kind === 'texte' ? 'Ce texte a été abrogé' : 'Cet article a été abrogé'}>Abrogé</span>
+                                )}
+                            </div>
                             {bestMatch.kind === 'texte'
                                 ? <span className="best-match__meta">Texte complet</span>
                                 : bestMatch.meta && <span className="best-match__meta">{bestMatch.meta}</span>}
@@ -1222,7 +1258,10 @@ const SearchPage: React.FC = () => {
                             {bestMatch.titre && <strong>{bestMatch.titre}</strong>}
                             <ul className="best-match__options">
                                 {bestMatch.options.map(o => (
-                                    <li key={o.href}><Link to={o.href}>{o.libelle}</Link></li>
+                                    <li key={o.href}>
+                                        <Link to={o.href}>{o.libelle}</Link>
+                                        {o.estAbroge && <span className="badge-abroge" title="Cet article a été abrogé">Abrogé</span>}
+                                    </li>
                                 ))}
                             </ul>
                         </div>

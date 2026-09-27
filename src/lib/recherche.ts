@@ -8,7 +8,8 @@
  *  - pastilles de matière à plusieurs valeurs (arbitrage : « Pénale » inclut « Criminelle ») ;
  *  - chambre rattachée à sa juridiction (couples « Juridiction::Chambre ») ;
  *  - total réel des décisions (count_decisions_fts, borné) et message de fin de liste ;
- *  - carte « Meilleur résultat » et aperçu de l'accueil, liens par la règle unique (urls.ts).
+ *  - carte « Meilleur résultat » (abrogation signalée) et aperçu de l'accueil, liens par la
+ *    règle unique (urls.ts).
  */
 import { articleLabel } from './articleLabel';
 import { urlArticle, urlTexte } from './urls';
@@ -313,11 +314,22 @@ export function totalAParcourir(p: { tri: string; total: number | null; plafond:
 // Carte « Meilleur résultat » (resolve_citation)
 // ---------------------------------------------------------------------------
 
+/**
+ * `estAbroge` n'est pas renvoyé par resolve_citation : il est posé ensuite par
+ * completerMeilleurResultat, à partir de lectures complémentaires (lecturesMeilleurResultat).
+ */
 export type MeilleurResultat =
-    | { kind: 'article'; titre: string; meta: string; href: string }
-    | { kind: 'texte'; titre: string; href: string }
-    | { kind: 'choix'; titre: string; options: Array<{ libelle: string; href: string }> }
+    | { kind: 'article'; titre: string; meta: string; href: string; codeSlug: string; articleId: string | null; estAbroge?: boolean }
+    | { kind: 'texte'; titre: string; href: string; codeSlug: string; estAbroge?: boolean }
+    | { kind: 'choix'; titre: string; codeSlug: string; options: OptionChoix[] }
     | { kind: 'decision'; titre: string; meta: string; href: string };
+
+export interface OptionChoix {
+    libelle: string;
+    href: string;
+    articleId: string | null;
+    estAbroge?: boolean;
+}
 
 /** Nombre maximal d'options affichées pour une référence ambiguë. */
 export const MAX_OPTIONS_CHOIX = 5;
@@ -337,19 +349,26 @@ export function carteMeilleurResultat(data: any): MeilleurResultat | null {
             titre: articleLabel({ article_number: r.article_number }),
             meta: r.code_title || r.code_slug,
             href: urlArticle(r.code_slug, r.article_slug),
+            codeSlug: r.code_slug,
+            articleId: r.article_id ?? null,
         };
     }
     if (data.kind === 'norme' && r.status === 'desambiguisation' && r.code_slug && Array.isArray(r.options)) {
-        const options = r.options
+        const options: OptionChoix[] = r.options
             .filter((o: any) => o && o.article_slug)
             .slice(0, MAX_OPTIONS_CHOIX)
-            .map((o: any) => ({ libelle: articleLabel({ article_number: o.article_number }), href: urlArticle(r.code_slug, o.article_slug) }));
+            .map((o: any) => ({
+                libelle: articleLabel({ article_number: o.article_number }),
+                href: urlArticle(r.code_slug, o.article_slug),
+                articleId: o.article_id ?? null,
+            }));
         if (!options.length) return null;
-        // Le titre du texte n'est pas toujours renvoyé pour une référence ambiguë : vide alors.
-        return { kind: 'choix', titre: r.code_title || '', options };
+        // resolve_article ne renvoie JAMAIS code_title pour une référence ambiguë (seulement
+        // code_slug) : le titre est lu à part (lecturesMeilleurResultat), vide en attendant.
+        return { kind: 'choix', titre: r.code_title || '', codeSlug: r.code_slug, options };
     }
     if (data.kind === 'texte' && r.status === 'ok' && r.code_slug) {
-        return { kind: 'texte', titre: r.code_title || r.code_slug, href: urlTexte(r.code_slug) };
+        return { kind: 'texte', titre: r.code_title || r.code_slug, href: urlTexte(r.code_slug), codeSlug: r.code_slug };
     }
     if (data.kind === 'decision' && r.status === 'ok' && r.match?.slug) {
         const m = r.match;
@@ -362,6 +381,50 @@ export function carteMeilleurResultat(data: any): MeilleurResultat | null {
         };
     }
     return null;
+}
+
+/**
+ * Lectures qui complètent la carte : le texte (titre court, abrogation en entier) et le statut
+ * des articles proposés. Rien pour une décision.
+ */
+export function lecturesMeilleurResultat(c: MeilleurResultat | null): { codeSlug: string | null; articleIds: string[] } {
+    if (!c || c.kind === 'decision') return { codeSlug: null, articleIds: [] };
+    if (c.kind === 'article') return { codeSlug: c.codeSlug, articleIds: c.articleId ? [c.articleId] : [] };
+    if (c.kind === 'choix') return { codeSlug: c.codeSlug, articleIds: c.options.map((o) => o.articleId).filter((id): id is string => !!id) };
+    return { codeSlug: c.codeSlug, articleIds: [] };
+}
+
+export interface InfosMeilleurResultat {
+    /** Titre du texte, comme resolve_article : `short_title`, sinon `title`. */
+    titreTexte: string | null;
+    /** Texte abrogé en entier (`laws_and_codes.abrogated_by_slug`). */
+    texteAbroge: boolean;
+    /** Ids des articles au statut « abrogé ». */
+    articlesAbroges: string[];
+}
+
+/**
+ * Pose l'abrogation sur la carte, avec la même règle que la liste, l'aperçu de l'accueil et la
+ * base (fn_poids_vigueur) : article au statut « abrogé » OU texte abrogé en entier. Arbitrage du
+ * 27/09 : les abrogés restent trouvables mais toujours signalés, y compris en tête.
+ * Référence ambiguë : le titre du texte, que resolve_article ne renvoie pas, est complété.
+ */
+export function completerMeilleurResultat(c: MeilleurResultat, infos: InfosMeilleurResultat): MeilleurResultat {
+    const abroge = (id: string | null) => infos.texteAbroge || (!!id && infos.articlesAbroges.includes(id));
+    switch (c.kind) {
+        case 'article':
+            return { ...c, estAbroge: abroge(c.articleId) };
+        case 'texte':
+            return { ...c, estAbroge: infos.texteAbroge };
+        case 'choix':
+            return {
+                ...c,
+                titre: c.titre || infos.titreTexte || '',
+                options: c.options.map((o) => ({ ...o, estAbroge: abroge(o.articleId) })),
+            };
+        default:
+            return c;
+    }
 }
 
 // ---------------------------------------------------------------------------

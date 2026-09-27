@@ -6,7 +6,8 @@ import {
     groupeDeJuridiction, construireArbreJuridictions, cleChambre, lireCleChambre,
     filtreChambres, filtreJuridictions, filtreOuChambres, libelleFacette,
     totalDecisions, formatTotal, formatTotalCourt, ajouterAuTotal, totalAParcourir,
-    carteMeilleurResultat, resultatsApercu, rechercheAvecRequete,
+    carteMeilleurResultat, lecturesMeilleurResultat, completerMeilleurResultat,
+    resultatsApercu, rechercheAvecRequete,
 } from '../recherche';
 
 const fr = (n: number) => n.toLocaleString('fr-FR');
@@ -182,14 +183,17 @@ describe('carte « Meilleur résultat »', () => {
             kind: 'norme', intent: 'authority',
             result: { status: 'ok', code_slug: 'ccn-banques', article_slug: 'art-12', article_number: '12', code_title: 'Convention des banques', url: '/ccn/banques/art-12' },
         });
-        expect(c).toEqual({ kind: 'article', titre: 'Article 12', meta: 'Convention des banques', href: '/ccn/banques/art-12' });
+        expect(c).toEqual({
+            kind: 'article', titre: 'Article 12', meta: 'Convention des banques', href: '/ccn/banques/art-12',
+            codeSlug: 'ccn-banques', articleId: null,
+        });
     });
     it('texte cité (« loi n° 2008-41 ») : lien vers le texte', () => {
         const c = carteMeilleurResultat({
             kind: 'texte', intent: 'authority',
             result: { status: 'ok', code_slug: 'loi-2008-41-cryptologie', code_title: 'Loi n° 2008-41', url: '/code/loi-2008-41-cryptologie' },
         });
-        expect(c).toEqual({ kind: 'texte', titre: 'Loi n° 2008-41', href: '/code/loi-2008-41-cryptologie' });
+        expect(c).toEqual({ kind: 'texte', titre: 'Loi n° 2008-41', href: '/code/loi-2008-41-cryptologie', codeSlug: 'loi-2008-41-cryptologie' });
     });
     it('texte non publié ou inconnu : pas de carte (jamais de lien mort)', () => {
         expect(carteMeilleurResultat({ kind: 'texte', intent: 'authority', result: { status: 'non_publie', code_slug: 'x' } })).toBeNull();
@@ -202,7 +206,7 @@ describe('carte « Meilleur résultat »', () => {
         expect(c?.kind).toBe('choix');
         if (c?.kind !== 'choix') return;
         expect(c.options).toHaveLength(5);
-        expect(c.options[0]).toEqual({ libelle: 'Article L.0', href: '/ccn/banques/art-l-0' });
+        expect(c.options[0]).toEqual({ libelle: 'Article L.0', href: '/ccn/banques/art-l-0', articleId: null });
     });
     it('décision', () => {
         const c = carteMeilleurResultat({
@@ -213,6 +217,62 @@ describe('carte « Meilleur résultat »', () => {
         if (c?.kind !== 'decision') return;
         expect(c.href).toBe('/decision/arret-n-12');
         expect(c.meta.startsWith('Cour suprême · Chambre sociale · ')).toBe(true);
+    });
+});
+
+describe('carte « Meilleur résultat » : texte et abrogation', () => {
+    // Réponse réelle de resolve_citation('article 10 du code électoral') : pas de code_title.
+    const ambigue = {
+        kind: 'norme', intent: 'authority',
+        result: {
+            status: 'desambiguisation', code_slug: 'code-electoral', numero: '10',
+            options: [
+                { article_id: 'id-l10', article_slug: 'art-l-10', article_number: 'L.10', url: '/code/code-electoral/art-l-10' },
+                { article_id: 'id-r10', article_slug: 'art-r-10', article_number: 'R.10', url: '/code/code-electoral/art-r-10' },
+            ],
+        },
+    };
+    const article = (code_slug: string, article_id: string) => carteMeilleurResultat({
+        kind: 'norme', intent: 'authority',
+        result: { status: 'ok', code_slug, article_id, article_slug: 'art-46', article_number: '46', code_title: 'Code de procédure civile' },
+    })!;
+    const aucune = { titreTexte: null, texteAbroge: false, articlesAbroges: [] as string[] };
+
+    it('lectures nécessaires : le texte, et les articles proposés', () => {
+        expect(lecturesMeilleurResultat(carteMeilleurResultat(ambigue))).toEqual({ codeSlug: 'code-electoral', articleIds: ['id-l10', 'id-r10'] });
+        expect(lecturesMeilleurResultat(article('code-procedure-civile', 'id-46'))).toEqual({ codeSlug: 'code-procedure-civile', articleIds: ['id-46'] });
+        expect(lecturesMeilleurResultat(null)).toEqual({ codeSlug: null, articleIds: [] });
+        const decision = carteMeilleurResultat({ kind: 'decision', intent: 'authority', result: { status: 'ok', match: { slug: 'd', reference: 'Arrêt' } } });
+        expect(lecturesMeilleurResultat(decision)).toEqual({ codeSlug: null, articleIds: [] });
+    });
+    it('référence ambiguë : le titre du texte, absent de la réponse, est complété', () => {
+        const c = carteMeilleurResultat(ambigue)!;
+        expect(c.kind === 'choix' && c.titre).toBe('');
+        const complete = completerMeilleurResultat(c, { ...aucune, titreTexte: 'Code électoral' });
+        expect(complete.kind === 'choix' && complete.titre).toBe('Code électoral');
+    });
+    it('article au statut abrogé dans un texte en vigueur : signalé', () => {
+        const c = completerMeilleurResultat(article('code-procedure-civile', 'id-46'), { ...aucune, articlesAbroges: ['id-46'] });
+        expect(c.kind === 'article' && c.estAbroge).toBe(true);
+        const enVigueur = completerMeilleurResultat(article('code-procedure-civile', 'id-46'), aucune);
+        expect(enVigueur.kind === 'article' && enVigueur.estAbroge).toBe(false);
+    });
+    it('texte abrogé en entier (Code du travail de 1997) : l’article et chaque option sont signalés', () => {
+        const c = completerMeilleurResultat(article('code-travail', 'id-l2'), { ...aucune, texteAbroge: true });
+        expect(c.kind === 'article' && c.estAbroge).toBe(true);
+        const choix = completerMeilleurResultat(carteMeilleurResultat(ambigue)!, { ...aucune, texteAbroge: true });
+        expect(choix.kind === 'choix' && choix.options.every((o) => o.estAbroge)).toBe(true);
+    });
+    it('référence ambiguë : seule l’option abrogée porte le badge', () => {
+        const c = completerMeilleurResultat(carteMeilleurResultat(ambigue)!, { ...aucune, articlesAbroges: ['id-r10'] });
+        expect(c.kind === 'choix' && c.options.map((o) => o.estAbroge)).toEqual([false, true]);
+    });
+    it('texte cité : abrogation du texte seulement ; décision inchangée', () => {
+        const texte = carteMeilleurResultat({ kind: 'texte', intent: 'authority', result: { status: 'ok', code_slug: 'code-travail', code_title: 'Code du Travail de 1997 (abrogé)' } })!;
+        const c = completerMeilleurResultat(texte, { ...aucune, texteAbroge: true });
+        expect(c.kind === 'texte' && c.estAbroge).toBe(true);
+        const decision = carteMeilleurResultat({ kind: 'decision', intent: 'authority', result: { status: 'ok', match: { slug: 'd', reference: 'Arrêt' } } })!;
+        expect(completerMeilleurResultat(decision, { ...aucune, texteAbroge: true })).toEqual(decision);
     });
 });
 
