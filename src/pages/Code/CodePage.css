@@ -265,7 +265,7 @@
     margin-bottom: 6px;
 }
 .article-body ul.enum-dash li::before {
-    content: "—";
+    content: "-";
     position: absolute;
     left: -20px;
     color: var(--cp-text-muted);

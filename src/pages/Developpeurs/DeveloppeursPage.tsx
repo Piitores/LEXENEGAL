@@ -80,7 +80,7 @@ const DeveloppeursPage: React.FC = () => {
     return (
         <div className="dev-page">
             <SEO
-                title="API LEXENEGAL — brancher le droit sénégalais dans vos outils"
+                title="API LEXENEGAL - brancher le droit sénégalais dans vos outils"
                 description="L'API LEXENEGAL donne accès à la législation, à la jurisprudence et à la doctrine administrative du Sénégal et de l'OHADA : recherche par le sens, texte intégral et liens entre les textes."
                 url="https://www.lexenegal.sn/developpeurs"
             />
@@ -90,8 +90,8 @@ const DeveloppeursPage: React.FC = () => {
                     <span className="dev-page__eyebrow"><Plug size={14} /> API</span>
                     <h1>Brancher LEXENEGAL dans vos outils</h1>
                     <p className="dev-page__lede">
-                        L’API LEXENEGAL ouvre le fonds juridique sénégalais et OHADA — codes, lois,
-                        décisions de justice, doctrine administrative — à vos propres applications :
+                        L’API LEXENEGAL ouvre le fonds juridique sénégalais et OHADA - codes, lois,
+                        décisions de justice, doctrine administrative - à vos propres applications :
                         logiciel métier, intranet de cabinet, assistant conversationnel.
                     </p>
                     <p className="dev-page__adresse">
@@ -168,7 +168,7 @@ const DeveloppeursPage: React.FC = () => {
                         </li>
                         <li>
                             Collez notre fiche technique :{' '}
-                            <code>{`${API_BASE}/openapi.json`}</code> — les opérations apparaissent
+                            <code>{`${API_BASE}/openapi.json`}</code> - les opérations apparaissent
                             toutes seules.
                         </li>
                         <li>
@@ -223,8 +223,8 @@ const DeveloppeursPage: React.FC = () => {
                         restant accompagne chaque réponse dans <code>meta.quota_remaining</code>.
                     </p>
                     <ul className="dev-liste">
-                        <li><strong>Essai</strong> — 500 appels par jour, dont 50 recherches. Expire au bout de 30 jours.</li>
-                        <li><strong>Standard</strong> — 10 000 appels par jour, 60 par minute.</li>
+                        <li><strong>Essai</strong> - 500 appels par jour, dont 50 recherches. Expire au bout de 30 jours.</li>
+                        <li><strong>Standard</strong> - 10 000 appels par jour, 60 par minute.</li>
                     </ul>
                     <p className="dev-note">
                         Les recherches sont comptées à part : elles mobilisent un moteur sémantique
@@ -269,7 +269,7 @@ const DeveloppeursPage: React.FC = () => {
                 <footer className="dev-page__pied">
                     <p>
                         Une question, un besoin que l’API ne couvre pas encore ?{' '}
-                        <a href="mailto:contact@lexenegal.sn">contact@lexenegal.sn</a> — ou{' '}
+                        <a href="mailto:contact@lexenegal.sn">contact@lexenegal.sn</a> - ou{' '}
                         <Link to="/codes">parcourez le fonds</Link> pour voir ce qu’il contient.
                     </p>
                 </footer>

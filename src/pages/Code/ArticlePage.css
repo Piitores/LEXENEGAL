@@ -630,7 +630,7 @@
 }
 
 .article-text .enum-dash li::before {
-    content: '—';
+    content: '-';
     position: absolute;
     left: 0;
     top: 0;
@@ -641,7 +641,7 @@
 
 /* Variante avec tirets subtils pour les sous-listes */
 .article-text .enum-dash .enum-dash li::before {
-    content: '–';
+    content: '-';
     color: var(--gris-texte);
 }
 

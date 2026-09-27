@@ -382,7 +382,7 @@ function libelleNiveau(n) {
   const mot = MOTS_NIVEAU[n.type] || (n.type ? n.type.charAt(0).toUpperCase() + n.type.slice(1) : '');
   const num = (n.numero || '').trim();
   const intitule = (n.intitule || n.label || '').trim();
-  if (num) return `${mot} ${num}${intitule ? ` — ${intitule}` : ''}`;
+  if (num) return `${mot} ${num}${intitule ? ` - ${intitule}` : ''}`;
   if (!intitule) return mot;
   /*
    * Sans numéro : l'intitulé se suffit en général à lui-même (« PREMIERE
@@ -393,7 +393,7 @@ function libelleNiveau(n) {
    */
   const m = intitule.match(ORDINAUX);
   if (m && mot && !new RegExp(`\\b${mot}\\b`, 'i').test(intitule) && m[2]) {
-    return `${mot} ${m[1]} — ${m[2].replace(/^[\s.:—–-]+/, '')}`;
+    return `${mot} ${m[1]} - ${m[2].replace(/^[\s.:—–-]+/, '')}`;
   }
   return intitule;
 }

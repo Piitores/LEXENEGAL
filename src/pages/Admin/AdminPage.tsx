@@ -181,7 +181,7 @@ const AdminPage: React.FC = () => {
     const copierCle = async () => {
         if (!nouvelleCle) return;
         try { await navigator.clipboard.writeText(nouvelleCle); setCleCopiee(true); }
-        catch { window.alert('Copie impossible — sélectionnez la clé et copiez-la à la main.'); }
+        catch { window.alert('Copie impossible - sélectionnez la clé et copiez-la à la main.'); }
     };
 
     const basculerApiKey = async (k: ApiKey) => {
@@ -521,7 +521,7 @@ const AdminPage: React.FC = () => {
                         garde que l'empreinte. D'où l'avertissement explicite. */}
                     {nouvelleCle && (
                         <section className="admin-section admin-card api-nouvelle">
-                            <h2><KeyRound size={20} /> Nouvelle clé — à copier maintenant</h2>
+                            <h2><KeyRound size={20} /> Nouvelle clé - à copier maintenant</h2>
                             <p className="api-avertissement">
                                 Cette clé ne sera <strong>plus jamais affichée</strong>. Transmettez-la au client
                                 par un canal sûr. Si elle est perdue, il faudra en émettre une nouvelle et révoquer celle-ci.
@@ -555,8 +555,8 @@ const AdminPage: React.FC = () => {
                                 value={formCle.plan}
                                 onChange={e => setFormCle({ ...formCle, plan: e.target.value })}
                             >
-                                <option value="essai">Essai — 500 appels/jour, expire à 30 jours</option>
-                                <option value="standard">Standard — 10 000 appels/jour</option>
+                                <option value="essai">Essai - 500 appels/jour, expire à 30 jours</option>
+                                <option value="standard">Standard - 10 000 appels/jour</option>
                             </select>
                             <button className="btn-action btn-action--pro" onClick={creerApiKey} disabled={creationEnCours}>
                                 {creationEnCours ? <Loader2 size={14} className="spinner" /> : <Plus size={14} />} Créer la clé
