@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { normalizeArticleNumber } from './articleRefResolver';
+import { indexerParNumero } from './articleRefResolver';
 import { lireToutesLesPages } from './lecturePaginee';
 
 /**
@@ -30,13 +30,16 @@ export function getCodeArticleIndex(codeSlug: string): Promise<Map<string, Index
                 .maybeSingle();
             if (code) {
                 // Lecture paginée : au-delà de 1 000 articles, PostgREST tronque en silence et
-                // les renvois vers la fin du code restaient du texte brut.
+                // les renvois vers la fin du code restaient du texte brut. Ordre de lecture
+                // (display_order, puis id : ordre total pour la pagination), car à numéro égal le
+                // premier article lu l'emporte : le corps du code avant ses annexes.
                 let arts: { article_number: string; slug: string }[] = [];
                 try {
                     arts = await lireToutesLesPages((de, a) => supabase
                         .from('articles')
                         .select('article_number, slug')
                         .eq('code_id', code.id)
+                        .order('display_order')
                         .order('id')
                         .range(de, a));
                 } catch {
@@ -44,8 +47,8 @@ export function getCodeArticleIndex(codeSlug: string): Promise<Map<string, Index
                     cache.delete(codeSlug);
                 }
                 const codeName = (code as any).short_title || (code as any).title || '';
-                for (const a of arts) {
-                    map.set(normalizeArticleNumber(a.article_number), { slug: a.slug, codeName });
+                for (const [numero, a] of indexerParNumero(arts)) {
+                    map.set(numero, { slug: a.slug, codeName });
                 }
             }
             return map;

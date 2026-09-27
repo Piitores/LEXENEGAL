@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   normalizeToken,
   normalizeArticleNumber,
+  indexerParNumero,
   buildCodeIndex,
   buildSuccessions,
   codePourDecision,
@@ -38,6 +39,32 @@ describe('normalizeArticleNumber', () => {
     expect(normalizeArticleNumber('Article L. 56')).toBe('L56');
     expect(normalizeArticleNumber('L.56')).toBe('L56');
     expect(normalizeArticleNumber(' 3 ')).toBe('3');
+  });
+});
+
+describe('indexerParNumero', () => {
+  // Code pénal, dans l'ordre de lecture (display_order, puis id) : le corps du code (rangs 40 et
+  // 50) précède l'annexe III sur la cryptologie (rangs 60003 et 60004), qui reprend les numéros.
+  const CODE_PENAL = [
+    { slug: 'annexe2-art-4', article_number: '4' },
+    { slug: 'annexe2-art-5', article_number: '5' },
+    { slug: 'annexe-iii-art-4', article_number: '4' },
+    { slug: 'annexe-iii-art-5', article_number: '5' },
+  ];
+
+  it('à numéro égal, le premier lu l’emporte : le corps du code, pas l’annexe', () => {
+    const index = indexerParNumero(CODE_PENAL);
+    expect(index.get('5')?.slug).toBe('annexe2-art-5');
+    expect(index.get('4')?.slug).toBe('annexe2-art-4');
+    expect(index.size).toBe(2);
+  });
+
+  it('clé = numéro normalisé (« L. 56 » et « L.56 » ne font qu’un)', () => {
+    const index = indexerParNumero([
+      { slug: 'article-l56', article_number: 'L. 56' },
+      { slug: 'article-l56-bis', article_number: 'L.56' },
+    ]);
+    expect(index.get('L56')?.slug).toBe('article-l56');
   });
 });
 

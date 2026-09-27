@@ -9,7 +9,7 @@
 
 import React from 'react';
 import ArticleHoverPreview from '../components/ArticleHoverPreview/ArticleHoverPreview';
-import { normalizeArticleNumber } from '../lib/articleRefResolver';
+import { indexerParNumero, normalizeArticleNumber } from '../lib/articleRefResolver';
 import { urlArticle } from '../lib/urls';
 
 /**
@@ -213,6 +213,23 @@ export function findAllArticleCitations(text: string): MatchResult[] {
 }
 
 /**
+ * Index { code → { numéro normalisé → article } }. Les articles doivent arriver dans l'ordre de
+ * lecture de chaque code (chargerArticlesDesCodes : code_id, display_order, id) : à numéro égal,
+ * le premier l'emporte (indexerParNumero), soit le corps du code avant ses annexes.
+ */
+function indexerParCode(articles: ArticleInfo[]): Record<string, Map<string, ArticleInfo>> {
+    const parCode: Record<string, ArticleInfo[]> = {};
+    for (const art of articles) {
+        (parCode[art.code_slug] ||= []).push(art);
+    }
+    const articleMaps: Record<string, Map<string, ArticleInfo>> = {};
+    for (const [code, arts] of Object.entries(parCode)) {
+        articleMaps[code] = indexerParNumero(arts);
+    }
+    return articleMaps;
+}
+
+/**
  * Transforme le texte brut en éléments React avec liens vers les articles
  */
 export function renderTextWithArticleLinks(
@@ -222,13 +239,7 @@ export function renderTextWithArticleLinks(
     const { articles } = options;
 
     // Créer des maps pour recherche rapide par code
-    const articleMaps: Record<string, Map<string, ArticleInfo>> = {};
-    for (const art of articles) {
-        if (!articleMaps[art.code_slug]) {
-            articleMaps[art.code_slug] = new Map();
-        }
-        articleMaps[art.code_slug].set(normalizeArticleNumber(art.article_number), art);
-    }
+    const articleMaps = indexerParCode(articles);
 
     const citations = findAllArticleCitations(text);
     const result: React.ReactNode[] = [];
@@ -301,13 +312,7 @@ export function textToHtmlWithLinks(
     articles: ArticleInfo[],
     _codeSlug: string = 'code-travail'
 ): string {
-    const articleMaps: Record<string, Map<string, ArticleInfo>> = {};
-    for (const art of articles) {
-        if (!articleMaps[art.code_slug]) {
-            articleMaps[art.code_slug] = new Map();
-        }
-        articleMaps[art.code_slug].set(normalizeArticleNumber(art.article_number), art);
-    }
+    const articleMaps = indexerParCode(articles);
 
     const citations = findAllArticleCitations(text);
 

@@ -119,13 +119,16 @@ const DecisionPage: React.FC = () => {
             if (!candidates.length) return;
             const codeSlugs = Array.from(new Set(candidates.flatMap((c) => (c.repli ? [c.codeSlug, c.repli] : [c.codeSlug]))));
             // Lecture PAGINÉE et ordonnée : PostgREST plafonne en silence à 1 000 lignes, et deux
-            // codes cités (ex. Code du travail + COCC) les dépassent.
+            // codes cités (ex. Code du travail + COCC) les dépassent. Ordre de lecture (display_order,
+            // puis id) : à numéro égal, `chercher` garde le premier, soit le corps du code avant ses
+            // annexes (« Article 5 du Code pénal » ≠ article 5 de l'annexe III sur la cryptologie).
             const data: any[] = [];
             for (let from = 0; active; from += 1000) {
                 const { data: page, error } = await supabase
                     .from('articles')
                     .select('id, slug, article_number, laws_and_codes!inner(slug, short_title)')
                     .in('laws_and_codes.slug', codeSlugs)
+                    .order('display_order')
                     .order('id')
                     .range(from, from + 999);
                 if (error || !page) break;

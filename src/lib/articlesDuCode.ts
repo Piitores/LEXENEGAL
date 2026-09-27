@@ -59,8 +59,9 @@ export async function chargerArticlesDesCodes(codeSlugs: string[]): Promise<Arti
             .from('articles')
             .select('id, slug, article_number, code_id')
             .in('code_id', Array.from(parId.keys()))
-            // Ordre total et déterministe ; dans un texte, l'ordre de lecture (display_order),
-            // comme l'ancienne lecture : à numéro égal (annexes), c'est le même article qui gagne.
+            // Ordre total et déterministe ; dans un texte, l'ordre de lecture (display_order).
+            // Les appelants gardent le PREMIER article de chaque numéro (indexerParNumero) : le
+            // corps du code avant ses annexes (Code pénal : art. 5 du code, pas celui de l'annexe III).
             .order('code_id')
             .order('display_order')
             .order('id')

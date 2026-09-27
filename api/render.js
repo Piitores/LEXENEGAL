@@ -896,6 +896,23 @@ async function fetchCitingDecisions(artId) {
   } catch (e) { return []; }
 }
 
+/*
+ * Texte visé par une page de texte ou d'article, d'après le paramètre posé par la réécriture de
+ * vercel.json : ccn= pour /ccn/:segment…, slug= (type code) ou code= (type article) pour /code/….
+ * Une réécriture ne pose jamais les deux. Or Vercel transmet aussi la requête d'origine :
+ * /code/code-penal?ccn=banques arrive avec slug ET ccn, et /ccn/banques?slug=code-penal aussi.
+ * Servir l'un ou l'autre, c'est afficher un texte sous l'adresse d'un autre (et le mettre en cache
+ * au CDN). Requête ambiguë ou incomplète → null : l'appelant sert la coquille, l'application
+ * lit l'adresse réelle. Sinon { slug en base, chemin du texte tel que reçu }.
+ */
+export function texteDeLaRequete(ccn, slugTexte) {
+  const present = (v) => v != null && v !== '';
+  if (present(ccn) && present(slugTexte)) return null;
+  if (present(ccn)) return typeof ccn === 'string' ? { slug: slugDepuisSegmentCcn(ccn), recue: `/ccn/${ccn}` } : null;
+  if (present(slugTexte)) return typeof slugTexte === 'string' ? { slug: slugTexte, recue: `/code/${slugTexte}` } : null;
+  return null;
+}
+
 /* ---------- Handler ---------- */
 export default async function handler(req, res) {
   try {
@@ -1004,11 +1021,11 @@ export default async function handler(req, res) {
 
     if (type === 'code') {
       // /ccn/:segment (convention collective) ou /code/:slug : même page, slug en base retrouvé.
-      const slug = q.ccn ? slugDepuisSegmentCcn(q.ccn) : q.slug;
-      if (!slug) return serveShell();
+      const cible = texteDeLaRequete(q.ccn, q.slug);
+      if (!cible) return serveShell();
+      const { slug, recue } = cible;
       // Une seule adresse publique par texte : une ancienne forme (/code/ccn-…, /ccn/ccn-…),
       // normalement déjà redirigée par vercel.json, ne doit jamais servir une page en 200.
-      const recue = q.ccn ? `/ccn/${q.ccn}` : `/code/${slug}`;
       if (recue !== urlTexte(slug)) return serve301(`${SITE}${urlTexte(slug)}`);
       let law = null;
       try { law = await fetchLaw(slug); } catch (e) { return serve503(); }
@@ -1022,8 +1039,9 @@ export default async function handler(req, res) {
 
     if (type === 'article') {
       // /ccn/:segment/:article (convention collective) ou /code/:code/:article.
-      const codeSlug = q.ccn ? slugDepuisSegmentCcn(q.ccn) : q.code, artSlug = q.slug;
-      if (!codeSlug || !artSlug) return serveShell();
+      const cible = texteDeLaRequete(q.ccn, q.code), artSlug = q.slug;
+      if (!cible || !artSlug) return serveShell();
+      const { slug: codeSlug, recue } = cible;
       // Adresse publique d'un article, segments encodés (le slug d'article peut porter un espace).
       const adresseArticle = (art) => `${SITE}${urlTexte(codeSlug)}/${encodeURIComponent(art)}`;
       // Anciens slugs avec espaces (ex. « article-307 bis ») : 301 vers la forme tiretée.
@@ -1031,7 +1049,6 @@ export default async function handler(req, res) {
         return serve301(adresseArticle(artSlug.replace(/\s+/g, '-')));
       }
       // Ancienne forme d'adresse du texte (/code/ccn-…, /ccn/ccn-…) : 301 vers la forme publique.
-      const recue = q.ccn ? `/ccn/${q.ccn}` : `/code/${codeSlug}`;
       if (recue !== urlTexte(codeSlug)) return serve301(adresseArticle(artSlug));
       let law = null;
       try { law = await fetchLaw(codeSlug); } catch (e) { return serve503(); }
