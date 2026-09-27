@@ -7,6 +7,8 @@ import { articleLabel } from '../../lib/articleLabel';
 import { normalizeArticleNumber } from '../../lib/articleRefResolver';
 import { getCodeArticleIndex } from '../../lib/codeArticleIndex';
 import { findAllArticleCitations, PREFIX_BY_CODE } from '../../utils/articleLinkRenderer';
+import { urlArticle } from '../../lib/urls';
+import { lireAdresseArticle } from '../../lib/routeTexte';
 import '../ArticleHoverPreview/ArticleHoverPreview.css';
 
 /**
@@ -15,7 +17,8 @@ import '../ArticleHoverPreview/ArticleHoverPreview.css';
  * - Préserve exactement le HTML (classes alinéa/nota/etc.) via dangerouslySetInnerHTML.
  * - Ajoute, par survol délégué, la MÊME prévisualisation riche que partout ailleurs
  *   (réutilise les classes .article-hover-preview), pour tout renvoi d'article :
- *   liens `data-article-id` (CGI…) ET liens `/code/<code>/<article>` (COCC…).
+ *   liens `data-article-id` (CGI…) ET liens `/code/<code>/<article>` (COCC…) ou
+ *   `/ccn/<convention>/<article>` (adresses : src/lib/urls.ts).
  * Utilisé sur le corps d'article, les extraits de la page de présentation, les annotations.
  */
 
@@ -57,7 +60,7 @@ const LinkedLegalContent: React.FC<{ html: string; className?: string }> = ({ ht
         const a = (target as HTMLElement)?.closest?.('a') as HTMLAnchorElement | null;
         if (!a || !ref.current?.contains(a)) return null;
         const href = a.getAttribute('href') || '';
-        if (a.getAttribute('data-article-id') || /\/code\/[^/?#]+\/[^/?#]+/.test(href)) return a;
+        if (a.getAttribute('data-article-id') || lireAdresseArticle(href)) return a;
         return null;
     };
 
@@ -66,16 +69,16 @@ const LinkedLegalContent: React.FC<{ html: string; className?: string }> = ({ ht
         if (!a) return;
         if (hideTimer.current) { clearTimeout(hideTimer.current); hideTimer.current = null; }
         const href = a.getAttribute('href') || '';
-        const m = href.match(/\/code\/([^/?#]+)\/([^/?#]+)/);
+        const cible = lireAdresseArticle(href);
         const dataId = a.getAttribute('data-article-id');
         const number = a.getAttribute('data-article-number') || (a.textContent || '').trim().slice(0, 48);
         const codeName = a.getAttribute('data-code-name') || '';
         const rect = a.getBoundingClientRect();
-        setPv({ top: rect.bottom + window.scrollY + 6, left: rect.left + window.scrollX, number, codeName, href: m ? href : '', loading: true, text: null });
+        setPv({ top: rect.bottom + window.scrollY + 6, left: rect.left + window.scrollX, number, codeName, href: cible ? href : '', loading: true, text: null });
         const key = dataId || href;
         let text = previewCache.get(key);
         if (text === undefined) {
-            text = await fetchPreviewText(dataId, m?.[1], m?.[2]);
+            text = await fetchPreviewText(dataId, cible?.codeSlug, cible?.articleSlug);
             previewCache.set(key, text);
         }
         setPv(prev => prev ? { ...prev, loading: false, text: text! } : null);
@@ -88,7 +91,7 @@ const LinkedLegalContent: React.FC<{ html: string; className?: string }> = ({ ht
     // Linkification des citations tapées EN CLAIR dans le corps (« article L.12 du Code
     // de l'urbanisme »). On parcourt les nœuds texte hors <a> déjà présents, on ne résout
     // que les codes réellement cités (index paresseux caché), et on enveloppe les renvois
-    // résolus dans un <a> /code/…/… - que le survol délégué ci-dessus allume comme les autres.
+    // résolus dans un <a> vers l'article (urlArticle) - que le survol délégué ci-dessus allume comme les autres.
     // Idempotent : le texte déjà linkifié se retrouve dans un <a> et est ignoré au re-run.
     useEffect(() => {
         const root = ref.current;
@@ -102,7 +105,7 @@ const LinkedLegalContent: React.FC<{ html: string; className?: string }> = ({ ht
             a.rel = 'noopener noreferrer';
         };
         const isRenvoi = (a: HTMLAnchorElement) =>
-            !!a.getAttribute('data-article-id') || /\/code\/[^/?#]+\/[^/?#]+/.test(a.getAttribute('href') || '');
+            !!a.getAttribute('data-article-id') || !!lireAdresseArticle(a.getAttribute('href') || '');
         root.querySelectorAll('a').forEach((a) => { if (isRenvoi(a)) openInNewTab(a); });
 
         let cancelled = false;
@@ -140,7 +143,7 @@ const LinkedLegalContent: React.FC<{ html: string; className?: string }> = ({ ht
                     if (!hit) continue; // citation non résolue : on laisse le texte tel quel
                     if (c.index > last) frag.appendChild(document.createTextNode(text.slice(last, c.index)));
                     const a = document.createElement('a');
-                    a.href = `/code/${c.codeSlug}/${hit.slug}`;
+                    a.href = urlArticle(c.codeSlug, hit.slug);
                     a.className = 'article-link';
                     a.setAttribute('data-code-name', hit.codeName);
                     a.setAttribute('data-linkified', '1');

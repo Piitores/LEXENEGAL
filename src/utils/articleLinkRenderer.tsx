@@ -10,6 +10,7 @@
 import React from 'react';
 import ArticleHoverPreview from '../components/ArticleHoverPreview/ArticleHoverPreview';
 import { normalizeArticleNumber } from '../lib/articleRefResolver';
+import { urlArticle } from '../lib/urls';
 
 /**
  * Configuration des codes avec leurs patterns de détection
@@ -261,7 +262,7 @@ export function renderTextWithArticleLinks(
                     articleSlug={article.slug}
                 >
                     <a
-                        href={`/code/${article.code_slug}/${article.slug}`}
+                        href={urlArticle(article.code_slug, article.slug)}
                         target="_blank"
                         rel="noopener noreferrer"
                     >
@@ -320,7 +321,7 @@ export function textToHtmlWithLinks(
         const article = codeMap?.get(articleKey);
 
         if (article) {
-            const link = `<a href="/code/${article.code_slug}/${article.slug}" class="article-link" data-article-id="${article.id}" target="_blank" rel="noopener noreferrer">${c.fullMatch}</a>`;
+            const link = `<a href="${urlArticle(article.code_slug, article.slug)}" class="article-link" data-article-id="${article.id}" target="_blank" rel="noopener noreferrer">${c.fullMatch}</a>`;
             result = result.substring(0, c.index) + link + result.substring(c.index + c.length);
         }
     }

@@ -8,7 +8,9 @@ import LexenegalSymbol from '../../components/LexenegalSymbol/LexenegalSymbol';
 import SEO from '../../components/SEO/SEO';
 import DecisionActions from '../../components/DecisionActions/DecisionActions';
 import ConversionModal from '../../components/ConversionModal/ConversionModal';
-import { textToHtmlWithLinks } from '../../utils/articleLinkRenderer';
+import { findAllArticleCitations, textToHtmlWithLinks } from '../../utils/articleLinkRenderer';
+import { urlArticle } from '../../lib/urls';
+import { chargerArticlesDesCodes } from '../../lib/articlesDuCode';
 import ArticleHoverPreview from '../../components/ArticleHoverPreview/ArticleHoverPreview';
 import { buildCodeIndex, buildSuccessions, codePourDecision, parseCitedString, normalizeToken, normalizeArticleNumber, type ResolvedArticle, type Succession } from '../../lib/articleRefResolver';
 import { getDecisionHtml, isNewFormat } from '../../utils/decisionTextFormatter';
@@ -73,8 +75,28 @@ const DecisionPage: React.FC = () => {
     useEffect(() => {
         if (!slug) return;
         fetchDecision();
-        fetchArticles();
+        fetchCodesIndex();
     }, [slug]);
+
+    // Liens du corps de l'arrêt : on ne charge que les articles des codes RÉELLEMENT cités
+    // dans le texte (motifs de CODE_CONFIG), en lecture paginée. Avant, la page chargeait
+    // tous les articles de la base d'une traite : tronqués en silence à 1 000 lignes, la
+    // plupart des codes n'y figuraient pas et leurs renvois restaient du texte brut.
+    useEffect(() => {
+        setArticles([]);
+        if (!decision) return;
+        const codeSlugs = Array.from(new Set(findAllArticleCitations(getDecisionHtml(decision)).map((c) => c.codeSlug)));
+        if (!codeSlugs.length) return;
+        let active = true;
+        chargerArticlesDesCodes(codeSlugs)
+            .then((arts) => {
+                if (!active) return;
+                setArticles(arts);
+                console.log(`📚 Loaded ${arts.length} articles for hyperlinking (${codeSlugs.join(', ')})`);
+            })
+            .catch((error) => console.error('Error fetching articles:', error));
+        return () => { active = false; };
+    }, [decision]);
 
     // Résout les références citées en liens FIABLES via une requête CIBLÉE (uniquement les
     // codes réellement cités) : pas de plafond 1000, pas de lien mort. Conservateur.
@@ -210,35 +232,10 @@ const DecisionPage: React.FC = () => {
         }
     };
 
-    // Fetch articles from Supabase for hyperlinking
-    const fetchArticles = async () => {
+    // Index des textes et de leurs alias, pour résoudre les références citées en liens fiables
+    // (les articles du corps de l'arrêt sont chargés à part, cf. l'effet sur `decision`).
+    const fetchCodesIndex = async () => {
         try {
-            const { data, error } = await supabase
-                .from('articles')
-                .select(`
-                    id,
-                    article_number,
-                    slug,
-                    laws_and_codes!inner(slug, short_title)
-                `)
-                .order('display_order');
-
-            if (error) {
-                console.error('Error fetching articles:', error);
-                return;
-            }
-
-            if (data) {
-                const formattedArticles: ArticleInfo[] = data.map((art: any) => ({
-                    id: art.id,
-                    article_number: art.article_number,
-                    slug: art.slug,
-                    code_slug: art.laws_and_codes?.slug,
-                    code_name: art.laws_and_codes?.short_title || art.laws_and_codes?.slug
-                }));
-                setArticles(formattedArticles);
-                console.log(`📚 Loaded ${formattedArticles.length} articles for hyperlinking`);
-            }
             // Index générique des codes (extensible) pour résoudre les références citées en liens fiables.
             // Alias d'acronymes = vue DB `code_aliases` (source unique, dérivée de ref_code).
             const [{ data: laws }, { data: aliases }] = await Promise.all([
@@ -252,7 +249,7 @@ const DecisionPage: React.FC = () => {
                 setCodeIndex(buildCodeIndex(laws, (aliases || []).map((a: any) => ({ alias: a.alias, code_slug: a.code_slug }))));
             }
         } catch (error) {
-            console.error('Error in fetchArticles:', error);
+            console.error('Error in fetchCodesIndex:', error);
         }
     };
 
@@ -573,7 +570,7 @@ const DecisionPage: React.FC = () => {
                                                     articleSlug={hit.slug}
                                                 >
                                                     <a
-                                                        href={`/code/${hit.code_slug}/${hit.slug}`}
+                                                        href={urlArticle(hit.code_slug, hit.slug)}
                                                         className="article-link"
                                                         target="_blank"
                                                         rel="noreferrer"

@@ -50,6 +50,31 @@ function loadEnv() {
 const { url: SUPABASE_URL, key: SUPABASE_KEY } = loadEnv();
 const SITE = 'https://www.lexenegal.sn';
 
+/*
+ * Adresses publiques des textes et des articles.
+ * ⛔ COPIE À L'IDENTIQUE de src/lib/urls.ts (règle unique, décision du propriétaire du
+ * 27/09/2026 : conventions collectives sous /ccn/<segment>, « ccn-banques » → /ccn/banques,
+ * « ccni-2019 » → /ccn/ccni-2019 ; le reste sous /code/<slug>). Une fonction Vercel en .js ne
+ * peut pas importer le module TypeScript : toute modification de la règle se reporte ici, dans
+ * api/render.js et dans lexenegal-mcp/src/links.ts. Le test src/lib/__tests__/urlsApi.test.ts
+ * vérifie que les copies répondent comme l'original.
+ */
+export function estConvention(slug) {
+  return /^ccni?-/.test(slug ?? '');
+}
+export function segmentConvention(slug) {
+  return slug.startsWith('ccn-') ? slug.slice(4) : slug;
+}
+export function slugDepuisSegmentCcn(segment) {
+  return /^ccni?-/.test(segment) ? segment : `ccn-${segment}`;
+}
+export function urlTexte(slug) {
+  return estConvention(slug) ? `/ccn/${segmentConvention(slug)}` : `/code/${slug}`;
+}
+export function urlArticle(codeSlug, articleSlug) {
+  return `${urlTexte(codeSlug)}/${articleSlug}`;
+}
+
 // PostgREST plafonne les réponses à 1000 lignes : c'est la taille de pagination
 // imposée côté serveur, pas un choix.
 const ROWS_PER_REQUEST = 1000;
@@ -177,7 +202,7 @@ const SECTIONS = {
     query: Q_ARTICLES,
     rendu: (lignes) => lignes
       .filter((a) => a.slug && a.laws_and_codes?.slug)
-      .map((a) => urlTag(`/code/${a.laws_and_codes.slug}/${a.slug}`, { changefreq: 'monthly', priority: '0.7' })),
+      .map((a) => urlTag(urlArticle(a.laws_and_codes.slug, a.slug), { changefreq: 'monthly', priority: '0.7' })),
   },
   decisions: {
     query: Q_DECISIONS,
@@ -187,7 +212,7 @@ const SECTIONS = {
   codes: {
     query: Q_CODES,
     rendu: (lignes) => lignes.filter((c) => c.slug)
-      .map((c) => urlTag(`/code/${c.slug}`, { date: c.updated_at, changefreq: 'weekly', priority: '0.9' })),
+      .map((c) => urlTag(urlTexte(c.slug), { date: c.updated_at, changefreq: 'weekly', priority: '0.9' })),
   },
   doctrine: {
     query: Q_DOCTRINE,

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Globe2, FileText, ArrowRight, Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { urlTexte } from '../../lib/urls';
 import SEO from '../../components/SEO/SEO';
 import './CommunautairePage.css';
 
@@ -66,7 +67,7 @@ const CommunautairePage: React.FC = () => {
                     ) : (
                         <div className="comm-grid">
                             {actes.map((a) => (
-                                <Link key={a.slug} to={`/code/${a.slug}`} className="comm-card">
+                                <Link key={a.slug} to={urlTexte(a.slug)} className="comm-card">
                                     <span className="comm-card__icon"><FileText size={20} strokeWidth={1.6} /></span>
                                     <span className="comm-card__title">{a.short_title || a.title}</span>
                                     <ArrowRight size={16} className="comm-card__arrow" />

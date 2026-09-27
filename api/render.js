@@ -10,6 +10,8 @@
  *   /decision/:slug              -> /api/render?type=decision&slug=:slug
  *   /code/:slug                  -> /api/render?type=code&slug=:slug
  *   /code/:codeSlug/:articleSlug -> /api/render?type=article&code=:codeSlug&slug=:articleSlug
+ *   /ccn/:segment                -> /api/render?type=code&ccn=:segment
+ *   /ccn/:segment/:articleSlug   -> /api/render?type=article&ccn=:segment&slug=:articleSlug
  */
 import fs from 'fs';
 import path from 'path';
@@ -38,6 +40,31 @@ function loadEnv() {
 const { url: SUPABASE_URL, key: SUPABASE_KEY } = loadEnv();
 const SITE = 'https://www.lexenegal.sn';
 const OG_IMAGE = SITE + '/og-image.svg';
+
+/*
+ * Adresses publiques des textes et des articles.
+ * ⛔ COPIE À L'IDENTIQUE de src/lib/urls.ts (règle unique, décision du propriétaire du
+ * 27/09/2026 : conventions collectives sous /ccn/<segment>, « ccn-banques » → /ccn/banques,
+ * « ccni-2019 » → /ccn/ccni-2019 ; le reste sous /code/<slug>). Une fonction Vercel en .js ne
+ * peut pas importer le module TypeScript : toute modification de la règle se reporte ici, dans
+ * api/sitemap.js et dans lexenegal-mcp/src/links.ts. Le test src/lib/__tests__/urlsApi.test.ts
+ * vérifie que les copies répondent comme l'original.
+ */
+export function estConvention(slug) {
+  return /^ccni?-/.test(slug ?? '');
+}
+export function segmentConvention(slug) {
+  return slug.startsWith('ccn-') ? slug.slice(4) : slug;
+}
+export function slugDepuisSegmentCcn(segment) {
+  return /^ccni?-/.test(segment) ? segment : `ccn-${segment}`;
+}
+export function urlTexte(slug) {
+  return estConvention(slug) ? `/ccn/${segmentConvention(slug)}` : `/code/${slug}`;
+}
+export function urlArticle(codeSlug, articleSlug) {
+  return `${urlTexte(codeSlug)}/${articleSlug}`;
+}
 
 function esc(s) {
   return String(s == null ? '' : s)
@@ -165,7 +192,7 @@ export function buildDecisionBody(d, cited, related) {
     ? `<section class="ssr-cited"><h2>Textes et articles cités</h2><ul>${cited.map((c) => {
         const a = c.article; if (!a || !a.code || !a.code.slug || !a.slug) return '';
         const label = a.num || a.num_court || (a.article_number != null ? `Article ${a.article_number}` : 'Article');
-        return `<li><a href="/code/${esc(a.code.slug)}/${esc(a.slug)}">${esc(label)} - ${esc(a.code.title)}</a></li>`;
+        return `<li><a href="${esc(urlArticle(a.code.slug, a.slug))}">${esc(label)} - ${esc(a.code.title)}</a></li>`;
       }).filter(Boolean).join('')}</ul></section>`
     : '';
   // Décisions liées (decisions_similaires, deux sens) : cibles actives seulement.
@@ -237,7 +264,7 @@ export function buildCodeHead(law, nArticles, canonical) {
 function abrogationBanner(law) {
   if (!law || !law.abrogation_note) return '';
   const link = law.abrogated_by_slug
-    ? ` <a href="/code/${esc(law.abrogated_by_slug)}">Voir le texte en vigueur →</a>` : '';
+    ? ` <a href="${esc(urlTexte(law.abrogated_by_slug))}">Voir le texte en vigueur →</a>` : '';
   return `<div class="ssr-abrogation" style="background:#fef2f2;border:1px solid #fca5a5;border-left:4px solid #dc2626;color:#991b1b;padding:0.85rem 1.1rem;border-radius:8px;margin:0 0 1.25rem;">⛔ ${esc(law.abrogation_note)}${link}</div>`;
 }
 
@@ -247,8 +274,7 @@ function buildRelatedBlock(related) {
   if (!related || !related.length) return '';
   const CAT = { code: 'Code', loi: 'Loi', decret: 'Décret', arrete: 'Arrêté', circulaire: 'Circulaire',
     ohada: 'OHADA', uemoa: 'UEMOA', cima: 'CIMA', convention_collective: 'Convention', jors: 'JO' };
-  const pathFor = (cat, slug) => (cat === 'convention_collective' ? `/convention/${slug}` : `/code/${slug}`);
-  const card = (i) => `<a href="${esc(pathFor(i.category, i.slug))}" class="related-card">`
+  const card = (i) => `<a href="${esc(urlTexte(i.slug))}" class="related-card">`
     + `<span class="related-card__badge">${esc(CAT[i.category] || 'Texte')}</span>`
     + `<span class="related-card__title">${esc(i.short_title || i.title)}</span></a>`;
   const grp = (title, items) => (items.length
@@ -265,7 +291,7 @@ export function buildCodeBody(law, articles, related) {
   const m = codeSeoMeta(law);
   const links = (articles || []).map((a) => {
     const label = a.num || a.num_court || (a.article_number != null ? `Article ${a.article_number}` : a.slug);
-    return `<li><a href="/code/${esc(law.slug)}/${esc(a.slug)}">${esc(label)}</a></li>`;
+    return `<li><a href="${esc(urlArticle(law.slug, a.slug))}">${esc(label)}</a></li>`;
   }).join('\n');
   const n = articles && articles.length ? articles.length : 0;
   // Chapô SEO : référence + date de publication (données vérifiées en base)
@@ -292,6 +318,13 @@ export function buildCodeBody(law, articles, related) {
 }
 
 /* ---------- ARTICLE de loi ---------- */
+// Premier maillon du fil d'Ariane d'un article : la liste dont le texte fait partie.
+// Doit rester identique au fil d'Ariane de src/pages/Code/ArticlePage.tsx.
+function racineFilAriane(slug) {
+  return estConvention(slug)
+    ? { nom: 'Conventions collectives', url: '/conventions-collectives' }
+    : { nom: 'Codes et textes', url: '/codes' };
+}
 export function buildArticleHead(law, art, canonical, plain) {
   const numLabel = art.num || art.num_court || (art.article_number != null ? `Article ${art.article_number}` : 'Article');
   const title = `${numLabel} - ${law.title} | Lexenegal`;
@@ -302,19 +335,21 @@ export function buildArticleHead(law, art, canonical, plain) {
     '@context': 'https://schema.org', '@type': 'Legislation', name: `${numLabel} - ${law.title}`,
     legislationIdentifier: String(art.article_number != null ? art.article_number : numLabel),
     inLanguage: 'fr',
-    isPartOf: { '@type': 'Legislation', name: law.title, url: `${SITE}/code/${law.slug}` },
+    isPartOf: { '@type': 'Legislation', name: law.title, url: `${SITE}${urlTexte(law.slug)}` },
     legislationJurisdiction: { '@type': 'AdministrativeArea', name: 'Sénégal' }, url: canonical,
   };
   /*
    * BreadcrumbList : trois niveaux seulement (Codes › Code › Article). Les
    * niveaux du plan sont volontairement exclus car Google exige une URL « item »
    * pour tout maillon intermédiaire, et un chapitre n'a pas d'URL propre.
+   * Pour une convention collective, le premier maillon est la liste des conventions.
    */
+  const racine = racineFilAriane(law.slug);
   const filAriane = {
     '@context': 'https://schema.org', '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Codes et textes', item: `${SITE}/codes` },
-      { '@type': 'ListItem', position: 2, name: law.title, item: `${SITE}/code/${law.slug}` },
+      { '@type': 'ListItem', position: 1, name: racine.nom, item: `${SITE}${racine.url}` },
+      { '@type': 'ListItem', position: 2, name: law.title, item: `${SITE}${urlTexte(law.slug)}` },
       { '@type': 'ListItem', position: 3, name: numLabel, item: canonical },
     ],
   };
@@ -328,7 +363,7 @@ export function buildArticleHead(law, art, canonical, plain) {
  * au crawler — qui ne montrait que « Code › Article N ».
  *
  * Rendu en TEXTE, volontairement pas en liens : la seule URL de chapitre qui
- * existe est /code/:slug?node=… , or ces URL sont des doublons de la page du
+ * existe est /code/:slug?node=… (/ccn/… pour une convention), or ces URL sont des doublons de la page du
  * code (elles figurent telles quelles dans le rapport « Duplicate without
  * user-selected canonical » de Search Console). Y pousser 17 000 liens
  * aggraverait le problème qu'on vient de corriger. Seuls « précédent » et
@@ -393,7 +428,7 @@ export function buildArticleBody(law, art, contentHtml, citing, chemin, voisins)
   // Précédent / suivant : chaîne les articles entre eux. Sans ça la page est un
   // cul-de-sac, atteignable seulement depuis la liste de la page du code.
   const lien = (a, sens, fleche) => (a && a.slug)
-    ? `<a href="/code/${esc(law.slug)}/${esc(a.slug)}" rel="${sens}">${esc(fleche === 'g' ? '← ' : '')}${esc(a.num || a.num_court || (a.article_number != null ? `Article ${a.article_number}` : 'Article'))}${esc(fleche === 'd' ? ' →' : '')}</a>`
+    ? `<a href="${esc(urlArticle(law.slug, a.slug))}" rel="${sens}">${esc(fleche === 'g' ? '← ' : '')}${esc(a.num || a.num_court || (a.article_number != null ? `Article ${a.article_number}` : 'Article'))}${esc(fleche === 'd' ? ' →' : '')}</a>`
     : '';
   const prec = lien(voisins && voisins.prec, 'prev', 'g');
   const suiv = lien(voisins && voisins.suiv, 'next', 'd');
@@ -403,7 +438,7 @@ export function buildArticleBody(law, art, contentHtml, citing, chemin, voisins)
 
   // contentHtml = HTML déjà généré par notre pipeline (de confiance) -> injecté tel quel
   return wrapContent(`<article>
-    <nav class="ssr-bc" aria-label="Fil d'Ariane"><a href="/code/${esc(law.slug)}">${esc(law.title)}</a>${cheminHtml} › ${esc(numLabel)}</nav>
+    <nav class="ssr-bc" aria-label="Fil d'Ariane"><a href="${esc(urlTexte(law.slug))}">${esc(law.title)}</a>${cheminHtml} › ${esc(numLabel)}</nav>
     ${abrogationBanner(law)}
     <h1>${esc(numLabel)}</h1>
     <div class="ssr-article-body">${contentHtml || `<p>Texte de l'article non disponible.</p>`}</div>
@@ -457,7 +492,7 @@ export function buildHomeHead(canonical) {
   return headBlock({ title, description, keywords, canonical, ogType: 'website', schema });
 }
 export function buildHomeBody(codes) {
-  const items = (codes || []).map((c) => `<li><a href="/code/${esc(c.slug)}">${esc(c.short_title || c.title)}</a></li>`).join('\n');
+  const items = (codes || []).map((c) => `<li><a href="${esc(urlTexte(c.slug))}">${esc(c.short_title || c.title)}</a></li>`).join('\n');
   const nav = items ? `<nav class="ssr-home-codes" aria-label="Codes"><h2>Codes et textes en consultation</h2><ul>${items}</ul></nav>` : '';
   return wrapContent(`<article>
     <h1>Lexenegal - la mémoire juridique du Sénégal</h1>
@@ -479,12 +514,12 @@ export function buildCodesBody(texts) {
   const groups = {};
   (texts || []).forEach((t) => { const k = String(t.category || 'code').toLowerCase(); (groups[k] = groups[k] || []).push(t); });
   const sections = order.filter((k) => groups[k] && groups[k].length).map((k) => {
-    const items = groups[k].map((c) => `<li><a href="/code/${esc(c.slug)}">${esc(c.short_title || c.title)}</a></li>`).join('\n');
+    const items = groups[k].map((c) => `<li><a href="${esc(urlTexte(c.slug))}">${esc(c.short_title || c.title)}</a></li>`).join('\n');
     return `<section><h2>${esc(CAT_LABELS[k] || k)}</h2><ul>${items}</ul></section>`;
   }).join('\n');
   // catégories hors liste connue (au cas où), placées en fin
   const extra = Object.keys(groups).filter((k) => !order.includes(k)).map((k) => {
-    const items = groups[k].map((c) => `<li><a href="/code/${esc(c.slug)}">${esc(c.short_title || c.title)}</a></li>`).join('\n');
+    const items = groups[k].map((c) => `<li><a href="${esc(urlTexte(c.slug))}">${esc(c.short_title || c.title)}</a></li>`).join('\n');
     return `<section><h2>${esc(k)}</h2><ul>${items}</ul></section>`;
   }).join('\n');
   return wrapContent(`<article>
@@ -598,7 +633,7 @@ export function buildThemeBody(data) {
     </li>`;
   }).join('\n');
   const arts = (data.articles || []).map((a) =>
-    `<li><a href="/code/${esc(a.code_slug)}/${esc(a.article_slug)}">${esc(a.article_label)} - ${esc(a.code_title)}</a> <span class="ssr-theme-art-n">(cité par ${a.n} décision${a.n > 1 ? 's' : ''})</span></li>`
+    `<li><a href="${esc(urlArticle(a.code_slug, a.article_slug))}">${esc(a.article_label)} - ${esc(a.code_title)}</a> <span class="ssr-theme-art-n">(cité par ${a.n} décision${a.n > 1 ? 's' : ''})</span></li>`
   ).join('\n');
   const faq = Array.isArray(t.faq) ? t.faq.filter((f) => f && f.q && f.a) : [];
   const faqHtml = faq.length
@@ -801,8 +836,20 @@ async function fetchThemePage(slug) {
 async function fetchLaw(slug) {
   return one(await sb(`laws_and_codes?slug=eq.${encodeURIComponent(slug)}&select=id,title,short_title,category,slug,reference,publication_date,description,abrogation_note,abrogated_by_slug&limit=1`));
 }
+/*
+ * Liste des articles d'un texte, PAGINÉE : PostgREST plafonne chaque réponse à 1 000 lignes en
+ * silence (l'ancien « limit=3000 » n'y changeait rien : l'AUSCGIE, 1 104 articles, perdait ses
+ * 104 derniers). Ordre total display_order puis id, sinon deux pages peuvent sauter ou doubler
+ * des articles de même rang.
+ */
+const PAGE_POSTGREST = 1000;
 async function fetchCodeArticles(codeId) {
-  return sb(`articles?code_id=eq.${codeId}&select=num,num_court,article_number,slug&order=display_order&limit=3000`);
+  const lignes = [];
+  for (let offset = 0; ; offset += PAGE_POSTGREST) {
+    const page = await sb(`articles?code_id=eq.${codeId}&select=num,num_court,article_number,slug&order=display_order,id&offset=${offset}&limit=${PAGE_POSTGREST}`);
+    lignes.push(...page);
+    if (page.length < PAGE_POSTGREST) return lignes;
+  }
 }
 // Textes & codes liés (legal_edge relation lie_a, bidirectionnel) pour le SSR/SEO.
 async function fetchRelatedTexts(codeId) {
@@ -824,14 +871,15 @@ async function fetchStructureNodes(codeId) {
     return await sb(`structure_nodes?code_id=eq.${codeId}&select=id,parent_id,type,numero,intitule,label&limit=5000`);
   } catch (e) { return []; }
 }
-// Article précédent et suivant, selon l'ordre d'affichage du code.
-async function fetchVoisins(codeId, ordre) {
+// Article précédent et suivant, selon l'ordre d'affichage du code (display_order, puis id pour
+// départager les articles de même rang : sans ce départage, ils étaient sautés).
+async function fetchVoisins(codeId, ordre, artId) {
   if (ordre == null) return { prec: null, suiv: null };
   const champs = 'slug,num,num_court,article_number';
   try {
     const [prec, suiv] = await Promise.all([
-      sb(`articles?code_id=eq.${codeId}&display_order=lt.${ordre}&select=${champs}&order=display_order.desc&limit=1`),
-      sb(`articles?code_id=eq.${codeId}&display_order=gt.${ordre}&select=${champs}&order=display_order.asc&limit=1`),
+      sb(`articles?code_id=eq.${codeId}&or=(display_order.lt.${ordre},and(display_order.eq.${ordre},id.lt.${artId}))&select=${champs}&order=display_order.desc,id.desc&limit=1`),
+      sb(`articles?code_id=eq.${codeId}&or=(display_order.gt.${ordre},and(display_order.eq.${ordre},id.gt.${artId}))&select=${champs}&order=display_order.asc,id.asc&limit=1`),
     ]);
     return { prec: one(prec), suiv: one(suiv) };
   } catch (e) { return { prec: null, suiv: null }; }
@@ -955,25 +1003,36 @@ export default async function handler(req, res) {
     }
 
     if (type === 'code') {
-      const slug = q.slug;
+      // /ccn/:segment (convention collective) ou /code/:slug : même page, slug en base retrouvé.
+      const slug = q.ccn ? slugDepuisSegmentCcn(q.ccn) : q.slug;
       if (!slug) return serveShell();
+      // Une seule adresse publique par texte : une ancienne forme (/code/ccn-…, /ccn/ccn-…),
+      // normalement déjà redirigée par vercel.json, ne doit jamais servir une page en 200.
+      const recue = q.ccn ? `/ccn/${q.ccn}` : `/code/${slug}`;
+      if (recue !== urlTexte(slug)) return serve301(`${SITE}${urlTexte(slug)}`);
       let law = null;
       try { law = await fetchLaw(slug); } catch (e) { return serve503(); }
       if (!law) return serveShell(60, true);
       let articles = [];
       try { articles = await fetchCodeArticles(law.id); } catch (e) { /* */ }
       const related = await fetchRelatedTexts(law.id);
-      const canonical = `${SITE}/code/${slug}`;
+      const canonical = `${SITE}${urlTexte(slug)}`;
       return serveHtml(buildCodeHead(law, articles.length, canonical), buildCodeBody(law, articles, related));
     }
 
     if (type === 'article') {
-      const codeSlug = q.code, artSlug = q.slug;
+      // /ccn/:segment/:article (convention collective) ou /code/:code/:article.
+      const codeSlug = q.ccn ? slugDepuisSegmentCcn(q.ccn) : q.code, artSlug = q.slug;
       if (!codeSlug || !artSlug) return serveShell();
+      // Adresse publique d'un article, segments encodés (le slug d'article peut porter un espace).
+      const adresseArticle = (art) => `${SITE}${urlTexte(codeSlug)}/${encodeURIComponent(art)}`;
       // Anciens slugs avec espaces (ex. « article-307 bis ») : 301 vers la forme tiretée.
       if (/\s/.test(artSlug)) {
-        return serve301(`${SITE}/code/${encodeURIComponent(codeSlug)}/${encodeURIComponent(artSlug.replace(/\s+/g, '-'))}`);
+        return serve301(adresseArticle(artSlug.replace(/\s+/g, '-')));
       }
+      // Ancienne forme d'adresse du texte (/code/ccn-…, /ccn/ccn-…) : 301 vers la forme publique.
+      const recue = q.ccn ? `/ccn/${q.ccn}` : `/code/${codeSlug}`;
+      if (recue !== urlTexte(codeSlug)) return serve301(adresseArticle(artSlug));
       let law = null;
       try { law = await fetchLaw(codeSlug); } catch (e) { return serve503(); }
       if (!law) return serveShell(60, true);
@@ -986,7 +1045,7 @@ export default async function handler(req, res) {
           const short = artSlug.slice(codeSlug.length + 1);
           let alt = null;
           try { alt = await fetchArticle(law.id, short); } catch (e) { /* */ }
-          if (alt) return serve301(`${SITE}/code/${encodeURIComponent(codeSlug)}/${encodeURIComponent(short)}`);
+          if (alt) return serve301(adresseArticle(short));
         }
         return serveShell(60, true);
       }
@@ -997,10 +1056,10 @@ export default async function handler(req, res) {
         art.content_html ? Promise.resolve(art.content_html) : fetchCurrentVersion(art.id),
         fetchCitingDecisions(art.id),
         art.node_id ? fetchStructureNodes(law.id) : Promise.resolve([]),
-        fetchVoisins(law.id, art.display_order),
+        fetchVoisins(law.id, art.display_order, art.id),
       ]);
       const chemin = cheminDansLePlan(art.node_id, noeuds);
-      const canonical = `${SITE}/code/${codeSlug}/${artSlug}`;
+      const canonical = `${SITE}${urlArticle(codeSlug, artSlug)}`;
       return serveHtml(buildArticleHead(law, art, canonical, stripHtml(content)), buildArticleBody(law, art, content, citing, chemin, voisins));
     }
 

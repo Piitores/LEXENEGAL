@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
+import { urlTexte } from '../../lib/urls';
 import {
     Scale, BookOpen, Users, Building, Briefcase, Radio, Pickaxe,
     FileText, ChevronRight, Loader2, Gavel, Landmark,
@@ -53,7 +54,7 @@ const FALLBACK_BRANCHE: Branche = {
 // Composant Card pour un texte (reçoit sa branche résolue -> icône + couleur)
 const CodeCard: React.FC<{ code: LawCode; branche: Branche }> = ({ code, branche }) => {
     const IconComponent = iconFor(branche.icon);
-    const linkPath = code.slug === 'doctrine-fiscale' ? '/doctrine-fiscale' : `/code/${code.slug}`;
+    const linkPath = code.slug === 'doctrine-fiscale' ? '/doctrine-fiscale' : urlTexte(code.slug);
 
     return (
         <Link to={linkPath} className="code-card-v2">
@@ -301,7 +302,7 @@ const CodesListPage: React.FC = () => {
                                                 {themeCodes.map(code => (
                                                     <Link
                                                         key={code.id}
-                                                        to={code.slug === 'doctrine-fiscale' ? '/doctrine-fiscale' : `/code/${code.slug}`}
+                                                        to={code.slug === 'doctrine-fiscale' ? '/doctrine-fiscale' : urlTexte(code.slug)}
                                                         className="theme-code-link"
                                                     >
                                                         <FileText size={16} />

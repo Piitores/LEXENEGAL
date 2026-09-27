@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Link2, BookOpen, FileText } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { urlTexte } from '../../lib/urls';
 import './RelatedTexts.css';
 
 interface RelatedItem {
@@ -17,10 +18,6 @@ const CAT_LABELS: Record<string, string> = {
     circulaire: 'Circulaire', ohada: 'OHADA', uemoa: 'UEMOA', cima: 'CIMA',
     convention_collective: 'Convention', jors: 'JO',
 };
-
-function pathFor(cat: string, slug: string): string {
-    return cat === 'convention_collective' ? `/convention/${slug}` : `/code/${slug}`;
-}
 
 /**
  * Bloc « Textes & codes liés » en bas d'une page de texte. Lit les arêtes
@@ -60,7 +57,7 @@ const RelatedTexts: React.FC<{ codeId?: string | null }> = ({ codeId }) => {
     const textes = items.filter((i) => i.category !== 'code');
 
     const card = (i: RelatedItem) => (
-        <Link key={i.id} to={pathFor(i.category, i.slug)} className="related-card">
+        <Link key={i.id} to={urlTexte(i.slug)} className="related-card">
             <span className="related-card__badge">{CAT_LABELS[i.category] || 'Texte'}</span>
             <span className="related-card__title">{i.short_title || i.title}</span>
         </Link>

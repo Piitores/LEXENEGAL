@@ -4,6 +4,7 @@ import { ArrowRight, FileText } from 'lucide-react';
 import {
     badgePour, fetchRecentPublications, metaPour, type RecentPublication,
 } from '../../lib/homeStats';
+import { urlTexte } from '../../lib/urls';
 import './RecentlyPublished.css';
 
 /**
@@ -50,7 +51,7 @@ const RecentlyPublished: React.FC = () => {
 
                 <div className="recent__grid">
                     {(items ?? []).map((item) => (
-                        <Link key={item.slug} to={`/code/${item.slug}`} className="recent-card">
+                        <Link key={item.slug} to={urlTexte(item.slug)} className="recent-card">
                             <span className="recent-card__badge">{badgePour(item.category)}</span>
                             <span className="recent-card__icon"><FileText size={18} strokeWidth={1.6} /></span>
                             <h3 className="recent-card__title">{item.titre}</h3>

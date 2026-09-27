@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
+import { urlArticle } from '../../lib/urls';
 import { Loader2, Scale, FileText, BookOpen, HelpCircle } from 'lucide-react';
 import './ThemePage.css';
 
@@ -129,7 +130,7 @@ const ThemePage: React.FC = () => {
                         <ul className="theme-page__articles">
                             {articles.map((a) => (
                                 <li key={`${a.code_slug}/${a.article_slug}`}>
-                                    <Link to={`/code/${a.code_slug}/${a.article_slug}`}>
+                                    <Link to={urlArticle(a.code_slug, a.article_slug)}>
                                         {a.article_label} - {a.code_title}
                                     </Link>
                                     <span className="theme-page__article-count">

@@ -18,6 +18,7 @@ import {
     Ban, Eye, EyeOff, KeyRound, Plus, Copy, Activity
 } from 'lucide-react';
 import UsageTab, { type UsageStats } from './UsageTab';
+import { urlTexte } from '../../lib/urls';
 import { STATUT_CLE, formatDateFr, statutCle } from './usageFormat';
 import './AdminPage.css';
 
@@ -416,7 +417,7 @@ const AdminPage: React.FC = () => {
                             <tbody>
                                 {content.map(item => (
                                     <tr key={item.id} className={item.is_active ? '' : 'row-suspended'}>
-                                        <td><a href={`/code/${item.slug}`} target="_blank" rel="noreferrer">{item.title}</a></td>
+                                        <td><a href={urlTexte(item.slug)} target="_blank" rel="noreferrer">{item.title}</a></td>
                                         <td><span className="cat-badge">{item.category}</span></td>
                                         <td>{item.is_active
                                             ? <span className="report-status report-status--resolved">En ligne</span>
