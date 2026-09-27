@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Search, Scale, BookOpen, ArrowRight, Loader2 } from 'lucide-react';
+import { Search, Scale, BookOpen, Library, ArrowRight, Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import { articleLabel } from '../../lib/articleLabel';
+import { resultatsApercu, type ResultatApercu } from '../../lib/recherche';
 import HeroSenegalStatic from './HeroSenegalStatic';
 import CanvasBoundary from './CanvasBoundary';
 import './Hero.css';
@@ -11,21 +11,10 @@ import './Hero.css';
 const HeroCanvas = lazy(() => import('./HeroCanvas'));
 
 
-interface SearchResult {
-  type: 'decision' | 'article';
-  id: string;
-  title: string;
-  subtitle: string;
-  slug: string;
-  codeSlug?: string;
-  /** Article abrogé (d'après `articles.status`) : signalé dans l'aperçu comme sur /search. */
-  estAbroge?: boolean;
-}
-
 function Hero() {
   const [query, setQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
-  const [results, setResults] = useState<SearchResult[]>([]);
+  const [results, setResults] = useState<ResultatApercu[]>([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -94,86 +83,26 @@ function Hero() {
     };
   }, [query]);
 
+  // Aperçu : UN appel (search_apercu) au lieu de deux moteurs (search_decisions_fts +
+  // search_articles + requête de statut). La base propose d'abord le texte nommé dans la
+  // saisie (« code pénal », « AUSCGIE »), complète le mot en cours de frappe (« licenciem »)
+  // et signale les textes et articles abrogés. Audit de la recherche du 27/09/2026.
   const performSearch = async (searchQuery: string) => {
     // Chaque frappe relance une recherche : seule la plus récente a le droit d'afficher.
     const requete = ++derniereRequeteRef.current;
     setLoading(true);
-    const mixedResults: SearchResult[] = [];
-
     try {
-      // 1. Search Decisions (Supabase FTS)
-      if (supabase) {
-        try {
-          const { data: decisions, error } = await supabase
-            .rpc('search_decisions_fts', {
-              search_query: searchQuery,
-              result_limit: 10
-            });
-
-          if (!error && decisions) {
-            // Take top 4 decisions
-            decisions.slice(0, 4).forEach((hit: any) => {
-              mixedResults.push({
-                type: 'decision',
-                id: hit.id,
-                title: hit.reference || 'Décision',
-                subtitle: `${hit.chambre || hit.juridiction || 'Juridiction'} · ${hit.date_decision ? new Date(hit.date_decision).getFullYear() : ''}`,
-                slug: hit.slug || hit.id,
-              });
-            });
-          }
-        } catch (e) {
-          console.warn('Supabase decisions search error:', e);
-        }
-      }
-
-      // 2. Search Articles (Supabase FTS)
-      if (supabase) {
-        try {
-          const { data: articles, error } = await supabase
-            .rpc('search_articles', {
-              search_query: searchQuery,
-              result_limit: 4
-            });
-
-          if (!error && articles) {
-            // Sans code connu, pas de lien (l'ancien repli visait le Code du travail de 1997, abrogé).
-            const hits = articles.filter((hit: any) => hit.code_slug && hit.slug);
-            // Articles ABROGÉS : même requête complémentaire que la page /search. Sans ce
-            // signal, l'aperçu présente un article abrogé comme du droit en vigueur.
-            let abroges = new Set<string>();
-            if (hits.length) {
-              try {
-                const { data: st } = await supabase
-                  .from('articles')
-                  .select('id')
-                  .in('id', hits.map((h: any) => h.id))
-                  .eq('status', 'abrogé');
-                abroges = new Set((st || []).map((r: any) => r.id));
-              } catch (e) {
-                console.warn('statut abrogation non récupéré:', e);
-              }
-            }
-            hits.forEach((hit: any) => {
-              mixedResults.push({
-                type: 'article',
-                id: hit.id,
-                title: articleLabel({ article_number: hit.article_number }),
-                subtitle: hit.code_title || 'Code',
-                slug: hit.slug,
-                codeSlug: hit.code_slug,
-                estAbroge: abroges.has(hit.id),
-              });
-            });
-          }
-        } catch (e) {
-          console.warn('Supabase articles search error:', e);
-        }
-      }
-
-      if (requete === derniereRequeteRef.current) setResults(mixedResults);
+      const { data, error } = await supabase.rpc('search_apercu', {
+        search_query: searchQuery,
+        n_decisions: 4,
+        n_articles: 4,
+      });
+      if (requete !== derniereRequeteRef.current) return;
+      if (error) console.warn('aperçu de recherche indisponible:', error);
+      setResults(error ? [] : resultatsApercu(data));
     } catch (error) {
       console.error('Search error:', error);
+      if (requete === derniereRequeteRef.current) setResults([]);
     } finally {
       if (requete === derniereRequeteRef.current) setLoading(false);
     }
@@ -195,12 +124,9 @@ function Hero() {
     }
   };
 
-  const handleResultClick = (result: SearchResult) => {
-    if (result.type === 'decision') {
-      navigate(`/decision/${result.slug}`);
-    } else {
-      navigate(`/code/${result.codeSlug}/${result.slug}`);
-    }
+  // Adresses construites par la règle unique (src/lib/urls.ts) : conventions sous /ccn/.
+  const handleResultClick = (result: ResultatApercu) => {
+    navigate(result.href);
   };
 
   return (
@@ -274,6 +200,8 @@ function Hero() {
                         <span className="spotlight__result-icon">
                           {result.type === 'decision' ? (
                             <Scale size={16} />
+                          ) : result.type === 'texte' ? (
+                            <Library size={16} />
                           ) : (
                             <BookOpen size={16} />
                           )}
@@ -283,12 +211,12 @@ function Hero() {
                           <span className="spotlight__result-subtitle">
                             {result.subtitle}
                             {result.estAbroge && (
-                              <span className="spotlight__abroge" title="Cet article a été abrogé">Abrogé</span>
+                              <span className="spotlight__abroge" title={result.type === 'texte' ? 'Ce texte a été abrogé' : 'Cet article a été abrogé'}>Abrogé</span>
                             )}
                           </span>
                         </div>
                         <span className={`spotlight__result-badge ${result.type}`}>
-                          {result.type === 'decision' ? '⚖️' : '📖'}
+                          {result.type === 'decision' ? '⚖️' : result.type === 'texte' ? '📚' : '📖'}
                         </span>
                       </button>
                     ))}
