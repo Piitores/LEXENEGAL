@@ -51,6 +51,18 @@ const VERIFIED_CRAWLERS = [
 
 const SUSPICIOUS_UA = ['headless', 'phantom', 'selenium', 'puppeteer', 'playwright'];
 
+/**
+ * Agent automatisé (robot d'indexation vérifié, navigateur piloté, ou UA de robot générique).
+ * Sert à NE PAS journaliser leurs « recherches » : Googlebot suit les liens /search?q=<thème>
+ * des pages thèmes et faussait les statistiques (audit du 27/09/2026).
+ */
+export function isAutomatedAgent(userAgent: string): boolean {
+    const ua = (userAgent || '').toLowerCase();
+    return VERIFIED_CRAWLERS.some((c) => ua.includes(c))
+        || SUSPICIOUS_UA.some((s) => ua.includes(s))
+        || /\b(bot|crawler|spider|slurp|lighthouse|facebookexternalhit)\b|bot\//i.test(ua);
+}
+
 /* Seuil : 2 signaux ou plus = navigateur automatisé probable. */
 export const BOT_THRESHOLD = 2;
 

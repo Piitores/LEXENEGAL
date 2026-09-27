@@ -341,6 +341,22 @@
   color: #6B7280;
 }
 
+/* Article ABROGÉ dans l'aperçu : même signal rouge que le badge de /search et le
+   bandeau de la page article. */
+.spotlight__abroge {
+  margin-left: 6px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #991b1b;
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  padding: 0 0.3rem;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
 .spotlight__result-badge {
   font-size: 1.1rem;
   flex-shrink: 0;

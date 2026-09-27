@@ -205,9 +205,12 @@ const DeveloppeursPage: React.FC = () => {
                         </div>
                     ))}
                     <p className="dev-note">
-                        Un article se désigne par son code et son numéro — le nom
+                        Un article se désigne par son code et son numéro : le nom
                         (<code>code du travail</code>), le sigle (<code>CT</code>) ou l’identifiant
-                        d’URL (<code>code-travail</code>) fonctionnent tous. Une décision se désigne
+                        d’URL (<code>code-travail-2026</code>) fonctionnent tous. Sans précision,
+                        « code du travail » et <code>CT</code> désignent le code en vigueur ; le code
+                        abrogé de 1997 se désigne par <code>CT 1997</code>, par l’identifiant
+                        <code>code-travail</code> ou par un numéro en « L. ». Une décision se désigne
                         par l’identifiant qui figure dans son adresse sur lexenegal.sn.
                     </p>
                 </section>

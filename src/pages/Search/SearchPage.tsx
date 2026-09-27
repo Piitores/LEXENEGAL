@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { articleLabel } from '../../lib/articleLabel';
+import { isAutomatedAgent } from '../../lib/botDetect';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import './SearchPage.css';
@@ -38,6 +39,16 @@ interface ArticleHit {
     est_abroge?: boolean;
 }
 
+/** Bilan d'un pilier de la recherche fédérée, pour le journal (`search_events`). */
+interface BilanPilier {
+    n: number;
+    mode: 'hybrid' | 'fts' | null;
+    ok: boolean;
+    /** Instant (performance.now) où le pilier a fini : la latence journalisée n'inclut pas les suggestions. */
+    fin?: number;
+}
+const BILAN_VIDE: BilanPilier = { n: 0, mode: null, ok: true };
+
 type BestMatch =
     | { kind: 'article'; article_number: string; slug: string; code_slug: string; code_title: string }
     | { kind: 'decision'; reference: string; slug: string; date_decision: string; chambre: string; juridiction: string };
@@ -68,6 +79,9 @@ const SearchPage: React.FC = () => {
     const userPickedTab = useRef(false);
     // Analytics : dernier terme déjà loggé (évite de logger 2× la même requête).
     const loggedQueryRef = useRef<string>('');
+    // Requête actuellement affichée : une recherche terminée n'est journalisée que si
+    // l'utilisateur ne l'a pas remplacée entre-temps (pas de bribes de frappe dans le journal).
+    const latestQueryRef = useRef<string>('');
     // Mode effectif de la dernière recherche par pilier ('hybrid' via edge function, sinon 'fts' fallback).
     const doctrineModeRef = useRef<'hybrid' | 'fts'>('fts');
     const articleModeRef = useRef<'hybrid' | 'fts'>('fts');
@@ -166,6 +180,8 @@ const SearchPage: React.FC = () => {
     };
 
 
+    useEffect(() => { latestQueryRef.current = (query || '').trim(); }, [query]);
+
     // Sync URL param
     useEffect(() => {
         setQuery(queryParam);
@@ -179,10 +195,10 @@ const SearchPage: React.FC = () => {
     // perf 2026-07-27. Chaque pilier garde son repli FTS INDÉPENDANT : si
     // l'hybride échoue pour lui seul, on retombe sur sa RPC FTS sans pénaliser
     // les autres. `hybridRows === null` = pas de résultat hybride → repli.
-    const applyArticles = async (term: string, hybridRows: any[] | null) => {
+    const applyArticles = async (term: string, hybridRows: any[] | null): Promise<BilanPilier> => {
+        let mode: 'hybrid' | 'fts' = 'hybrid';
         try {
             let rows = hybridRows;
-            let mode: 'hybrid' | 'fts' = 'hybrid';
             if (rows === null) {
                 mode = 'fts';
                 const { data, error } = await supabase.rpc('search_articles', {
@@ -193,11 +209,13 @@ const SearchPage: React.FC = () => {
                 rows = data || [];
             }
             articleModeRef.current = mode;
-            const hits: ArticleHit[] = (rows || []).map((a: any) => ({
+            // Sans code connu, pas de lien : jamais de renvoi par défaut vers un code
+            // (l'ancien repli visait le Code du travail de 1997, abrogé).
+            const hits: ArticleHit[] = (rows || []).filter((a: any) => a.code_slug && a.slug).map((a: any) => ({
                 id: a.id,
                 article_number: a.article_number,
                 slug: a.slug,
-                code_slug: a.code_slug || 'code-travail',
+                code_slug: a.code_slug,
                 code_title: a.code_title || 'Code',
                 content: a.content || ''
             }));
@@ -222,18 +240,20 @@ const SearchPage: React.FC = () => {
                 }
             }
             setArticleResults(hits);
+            return { n: hits.length, mode, ok: true, fin: performance.now() };
         } catch (e) {
             setArticleResults([]);
             console.warn('search articles error:', e);
+            return { n: 0, mode, ok: false, fin: performance.now() };
         } finally {
             setArticlesLoading(false);
         }
     };
 
-    const applyDoctrine = async (term: string, hybridRows: any[] | null) => {
+    const applyDoctrine = async (term: string, hybridRows: any[] | null): Promise<BilanPilier> => {
+        let mode: 'hybrid' | 'fts' = 'hybrid';
         try {
             let rows = hybridRows;
-            let mode: 'hybrid' | 'fts' = 'hybrid';
             if (rows === null) {
                 mode = 'fts';
                 const { data, error } = await supabase.rpc('search_doctrine', {
@@ -245,9 +265,11 @@ const SearchPage: React.FC = () => {
             }
             doctrineModeRef.current = mode;
             setDoctrineResults((rows || []) as DoctrineHit[]);
+            return { n: (rows || []).length, mode, ok: true, fin: performance.now() };
         } catch (e) {
             setDoctrineResults([]);
             console.warn('search doctrine error:', e);
+            return { n: 0, mode, ok: false, fin: performance.now() };
         } finally {
             setDoctrineLoading(false);
         }
@@ -293,38 +315,57 @@ const SearchPage: React.FC = () => {
         return () => { active = false; };
     }, [query]);
 
-    // Analytics requêtable (search_events) : on logge chaque recherche UNE fois, une fois
-    // les compteurs des 4 piliers stabilisés (1,2 s sans changement). Fire-and-forget :
-    // n'attend rien, ignore les erreurs - ne doit jamais gêner la recherche.
-    useEffect(() => {
-        const term = (query || '').trim();
+    // Analytics requêtable (search_events) : UNE écriture par recherche, à la FIN de la
+    // recherche fédérée (les 3 piliers terminés), avec le mode réellement employé, la durée
+    // mesurée et un statut. L'ancienne version écrivait 1,2 s après la frappe, souvent AVANT
+    // les résultats : 44 % de faux « zéro résultat » sur 90 jours (audit du 27/09/2026).
+    // Série marquée `v: 2`. Fire-and-forget : ne doit jamais gêner la recherche.
+    const journaliserRecherche = (
+        term: string,
+        t0: number,
+        decisions: BilanPilier & { plus: boolean },
+        articles: BilanPilier,
+        doctrine: BilanPilier,
+        statut: 'ok' | 'erreur' | 'delai',
+        filtres: number,
+    ) => {
         if (term.length < 3) return;
-        const timer = setTimeout(() => {
-            if (loggedQueryRef.current === term) return; // déjà loggé ce terme
+        if (typeof navigator !== 'undefined' && isAutomatedAgent(navigator.userAgent || '')) return;
+        // Fin de la recherche = le plus tardif des trois piliers (hors suggestions « Vouliez-vous dire »).
+        const fin = Math.max(decisions.fin ?? 0, articles.fin ?? 0, doctrine.fin ?? 0) || performance.now();
+        const latence = Math.round(fin - t0);
+        // On laisse passer la frappe : seule la requête restée affichée 1 s est journalisée.
+        setTimeout(() => {
+            if (latestQueryRef.current !== term || loggedQueryRef.current === term) return;
             loggedQueryRef.current = term;
-            const total = totalHits + articleResults.length + doctrineResults.length;
-            const modes = [decisionsModeRef.current, articleModeRef.current, doctrineModeRef.current];
-            const globalMode = modes.every((m) => m === 'hybrid')
-                ? 'hybrid'
-                : modes.every((m) => m === 'fts') ? 'fts' : 'mixed';
+            const modes = [decisions.mode, articles.mode, doctrine.mode].filter(Boolean);
+            const globalMode = modes.length === 0
+                ? null
+                : modes.every((m) => m === 'hybrid') ? 'hybrid' : modes.every((m) => m === 'fts') ? 'fts' : 'mixed';
             void supabase.rpc('log_search_event', {
                 p_source: 'front',
                 p_query: term,
                 p_surface: 'all',
                 p_mode: globalMode,
-                p_result_count: total,
+                p_result_count: decisions.n + articles.n + doctrine.n,
+                p_latency_ms: latence,
                 p_metadata: {
-                    decisions: totalHits,
-                    articles: articleResults.length,
-                    doctrine: doctrineResults.length,
-                    decisions_mode: decisionsModeRef.current,
-                    articles_mode: articleModeRef.current,
-                    doctrine_mode: doctrineModeRef.current,
+                    v: 2,
+                    statut,
+                    // Comptes de la PREMIÈRE page ; `decisions_plus` = d'autres décisions existent.
+                    decisions: decisions.n,
+                    decisions_plus: decisions.plus,
+                    articles: articles.n,
+                    doctrine: doctrine.n,
+                    decisions_mode: decisions.mode,
+                    articles_mode: articles.mode,
+                    doctrine_mode: doctrine.mode,
+                    filtres,
+                    ...(articles.ok && doctrine.ok ? {} : { piliers_en_erreur: [articles.ok ? null : 'articles', doctrine.ok ? null : 'doctrine'].filter(Boolean) }),
                 },
             }).then(undefined, () => { /* logging best-effort */ });
-        }, 1200);
-        return () => clearTimeout(timer);
-    }, [query, totalHits, articleResults.length, doctrineResults.length]);
+        }, 1000);
+    };
 
     const selectTab = (tab: 'tout' | 'decisions' | 'articles' | 'doctrine') => {
         userPickedTab.current = true;
@@ -428,8 +469,15 @@ const SearchPage: React.FC = () => {
     const performSearch = async (append: boolean, federated = false) => {
         setLoading(true);
         setError(null);
+        const t0 = performance.now();
+        const searchTermLog = query?.trim() || '';
+        let pArticles: Promise<BilanPilier> = Promise.resolve(BILAN_VIDE);
+        let pDoctrine: Promise<BilanPilier> = Promise.resolve(BILAN_VIDE);
+        // Mode tenté pour les décisions, capturé ICI (une recherche concurrente peut écraser la ref).
+        let modeDecisions: 'hybrid' | 'fts' | null = null;
+        let finDecisions: number | undefined;
         try {
-            const searchTerm = query?.trim() || '';
+            const searchTerm = searchTermLog;
             const currentOffset = append ? offset : 0;
             const pageSize = 20;
 
@@ -518,8 +566,8 @@ const SearchPage: React.FC = () => {
 
                 if (federated) {
                     // On sert les piliers secondaires sans attendre les décisions.
-                    if (wantArticles) void applyArticles(searchTerm, bag?.articles && !bag.articles.fallback ? bag.articles.results : null);
-                    if (wantDoctrine) void applyDoctrine(searchTerm, bag?.doctrine && !bag.doctrine.fallback ? bag.doctrine.results : null);
+                    if (wantArticles) pArticles = applyArticles(searchTerm, bag?.articles && !bag.articles.fallback ? bag.articles.results : null);
+                    if (wantDoctrine) pDoctrine = applyDoctrine(searchTerm, bag?.doctrine && !bag.doctrine.fallback ? bag.doctrine.results : null);
                 }
 
                 const hybridDecisions = federated
@@ -529,7 +577,9 @@ const SearchPage: React.FC = () => {
                 if (hybridDecisions) {
                     data = hybridDecisions;
                     decisionsModeRef.current = 'hybrid';
+                    modeDecisions = 'hybrid';
                 } else {
+                    modeDecisions = 'fts';
                     const { data: ftsData, error: rpcError } = await supabase.rpc('search_decisions_fts', {
                         search_query: searchTerm,
                         matiere_filter: matiereFilter,
@@ -574,6 +624,9 @@ const SearchPage: React.FC = () => {
                 if (dateTo) queryBuilder = queryBuilder.lte('date_decision', dateTo);
 
                 queryBuilder = queryBuilder.order('date_decision', { ascending: sortOption === 'date_asc', nullsFirst: false });
+                // Départage par clé unique : sans lui, les décisions d'une même date changent
+                // d'ordre d'une page à l'autre (doublons et décisions jamais affichées).
+                queryBuilder = queryBuilder.order('id', { ascending: true });
                 queryBuilder = queryBuilder.range(currentOffset, currentOffset + pageSize - 1);
 
                 const { data, error: queryError, count } = await queryBuilder;
@@ -593,9 +646,15 @@ const SearchPage: React.FC = () => {
 
                 totalCount = count || 0;
             }
+            finDecisions = performance.now();
 
             if (append) {
-                setResults(prev => [...prev, ...decisions]);
+                // Garde-fou : une décision déjà affichée n'est pas répétée (ex. bascule
+                // hybride → plein texte d'une page à l'autre).
+                setResults(prev => {
+                    const vues = new Set(prev.map(p => p.id));
+                    return [...prev, ...decisions.filter(d => !vues.has(d.id))];
+                });
             } else {
                 setResults(decisions);
 
@@ -632,9 +691,26 @@ const SearchPage: React.FC = () => {
                 setSuggestions([]);
             }
 
+            if (federated) {
+                const bilanDecisions = {
+                    n: decisions.length,
+                    plus: decisions.length === pageSize,
+                    mode: modeDecisions,
+                    ok: true,
+                    fin: finDecisions,
+                };
+                void Promise.all([pArticles, pDoctrine]).then(([a, d]) =>
+                    journaliserRecherche(searchTerm, t0, bilanDecisions, a, d, 'ok', activeFilterCount));
+            }
+
         } catch (err: any) {
             console.error("Search Error:", err);
             setError(err.message);
+            if (federated) {
+                const delai = err?.code === '57014' || /timeout|statement timeout|canceling statement/i.test(err?.message || '');
+                void Promise.all([pArticles, pDoctrine]).then(([a, d]) =>
+                    journaliserRecherche(searchTermLog, t0, { n: 0, plus: false, mode: modeDecisions, ok: false, fin: performance.now() }, a, d, delai ? 'delai' : 'erreur', activeFilterCount));
+            }
         } finally {
             setLoading(false);
         }

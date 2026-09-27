@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { detectBot, type BotEnv } from '../botDetect';
+import { detectBot, isAutomatedAgent, type BotEnv } from '../botDetect';
 
 const base: BotEnv = {
     userAgent: 'Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0 Mobile Safari/537.36',
@@ -68,5 +68,18 @@ describe('detectBot', () => {
     it('un signal isolé ne suffit pas', () => {
         expect(detectBot({ ...base, webdriver: true }).isBot).toBe(false);
         expect(detectBot({ ...base, languages: [] }).isBot).toBe(false);
+    });
+});
+
+describe('isAutomatedAgent (journal des recherches)', () => {
+    it('reconnaît les robots d\u2019indexation, y compris le test en direct de la Search Console', () => {
+        expect(isAutomatedAgent('Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)')).toBe(true);
+        expect(isAutomatedAgent('Mozilla/5.0 (Linux; Android 6.0.1) Chrome/128.0 Mobile Safari/537.36 (compatible; Google-InspectionTool/1.0;)')).toBe(true);
+        expect(isAutomatedAgent('Mozilla/5.0 HeadlessChrome/128.0')).toBe(true);
+    });
+
+    it('laisse passer un navigateur ordinaire, y compris un téléphone CUBOT', () => {
+        expect(isAutomatedAgent(base.userAgent)).toBe(false);
+        expect(isAutomatedAgent('Mozilla/5.0 (Linux; Android 12; CUBOT KINGKONG 7) Chrome/128.0 Mobile Safari/537.36')).toBe(false);
     });
 });
