@@ -4,6 +4,7 @@ import { HelmetProvider } from 'react-helmet-async';
 import Navbar from './components/Navbar/Navbar';
 import Footer from './components/Footer/Footer';
 import BotBlocker from './components/BotBlocker/BotBlocker';
+import AdresseCanonique from './components/AdresseCanonique/AdresseCanonique';
 /*
  * Pages chargées À LA DEMANDE (une par route). Avant, les 22 pages étaient
  * importées statiquement : un seul bundle de 766 Ko (225 Ko gzip, 62 % inutilisé
@@ -186,13 +187,19 @@ function App() {
 
               {/* Codes & Lois - Pilier */}
               <Route path="/codes" element={<CodesListPage />} />
-              <Route path="/code/:slug" element={<CodePage />} />
-              <Route path="/code/:codeSlug/:articleSlug" element={<ArticlePage />} />
+              {/* Une seule adresse publique par texte (src/lib/urls.ts) : AdresseCanonique
+                  remplace une ancienne forme (/code/ccn-…, /convention/…) par la bonne. */}
+              <Route path="/code/:slug" element={<AdresseCanonique><CodePage /></AdresseCanonique>} />
+              <Route path="/code/:codeSlug/:articleSlug" element={<AdresseCanonique><ArticlePage /></AdresseCanonique>} />
               {/* Conventions collectives (menu « Autour de la loi ») - réutilise le lecteur
-                  générique ; les routes /code restent un fallback valide pour tout slug. */}
+                  générique, sous /ccn/<segment> (slug « ccn-banques » → /ccn/banques). */}
               <Route path="/conventions-collectives" element={<ConventionsListPage />} />
-              <Route path="/convention/:slug" element={<CodePage />} />
-              <Route path="/convention/:codeSlug/:articleSlug" element={<ArticlePage />} />
+              <Route path="/ccn/:segment" element={<AdresseCanonique><CodePage /></AdresseCanonique>} />
+              <Route path="/ccn/:segment/:articleSlug" element={<AdresseCanonique><ArticlePage /></AdresseCanonique>} />
+              {/* Anciennes adresses des conventions : toujours redirigées vers /ccn/…
+                  (et un texte qui n'est pas une convention, vers /code/…). */}
+              <Route path="/convention/:slug" element={<AdresseCanonique />} />
+              <Route path="/convention/:codeSlug/:articleSlug" element={<AdresseCanonique />} />
               <Route path="/doctrine-fiscale" element={<DoctrinePage />} />
               <Route path="/doctrine-fiscale/:slug" element={<DoctrineDetailPage />} />
               <Route path="/droit-communautaire" element={<CommunautairePage />} />

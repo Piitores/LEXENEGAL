@@ -33,6 +33,56 @@
             "permanent": true
         },
         {
+            "source": "/code/ccn-:nom",
+            "destination": "/ccn/:nom",
+            "statusCode": 301
+        },
+        {
+            "source": "/code/ccn-:nom/:article",
+            "destination": "/ccn/:nom/:article",
+            "statusCode": 301
+        },
+        {
+            "source": "/code/ccni-:nom",
+            "destination": "/ccn/ccni-:nom",
+            "statusCode": 301
+        },
+        {
+            "source": "/code/ccni-:nom/:article",
+            "destination": "/ccn/ccni-:nom/:article",
+            "statusCode": 301
+        },
+        {
+            "source": "/convention/ccn-:nom",
+            "destination": "/ccn/:nom",
+            "statusCode": 301
+        },
+        {
+            "source": "/convention/ccn-:nom/:article",
+            "destination": "/ccn/:nom/:article",
+            "statusCode": 301
+        },
+        {
+            "source": "/convention/ccni-:nom",
+            "destination": "/ccn/ccni-:nom",
+            "statusCode": 301
+        },
+        {
+            "source": "/convention/ccni-:nom/:article",
+            "destination": "/ccn/ccni-:nom/:article",
+            "statusCode": 301
+        },
+        {
+            "source": "/ccn/ccn-:nom",
+            "destination": "/ccn/:nom",
+            "statusCode": 301
+        },
+        {
+            "source": "/ccn/ccn-:nom/:article",
+            "destination": "/ccn/:nom/:article",
+            "statusCode": 301
+        },
+        {
             "source": "/decision/ohada-j-02-30",
             "destination": "/decision/conseil-constitutionnel-19931216-3-c-93",
             "permanent": true
@@ -62,6 +112,14 @@
         {
             "source": "/code/:slug",
             "destination": "/api/render?type=code&slug=:slug"
+        },
+        {
+            "source": "/ccn/:segment/:articleSlug",
+            "destination": "/api/render?type=article&ccn=:segment&slug=:articleSlug"
+        },
+        {
+            "source": "/ccn/:segment",
+            "destination": "/api/render?type=code&ccn=:segment"
         },
         {
             "source": "/doctrine-fiscale/:slug",

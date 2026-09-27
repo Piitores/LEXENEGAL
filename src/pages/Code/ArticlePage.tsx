@@ -14,6 +14,9 @@ import ConversionModal from '../../components/ConversionModal/ConversionModal';
 import ReportErrorModal from '../../components/ReportError/ReportErrorModal';
 import ActionButton from '../../components/ui/ActionButton';
 import CodeNavTree from '../../components/CodeNavTree/CodeNavTree';
+import { estConvention, urlArticle, urlTexte } from '../../lib/urls';
+import { slugDuTexte } from '../../lib/routeTexte';
+import { chargerArticlesDuCode, COLONNES_ARBRE } from '../../lib/articlesDuCode';
 import {
     Article as CodeArticle, StructureNode, HierarchyNode,
     buildTreeFromNodes, buildTreeLegacy, getBreadcrumb, formatNodeLabel,
@@ -114,7 +117,10 @@ function diffVersions(oldHtml: string, newHtml: string): { oldHtml: string; newH
 }
 
 const ArticlePage: React.FC = () => {
-    const { codeSlug, articleSlug } = useParams();
+    // Slug en base du texte : /code/:codeSlug/…, ou /ccn/:segment/… pour une convention.
+    const params = useParams();
+    const codeSlug = slugDuTexte(params);
+    const { articleSlug } = params;
     const navigate = useNavigate();
 
     // « Retour au code » : on revient TOUJOURS à la page du code en cours de
@@ -132,8 +138,8 @@ const ArticlePage: React.FC = () => {
 
     // Toute copie de texte de l'article emporte la référence LexeSenegal + le lien.
     useCopyAttribution(codeSlug, law?.title);
-    // Préfixe d'URL : conventions collectives sous /convention, le reste sous /code.
-    const basePath = (law as any)?.category === 'convention_collective' ? '/convention' : '/code';
+    // Adresse publique du texte (src/lib/urls.ts : conventions sous /ccn/, le reste sous /code/).
+    const adresseTexte = urlTexte(codeSlug || '');
     const [versions, setVersions] = useState<ArticleVersion[]>([]);
     const [currentVersion, setCurrentVersion] = useState<ArticleVersion | null>(null);
     const [loading, setLoading] = useState(true);
@@ -232,28 +238,30 @@ const ArticlePage: React.FC = () => {
                 // Get article
                 const { data: articleData } = await supabase
                     .from('articles')
-                    .select('*')
+                    .select(`${COLONNES_ARBRE}, code_id, content_raw, modifications, notes`)
                     .eq('code_id', lawData.id)
                     .eq('slug', articleSlug)
                     .single();
 
                 if (articleData) {
-                    setArticle(articleData);
+                    setArticle(articleData as unknown as Article);
 
-                    // Arbre de navigation du code (mêmes données/mécanique que CodePage)
-                    const { data: allArts } = await supabase
-                        .from('articles')
-                        .select('*')
-                        .eq('code_id', lawData.id)
-                        .order('display_order');
-                    const { data: nodesData } = await supabase
-                        .from('structure_nodes')
-                        .select('*')
-                        .eq('code_id', lawData.id)
-                        .order('position');
+                    // Arbre de navigation du code (même mécanique que CodePage) : colonnes
+                    // LÉGÈRES (sans le contenu des articles, inutile ici) et lecture PAGINÉE
+                    // (au-delà de 1 000 articles, la fin du code manquait à l'arbre).
+                    // Un échec ne doit pas priver le lecteur de l'article : l'arbre reste vide.
+                    const [allArts, { data: nodesData }] = await Promise.all([
+                        chargerArticlesDuCode<CodeArticle>(lawData.id, COLONNES_ARBRE)
+                            .catch((e) => { console.error('Error fetching code tree:', e); return [] as CodeArticle[]; }),
+                        supabase
+                            .from('structure_nodes')
+                            .select('*')
+                            .eq('code_id', lawData.id)
+                            .order('position'),
+                    ]);
                     const tree = (nodesData && nodesData.length > 0)
-                        ? buildTreeFromNodes(nodesData as StructureNode[], (allArts || []) as CodeArticle[])
-                        : buildTreeLegacy((allArts || []) as CodeArticle[]);
+                        ? buildTreeFromNodes(nodesData as StructureNode[], allArts)
+                        : buildTreeLegacy(allArts);
                     setHierarchy(tree);
                     setTreeActiveNodeId(articleData.node_id ?? null);
                     if (articleData.node_id) {
@@ -289,30 +297,16 @@ const ArticlePage: React.FC = () => {
                         });
                     }
 
-                    // Get previous article (lower display_order)
-                    const { data: prevData } = await supabase
-                        .from('articles')
-                        .select('slug, article_number')
-                        .eq('code_id', lawData.id)
-                        .lt('display_order', articleData.display_order)
-                        .order('display_order', { ascending: false })
-                        .limit(1)
-                        .single();
-
+                    // Article précédent / suivant : voisins dans la liste déjà chargée, triée
+                    // par display_order puis id. (Les requêtes « display_order < / > » sautaient
+                    // les articles de même rang : le Code de procédure pénale compte 923 articles
+                    // pour 834 rangs.)
+                    const rang = allArts.findIndex(a => a.id === articleData.id);
+                    const prevData = rang > 0 ? allArts[rang - 1] : null;
+                    const nextData = rang >= 0 && rang < allArts.length - 1 ? allArts[rang + 1] : null;
                     if (prevData) {
                         setPrevArticle({ slug: prevData.slug, number: prevData.article_number });
                     }
-
-                    // Get next article (higher display_order)
-                    const { data: nextData } = await supabase
-                        .from('articles')
-                        .select('slug, article_number')
-                        .eq('code_id', lawData.id)
-                        .gt('display_order', articleData.display_order)
-                        .order('display_order', { ascending: true })
-                        .limit(1)
-                        .single();
-
                     if (nextData) {
                         setNextArticle({ slug: nextData.slug, number: nextData.article_number });
                     }
@@ -466,7 +460,7 @@ const ArticlePage: React.FC = () => {
         return (
             <div className="article-page article-not-found">
                 <h2>Article non trouvé</h2>
-                <button onClick={() => goBack(`${basePath}/${codeSlug}`)}>Retour au code</button>
+                <button onClick={() => goBack(adresseTexte)}>Retour au code</button>
             </div>
         );
     }
@@ -476,7 +470,7 @@ const ArticlePage: React.FC = () => {
             <SEO
                 title={`${articleLabel(article)} - ${law?.title} | Lexenegal`}
                 description={`${articleLabel(article)} du ${law?.title} - texte intégral. Droit sénégalais consolidé sur Lexenegal.`}
-                url={`https://www.lexenegal.sn${basePath}/${codeSlug}/${articleSlug}`}
+                url={`https://www.lexenegal.sn${urlArticle(codeSlug || '', article.slug)}`}
             />
 
             <div className="article-layout">
@@ -497,10 +491,9 @@ const ArticlePage: React.FC = () => {
                             <CodeNavTree
                                 nodes={hierarchy}
                                 slug={codeSlug}
-                                basePath={basePath}
                                 expandedNodes={expandedNodes}
                                 onToggle={toggleNode}
-                                onSelect={(node) => { setMobileNavOpen(false); navigate(`${basePath}/${codeSlug}?node=${encodeURIComponent(node.name)}`); }}
+                                onSelect={(node) => { setMobileNavOpen(false); navigate(`${adresseTexte}?node=${encodeURIComponent(node.name)}`); }}
                                 activeNodeId={treeActiveNodeId}
                                 activeArticleSlug={article.slug}
                             />
@@ -517,9 +510,11 @@ const ArticlePage: React.FC = () => {
                 )}
                 {/* BREADCRUMB - minimal et raffiné */}
                 <nav className="article-breadcrumb">
-                    <Link to="/codes">Codes</Link>
+                    {estConvention(codeSlug)
+                        ? <Link to="/conventions-collectives">Conventions collectives</Link>
+                        : <Link to="/codes">Codes</Link>}
                     <ChevronRight size={13} />
-                    <Link to={`${basePath}/${codeSlug}`}>{law?.title}</Link>
+                    <Link to={adresseTexte}>{law?.title}</Link>
                     <ChevronRight size={13} />
                     <span className="bc-current">{articleLabel(article)}</span>
                 </nav>
@@ -532,7 +527,7 @@ const ArticlePage: React.FC = () => {
                             return actif ? (
                                 <span key={p.slug} className="partie-toggle__btn actif" role="tab" aria-selected="true">{label}</span>
                             ) : (
-                                <Link key={p.slug} to={`${basePath}/${p.slug}`} className="partie-toggle__btn" role="tab" aria-selected="false">{label}</Link>
+                                <Link key={p.slug} to={urlTexte(p.slug)} className="partie-toggle__btn" role="tab" aria-selected="false">{label}</Link>
                             );
                         })}
                     </div>
@@ -543,7 +538,7 @@ const ArticlePage: React.FC = () => {
                     <div className="law-abrogation-banner" role="note">
                         <span className="lab-icon" aria-hidden="true">⛔</span>
                         <span>{law.abrogation_note}{law.abrogated_by_slug && (
-                            <> <Link to={`/code/${law.abrogated_by_slug}`}>Voir le texte en vigueur →</Link></>
+                            <> <Link to={urlTexte(law.abrogated_by_slug)}>Voir le texte en vigueur →</Link></>
                         )}</span>
                     </div>
                 )}
@@ -570,7 +565,7 @@ const ArticlePage: React.FC = () => {
                                         <Link
                                             key={n.id}
                                             className={`ah-row ah-row--${n.type}`}
-                                            to={`${basePath}/${codeSlug}?node=${encodeURIComponent(n.name)}`}
+                                            to={`${adresseTexte}?node=${encodeURIComponent(n.name)}`}
                                         >
                                             {badge && <span className={`ah-badge ah-badge--${n.type}`}>{badge}</span>}
                                             <span className="ah-label">{label}</span>
@@ -798,18 +793,18 @@ const ArticlePage: React.FC = () => {
                 <div className="article-nav">
                     <button
                         className={`btn-nav ${!prevArticle ? 'disabled' : ''}`}
-                        onClick={() => prevArticle && navigate(`${basePath}/${codeSlug}/${prevArticle.slug}`)}
+                        onClick={() => prevArticle && navigate(urlArticle(codeSlug || '', prevArticle.slug))}
                         disabled={!prevArticle}
                     >
                         <ChevronLeft size={16} />
                         {prevArticle ? articleLabel({ article_number: prevArticle.number }) : 'Premier article'}
                     </button>
-                    <button className="btn-nav btn-nav-center" onClick={() => goBack(`${basePath}/${codeSlug}`)}>
+                    <button className="btn-nav btn-nav-center" onClick={() => goBack(adresseTexte)}>
                         Retour
                     </button>
                     <button
                         className={`btn-nav ${!nextArticle ? 'disabled' : ''}`}
-                        onClick={() => nextArticle && navigate(`${basePath}/${codeSlug}/${nextArticle.slug}`)}
+                        onClick={() => nextArticle && navigate(urlArticle(codeSlug || '', nextArticle.slug))}
                         disabled={!nextArticle}
                     >
                         {nextArticle ? articleLabel({ article_number: nextArticle.number }) : 'Dernier article'}

@@ -48,6 +48,20 @@ export function normalizeArticleNumber(s: string): string {
     .replace(/[\s.]+/g, ''); // insensible aux espaces ET aux points ("L. 69" = "L69" = "L.69")
 }
 
+/** Index { numéro normalisé → article } d'articles reçus dans l'ordre de lecture du texte
+ *  (display_order, puis id). À numéro égal, le PREMIER lu l'emporte : au Code pénal, les
+ *  articles premier à 8 existent deux fois, dans le corps du code (rangs 10 à 80) et dans
+ *  l'annexe III sur la cryptologie (rangs 60000 et plus). « Article 5 du code pénal » doit
+ *  mener au corps du code, jamais à l'annexe. */
+export function indexerParNumero<T extends { article_number: string }>(articles: T[]): Map<string, T> {
+  const index = new Map<string, T>();
+  for (const art of articles) {
+    const k = normalizeArticleNumber(art.article_number);
+    if (!index.has(k)) index.set(k, art);
+  }
+  return index;
+}
+
 export interface LawRef {
   slug: string;
   title?: string | null;

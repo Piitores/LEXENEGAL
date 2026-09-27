@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ChevronRight, FileText, Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import SEO from '../../components/SEO/SEO';
+import { urlTexte } from '../../lib/urls';
 import '../Codes/CodesListPage.css';
 
 interface ConventionItem {
@@ -15,7 +16,7 @@ interface ConventionItem {
 
 // Page « Conventions collectives » (menu « Autour de la loi »).
 // Liste les textes category='convention_collective' publiés ; chacun ouvre son
-// texte intégral sous /convention/<slug>.
+// texte intégral sous /ccn/<segment> (ccn-banques → /ccn/banques, cf. src/lib/urls.ts).
 const ConventionsListPage: React.FC = () => {
     const [items, setItems] = useState<ConventionItem[] | null>(null);
 
@@ -71,7 +72,7 @@ const ConventionsListPage: React.FC = () => {
                     ) : (
                         <div className="codes-list">
                             {items.map((c) => (
-                                <Link key={c.id} to={`/convention/${c.slug}`} className="code-card-v2">
+                                <Link key={c.id} to={urlTexte(c.slug)} className="code-card-v2">
                                     <div className="code-card-v2__icon" style={{ background: '#2563eb15', color: '#2563eb' }}>
                                         <FileText size={24} />
                                     </div>

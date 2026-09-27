@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Search, BookOpen, Scale, Shield, LogOut, User, Globe2, FileText, ChevronDown, Settings, Briefcase } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import useAuth from '../../hooks/useAuth';
+import { urlTexte } from '../../lib/urls';
 import './Navbar.css';
 
 interface DDItem { label: string; to?: string; soon?: boolean; }
@@ -17,7 +18,7 @@ const CORPUS: DDItem[] = [
 // Droit communautaire = sous-rubriques par organisation (OHADA dispo ; UEMOA / UA à venir)
 const COMMUNAUTAIRE: DDItem[] = [
   { label: 'OHADA', to: '/droit-communautaire' },
-  { label: 'CIMA (assurances)', to: '/code/code-assurances-cima' },
+  { label: 'CIMA (assurances)', to: urlTexte('code-assurances-cima') },
   { label: 'UEMOA', soon: true },
   { label: 'Union africaine (UA)', soon: true },
 ];

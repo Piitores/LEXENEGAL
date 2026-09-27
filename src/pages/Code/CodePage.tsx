@@ -20,6 +20,10 @@ import {
     isPreambule,
 } from '../../lib/codeTree';
 import { useCopyAttribution, attributionFooter, articleUrl } from '../../hooks/useCopyAttribution';
+import { urlArticle, urlTexte } from '../../lib/urls';
+import { slugDuTexte } from '../../lib/routeTexte';
+import { chargerArticlesDuCode, COLONNES_LECTURE } from '../../lib/articlesDuCode';
+import { correspond, texteCherchable } from '../../lib/rechercheDansLeTexte';
 import './CodePage.css';
 import '../../styles/legal-content.css';
 
@@ -44,7 +48,7 @@ const articleToPlainText = (art: Article): string => {
 
 // ── Carte d'un article (gère le repli du préambule + le bouton Copier) ──
 
-const ArticleCard: React.FC<{ art: Article; slug: string | undefined; codeTitle?: string; basePath: string }> = ({ art, slug, codeTitle, basePath }) => {
+const ArticleCard: React.FC<{ art: Article; slug: string | undefined; codeTitle?: string }> = ({ art, slug, codeTitle }) => {
     const preambule = isPreambule(art);
     // Préambule replié par défaut ; articles normaux toujours ouverts.
     const [open, setOpen] = useState(!preambule);
@@ -125,7 +129,7 @@ const ArticleCard: React.FC<{ art: Article; slug: string | undefined; codeTitle?
                         </div>
                     )}
 
-                    <Link to={`${basePath}/${slug}/${art.slug}`} className="article-link-btn">
+                    <Link to={urlArticle(slug || '', art.slug)} className="article-link-btn">
                         <ExternalLink size={13} />
                         Voir l'article complet
                     </Link>
@@ -146,7 +150,8 @@ const allerA = (y: number) => window.scrollTo({ top: y, left: 0, behavior: 'inst
 // ── Composant principal ──
 
 const CodePage: React.FC = () => {
-    const { slug } = useParams();
+    // Slug en base du texte : /code/:slug, ou /ccn/:segment pour une convention collective.
+    const slug = slugDuTexte(useParams());
     const navigate = useNavigate();
 
     const [law, setLaw] = useState<Law | null>(null);
@@ -161,9 +166,6 @@ const CodePage: React.FC = () => {
 
     // Toute copie de texte d'un article emporte la référence LexeSenegal + le lien.
     useCopyAttribution(slug, law?.title);
-    // Préfixe d'URL selon la nature du texte : conventions collectives sous /convention,
-    // le reste sous /code (la route /code reste un fallback valide pour tout slug).
-    const basePath = (law as any)?.category === 'convention_collective' ? '/convention' : '/code';
     const [activeTab, setActiveTab] = useState<'articles' | 'structure'>('articles');
     // Tiroir « Sommaire » : sous 1024px la colonne de gauche sort du flux et
     // s'ouvre par-dessus la page (même dispositif que la page Article).
@@ -243,14 +245,9 @@ const CodePage: React.FC = () => {
                 setParties([]);
             }
 
-            // Fetch articles
-            const { data: articlesData } = await supabase
-                .from('articles')
-                .select('*')
-                .eq('code_id', lawData.id)
-                .order('display_order');
-
-            const allArticles = articlesData || [];
+            // Articles : lecture PAGINÉE (PostgREST tronque en silence à 1 000 lignes : les
+            // 104 derniers articles de l'AUSCGIE, qui en compte 1 104, étaient invisibles).
+            const allArticles = await chargerArticlesDuCode<Article>(lawData.id, COLONNES_LECTURE);
             setArticles(allArticles);
             setTotalArticles(allArticles.length);
 
@@ -362,17 +359,18 @@ const CodePage: React.FC = () => {
 
     // ── Search ──
 
+    // Recherche sur le texte AFFICHÉ (content_html sans balises, et non content_raw qui en
+    // diverge), sans tenir compte des accents : « preavis » trouve « préavis ». Le texte
+    // cherchable de chaque article est préparé une fois par chargement du code.
+    const textesCherchables = useMemo(
+        () => new Map(articles.map(a => [a.id, texteCherchable(a)])),
+        [articles]
+    );
+
     const filteredArticles = useMemo(() => {
-        if (searchQuery.length < 2) return null;
-        const q = searchQuery.toLowerCase();
-        return articles.filter(a =>
-            a.article_number?.toLowerCase().includes(q) ||
-            a.num?.toLowerCase().includes(q) ||
-            a.content_raw?.toLowerCase().includes(q) ||
-            a.chapter_name?.toLowerCase().includes(q) ||
-            a.title_name?.toLowerCase().includes(q)
-        );
-    }, [searchQuery, articles]);
+        if (searchQuery.trim().length < 2) return null;
+        return articles.filter(a => correspond(textesCherchables.get(a.id) || '', searchQuery));
+    }, [searchQuery, articles, textesCherchables]);
 
     // ── Render main panel articles ──
 
@@ -477,7 +475,7 @@ const CodePage: React.FC = () => {
 
     return (
         <div className="code-page">
-            <SEO title={`${law.title} | Lexenegal`} description={`${law.title} - texte intégral consolidé (${totalArticles} articles). ${['ohada', 'uemoa', 'cedeao', 'cima'].includes((law as any).category) ? 'Droit communautaire applicable au Sénégal' : 'Droit sénégalais'} sur Lexenegal.`} url={`https://www.lexenegal.sn${basePath}/${slug}`} />
+            <SEO title={`${law.title} | Lexenegal`} description={`${law.title} - texte intégral consolidé (${totalArticles} articles). ${['ohada', 'uemoa', 'cedeao', 'cima'].includes((law as any).category) ? 'Droit communautaire applicable au Sénégal' : 'Droit sénégalais'} sur Lexenegal.`} url={`https://www.lexenegal.sn${urlTexte(law.slug)}`} />
 
             <div className="code-layout">
                 {/* ═══════ SIDEBAR ═══════
@@ -511,7 +509,7 @@ const CodePage: React.FC = () => {
                                         return actif ? (
                                             <span key={p.slug} className="partie-toggle__btn actif" role="tab" aria-selected="true">{label}</span>
                                         ) : (
-                                            <Link key={p.slug} to={`${basePath}/${p.slug}`} className="partie-toggle__btn" role="tab" aria-selected="false">{label}</Link>
+                                            <Link key={p.slug} to={urlTexte(p.slug)} className="partie-toggle__btn" role="tab" aria-selected="false">{label}</Link>
                                         );
                                     })}
                                 </div>
@@ -539,7 +537,6 @@ const CodePage: React.FC = () => {
                         <CodeNavTree
                             nodes={hierarchy}
                             slug={slug}
-                            basePath={basePath}
                             expandedNodes={expandedNodes}
                             onToggle={toggleNode}
                             onSelect={selectNode}
@@ -576,7 +573,7 @@ const CodePage: React.FC = () => {
                         <div className="law-abrogation-banner" role="note">
                             <span className="lab-icon" aria-hidden="true">⛔</span>
                             <span>{law.abrogation_note}{law.abrogated_by_slug && (
-                                <> <Link to={`/code/${law.abrogated_by_slug}`}>Voir le texte en vigueur →</Link></>
+                                <> <Link to={urlTexte(law.abrogated_by_slug)}>Voir le texte en vigueur →</Link></>
                             )}</span>
                         </div>
                     )}
@@ -586,7 +583,7 @@ const CodePage: React.FC = () => {
                     {!filteredArticles && preambuleArticles.length > 0 && (
                         <div className="preambule-top articles-list">
                             {preambuleArticles.map(art => (
-                                <ArticleCard key={art.id} art={art} slug={slug} codeTitle={law?.title} basePath={basePath} />
+                                <ArticleCard key={art.id} art={art} slug={slug} codeTitle={law?.title} />
                             ))}
                         </div>
                     )}
@@ -597,7 +594,7 @@ const CodePage: React.FC = () => {
                             <h2>{filteredArticles.length} résultat{filteredArticles.length > 1 ? 's' : ''} pour « {searchQuery} »</h2>
                             <div className="search-results-list">
                                 {filteredArticles.map(a => (
-                                    <Link key={a.id} to={`${basePath}/${slug}/${a.slug}`} className="search-result-item">
+                                    <Link key={a.id} to={urlArticle(law.slug, a.slug)} className="search-result-item">
                                         <strong>{a.num || `Article ${a.article_number}`}</strong>
                                         <span>{a.chapter_name || a.title_name || ''}</span>
                                     </Link>
@@ -704,7 +701,7 @@ const CodePage: React.FC = () => {
                                         </div>
                                     ) : (
                                         selectedArticles.map(art => (
-                                            <ArticleCard key={art.id} art={art} slug={slug} codeTitle={law?.title} basePath={basePath} />
+                                            <ArticleCard key={art.id} art={art} slug={slug} codeTitle={law?.title} />
                                         ))
                                     )}
                                 </div>

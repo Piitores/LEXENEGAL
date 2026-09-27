@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../../lib/supabase';
 import { Scale, ExternalLink } from 'lucide-react';
 import { articleLabel } from '../../lib/articleLabel';
+import { urlArticle } from '../../lib/urls';
 import './ArticleHoverPreview.css';
 
 
@@ -134,7 +135,7 @@ const ArticleHoverPreview: React.FC<ArticleHoverPreviewProps> = ({
 
                             {/* Footer */}
                             <a
-                                href={`/code/${codeSlug}/${articleSlug}`}
+                                href={urlArticle(codeSlug, articleSlug)}
                                 className="preview-link"
                             >
                                 Voir l'article complet <ExternalLink size={12} />

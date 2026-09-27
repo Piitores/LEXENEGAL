@@ -5,16 +5,15 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight } from 'lucide-react';
 import { articleLabel } from '../../lib/articleLabel';
+import { urlArticle } from '../../lib/urls';
 import { HierarchyNode, countArticles, computeMaxArticlesInLevel, formatNodeLabel, NODE_KIND } from '../../lib/codeTree';
 import './CodeNavTree.css';
 
 interface CodeNavTreeProps {
     nodes: HierarchyNode[];
+    // Slug en base du texte : l'adresse des pastilles d'article en découle (urlArticle :
+    // /ccn/… pour une convention collective, /code/… pour le reste).
     slug: string | undefined;
-    // Préfixe d'URL du texte : « /convention » pour les conventions collectives,
-    // « /code » pour tout le reste. Sans lui, les pastilles d'article d'une convention
-    // sortaient du préfixe de la page qui les affiche.
-    basePath?: string;
     expandedNodes: Set<string>;
     onToggle: (id: string) => void;
     onSelect: (node: HierarchyNode) => void;
@@ -27,7 +26,6 @@ interface CodeNavTreeProps {
 const CodeNavTree: React.FC<CodeNavTreeProps> = ({
     nodes,
     slug,
-    basePath = '/code',
     expandedNodes,
     onToggle,
     onSelect,
@@ -105,7 +103,7 @@ const CodeNavTree: React.FC<CodeNavTreeProps> = ({
                                     {node.articles.map(art => (
                                         <Link
                                             key={art.id}
-                                            to={`${basePath}/${slug}/${art.slug}`}
+                                            to={urlArticle(slug || '', art.slug)}
                                             className={`tree-article-chip ${activeArticleSlug && art.slug === activeArticleSlug ? 'is-active' : ''} ${(art.status === 'abrogé' || art.is_active === false) ? 'is-abroge' : ''}`}
                                             title={(art.status === 'abrogé' || art.is_active === false) ? 'Article abrogé' : undefined}
                                         >

@@ -1,11 +1,13 @@
 import { useEffect } from 'react';
+import { urlArticle } from '../lib/urls';
 
 // Référence LexeSenegal ajoutée à toute copie de contenu d'article, pour que le
 // texte collé ailleurs garde sa source + le lien de consultation.
-const BASE_URL = 'https://www.lexenegal.sn/code';
+const SITE = 'https://www.lexenegal.sn';
 
+// Adresse publique de l'article (règle unique : src/lib/urls.ts).
 export function articleUrl(codeSlug: string, artSlug: string): string {
-  return `${BASE_URL}/${codeSlug}/${artSlug}`;
+  return `${SITE}${urlArticle(codeSlug, artSlug)}`;
 }
 
 // Pied de référence en texte brut (réutilisé par le bouton « Copier » et la copie manuelle).
