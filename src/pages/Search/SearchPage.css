@@ -38,6 +38,42 @@
     font-size: 0.85rem;
     color: var(--color-text-secondary, #6B7280);
 }
+/* La carte est un lien (<a>) : pas de soulignement ni de couleur de lien. */
+a.best-match {
+    text-decoration: none;
+    color: inherit;
+}
+/* Référence ambiguë (« article 10 du code électoral » → L.10 | R.10) : petite liste de choix. */
+.best-match--choix {
+    cursor: default;
+}
+.best-match--choix:hover {
+    box-shadow: none;
+    transform: none;
+}
+.best-match__options {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 6px 0 0;
+    padding: 0;
+}
+.best-match__options a {
+    display: inline-block;
+    padding: 4px 12px;
+    border: 1px solid var(--color-accent, #047857);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--color-accent, #047857);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+.best-match__options a:hover {
+    background: var(--color-accent, #047857);
+    color: #fff;
+}
 
 /* Vue « Tout » (fédérée) — une section par pilier */
 .tout-view {
@@ -847,4 +883,95 @@
     .best-match {
         padding: 12px 14px;
     }
+}
+
+/* --- Lots B et C de l'audit de la recherche (27/09/2026) --- */
+
+/* Puces des filtres actifs, lisibles et retirables une à une. */
+.activeFilters {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0.75rem 0 0;
+    padding: 0;
+}
+.activeFilter {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    max-width: 100%;
+    padding: 0.25rem 0.7rem;
+    border: 1px solid #A7F3D0;
+    border-radius: 20px;
+    background: #ECFDF5;
+    color: #065F46;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+}
+.activeFilter:hover {
+    border-color: #10B981;
+}
+.activeFilter span {
+    font-size: 0.95rem;
+    line-height: 1;
+}
+
+/* Fin de la liste par pertinence : invitation à trier par date. */
+.finPertinence {
+    margin: 1.5rem 0 0;
+    padding: 0.9rem 1.1rem;
+    border-radius: 8px;
+    background: #F9FAFB;
+    color: #4B5563;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    text-align: center;
+}
+.finPertinence__tri {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #047857;
+    font: inherit;
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+/* Onglet « Codes & articles » : base de textes et interrupteur « En vigueur uniquement ». */
+.articlesControls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+.baseSelector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+.toggleVigueur {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #374151;
+    cursor: pointer;
+    user-select: none;
+}
+.toggleVigueur input {
+    width: 16px;
+    height: 16px;
+    accent-color: #10B981;
+    cursor: pointer;
+}
+.abrogesMasques {
+    margin: -0.5rem 0 0;
+    font-size: 0.8rem;
+    color: #6B7280;
 }
