@@ -6,6 +6,7 @@
  * Lots B et C de l'audit de la recherche (27/09/2026) :
  *  - bases de textes (sélecteur de l'onglet « Codes & articles ») ;
  *  - pastilles de matière à plusieurs valeurs (arbitrage : « Pénale » inclut « Criminelle ») ;
+ *  - case « Non renseignée » pour les décisions sans matière (lot C5) ;
  *  - chambre rattachée à sa juridiction (couples « Juridiction::Chambre ») ;
  *  - total réel des décisions (count_decisions_fts, borné) et message de fin de liste ;
  *  - carte « Meilleur résultat » (abrogation signalée) et aperçu de l'accueil, liens par la
@@ -66,6 +67,31 @@ export const REGROUPEMENTS_MATIERE: Record<string, string[]> = {
     'Pénale': ['Pénale', 'Criminelle'],
 };
 
+/**
+ * Valeur de filtre des décisions SANS matière (lot C5 : 1 323 décisions actives au 27/09/2026,
+ * que la vue des facettes ignore). Les RPC de décisions (search_decisions_fts, search_decisions_hybrid,
+ * count_decisions_fts) la comprennent ; en parcours sans requête, elle devient
+ * `matiere_principale is null` (filtreOuMatieres).
+ */
+export const MATIERE_NON_RENSEIGNEE = '(non renseignée)';
+
+/** Libellé affiché d'une matière : « Non renseignée » plutôt que la valeur technique. */
+export function libelleMatiere(v: string): string {
+    return v === MATIERE_NON_RENSEIGNEE ? 'Non renseignée' : libelleFacette(v);
+}
+
+/**
+ * Matières cochées → expression `.or()` PostgREST, pour le parcours sans requête (lecture
+ * directe de la table) : `.in()` ne connaît pas « (non renseignée) », qui devient `is.null`.
+ */
+export function filtreOuMatieres(valeurs: string[]): string {
+    const nommees = valeurs.filter((v) => v !== MATIERE_NON_RENSEIGNEE);
+    const parts: string[] = [];
+    if (nommees.length) parts.push(`matiere_principale.in.(${nommees.map(valeurPostgrest).join(',')})`);
+    if (valeurs.includes(MATIERE_NON_RENSEIGNEE)) parts.push('matiere_principale.is.null');
+    return parts.join(',');
+}
+
 export interface PastilleMatiere {
     libelle: string;
     /** `null` = « Tous » (aucun filtre de matière). */
@@ -119,7 +145,8 @@ export function pucesMatiere(selection: string[]): Array<{ libelle: string; vale
 
 /**
  * Liste des matières du panneau de filtres, regroupements appliqués : « Criminelle » n'apparaît
- * plus seule, son compte est ajouté à « Pénale » (qui la coche avec elle).
+ * plus seule, son compte est ajouté à « Pénale » (qui la coche avec elle). Tri par nombre de
+ * décisions, « Non renseignée » toujours en dernier.
  */
 export function matieresRegroupees(comptes: Record<string, number>): Array<{ libelle: string; valeurs: string[]; n: number }> {
     const membres = new Set<string>();
@@ -135,7 +162,8 @@ export function matieresRegroupees(comptes: Record<string, number>): Array<{ lib
         if (comptes[tete] !== undefined) return;
         vals.filter((v) => v !== tete && comptes[v] !== undefined).forEach((v) => out.push({ libelle: v, valeurs: [v], n: comptes[v] }));
     });
-    return out.sort((a, b) => b.n - a.n);
+    const enDernier = (m: { libelle: string }) => (m.libelle === MATIERE_NON_RENSEIGNEE ? 1 : 0);
+    return out.sort((a, b) => enDernier(a) - enDernier(b) || b.n - a.n);
 }
 
 // ---------------------------------------------------------------------------

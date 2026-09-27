@@ -8,6 +8,7 @@ import {
     totalDecisions, formatTotal, formatTotalCourt, ajouterAuTotal, totalAParcourir,
     carteMeilleurResultat, lecturesMeilleurResultat, completerMeilleurResultat,
     resultatsApercu, rechercheAvecRequete,
+    MATIERE_NON_RENSEIGNEE, libelleMatiere, filtreOuMatieres,
 } from '../recherche';
 
 const fr = (n: number) => n.toLocaleString('fr-FR');
@@ -75,6 +76,25 @@ describe('pastilles de matière', () => {
     });
     it('panneau : un membre sans sa tête de groupe reste proposé seul', () => {
         expect(matieresRegroupees({ Criminelle: 5 })).toEqual([{ libelle: 'Criminelle', valeurs: ['Criminelle'], n: 5 }]);
+    });
+});
+
+describe('matière « non renseignée » (lot C5)', () => {
+    it('case proposée en dernier, quel que soit son compte', () => {
+        const liste = matieresRegroupees({ Sociale: 2524, [MATIERE_NON_RENSEIGNEE]: 1323, Civile: 1353, Commerciale: 900 });
+        expect(liste.map((m) => m.libelle)).toEqual(['Sociale', 'Civile', 'Commerciale', MATIERE_NON_RENSEIGNEE]);
+        expect(liste[3]).toEqual({ libelle: MATIERE_NON_RENSEIGNEE, valeurs: [MATIERE_NON_RENSEIGNEE], n: 1323 });
+    });
+    it('libellé lisible, valeur technique inchangée pour les RPC', () => {
+        expect(MATIERE_NON_RENSEIGNEE).toBe('(non renseignée)');
+        expect(libelleMatiere(MATIERE_NON_RENSEIGNEE)).toBe('Non renseignée');
+        expect(libelleMatiere('Pénale')).toBe('Pénale');
+        expect(pucesMatiere([MATIERE_NON_RENSEIGNEE])).toEqual([{ libelle: MATIERE_NON_RENSEIGNEE, valeurs: [MATIERE_NON_RENSEIGNEE] }]);
+    });
+    it('parcours sans requête : `.in()` pour les matières nommées, `is.null` pour « non renseignée »', () => {
+        expect(filtreOuMatieres(['Pénale', 'Criminelle'])).toBe('matiere_principale.in.("Pénale","Criminelle")');
+        expect(filtreOuMatieres(['Sociale', MATIERE_NON_RENSEIGNEE])).toBe('matiere_principale.in.("Sociale"),matiere_principale.is.null');
+        expect(filtreOuMatieres([MATIERE_NON_RENSEIGNEE])).toBe('matiere_principale.is.null');
     });
 });
 

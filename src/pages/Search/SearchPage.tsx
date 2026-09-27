@@ -6,6 +6,7 @@ import { urlArticle } from '../../lib/urls';
 import {
     BASES_TEXTES, categoriesDeBase, type BaseTextes,
     PASTILLES_MATIERE, valeursActives, basculerValeurs, matieresRegroupees, pucesMatiere,
+    MATIERE_NON_RENSEIGNEE, libelleMatiere, filtreOuMatieres,
     construireArbreJuridictions, cleChambre, lireCleChambre, filtreChambres, filtreJuridictions,
     filtreOuChambres, libelleFacette, type GroupeJuridictions,
     PLAFOND_TOTAL_DECISIONS, totalDecisions, formatTotal, formatTotalCourt, ajouterAuTotal, totalAParcourir,
@@ -553,14 +554,23 @@ const SearchPage: React.FC = () => {
     useEffect(() => {
         const loadFacets = async () => {
             try {
-                // Facettes agrégées côté serveur (TOUTES les décisions, pas un échantillon plafonné à 1000)
-                const { data: facetData, error: facetErr } = await supabase.rpc('get_decision_facets');
+                // Facettes agrégées côté serveur (TOUTES les décisions, pas un échantillon plafonné à 1000).
+                // En parallèle, le compte des décisions actives SANS matière, que la vue des
+                // facettes ignore : case « Non renseignée » (lot C5 ; les RPC acceptent la valeur).
+                const [{ data: facetData, error: facetErr }, sansMatiere] = await Promise.all([
+                    supabase.rpc('get_decision_facets'),
+                    supabase.from('decisions').select('id', { count: 'exact', head: true })
+                        .eq('is_active', true).is('matiere_principale', null),
+                ]);
 
                 if (facetData && !facetErr) {
                     const matiereCount: Record<string, number> = {};
                     (facetData.matieres || []).forEach((m: any) => {
                         if (m.matiere_principale) matiereCount[m.matiere_principale] = m.n;
                     });
+                    if (!sansMatiere.error && typeof sansMatiere.count === 'number' && sansMatiere.count > 0) {
+                        matiereCount[MATIERE_NON_RENSEIGNEE] = sansMatiere.count;
+                    }
                     // Groupes (CCJA, Cour Suprême…) → juridictions réelles, et chaque chambre
                     // rattachée aux juridictions du groupe qui l'ont (lignes {juridiction, chambre, n}).
                     setFacets({
@@ -750,7 +760,9 @@ const SearchPage: React.FC = () => {
                     .from('decisions')
                     .select('id, reference, slug, date_decision, matiere_principale, chambre, resume, mots_cles, juridiction', { count: 'exact' });
 
-                if (matiereFilter) queryBuilder = queryBuilder.in('matiere_principale', matiereFilter);
+                // Matières : `.or()` plutôt que `.in()`, pour que « (non renseignée) » devienne
+                // `matiere_principale is null`. Deux `.or()` (matières, chambres) se cumulent en ET.
+                if (matiereFilter) queryBuilder = queryBuilder.or(filtreOuMatieres(matiereFilter));
                 // Chambres : couples « Juridiction::Chambre » → (juridiction = … ET chambre = …) OU …
                 if (chambreFilter) queryBuilder = queryBuilder.or(filtreOuChambres(chambreFilter));
                 if (finalJuridictionFilter) queryBuilder = queryBuilder.in('juridiction', finalJuridictionFilter);
@@ -1149,7 +1161,7 @@ const SearchPage: React.FC = () => {
                                         <div className={`custom-checkbox ${cochee ? 'checked' : ''}`}>
                                             {cochee && <span className="checkmark">✔</span>}
                                         </div>
-                                        <span className="filterLabel">{libelleFacette(m.libelle)}</span>
+                                        <span className="filterLabel">{libelleMatiere(m.libelle)}</span>
                                     </div>
                                     <span className="filterCount">({m.n})</span>
                                 </li>
@@ -1216,8 +1228,8 @@ const SearchPage: React.FC = () => {
                             })}
                             {pucesMatieres.map(m => (
                                 <li key={`m-${m.libelle}`}>
-                                    <button className="activeFilter" onClick={() => setSelectedMatiere(prev => prev.filter(v => !m.valeurs.includes(v)))} aria-label={`Retirer le filtre ${m.libelle}`}>
-                                        {libelleFacette(m.libelle)} <span aria-hidden="true">×</span>
+                                    <button className="activeFilter" onClick={() => setSelectedMatiere(prev => prev.filter(v => !m.valeurs.includes(v)))} aria-label={`Retirer le filtre ${libelleMatiere(m.libelle)}`}>
+                                        {libelleMatiere(m.libelle)} <span aria-hidden="true">×</span>
                                     </button>
                                 </li>
                             ))}
