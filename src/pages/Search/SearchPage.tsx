@@ -1397,6 +1397,7 @@ const SearchPage: React.FC = () => {
                                                 <span className="cardRef">{d.reference || d.matiere_principale || d.juridiction}</span>
                                                 <span className="cardDate">{[d.juridiction, d.chambre, d.date_decision && new Date(d.date_decision).toLocaleDateString('fr-FR')].filter(Boolean).join(' · ')}</span>
                                             </div>
+                                            {d.parNomUsage && <p className="cardNomUsage">Correspond à un nom de partie</p>}
                                             {d.resume && <p className="cardSnippet">{stripHtml(d.resume).slice(0, 200)}</p>}
                                         </div>
                                     ))}
