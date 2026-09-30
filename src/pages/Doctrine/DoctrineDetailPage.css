@@ -86,6 +86,21 @@
 .doctrine-detail__body p:last-child { margin-bottom: 0; }
 .doctrine-detail__novel { color: #6b7280; font-style: italic; }
 
+/* Extrait public (exposé de la demande), au-dessus du gate pour les visiteurs non connectés */
+.doctrine-detail__extrait {
+    margin: 0 0 1.75rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+.doctrine-detail__extrait h2 {
+    font-size: 0.95rem;
+    font-family: var(--font-body);
+    color: #111827;
+    margin: 0 0 1rem;
+    text-align: left;
+}
+.doctrine-detail__extrait-suite { color: #9ca3af; }
+
 /* Bloc de gate (visiteur non connecté) */
 .doctrine-detail__gate {
     text-align: center;

@@ -23,10 +23,12 @@ interface DoctrineDetail {
     objet: string;
     destinataire: string;
     signataire: string;
+    // Extrait public : exposé de la demande, jamais la réponse (colonne générée en base, public.doctrine_extrait).
+    extrait: string | null;
 }
 
 // Teaser public (content_raw EXCLU : gate DB par colonne, migration doctrine_gate_content_raw_columns).
-const TEASER_COLUMNS = 'id, slug, numero, annee, date, service_emetteur, reference_complete, objet, destinataire, signataire';
+const TEASER_COLUMNS = 'id, slug, numero, annee, date, service_emetteur, reference_complete, objet, destinataire, signataire, extrait';
 
 const DoctrineDetailPage: React.FC = () => {
     const { slug } = useParams();
@@ -212,17 +214,27 @@ const DoctrineDetailPage: React.FC = () => {
                                     <p className="doctrine-detail__novel">Texte intégral indisponible pour ce document.</p>
                                 )
                             ) : (
+                                <>
+                                {doctrine.extrait && (
+                                    <section className="doctrine-detail__extrait">
+                                        <h2>Extrait de la lettre</h2>
+                                        {doctrine.extrait.split('\n').filter((p) => p.trim()).map((p, idx) => <p key={idx}>{p}</p>)}
+                                        <p className="doctrine-detail__extrait-suite">[…]</p>
+                                    </section>
+                                )}
                                 <div className="doctrine-detail__gate">
                                     <div className="doctrine-detail__gate-icon"><Lock size={28} /></div>
                                     <h2>Texte intégral réservé aux membres</h2>
                                     <p>
                                         Créez un <strong>compte gratuit</strong> pour lire l'intégralité de cette lettre
-                                        de doctrine fiscale. L'objet et les références restent en accès libre.
+                                        de doctrine fiscale, avec la réponse de l'administration. L'objet, les références
+                                        et l'extrait restent en accès libre.
                                     </p>
                                     <button className="doctrine-detail__cta" onClick={() => setShowModal(true)}>
                                         Lire le texte intégral
                                     </button>
                                 </div>
+                                </>
                             )}
                         </div>
                     </article>

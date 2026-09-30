@@ -699,15 +699,18 @@ export function buildDoctrineBody(d, arts = []) {
     d.destinataire && `<li><strong>Destinataire :</strong> ${esc(d.destinataire)}</li>`,
     d.signataire && `<li><strong>Signataire :</strong> ${esc(d.signataire)}</li>`,
   ].filter(Boolean).join('\n');
-  // content_raw VOLONTAIREMENT absent : teaser uniquement côté serveur public.
+  // content_raw VOLONTAIREMENT absent : teaser + extrait public (colonne doctrine.extrait = exposé de la
+  // demande, jamais la réponse ; calculée en base par public.doctrine_extrait).
+  const extrait = (d.extrait || '').split('\n').map((p) => p.trim()).filter(Boolean);
   return wrapContent(`<article>
     <nav class="ssr-bc" aria-label="Fil d'Ariane"><a href="/doctrine-fiscale">Doctrine fiscale</a> › ${esc(ref)}</nav>
     <h1>${esc(objet || ref)}</h1>
     <ul class="ssr-meta">${meta}</ul>
     ${arts.length ? `<section class="ssr-doctrine-articles"><h2>Articles concernés</h2><ul>${arts.map((a) => `<li><a href="${attr(a.url)}">${esc(a.intitule)}</a></li>`).join('')}</ul></section>` : ''}
+    ${extrait.length ? `<section class="ssr-doctrine-extrait"><h2>Extrait de la lettre</h2>${extrait.map((p) => `<p>${esc(p)}</p>`).join('')}<p>[…]</p></section>` : ''}
     <section class="ssr-doctrine-gate">
-      <p>Document de doctrine fiscale de la <strong>DGID</strong> (Sénégal). L'objet et les références ci-dessus sont en accès libre.</p>
-      <p>Le <strong>texte intégral</strong> de cette lettre est réservé aux membres. <a href="/signup">Créez un compte gratuit</a> pour le consulter, ou parcourez l'ensemble de la <a href="/doctrine-fiscale">doctrine fiscale</a>.</p>
+      <p>Document de doctrine fiscale de la <strong>DGID</strong> (Sénégal). L'objet, les références et l'extrait ci-dessus sont en accès libre.</p>
+      <p>Le <strong>texte intégral</strong> de cette lettre, avec la réponse de l'administration, est réservé aux membres. <a href="/signup">Créez un compte gratuit</a> pour le consulter, ou parcourez l'ensemble de la <a href="/doctrine-fiscale">doctrine fiscale</a>.</p>
     </section>
   </article>`);
 }
@@ -934,7 +937,7 @@ async function fetchCitedArticles(decisionId) {
 }
 async function fetchDoctrine(slug) {
   // Teaser uniquement : content_raw EXCLU du select serveur public.
-  return one(await sb(`doctrine?slug=eq.${encodeURIComponent(slug)}&select=id,slug,numero,annee,date,service_emetteur,reference_complete,objet,destinataire,signataire&limit=1`));
+  return one(await sb(`doctrine?slug=eq.${encodeURIComponent(slug)}&select=id,slug,numero,annee,date,service_emetteur,reference_complete,objet,destinataire,signataire,extrait&limit=1`));
 }
 // Articles du code visés par une lettre de doctrine (table en lecture publique).
 async function fetchDoctrineArticles(doctrineId) {
