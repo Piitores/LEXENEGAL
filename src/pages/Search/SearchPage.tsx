@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { articleLabel } from '../../lib/articleLabel';
 import { isAutomatedAgent } from '../../lib/botDetect';
 import { urlArticle } from '../../lib/urls';
+import { doitChercherParNom, fusionnerResultats, filtrerCommeLaRecherche } from '../../lib/nomUsage';
 import {
     BASES_TEXTES, categoriesDeBase, type BaseTextes,
     PASTILLES_MATIERE, valeursActives, basculerValeurs, matieresRegroupees, pucesMatiere,
@@ -33,6 +34,8 @@ interface Decision {
     resume: string;
     slug: string;
     mots_cles: string[];
+    /** Remonte grâce au nom d'usage des parties (mention sur la carte, jamais le nom). */
+    parNomUsage?: boolean;
 }
 
 interface ArticleHit {
@@ -141,6 +144,9 @@ const SearchPage: React.FC = () => {
     const rechercheSeqRef = useRef(0);
     const articlesSeqRef = useRef(0);
     const doctrineSeqRef = useRef(0);
+    // Recherche par nom d'usage : réponse mémorisée par terme (interrogée quand la requête change,
+    // réappliquée aux filtres sans nouvel appel).
+    const nomUsageCacheRef = useRef(new Map<string, Decision[]>());
     // L'utilisateur a-t-il choisi un onglet manuellement ? (sinon on choisit pour lui selon la requête)
     const userPickedTab = useRef(false);
     // Analytics : dernier terme déjà loggé (évite de logger 2× la même requête).
@@ -641,6 +647,26 @@ const SearchPage: React.FC = () => {
                 dateFrom = `${currentYear - 5}-01-01`;
             }
 
+            // Recherche par nom d'usage (noms des parties conservés hors des décisions, jamais renvoyés) :
+            // appel direct à la RPC quand la requête change, en parallèle ; toute erreur est ignorée
+            // (la recherche habituelle reste affichée).
+            const pParNom: Promise<Decision[]> = !append && doitChercherParNom(searchTerm)
+                ? (nomUsageCacheRef.current.has(searchTerm)
+                    ? Promise.resolve(nomUsageCacheRef.current.get(searchTerm) as Decision[])
+                    : federated
+                        ? (async () => {
+                            try {
+                                const { data, error } = await supabase.rpc('search_decisions_nom_usage', { p_query: searchTerm });
+                                const lignes: Decision[] = !error && data?.ok && Array.isArray(data.results) ? data.results.map(versDecision) : [];
+                                if (!error) nomUsageCacheRef.current.set(searchTerm, lignes);
+                                return lignes;
+                            } catch {
+                                return [];
+                            }
+                        })()
+                        : Promise.resolve([]))
+                : Promise.resolve([]);
+
             let rows: any[] = [];
             let total: TotalReel | null = null;
 
@@ -785,7 +811,18 @@ const SearchPage: React.FC = () => {
             finDecisions = performance.now();
 
             const encoreLignes = rows.length > pageSize;
-            const decisions = rows.slice(0, pageSize).map(versDecision);
+            let decisions = rows.slice(0, pageSize).map(versDecision);
+            if (!append && searchTerm.length > 0) {
+                // Les résultats par nom passent par les MÊMES filtres que la recherche, puis viennent en tête.
+                const parNom = filtrerCommeLaRecherche(await pParNom, {
+                    matiere: matiereFilter,
+                    chambre: chambreFilter,
+                    juridiction: finalJuridictionFilter,
+                    date_from: dateFrom,
+                    date_to: dateTo,
+                });
+                if (parNom.length) decisions = fusionnerResultats(decisions, parNom);
+            }
 
             if (courante()) {
                 if (append) {
@@ -1436,6 +1473,7 @@ const SearchPage: React.FC = () => {
                                         </span>
                                     </div>
                                     <h2 className="cardTitle">{[hit.matiere_principale || hit.juridiction, hit.chambre].filter(Boolean).join(' - ') || 'Décision'}</h2>
+                                    {hit.parNomUsage && <p className="cardNomUsage">Correspond à un nom de partie</p>}
                                     <p className="cardSnippet">{hit.resume || 'Aucun aperçu disponible pour ce document.'}</p>
                                     <div className="cardTags">
                                         {hit.mots_cles && hit.mots_cles.slice(0, 3).map(tag => (

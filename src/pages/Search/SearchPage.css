@@ -987,3 +987,11 @@ a.best-match {
     font-size: 0.8rem;
     color: #6B7280;
 }
+
+/* Résultat remonté par le nom d'usage des parties (le nom lui-même n'est jamais affiché). */
+.cardNomUsage {
+    margin: -0.25rem 0 0.5rem;
+    font-size: 0.8rem;
+    font-style: italic;
+    color: var(--emerald-prestige, #047857);
+}
