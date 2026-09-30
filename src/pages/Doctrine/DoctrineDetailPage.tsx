@@ -7,6 +7,7 @@ import ConversionModal from '../../components/ConversionModal/ConversionModal';
 import ReportErrorModal from '../../components/ReportError/ReportErrorModal';
 import ActionButton from '../../components/ui/ActionButton';
 import { formatDoctrineDate } from '../../lib/doctrineDate';
+import { articlesDeDoctrine, titreSeoDoctrine, type ArticleDoctrine } from '../../lib/seoDoctrine';
 import './DoctrinePage.css';
 import './DoctrineDetailPage.css';
 
@@ -40,6 +41,8 @@ const DoctrineDetailPage: React.FC = () => {
     const [loadingBody, setLoadingBody] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+    // Articles du code visés par la lettre (métadonnée publique, table article_doctrine_links).
+    const [articlesVises, setArticlesVises] = useState<ArticleDoctrine[]>([]);
 
     // Teaser : chargé pour tout le monde (objet, référence, métadonnées).
     useEffect(() => {
@@ -72,14 +75,25 @@ const DoctrineDetailPage: React.FC = () => {
         return () => { active = false; };
     }, [slug]);
 
-    // Titre de page côté SPA (le SSR sert déjà le <head> complet aux crawlers).
     useEffect(() => {
-        if (doctrine) {
-            const ref = doctrine.reference_complete || (doctrine.numero ? `Lettre n° ${doctrine.numero}` : 'Doctrine fiscale');
-            document.title = `${doctrine.objet ? `${doctrine.objet} - ` : ''}${ref} | Doctrine fiscale | Lexenegal`;
-        }
-        return () => { document.title = 'Lexenegal'; };
+        if (!doctrine) return;
+        let active = true;
+        (async () => {
+            const { data } = await supabase
+                .from('article_doctrine_links')
+                .select('articles(slug, num, num_court, article_number, display_order, is_active, laws_and_codes(slug, title, short_title, category))')
+                .eq('doctrine_id', doctrine.id)
+                .limit(60);
+            if (active) setArticlesVises(articlesDeDoctrine((data || []) as any));
+        })();
+        return () => { active = false; };
     }, [doctrine]);
+
+    // Titre de page côté SPA : même règle que le rendu serveur (src/lib/seoDoctrine.ts).
+    useEffect(() => {
+        if (doctrine) document.title = titreSeoDoctrine(doctrine, articlesVises);
+        return () => { document.title = 'Lexenegal'; };
+    }, [doctrine, articlesVises]);
 
     // Corps (content_raw) chargé à la demande, SEULEMENT pour un membre (gate réel en base).
     useEffect(() => {
@@ -142,6 +156,17 @@ const DoctrineDetailPage: React.FC = () => {
                                 {doctrine.signataire && <li><strong>Signataire :</strong>&nbsp;{doctrine.signataire}</li>}
                             </ul>
                         </header>
+
+                        {articlesVises.length > 0 && (
+                            <section className="doctrine-detail__articles">
+                                <h2>Articles concernés</h2>
+                                <ul>
+                                    {articlesVises.map((a) => (
+                                        <li key={a.url}><Link to={a.url}>{a.intitule}</Link></li>
+                                    ))}
+                                </ul>
+                            </section>
+                        )}
 
                         {/* Actions du document */}
                         <div className="doctrine-detail__actions">

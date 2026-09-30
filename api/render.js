@@ -601,16 +601,72 @@ export function buildCodesBody(texts) {
  * `content_raw` n'est JAMAIS servi côté serveur public (anti-cloaking + anti-scraping) ;
  * le corps reste chargé côté client pour un membre connecté (gate DB Phase 1).
  */
-export function buildDoctrineHead(d, canonical) {
+/*
+ * Doctrine : titre, description et articles liés (métadonnées publiques ; le texte intégral reste réservé).
+ * COPIE de src/lib/seoDoctrine.ts ; src/lib/__tests__/seoDoctrineApi.test.ts vérifie la concordance.
+ */
+const MOIS_SEO = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+export function dateLongue(iso) {
+  const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return '';
+  const j = parseInt(m[3], 10);
+  return `${j === 1 ? '1er' : j} ${MOIS_SEO[parseInt(m[2], 10) - 1]} ${m[1]}`;
+}
+function nomCodeDoctrine(law) {
+  const court = String(law.short_title || '').trim();
+  return /^[A-Z0-9]{2,8}$/.test(court) ? court : nomCourtTexte(law);
+}
+export function articlesDeDoctrine(liens) {
+  const vus = new Set();
+  const out = [];
+  for (const l of liens || []) {
+    const a = l.articles; const law = a && a.laws_and_codes;
+    if (!a || !law || !a.slug || !law.slug || a.is_active === false) continue;
+    const url = `/code/${law.slug}/${a.slug}`;
+    if (vus.has(url)) continue;
+    vus.add(url);
+    out.push({ url, numero: libelleSeoArticle(a).replace(/^Article\s+/i, ''), intitule: intituleSeoArticle(a, law),
+      sigle: nomCodeDoctrine(law), codeSlug: law.slug, ordre: a.display_order ?? 0 });
+  }
+  return out.sort((x, y) => (x.codeSlug === y.codeSlug ? x.ordre - y.ordre : x.codeSlug < y.codeSlug ? -1 : 1));
+}
+function articlesEnClair(arts) {
+  if (!arts.length) return '';
+  const duCode = arts.filter((a) => a.codeSlug === arts[0].codeSlug);
+  const n = duCode.map((a) => a.numero);
+  const prep = /^code|^[A-Z0-9]{2,8}$/i.test(duCode[0].sigle) && !/^(loi|constitution|convention)/i.test(duCode[0].sigle) ? 'du' : 'de';
+  const fin = `${prep} ${duCode[0].sigle}`;
+  if (n.length === 1) return `article ${n[0]} ${fin}`;
+  if (n.length === 2) return `articles ${n[0]} et ${n[1]} ${fin}`;
+  if (n.length === 3) return `articles ${n[0]}, ${n[1]} et ${n[2]} ${fin}`;
+  return `articles ${n.slice(0, 3).join(', ')} et autres ${fin}`;
+}
+function objetPropre(d) {
+  const o = String(d.objet || '').replace(/\s+/g, ' ').replace(/[.\s]+$/, '').trim();
+  return o ? o.charAt(0).toUpperCase() + o.slice(1) : 'Doctrine fiscale';
+}
+function referenceCourte(d) {
+  const date = dateLongue(d.date);
+  if (d.numero) return `n° ${d.numero}${date ? ` du ${date}` : ''}`;
+  return d.reference_complete || date;
+}
+export function titreSeoDoctrine(d, arts) {
+  const quoi = articlesEnClair(arts);
+  const ref = `DGID ${referenceCourte(d)}`.trim();
+  return quoi ? `${objetPropre(d)} : ${quoi} - ${ref} | Lexenegal` : `${objetPropre(d)} - ${ref} | Doctrine fiscale | Lexenegal`;
+}
+export function descriptionSeoDoctrine(d, arts) {
+  const objet = String(d.objet || '').replace(/\s+/g, ' ').replace(/[.\s]+$/, '').trim();
+  const quoi = articlesEnClair(arts);
+  const porte = quoi ? ` Porte sur ${quoi.startsWith('articles') ? 'les' : 'l’'}${quoi.startsWith('articles') ? ' ' : ''}${quoi}.` : '';
+  return `Doctrine fiscale de la DGID (Sénégal), ${referenceCourte(d)}${objet ? ` : ${objet}` : ''}.${porte} Texte intégral réservé aux membres de Lexenegal.`;
+}
+export function buildDoctrineHead(d, canonical, arts = []) {
   const objet = (d.objet || '').trim();
   const ref = (d.reference_complete || (d.numero ? `Lettre n° ${d.numero}` : 'Doctrine fiscale')).trim();
-  const dateFr = formatDateFr(d.date);
-  const service = d.service_emetteur || 'DGID';
   const titleCore = objet ? `${objet} - ${ref}` : ref;
-  const title = `${titleCore} | Doctrine fiscale | Lexenegal`;
-  const description = `Doctrine fiscale de la DGID (Sénégal) : ${ref}. `
-    + `${objet ? `Objet : ${objet}. ` : ''}${service}${dateFr ? ` - ${dateFr}` : ''}. `
-    + `Référence et objet en accès libre ; texte intégral réservé aux membres sur Lexenegal.`;
+  const title = titreSeoDoctrine(d, arts);
+  const description = descriptionSeoDoctrine(d, arts);
   const keywords = [
     objet || null, ref, 'doctrine fiscale Sénégal', 'DGID', 'circulaire fiscale',
     'note DGID', 'droit fiscal sénégalais', 'Lexenegal',
@@ -627,7 +683,7 @@ export function buildDoctrineHead(d, canonical) {
   };
   return headBlock({ title, description, keywords, canonical, ogType: 'article', schema });
 }
-export function buildDoctrineBody(d) {
+export function buildDoctrineBody(d, arts = []) {
   const objet = (d.objet || '').trim();
   const ref = d.reference_complete || (d.numero ? `Lettre n° ${d.numero}` : 'Doctrine fiscale');
   const dateFr = formatDateFr(d.date);
@@ -643,6 +699,7 @@ export function buildDoctrineBody(d) {
     <nav class="ssr-bc" aria-label="Fil d'Ariane"><a href="/doctrine-fiscale">Doctrine fiscale</a> › ${esc(ref)}</nav>
     <h1>${esc(objet || ref)}</h1>
     <ul class="ssr-meta">${meta}</ul>
+    ${arts.length ? `<section class="ssr-doctrine-articles"><h2>Articles concernés</h2><ul>${arts.map((a) => `<li><a href="${attr(a.url)}">${esc(a.intitule)}</a></li>`).join('')}</ul></section>` : ''}
     <section class="ssr-doctrine-gate">
       <p>Document de doctrine fiscale de la <strong>DGID</strong> (Sénégal). L'objet et les références ci-dessus sont en accès libre.</p>
       <p>Le <strong>texte intégral</strong> de cette lettre est réservé aux membres. <a href="/signup">Créez un compte gratuit</a> pour le consulter, ou parcourez l'ensemble de la <a href="/doctrine-fiscale">doctrine fiscale</a>.</p>
@@ -874,6 +931,10 @@ async function fetchDoctrine(slug) {
   // Teaser uniquement : content_raw EXCLU du select serveur public.
   return one(await sb(`doctrine?slug=eq.${encodeURIComponent(slug)}&select=id,slug,numero,annee,date,service_emetteur,reference_complete,objet,destinataire,signataire&limit=1`));
 }
+// Articles du code visés par une lettre de doctrine (table en lecture publique).
+async function fetchDoctrineArticles(doctrineId) {
+  return sb(`article_doctrine_links?doctrine_id=eq.${encodeURIComponent(doctrineId)}&select=articles(slug,num,num_court,article_number,display_order,is_active,laws_and_codes(slug,title,short_title,category))&limit=60`);
+}
 // Anciens slugs doctrine (numériques + doublons -occ retirés) → nouveau slug SEO.
 // Alimente le 301 permanent : aucune URL indexée ne casse après la refonte des slugs.
 async function fetchDoctrineRedirect(oldSlug) {
@@ -1052,7 +1113,9 @@ export default async function handler(req, res) {
         return serveShell(60, true);
       }
       const canonical = `${SITE}/doctrine-fiscale/${slug}`;
-      return serveHtml(buildDoctrineHead(d, canonical), buildDoctrineBody(d));
+      let arts = [];
+      try { arts = articlesDeDoctrine(await fetchDoctrineArticles(d.id)); } catch (e) { /* bonus : la page reste servie */ }
+      return serveHtml(buildDoctrineHead(d, canonical, arts), buildDoctrineBody(d, arts));
     }
 
     if (type === 'guides') {
