@@ -43,12 +43,12 @@ const REPLI: PublicStats = {
 };
 
 /**
- * Plancher d'affichage des décisions, demandé par le propriétaire (2026-07-27) :
- * on continue d'annoncer 11 000 en attendant le prochain versement de décisions.
- * Écrit comme un PLANCHER et non comme une constante : dès que le corpus réel
- * dépasse ce seuil, l'affichage suit tout seul et ne se re-fige pas.
+ * Décisions annoncées PAR TRANCHES DE 1 000, arrondies vers le bas (décision du
+ * propriétaire, 2026-09-30) : le chiffre suit le corpus tout seul à chaque
+ * versement, sans révéler le compte exact (13 059 → « Plus de 13 000 »).
+ * Remplace le plancher figé à 11 000 du 2026-07-27, devenu faux.
  */
-export const PLANCHER_DECISIONS = 11000;
+export const TRANCHE_DECISIONS = 1000;
 
 /** Arrondi vers le BAS : on n'annonce jamais plus que ce que contient la base. */
 export function arrondiBas(n: number, pas: number): number {
@@ -61,9 +61,9 @@ export function formatFr(n: number): string {
     return n.toLocaleString('fr-FR').replace(/ | /g, ' ');
 }
 
-/** « Plus de 11 000 » : décisions arrondies à la centaine basse, plancher appliqué. */
+/** « Plus de 13 000 » : décisions arrondies à la tranche de 1 000 inférieure. */
 export function libelleDecisions(s: PublicStats): string {
-    return `Plus de ${formatFr(Math.max(PLANCHER_DECISIONS, arrondiBas(s.decisions, 100)))}`;
+    return `Plus de ${formatFr(arrondiBas(s.decisions, TRANCHE_DECISIONS))}`;
 }
 
 /** « Plus de 17 000 » : articles arrondis au millier bas. */
