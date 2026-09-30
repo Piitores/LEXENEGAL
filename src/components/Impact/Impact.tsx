@@ -20,7 +20,7 @@ function Impact() {
 
     const stats = s
         ? [
-            { value: libelleDecisions(s), label: 'Décisions de Jurisprudence' },
+            { value: libelleDecisions(s), label: 'Décisions de Justice' },
             { value: libelleArticles(s), label: 'Articles de Loi Indexés' },
             { value: formatFr(s.codes), label: 'Codes du Corpus National' },
             { value: formatFr(s.juridictions), label: 'Juridictions Couvertes' },
