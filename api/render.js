@@ -225,7 +225,12 @@ export function buildDecisionBody(d, cited, related) {
  *    (« Code X »), pas quand le nom porte déjà sa référence (« Loi n° … »).
  */
 function codeSeoMeta(law) {
-  const baseName = law.short_title || law.title;
+  // Nom court réduit à un sigle (« CGI ») : on cherche aussi le nom en toutes lettres
+  // (« code général des impôts sénégal ») → « Code Général des Impôts (CGI) ».
+  const court = String(law.short_title || '').trim();
+  const baseName = court && /^[A-Z0-9]{2,8}$/.test(court) && law.title
+    ? `${String(law.title).trim()} (${court})`
+    : (court || law.title);
   const cat = String(law.category || 'code').toLowerCase();
   const isCode = cat === 'code';
   const isOhada = cat === 'ohada';
