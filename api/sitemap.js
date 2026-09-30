@@ -192,7 +192,7 @@ const PAGES_STATIQUES = [
  */
 const Q_ARTICLES = 'articles?select=slug,laws_and_codes!inner(slug,is_active)&laws_and_codes.is_active=eq.true&is_active=eq.true&order=id';
 const Q_CODES = 'laws_and_codes?select=slug,updated_at&is_active=eq.true&order=id';
-const Q_DECISIONS = 'decisions?select=slug,date_decision&is_active=eq.true&order=id';
+const Q_DECISIONS = 'decisions?select=slug,date_decision,contenu_modifie_le&is_active=eq.true&order=id';
 const Q_DOCTRINE = 'doctrine?select=slug,date&order=id';
 const Q_THEMES = 'seo_themes?select=slug&is_active=eq.true&order=id';
 const Q_GUIDES = 'guides?select=slug,published_at&is_active=eq.true&order=id';
@@ -207,7 +207,9 @@ const SECTIONS = {
   decisions: {
     query: Q_DECISIONS,
     rendu: (lignes) => lignes.filter((d) => d.slug)
-      .map((d) => urlTag(`/decision/${d.slug}`, { date: d.date_decision, changefreq: 'yearly', priority: '0.7' })),
+      // <lastmod> : dernière modification du CONTENU (colonne tenue par un déclencheur, insensible aux mises à jour
+      // techniques) ; à défaut, date de la décision.
+      .map((d) => urlTag(`/decision/${d.slug}`, { date: d.contenu_modifie_le || d.date_decision, changefreq: 'yearly', priority: '0.7' })),
   },
   codes: {
     query: Q_CODES,
