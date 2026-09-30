@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
+import { avecReprise } from '../../lib/reprise';
 import { Loader2, BookMarked, Scale, HelpCircle } from 'lucide-react';
 import './GuidesPage.css';
 
@@ -35,21 +36,25 @@ const GuideDetailPage: React.FC = () => {
     const { slug } = useParams();
     const [guide, setGuide] = useState<GuideDetail | null>(null);
     const [notFound, setNotFound] = useState(false);
+    // Erreur technique persistante : jamais présentée comme « introuvable » (cf. lib/reprise.ts).
+    const [echec, setEchec] = useState(false);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         let active = true;
         setLoading(true);
         setNotFound(false);
+        setEchec(false);
         (async () => {
-            const { data, error } = await supabase
+            const { data, error } = await avecReprise(() => supabase
                 .from('guides')
                 .select('slug, title, h1, description, content_html, faq, theme_slug, published_at')
                 .eq('slug', slug)
                 .eq('is_active', true)
-                .maybeSingle();
+                .maybeSingle());
             if (!active) return;
-            if (error || !data) setNotFound(true);
+            if (error) setEchec(true);
+            else if (!data) setNotFound(true);
             else setGuide(data as GuideDetail);
             setLoading(false);
         })();
@@ -66,6 +71,19 @@ const GuideDetailPage: React.FC = () => {
             <div className="guides-page">
                 <div className="guides-page__container guides-page__loading">
                     <Loader2 size={40} className="spinner" />
+                </div>
+            </div>
+        );
+    }
+
+    if (echec) {
+        return (
+            <div className="guides-page">
+                <div className="guides-page__container guides-page__empty">
+                    <BookMarked size={48} />
+                    <h1>Chargement interrompu</h1>
+                    <p>La connexion a été interrompue avant la fin du chargement.</p>
+                    <button type="button" className="guides-page__cta" onClick={() => window.location.reload()}>Réessayer</button>
                 </div>
             </div>
         );

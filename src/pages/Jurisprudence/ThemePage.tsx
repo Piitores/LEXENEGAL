@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
+import { avecReprise } from '../../lib/reprise';
 import { urlArticle } from '../../lib/urls';
 import { Loader2, Scale, FileText, BookOpen, HelpCircle } from 'lucide-react';
 import './ThemePage.css';
@@ -56,16 +57,20 @@ const ThemePage: React.FC = () => {
     const { slug } = useParams();
     const [data, setData] = useState<ThemePageData | null>(null);
     const [notFound, setNotFound] = useState(false);
+    // Erreur technique persistante : jamais présentée comme « introuvable » (cf. lib/reprise.ts).
+    const [echec, setEchec] = useState(false);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         let active = true;
         setLoading(true);
         setNotFound(false);
+        setEchec(false);
         (async () => {
-            const { data: page, error } = await supabase.rpc('get_theme_page', { p_slug: slug });
+            const { data: page, error } = await avecReprise(() => supabase.rpc('get_theme_page', { p_slug: slug }));
             if (!active) return;
-            if (error || !page || !page.theme) setNotFound(true);
+            if (error) setEchec(true);
+            else if (!page || !page.theme) setNotFound(true);
             else setData(page as ThemePageData);
             setLoading(false);
         })();
@@ -86,6 +91,19 @@ const ThemePage: React.FC = () => {
                 <div className="theme-page__container theme-page__loading">
                     <Loader2 size={40} className="spinner" />
                     <p>Chargement…</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (echec) {
+        return (
+            <div className="theme-page">
+                <div className="theme-page__container theme-page__empty">
+                    <Scale size={48} />
+                    <h1>Chargement interrompu</h1>
+                    <p>La connexion a été interrompue avant la fin du chargement.</p>
+                    <button type="button" className="theme-page__cta" onClick={() => window.location.reload()}>Réessayer</button>
                 </div>
             </div>
         );

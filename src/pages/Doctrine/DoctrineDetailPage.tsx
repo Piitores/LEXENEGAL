@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
+import { avecReprise } from '../../lib/reprise';
 import useAuth from '../../hooks/useAuth';
 import { Loader2, ArrowLeft, Building, Calendar, FileText, Lock, BookOpen, Copy, AlertCircle } from 'lucide-react';
 import ConversionModal from '../../components/ConversionModal/ConversionModal';
@@ -36,6 +37,8 @@ const DoctrineDetailPage: React.FC = () => {
 
     const [doctrine, setDoctrine] = useState<DoctrineDetail | null>(null);
     const [notFound, setNotFound] = useState(false);
+    // Erreur technique persistante : jamais présentée comme « introuvable » (cf. lib/reprise.ts).
+    const [echec, setEchec] = useState(false);
     const [loading, setLoading] = useState(true);
     const [body, setBody] = useState<string | null>(null);
     const [loadingBody, setLoadingBody] = useState(false);
@@ -50,13 +53,14 @@ const DoctrineDetailPage: React.FC = () => {
         setLoading(true);
         setNotFound(false);
         (async () => {
-            const { data, error } = await supabase
+            const { data, error } = await avecReprise(() => supabase
                 .from('doctrine')
                 .select(TEASER_COLUMNS)
                 .eq('slug', slug)
-                .maybeSingle();
+                .maybeSingle());
             if (!active) return;
-            if (error || !data) {
+            if (error) setEchec(true);
+            else if (!data) {
                 // Slug inconnu : peut-être un ancien slug (refonte SEO) → redirection vers le nouveau.
                 const { data: redir } = await supabase
                     .from('doctrine_slug_redirects')
@@ -131,6 +135,15 @@ const DoctrineDetailPage: React.FC = () => {
                     <div className="doctrine-loading">
                         <Loader2 size={40} className="spinner" />
                         <p>Chargement…</p>
+                    </div>
+                ) : echec ? (
+                    <div className="empty-state" style={{ textAlign: 'center', padding: '4rem', color: '#6b7280' }}>
+                        <FileText size={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
+                        <h3>Chargement interrompu</h3>
+                        <p>La connexion a été interrompue avant la fin du chargement.</p>
+                        <button type="button" className="doctrine-detail__cta" style={{ marginTop: '1.5rem', display: 'inline-flex' }} onClick={() => window.location.reload()}>
+                            Réessayer
+                        </button>
                     </div>
                 ) : notFound ? (
                     <div className="empty-state" style={{ textAlign: 'center', padding: '4rem', color: '#6b7280' }}>
