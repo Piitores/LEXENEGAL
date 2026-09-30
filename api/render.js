@@ -325,12 +325,78 @@ function racineFilAriane(slug) {
     ? { nom: 'Conventions collectives', url: '/conventions-collectives' }
     : { nom: 'Codes et textes', url: '/codes' };
 }
+/*
+ * Titre et description d'un article, calqués sur la recherche (« article 363 du code pénal sénégalais »).
+ * COPIE de src/lib/seoArticle.ts (+ articleLabel de src/lib/articleLabel.ts) : une fonction Vercel ne peut pas
+ * importer un module TypeScript. src/lib/__tests__/seoArticleApi.test.ts vérifie que les deux copies concordent.
+ */
+export function articleLabelSeo(a) {
+  if (!a) return '';
+  const an = String(a.article_number ?? '').trim();
+  if (/^pr[ée]ambule/i.test(an)) return 'Préambule';
+  if (/^rapport de pr[ée]sentation/i.test(an)) return 'Rapport de présentation';
+  if (/^(expos[ée] des motifs|visas?)/i.test(an)) return a.num || a.num_court || an;
+  if (a.num) return a.num;
+  if (!an) return a.num_court || '';
+  if (/^(article|art\.)/i.test(an)) return an;
+  return `Article ${an}`;
+}
+const sansAccentsSeo = (s) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+const PREPOSITIONS_SEO = {
+  code: 'du', decret: 'du', traite: 'du', reglement: 'du', statut: 'du', protocole: 'du',
+  constitution: 'de la', loi: 'de la', convention: 'de la', charte: 'de la', directive: 'de la',
+  circulaire: 'de la', decision: 'de la', deliberation: 'de la', resolution: 'de la',
+  acte: "de l'", arrete: "de l'", ordonnance: "de l'", accord: "de l'", instruction: "de l'", avenant: "de l'",
+};
+const MINUSCULES_SEO = {
+  loi: 'loi', decret: 'décret', arrete: 'arrêté', ordonnance: 'ordonnance', decision: 'décision',
+  circulaire: 'circulaire', instruction: 'instruction', deliberation: 'délibération', resolution: 'résolution',
+};
+const OBJET_SEO = /\s+(?:portant|fixant|relatif|relative|modifiant|instituant|abrogeant|complétant|completant|déterminant|determinant|organisant|créant|creant|autorisant|concernant|sur|réglementant|reglementant|définissant|definissant|approuvant|prévoyant|prevoyant|ratifiant|abrogeant)\b/i;
+const premierMotSeo = (nom) => sansAccentsSeo((nom.match(/^[A-Za-zÀ-ÿ]+/) || [''])[0]).toLowerCase();
+export function nomCourtTexte(t) {
+  const court = String(t.short_title || '').trim();
+  let nom = String(court && !/^[A-Z0-9]{2,8}$/.test(court) ? court : (t.title || court || '')).trim();
+  nom = nom.replace(/\s+/g, ' ').replace(/[.\s]+$/, '');
+  const mot = premierMotSeo(nom);
+  if (MINUSCULES_SEO[mot]) {
+    nom = MINUSCULES_SEO[mot] + nom.slice(nom.match(/^[A-Za-zÀ-ÿ]+/)[0].length);
+    nom = nom.replace(/\bN\s*[°o]\s*/g, 'n° ').replace(/\bn\s*°\s*/g, 'n° ');
+    const m = nom.match(OBJET_SEO);
+    if (nom.length > 55 && m && m.index > 8) nom = nom.slice(0, m.index).trim();
+  }
+  return nom;
+}
+export function libelleSeoArticle(a) {
+  let l = articleLabelSeo(a).trim().replace(/\.$/, '');
+  if (l && !/^(article|art\.|pr[ée]ambule|rapport|visa|expos[ée]|annexe|titre|chapitre)/i.test(l)) l = `Article ${l}`;
+  return l || 'Article';
+}
+export function intituleSeoArticle(a, t) {
+  const nom = nomCourtTexte(t);
+  const prep = PREPOSITIONS_SEO[premierMotSeo(nom)];
+  const geo = t.category === 'code' && premierMotSeo(nom) === 'code' && !/s[ée]n[ée]gal|\(/i.test(nom) ? ' du Sénégal' : '';
+  const lib = libelleSeoArticle(a);
+  if (!prep) return `${lib} - ${nom}${geo}`;
+  return prep.endsWith("'") ? `${lib} ${prep}${nom}${geo}` : `${lib} ${prep} ${nom}${geo}`;
+}
+export function titreSeoArticle(a, t) { return `${intituleSeoArticle(a, t)} | Lexenegal`; }
+export function descriptionSeoArticle(a, t, texte) {
+  const intitule = intituleSeoArticle(a, t);
+  const extrait = String(texte || '').replace(/\s+/g, ' ').trim();
+  if (!extrait) {
+    const i = intitule.charAt(0).toLowerCase() + intitule.slice(1);
+    return `Texte intégral et en vigueur de l’${i}, avec la jurisprudence qui le cite.`;
+  }
+  const d = `${intitule} : ${extrait}`;
+  if (d.length <= 160) return d;
+  const coupe = d.slice(0, 159);
+  return `${coupe.slice(0, coupe.lastIndexOf(' ')).replace(/[\s,;:]+$/, '')}…`;
+}
 export function buildArticleHead(law, art, canonical, plain) {
-  const numLabel = art.num || art.num_court || (art.article_number != null ? `Article ${art.article_number}` : 'Article');
-  const title = `${numLabel} - ${law.title} | Lexenegal`;
-  const description = plain
-    ? `${plain.slice(0, 155)}…`
-    : `Texte intégral de l'${numLabel.toLowerCase()} du ${law.title}. Droit sénégalais consolidé sur Lexenegal.`;
+  const numLabel = libelleSeoArticle(art);
+  const title = titreSeoArticle(art, law);
+  const description = descriptionSeoArticle(art, law, plain);
   const schema = {
     '@context': 'https://schema.org', '@type': 'Legislation', name: `${numLabel} - ${law.title}`,
     legislationIdentifier: String(art.article_number != null ? art.article_number : numLabel),

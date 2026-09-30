@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useCopyAttribution } from '../../hooks/useCopyAttribution';
 import { articleLabel } from '../../lib/articleLabel';
+import { titreSeoArticle, descriptionSeoArticle } from '../../lib/seoArticle';
 import LinkedLegalContent from '../../components/LinkedLegalContent/LinkedLegalContent';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -52,6 +53,7 @@ interface ArticleVersion {
 
 interface Law {
     title: string;
+    short_title?: string | null;
     slug: string;
     publication_date?: string | null;
     reference?: string | null;
@@ -213,7 +215,7 @@ const ArticlePage: React.FC = () => {
             // Get law info
             const { data: lawData } = await supabase
                 .from('laws_and_codes')
-                .select('id, title, slug, category, publication_date, reference, abrogation_note, abrogated_by_slug, code_famille, partie')
+                .select('id, title, short_title, slug, category, publication_date, reference, abrogation_note, abrogated_by_slug, code_famille, partie')
                 .eq('slug', codeSlug)
                 .single();
 
@@ -468,8 +470,8 @@ const ArticlePage: React.FC = () => {
     return (
         <div className="article-page">
             <SEO
-                title={`${articleLabel(article)} - ${law?.title} | Lexenegal`}
-                description={`${articleLabel(article)} du ${law?.title} - texte intégral. Droit sénégalais consolidé sur Lexenegal.`}
+                title={titreSeoArticle(article, law ?? {})}
+                description={descriptionSeoArticle(article, law ?? {}, (currentVersion.content || '').replace(/<[^>]+>/g, ' '))}
                 url={`https://www.lexenegal.sn${urlArticle(codeSlug || '', article.slug)}`}
             />
 
