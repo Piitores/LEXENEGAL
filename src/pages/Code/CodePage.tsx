@@ -36,8 +36,11 @@ import { separerIntitule } from '../../lib/intituleArticle';
 // Texte lisible pour le presse-papiers : on privilégie content_raw, sinon on
 // dérive un texte propre depuis content_html (suppression des balises + décodage
 // des entités courantes), précédé du numéro/intitulé de l'article.
-const articleToPlainText = (art: Article): string => {
-    const heading = art.num || (art.article_number ? `Article ${art.article_number}` : '');
+const articleToPlainText = (art: Article, abroge = false): string => {
+    // Le texte copié d'un article abrogé le DIT : collé ailleurs, il ne doit pas passer pour du
+    // droit en vigueur, avec la référence Lexenegal en pied.
+    const numero = art.num || (art.article_number ? `Article ${art.article_number}` : '');
+    const heading = numero && abroge ? `${numero} (abrogé)` : numero;
     let body = (art.content_raw || '').trim();
     if (!body && art.content_html) {
         const tmp = document.createElement('div');
@@ -59,17 +62,21 @@ const articleToPlainText = (art: Article): string => {
 
 // ── Carte d'un article (gère le repli du préambule + le bouton Copier) ──
 
-const ArticleCard: React.FC<{ art: Article; slug: string | undefined; codeTitle?: string }> = ({ art, slug, codeTitle }) => {
+const ArticleCard: React.FC<{ art: Article; slug: string | undefined; codeTitle?: string; texteAbroge?: boolean }> = ({ art, slug, codeTitle, texteAbroge = false }) => {
     const preambule = isPreambule(art);
     // Préambule replié par défaut ; articles normaux toujours ouverts.
     const [open, setOpen] = useState(!preambule);
     const [copied, setCopied] = useState(false);
+    // Critère de la recherche (recherche.ts) : article au statut « abrogé » OU texte abrogé en
+    // entier. La charte veut le même traitement (contenu grisé + mention « Abrogé » rouge) pour
+    // un article seul, où qu'il s'affiche.
+    const abroge = art.status === 'abrogé' || art.is_active === false || texteAbroge;
 
     const handleCopy = async () => {
         try {
             const ref = art.num || `Article ${art.article_number}`;
             const url = articleUrl(slug || '', art.slug);
-            await navigator.clipboard.writeText(articleToPlainText(art) + attributionFooter(ref, codeTitle, url));
+            await navigator.clipboard.writeText(articleToPlainText(art, abroge) + attributionFooter(ref, codeTitle, url));
             setCopied(true);
             setTimeout(() => setCopied(false), 1500);
         } catch {
@@ -81,27 +88,30 @@ const ArticleCard: React.FC<{ art: Article; slug: string | undefined; codeTitle?
 
     return (
         <article
-            className={`article-card ${preambule ? 'article-card--preambule' : ''}`}
+            className={`article-card ${preambule ? 'article-card--preambule' : ''} ${abroge ? 'is-abroge' : ''}`}
             data-art-slug={art.slug}
             data-art-num={art.num || `Article ${art.article_number}`}
         >
             <div className="article-card-header">
-                {preambule ? (
-                    <button
-                        type="button"
-                        className="article-collapse-toggle"
-                        onClick={() => setOpen(o => !o)}
-                        aria-expanded={open}
-                    >
-                        <ChevronRight
-                            size={15}
-                            className={`collapse-chevron ${open ? 'is-open' : ''}`}
-                        />
+                <div className="article-card-header-left">
+                    {preambule ? (
+                        <button
+                            type="button"
+                            className="article-collapse-toggle"
+                            onClick={() => setOpen(o => !o)}
+                            aria-expanded={open}
+                        >
+                            <ChevronRight
+                                size={15}
+                                className={`collapse-chevron ${open ? 'is-open' : ''}`}
+                            />
+                            <span className="article-num">{heading}</span>
+                        </button>
+                    ) : (
                         <span className="article-num">{heading}</span>
-                    </button>
-                ) : (
-                    <span className="article-num">{heading}</span>
-                )}
+                    )}
+                    {abroge && <span className="article-card-abroge" title="Cet article a été abrogé">Abrogé</span>}
+                </div>
 
                 <div className="article-card-header-right">
                     {art.modifications && art.modifications.length > 0 && (
@@ -206,14 +216,22 @@ const CodePage: React.FC = () => {
     // bouger la page (on ne touche qu'au scroll interne de la sidebar).
     useLayoutEffect(() => {
         remonterEnHaut();
-        const cont = sidebarRef.current;
-        const el = activeNodeRef.current;
-        if (cont && el) {
-            const c = cont.getBoundingClientRect();
-            const e = el.getBoundingClientRect();
-            if (e.top < c.top) cont.scrollTop += e.top - c.top - 12;
-            else if (e.bottom > c.bottom) cont.scrollTop += e.bottom - c.bottom + 12;
-        }
+        const amenerNoeudActif = () => {
+            const cont = sidebarRef.current;
+            const el = activeNodeRef.current;
+            if (cont && el) {
+                const c = cont.getBoundingClientRect();
+                const e = el.getBoundingClientRect();
+                if (e.top < c.top) cont.scrollTop += e.top - c.top - 12;
+                else if (e.bottom > c.bottom) cont.scrollTop += e.bottom - c.bottom + 12;
+            }
+        };
+        amenerNoeudActif();
+        // ⚠️ Si la sélection a DÉPLIÉ une branche, celle-ci s'anime (0,2 s) et masque son
+        // débordement pendant ce temps : la colonne ne peut pas encore défiler jusqu'au nœud.
+        // On recommence une fois l'animation terminée.
+        const t = window.setTimeout(amenerNoeudActif, 260);
+        return () => window.clearTimeout(t);
     }, [selectedNode]);
 
     // Déplier/replier l'arbre ne doit PAS bouger la page : on restaure la position
@@ -594,7 +612,7 @@ const CodePage: React.FC = () => {
                     {!filteredArticles && preambuleArticles.length > 0 && (
                         <div className="preambule-top articles-list">
                             {preambuleArticles.map(art => (
-                                <ArticleCard key={art.id} art={art} slug={slug} codeTitle={law?.title} />
+                                <ArticleCard key={art.id} art={art} slug={slug} codeTitle={law?.title} texteAbroge={!!(law?.abrogated_by_slug || law?.abrogation_note)} />
                             ))}
                         </div>
                     )}
@@ -605,8 +623,11 @@ const CodePage: React.FC = () => {
                             <h2>{filteredArticles.length} résultat{filteredArticles.length > 1 ? 's' : ''} pour « {searchQuery} »</h2>
                             <div className="search-results-list">
                                 {filteredArticles.map(a => (
-                                    <Link key={a.id} to={urlArticle(law.slug, a.slug)} className="search-result-item">
-                                        <strong>{a.num || `Article ${a.article_number}`}</strong>
+                                    <Link key={a.id} to={urlArticle(law.slug, a.slug)} className={`search-result-item ${(a.status === 'abrogé' || a.is_active === false || law.abrogated_by_slug || law.abrogation_note) ? 'is-abroge' : ''}`}>
+                                        <strong>
+                                            {a.num || `Article ${a.article_number}`}
+                                            {(a.status === 'abrogé' || a.is_active === false || law.abrogated_by_slug || law.abrogation_note) && <span className="article-card-abroge" style={{ marginLeft: 8 }}>Abrogé</span>}
+                                        </strong>
                                         <span>{a.chapter_name || a.title_name || ''}</span>
                                     </Link>
                                 ))}
@@ -658,7 +679,9 @@ const CodePage: React.FC = () => {
                                         </React.Fragment>
                                     );
                                 })}
-                                <span className="version-pill">Version en vigueur</span>
+                                {/* Un texte abrogé en entier n'est pas « en vigueur » : la pastille se tait
+                                    (le bandeau d'abrogation en tête de page dit le reste). */}
+                                {!(law?.abrogated_by_slug || law?.abrogation_note) && <span className="version-pill">Version en vigueur</span>}
                             </div>
 
                             {/* Section header */}
@@ -712,7 +735,7 @@ const CodePage: React.FC = () => {
                                         </div>
                                     ) : (
                                         selectedArticles.map(art => (
-                                            <ArticleCard key={art.id} art={art} slug={slug} codeTitle={law?.title} />
+                                            <ArticleCard key={art.id} art={art} slug={slug} codeTitle={law?.title} texteAbroge={!!(law?.abrogated_by_slug || law?.abrogation_note)} />
                                         ))
                                     )}
                                 </div>

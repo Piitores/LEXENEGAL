@@ -53,3 +53,23 @@
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.08);
 }
+
+/* Alias de la page code, de l'arbre de navigation (CodeNavTree), des textes liés et de la page
+   article. ⛔ ICI et non dans CodePage.css : ce fichier-là n'est chargé qu'avec la page code, si
+   bien qu'une page article ouverte directement n'avait AUCUNE de ces variables (pastilles
+   d'articles sans fond ni bordure, nœud actif sans sa couleur), relevé le 02/10/2026. */
+:root {
+    /* Alias → tokens centralisés (src/styles/tokens.css) */
+    --cp-green: var(--color-accent);
+    --cp-green-light: var(--color-accent-wash);
+    --cp-green-lighter: var(--color-accent-wash-soft);
+    --cp-bg: var(--color-bg-subtle);
+    --cp-card: var(--color-bg);
+    --cp-border: var(--color-border);
+    --cp-border-light: var(--color-border-light);
+    --cp-text: var(--color-text);
+    --cp-text-muted: var(--color-text-secondary);
+    --cp-text-faint: var(--color-text-faint);
+    --cp-radius: var(--radius-lg);
+    --cp-sidebar-width: 320px;
+}

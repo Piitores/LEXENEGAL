@@ -82,12 +82,21 @@ const CodeNavTree: React.FC<CodeNavTreeProps> = ({
                     <div className="tree-density-fill" style={{ width: `${density}%` }} />
                 </div>
 
-                <AnimatePresence>
+                {/* initial={false} : une branche DÉJÀ ouverte au premier rendu (chemin de l'article
+                    consulté) s'affiche à sa hauteur, sans animation. Sinon, au moment où la page
+                    amène le nœud actif dans la colonne, la branche mesure encore 0 et le
+                    défilement visait à côté. */}
+                <AnimatePresence initial={false}>
                     {isExpanded && (
                         <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
+                            // ⚠️ Le débordement est masqué PENDANT l'animation seulement : sinon les
+                            // pastilles recouvraient les titres suivants le temps du dépliage (et
+                            // durablement quand le navigateur suspend l'animation). Une fois ouvert,
+                            // il redevient visible, sans quoi l'anneau de focus clavier des nœuds
+                            // imbriqués était rogné (revue du 02/10/2026).
+                            initial={{ height: 0, opacity: 0, overflow: 'hidden' }}
+                            animate={{ height: 'auto', opacity: 1, transitionEnd: { overflow: 'visible' } }}
+                            exit={{ height: 0, opacity: 0, overflow: 'hidden' }}
                             transition={{ duration: 0.2 }}
                         >
                             {/* Children */}

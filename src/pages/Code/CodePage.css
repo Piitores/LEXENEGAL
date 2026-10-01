@@ -5,21 +5,9 @@
 /* Polices chargées globalement via index.html (Inter + Playfair) ; Georgia = système.
    Lora supprimée (charte : Inter UI / Playfair titres / Georgia corps). */
 
-:root {
-    /* Alias → tokens centralisés (src/styles/tokens.css) */
-    --cp-green: var(--color-accent);
-    --cp-green-light: var(--color-accent-wash);
-    --cp-green-lighter: var(--color-accent-wash-soft);
-    --cp-bg: var(--color-bg-subtle);
-    --cp-card: var(--color-bg);
-    --cp-border: var(--color-border);
-    --cp-border-light: var(--color-border-light);
-    --cp-text: var(--color-text);
-    --cp-text-muted: var(--color-text-secondary);
-    --cp-text-faint: var(--color-text-faint);
-    --cp-radius: var(--radius-lg);
-    --cp-sidebar-width: 320px;
-}
+/* Les alias --cp-* vivent dans src/styles/tokens.css (chargé partout) : déclarés ici, ils
+   n'existaient pas sur une page article ouverte directement (ce fichier n'est chargé qu'avec la
+   page code), et l'arbre de navigation y perdait couleurs, fonds et bordures (02/10/2026). */
 
 .code-page { min-height: 100vh; background: var(--cp-bg); }
 
@@ -220,6 +208,7 @@
 .article-card-header {
     display: flex; align-items: flex-start; justify-content: space-between;
     margin-bottom: 14px; gap: 12px;
+    flex-wrap: wrap; /* sur téléphone, la date et « Copier » passent à la ligne au lieu de recouvrir le numéro */
 }
 .article-num {
     font-family: var(--font-ui);
@@ -303,6 +292,9 @@
 .article-link-btn:hover { background: var(--cp-green-light); }
 
 /* ─── En-tête : bloc droit (date + bouton copier) ─── */
+.article-card-header-left {
+    display: flex; align-items: center; gap: 8px;
+}
 .article-card-header-right {
     display: flex; align-items: center; gap: 10px;
     flex-shrink: 0;
@@ -409,6 +401,7 @@
 }
 .search-result-item strong { color: var(--cp-text); font-size: 0.95rem; }
 .search-result-item span { color: var(--cp-text-muted); font-size: 0.85rem; }
+.search-result-item.is-abroge strong { color: var(--color-text-faint); }
 
 /* Signature */
 .code-signature {

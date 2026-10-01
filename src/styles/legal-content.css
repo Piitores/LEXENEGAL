@@ -81,9 +81,53 @@
     color: var(--color-text-faint) !important;
 }
 
+/* Page CODE : carte d'un article abrogé, même traitement que la page article (charte :
+   « identique pour un article seul »). Avant le 02/10/2026, rien ne grisait ces cartes : 614
+   articles abrogés s'y lisaient comme du droit en vigueur, seule leur pastille de l'arbre était
+   barrée. */
+.article-card.is-abroge .article-body,
+.article-card.is-abroge .article-body * {
+    color: var(--color-text-faint) !important;
+}
+.article-card.is-abroge .article-body { font-style: italic; }
+/* les renvois aussi : leur soulignement et leur « § » étaient restés verts */
+:is(.article-content-wrapper.is-abroge .article-text, .article-card.is-abroge .article-body) :is(.article-link, a[data-article-id]) {
+    background: none !important;
+}
+:is(.article-content-wrapper.is-abroge .article-text, .article-card.is-abroge .article-body) :is(.article-link, a[data-article-id])::after {
+    color: var(--color-text-faint) !important;
+}
+/* et le numéro de la carte, pastille verte du droit en vigueur */
+.article-card.is-abroge .article-num {
+    background: var(--color-bg-subtle);
+    color: var(--color-text-faint);
+}
+/* …sauf le bandeau d'abrogation intégré au contenu (CGI), qui garde sa mention rouge */
+.article-card.is-abroge .article-body .abrogation-banner,
+.article-card.is-abroge .article-body .abrogation-banner * {
+    color: var(--color-danger-strong) !important;
+    font-style: normal;
+}
+/* Mention « Abrogé » de la carte : rouge sur fond propre, jamais de fond rouge plein */
+.article-card-abroge {
+    font-family: var(--font-ui, Inter, system-ui, sans-serif);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-danger);
+    background: var(--color-bg);
+    border: 1px solid var(--color-danger);
+    border-radius: 4px;
+    padding: 1px 6px;
+    white-space: nowrap;
+}
+
 /* Bandeaux d'abrogation (texte entier ET article) : fond propre, mention rouge */
 .law-abrogation-banner,
-.article-abrogation-banner {
+.article-abrogation-banner,
+.article-body .abrogation-banner,
+.article-text .abrogation-banner {
     background: var(--color-bg) !important;
     border: 1px solid var(--color-border) !important;
     border-left: 4px solid var(--color-danger) !important;
