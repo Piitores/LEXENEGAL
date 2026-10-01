@@ -26,6 +26,7 @@ import { chargerArticlesDuCode, COLONNES_LECTURE } from '../../lib/articlesDuCod
 import { correspond, texteCherchable } from '../../lib/rechercheDansLeTexte';
 import './CodePage.css';
 import '../../styles/legal-content.css';
+import { separerIntitule } from '../../lib/intituleArticle';
 
 
 // ── Helpers article ──
@@ -42,6 +43,16 @@ const articleToPlainText = (art: Article): string => {
         const tmp = document.createElement('div');
         tmp.innerHTML = art.content_html;
         body = (tmp.textContent || tmp.innerText || '').replace(/\n{3,}/g, '\n\n').trim();
+    }
+    // L'INTITULÉ sur sa propre ligne : `content_raw` le colle à la première phrase
+    // (« Indemnité compensatrice de préavis Toute rupture… »), la confusion relevée par le
+    // propriétaire le 02/10/2026. On ne coupe que si le texte commence bien par lui.
+    const { intitule } = separerIntitule(art.content_html);
+    if (intitule) {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = intitule;
+        const titre = (tmp.textContent || '').replace(/\s+/g, ' ').trim();
+        if (titre && body.startsWith(titre)) body = `${titre}\n\n${body.slice(titre.length).trim()}`;
     }
     return heading ? `${heading}\n\n${body}` : body;
 };

@@ -637,6 +637,15 @@ a.best-match {
     overflow: hidden;
 }
 
+/* Intitulé de l'article au-dessus de l'extrait (charte : rubrique en gras) */
+.cardIntitule {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #111827;
+    line-height: 1.4;
+    margin: 0 0 0.25rem;
+}
+
 .cardTags {
     display: flex;
     gap: 0.5rem;

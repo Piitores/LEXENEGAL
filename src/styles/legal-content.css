@@ -34,6 +34,44 @@
 }
 
 /* ─────────────────────────────────────────────
+   INTITULÉ D'ARTICLE = rubrique de l'article, DISTINCTE du corps
+   (charte §4 « Sous-titre / rubrique » : Georgia gras, jamais Playfair).
+   Avant, rien ne le séparait du premier alinéa : on lisait « Interdiction de la
+   discrimination » comme une phrase du texte (retour propriétaire, 02/10/2026).
+   Trois classes selon l'outil qui a publié le texte, toujours le PREMIER paragraphe du
+   contenu (vérifié en base) : voir src/lib/intituleArticle.ts. Même règle dans le CSS
+   critique du rendu serveur (index.html, #ssr-keep).
+   ───────────────────────────────────────────── */
+/* ⚠️ `:is()` porte la spécificité de son argument le PLUS fort (0,3,1 ici) : la règle l'emporte
+   sur `.article-text p.alinea` / `.article-body p.alinea` (retrait, justification) QUEL QUE SOIT
+   l'ordre de chargement des feuilles, que Vite ne garantit pas d'un morceau de bundle à l'autre. */
+:is(.article-text, .article-body) p:is(.alinea.intitule-article, .intitule-article, .article-intitule, .article-rubrique) {
+    font-family: var(--font-body, Georgia, 'Times New Roman', serif);
+    font-weight: 700;
+    font-size: 1.05em;
+    line-height: 1.5;
+    /* ⛔ PAS de `color` : l'intitulé hérite, comme le corps. Une couleur posée ici, à cette
+       spécificité, battait `.article-text:has(.abrogation-banner) .alinea` et laissait
+       l'intitulé NOIR dans un article abrogé (charte : tout grisé). */
+    text-indent: 0;     /* annule l'indentation d'alinéa */
+    text-align: left;   /* annule le justify d'alinéa */
+    hyphens: none;
+    margin: 0 0 1rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--color-border, #E5E7EB);
+}
+/* le <strong> d'origine n'ajoute rien : c'est le paragraphe entier qui porte le gras */
+:is(.article-text, .article-body) p:is(.article-intitule, .article-rubrique) strong {
+    font-weight: inherit;
+}
+/* le premier alinéa du texte reste sans retrait, comme dans un article sans intitulé.
+   ⛔ Sauf un ÉLÉMENT DE LISTE (niv1…) : il garderait sa marge sans son retrait et sa puce se
+   décalerait de 1,5rem par rapport aux puces suivantes (58 articles, revue du 02/10/2026). */
+.article-text p:is(.alinea.intitule-article, .intitule-article, .article-intitule, .article-rubrique) + p.alinea:not(.niv1, .niv2, .niv3) {
+    text-indent: 0;
+}
+
+/* ─────────────────────────────────────────────
    ABROGATION (premium) : contenu GRISÉ + mention « Abrogé » ROUGE
    Le bandeau reste sur fond propre ; seule la mention est rouge.
    ───────────────────────────────────────────── */

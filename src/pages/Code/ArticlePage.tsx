@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useCopyAttribution } from '../../hooks/useCopyAttribution';
 import { articleLabel } from '../../lib/articleLabel';
 import { titreSeoArticle, descriptionSeoArticle } from '../../lib/seoArticle';
+import { texteAvecIntitule } from '../../lib/intituleArticle';
 import LinkedLegalContent from '../../components/LinkedLegalContent/LinkedLegalContent';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -471,7 +472,7 @@ const ArticlePage: React.FC = () => {
         <div className="article-page">
             <SEO
                 title={titreSeoArticle(article, law ?? {})}
-                description={descriptionSeoArticle(article, law ?? {}, (currentVersion.content || '').replace(/<[^>]+>/g, ' '))}
+                description={descriptionSeoArticle(article, law ?? {}, texteAvecIntitule(currentVersion.content, (h) => h.replace(/<[^>]+>/g, ' ')))}
                 url={`https://www.lexenegal.sn${urlArticle(codeSlug || '', article.slug)}`}
             />
 

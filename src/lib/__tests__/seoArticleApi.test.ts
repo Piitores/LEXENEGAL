@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import * as seo from '../seoArticle';
+import { texteAvecIntitule } from '../intituleArticle';
 
 /*
  * La règle des titres d'articles (src/lib/seoArticle.ts) est recopiée dans api/render.js (fonction Vercel,
@@ -35,5 +36,21 @@ describe('seoArticle : copie de api/render.js identique', () => {
                 .toBe(seo.descriptionSeoArticle(a, t, 'Texte de l’article, assez long pour être coupé proprement sur un mot. '.repeat(4)));
             expect(api.descriptionSeoArticle(a, t, '')).toBe(seo.descriptionSeoArticle(a, t, ''));
         }
+    });
+
+    it('texte de la description : intitulé ponctué, identique serveur et client', async () => {
+        const api = await charger('render.js');
+        const html = [
+            '<p class="alinea intitule-article">Champ d’application</p>\n<p class="alinea">Le présent Code s’applique.</p>',
+            '<p class="article-intitule"><strong>De la durée :</strong></p><p class="alinea">Texte.</p>',
+            '<p class="article-rubrique"><strong>Amortissements</strong></p>\n<p class="alinea niv1"><span class="marqueur">1)</span> Sont admis.</p>',
+            '<p class="alinea">Tout condamné à mort sera fusillé.</p>',
+            '<p class="alinea-titre"><strong>A - Travail des femmes</strong></p><p class="alinea">Texte.</p>',
+            '',
+        ];
+        for (const h of html) {
+            expect(api.texteSeoArticle(h)).toBe(texteAvecIntitule(h, (x) => x.replace(/<[^>]+>/g, ' ')));
+        }
+        expect(api.texteSeoArticle(html[0])).toBe('Champ d’application. Le présent Code s’applique.');
     });
 });

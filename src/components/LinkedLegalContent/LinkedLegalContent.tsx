@@ -9,6 +9,7 @@ import { getCodeArticleIndex } from '../../lib/codeArticleIndex';
 import { findAllArticleCitations, PREFIX_BY_CODE } from '../../utils/articleLinkRenderer';
 import { urlArticle } from '../../lib/urls';
 import { lireAdresseArticle } from '../../lib/routeTexte';
+import { apercuArticle } from '../../lib/intituleArticle';
 import '../ArticleHoverPreview/ArticleHoverPreview.css';
 
 /**
@@ -22,15 +23,25 @@ import '../ArticleHoverPreview/ArticleHoverPreview.css';
  * Utilisé sur le corps d'article, les extraits de la page de présentation, les annotations.
  */
 
+interface Apercu { intitule: string | null; texte: string }
+
 interface PreviewState {
     top: number; left: number;
     number: string; codeName: string; href: string;
-    loading: boolean; text: string | null;
+    loading: boolean; apercu: Apercu | null;
 }
 
-const previewCache = new Map<string, string>();
+const previewCache = new Map<string, Apercu>();
+const INDISPONIBLE: Apercu = { intitule: null, texte: 'Contenu non disponible' };
 
-async function fetchPreviewText(dataId: string | null, codeSlug?: string, articleSlug?: string): Promise<string> {
+/** Texte lisible d'un fragment HTML (entités décodées par le navigateur). */
+const versTexte = (fragment: string): string => {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = fragment;
+    return tmp.textContent || '';
+};
+
+async function fetchPreviewText(dataId: string | null, codeSlug?: string, articleSlug?: string): Promise<Apercu> {
     try {
         let id: string | undefined = dataId || undefined;
         if (!id && codeSlug && articleSlug) {
@@ -40,14 +51,12 @@ async function fetchPreviewText(dataId: string | null, codeSlug?: string, articl
                 id = art?.id;
             }
         }
-        if (!id) return 'Contenu non disponible';
+        if (!id) return INDISPONIBLE;
         const { data } = await supabase.from('article_versions').select('content').eq('article_id', id).eq('is_current', true).single();
-        const tmp = document.createElement('div');
-        tmp.innerHTML = data?.content || '';
-        const plain = (tmp.textContent || '').replace(/\s+/g, ' ').trim();
-        return plain.length > 300 ? plain.slice(0, 300) + '…' : (plain || 'Contenu non disponible');
+        const apercu = apercuArticle(data?.content, versTexte);
+        return apercu.texte || apercu.intitule ? apercu : INDISPONIBLE;
     } catch {
-        return 'Contenu non disponible';
+        return INDISPONIBLE;
     }
 }
 
@@ -74,14 +83,14 @@ const LinkedLegalContent: React.FC<{ html: string; className?: string }> = ({ ht
         const number = a.getAttribute('data-article-number') || (a.textContent || '').trim().slice(0, 48);
         const codeName = a.getAttribute('data-code-name') || '';
         const rect = a.getBoundingClientRect();
-        setPv({ top: rect.bottom + window.scrollY + 6, left: rect.left + window.scrollX, number, codeName, href: cible ? href : '', loading: true, text: null });
+        setPv({ top: rect.bottom + window.scrollY + 6, left: rect.left + window.scrollX, number, codeName, href: cible ? href : '', loading: true, apercu: null });
         const key = dataId || href;
-        let text = previewCache.get(key);
-        if (text === undefined) {
-            text = await fetchPreviewText(dataId, cible?.codeSlug, cible?.articleSlug);
-            previewCache.set(key, text);
+        let apercu = previewCache.get(key);
+        if (apercu === undefined) {
+            apercu = await fetchPreviewText(dataId, cible?.codeSlug, cible?.articleSlug);
+            previewCache.set(key, apercu);
         }
-        setPv(prev => prev ? { ...prev, loading: false, text: text! } : null);
+        setPv(prev => prev ? { ...prev, loading: false, apercu: apercu! } : null);
     }, []);
 
     const onOut = useCallback((e: React.MouseEvent) => {
@@ -183,7 +192,12 @@ const LinkedLegalContent: React.FC<{ html: string; className?: string }> = ({ ht
                                 {pv.codeName && <span className="preview-code">{pv.codeName}</span>}
                             </div>
                             <div className="preview-content">
-                                {pv.loading ? <div className="preview-loading">Chargement...</div> : <p>{pv.text}</p>}
+                                {pv.loading ? <div className="preview-loading">Chargement...</div> : (
+                                    <>
+                                        {pv.apercu?.intitule && <p className="preview-intitule">{pv.apercu.intitule}</p>}
+                                        {pv.apercu?.texte && <p>{pv.apercu.texte}</p>}
+                                    </>
+                                )}
                             </div>
                             {pv.href && <a href={pv.href} className="preview-link" target="_blank" rel="noopener noreferrer">Voir l'article complet <ExternalLink size={12} /></a>}
                         </motion.div>

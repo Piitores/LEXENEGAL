@@ -73,6 +73,25 @@ function esc(s) {
 }
 function attr(s) { return esc(s).replace(/\n/g, ' '); }
 function stripHtml(s) { return String(s || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(); }
+
+/*
+ * Texte suivi d'un article pour la DESCRIPTION : l'intitulé PONCTUÉ, puis le corps. Copie de
+ * `texteAvecIntitule` (src/lib/intituleArticle.ts), que cette fonction Vercel ne peut pas
+ * importer ; `src/lib/__tests__/seoArticleApi.test.ts` vérifie la parité. Sans le point, la
+ * description servie à Google lisait « Champ d'application Le présent Code s'applique… ».
+ * Trois classes d'intitulé en base, toujours le premier paragraphe du contenu.
+ */
+const CLASSES_INTITULE = ['intitule-article', 'article-intitule', 'article-rubrique'];
+export function texteSeoArticle(html) {
+  const source = String(html || '');
+  const m = /^\s*<p\s+class="([^"]*)"\s*>([\s\S]*?)<\/p>/.exec(source);
+  const estIntitule = !!m && m[1].split(/\s+/).some((c) => CLASSES_INTITULE.includes(c));
+  const propre = (x) => x.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  const texte = propre(estIntitule ? source.slice(m[0].length) : source);
+  const titre = estIntitule ? propre(m[2]) : '';
+  if (!titre) return texte;
+  return `${titre}${/[.:;!?…]$/.test(titre) ? '' : '.'} ${texte}`.trim();
+}
 function formatDateFr(d) {
   if (!d) return '';
   // timeZone UTC : une date ISO sans heure est minuit UTC ; sans cela, un serveur à l'ouest de Greenwich afficherait la veille.
@@ -1226,7 +1245,7 @@ export default async function handler(req, res) {
       ]);
       const chemin = cheminDansLePlan(art.node_id, noeuds);
       const canonical = `${SITE}${urlArticle(codeSlug, artSlug)}`;
-      return serveHtml(buildArticleHead(law, art, canonical, stripHtml(content)), buildArticleBody(law, art, content, citing, chemin, voisins));
+      return serveHtml(buildArticleHead(law, art, canonical, texteSeoArticle(content)), buildArticleBody(law, art, content, citing, chemin, voisins));
     }
 
     // decision (défaut)

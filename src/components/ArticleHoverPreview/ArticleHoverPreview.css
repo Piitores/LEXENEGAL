@@ -159,6 +159,15 @@
     hyphens: auto;
 }
 
+/* Intitulé de l'article, au-dessus de son texte (Georgia gras, charte « rubrique ») */
+.preview-content p.preview-intitule {
+    font-weight: 700;
+    color: #111827;
+    text-align: left;
+    hyphens: none;
+    margin: 0 0 8px;
+}
+
 .preview-loading {
     color: #047857;
     font-size: 0.85rem;

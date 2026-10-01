@@ -1247,7 +1247,7 @@
 }
 /* corps grisé quand l'article est abrogé */
 .article-text:has(.abrogation-banner) .alinea { color: #9ca3af; }
-.article-text .article-rubrique { text-indent: 0; font-size: 1.05rem; }
+/* .article-rubrique (CGI) : mise en forme commune des intitulés dans styles/legal-content.css */
 
 /* Pastilles d'annotation INLINE (à leur alinéa cible) — encadré gris dépliable */
 .article-text .pastille {

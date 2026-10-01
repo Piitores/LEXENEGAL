@@ -16,12 +16,26 @@ import {
 } from '../../lib/recherche';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
+import { apercuArticle } from '../../lib/intituleArticle';
 import './SearchPage.css';
 
 
 // Retire les balises HTML pour l'aperçu d'un article
 const stripHtml = (html: string) =>
     (html || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+
+// Extrait d'un article dans une carte de résultat : l'INTITULÉ sur sa ligne, en gras, puis le
+// texte. Sans cela l'extrait collait l'intitulé à la première phrase (« Champ d'application Le
+// présent Code s'applique… »), la confusion relevée par le propriétaire le 02/10/2026.
+const ExtraitArticle: React.FC<{ html: string; max: number; vide?: string }> = ({ html, max, vide }) => {
+    const { intitule, texte } = apercuArticle(html, stripHtml, max);
+    return (
+        <>
+            {intitule && <p className="cardIntitule">{intitule}</p>}
+            <p className="cardSnippet">{texte || vide || ''}</p>
+        </>
+    );
+};
 
 // --- TYPES ---
 interface Decision {
@@ -1418,7 +1432,7 @@ const SearchPage: React.FC = () => {
                                                 {art.est_abroge && <span className="badge-abroge" title="Cet article a été abrogé">Abrogé</span>}
                                                 <span className="cardDate">{art.code_title}</span>
                                             </div>
-                                            <p className="cardSnippet">{stripHtml(art.content).slice(0, 200)}</p>
+                                            <ExtraitArticle html={art.content} max={200} />
                                         </div>
                                     ))}
                                 </div>
@@ -1574,7 +1588,7 @@ const SearchPage: React.FC = () => {
                                     {art.est_abroge && <span className="badge-abroge" title="Cet article a été abrogé">Abrogé</span>}
                                     <span className="cardDate">{art.code_title}</span>
                                 </div>
-                                <p className="cardSnippet">{stripHtml(art.content).slice(0, 240) || 'Voir l’article complet.'}</p>
+                                <ExtraitArticle html={art.content} max={240} vide="Voir l’article complet." />
                             </div>
                         ))}
                         {!articlesLoading && articlesAffiches.length === 0 && (

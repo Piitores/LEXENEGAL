@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase';
 import { Scale, ExternalLink } from 'lucide-react';
 import { articleLabel } from '../../lib/articleLabel';
 import { urlArticle } from '../../lib/urls';
+import { apercuArticle } from '../../lib/intituleArticle';
 import './ArticleHoverPreview.css';
 
 
@@ -27,12 +28,13 @@ const ArticleHoverPreview: React.FC<ArticleHoverPreviewProps> = ({
 }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [content, setContent] = useState<string | null>(null);
+    const [intitule, setIntitule] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [position, setPosition] = useState({ top: 0, left: 0 });
     const triggerRef = useRef<HTMLSpanElement>(null);
 
     useEffect(() => {
-        if (isHovered && !content) {
+        if (isHovered && content === null) {
             fetchArticleContent();
         }
     }, [isHovered]);
@@ -63,12 +65,15 @@ const ArticleHoverPreview: React.FC<ArticleHoverPreviewProps> = ({
 
             if (data) {
                 // Le contenu est du HTML : on en extrait le texte lisible (sinon les
-                // balises s'afficheraient telles quelles), puis on tronque proprement.
-                const tmp = document.createElement('div');
-                tmp.innerHTML = data.content || '';
-                const plain = (tmp.textContent || '').replace(/\s+/g, ' ').trim();
-                const truncated = plain.length > 300 ? plain.substring(0, 300) + '…' : plain;
-                setContent(truncated);
+                // balises s'afficheraient telles quelles), l'INTITULÉ à part (il se collait à
+                // la première phrase), puis on tronque proprement.
+                const apercu = apercuArticle(data.content, (fragment) => {
+                    const tmp = document.createElement('div');
+                    tmp.innerHTML = fragment;
+                    return tmp.textContent || '';
+                });
+                setIntitule(apercu.intitule);
+                setContent(apercu.texte);
             }
         } catch (error) {
             console.error('Error fetching article:', error);
@@ -129,7 +134,10 @@ const ArticleHoverPreview: React.FC<ArticleHoverPreviewProps> = ({
                                 {loading ? (
                                     <div className="preview-loading">Chargement...</div>
                                 ) : (
-                                    <p>{content}</p>
+                                    <>
+                                        {intitule && <p className="preview-intitule">{intitule}</p>}
+                                        {content && <p>{content}</p>}
+                                    </>
                                 )}
                             </div>
 
