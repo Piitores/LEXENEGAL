@@ -1,7 +1,8 @@
 import React from 'react';
 import './TextPresentation.css';
+import { formatJoReference, JoFields } from '../../lib/joReference';
 
-interface TextPresentationLaw {
+interface TextPresentationLaw extends JoFields {
     title: string;
     short_title?: string | null;
     category: string;
@@ -49,7 +50,10 @@ const TextPresentation: React.FC<Props> = ({ law, articleCount }) => {
     // 1er décembre 1997 »), on n'affiche pas le chip « Publié le … » en double.
     const pubYear = law.publication_date ? String(new Date(law.publication_date).getFullYear()) : null;
     const refHasYear = !!(pubYear && law.reference && law.reference.includes(pubYear));
-    const showDateChip = !!date && !refHasYear;
+    // Référence de publication vérifiée sur le J.O. : elle remplace le chip « Publié le … »
+    // (publication_date est en pratique la date de l'acte, pas celle de sa publication).
+    const jo = formatJoReference(law);
+    const showDateChip = !jo && !!date && !refHasYear;
 
     return (
         <section className="text-presentation" aria-label="Présentation du texte">
@@ -57,6 +61,7 @@ const TextPresentation: React.FC<Props> = ({ law, articleCount }) => {
                 <span className="tp-nature">{nature}</span>
                 {law.reference && hasDescription && <span className="tp-chip">{law.reference}</span>}
                 {showDateChip && <span className="tp-chip">Publié le {date}</span>}
+                {jo && <span className="tp-chip">Publié au {jo}</span>}
                 {typeof articleCount === 'number' && articleCount > 0 && (
                     <span className="tp-chip">{articleCount.toLocaleString('fr-FR')} articles</span>
                 )}

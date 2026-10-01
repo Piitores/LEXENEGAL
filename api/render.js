@@ -75,8 +75,17 @@ function attr(s) { return esc(s).replace(/\n/g, ' '); }
 function stripHtml(s) { return String(s || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(); }
 function formatDateFr(d) {
   if (!d) return '';
-  try { return new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }); }
+  // timeZone UTC : une date ISO sans heure est minuit UTC ; sans cela, un serveur à l'ouest de Greenwich afficherait la veille.
+  try { return new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }); }
   catch (e) { return ''; }
+}
+/* Mention de publication au Journal officiel (laws_and_codes.jo_numero / jo_date / jo_page), remplie
+ * seulement pour des références vérifiées sur pièce. Complète ou rien. Même règle que src/lib/joReference.ts. */
+function joReferenceSsr(law) {
+  if (!law || !law.jo_numero || !law.jo_date) return '';
+  const date = (formatDateFr(law.jo_date) || '').replace(/^1 /, '1er ');
+  if (!date || date === 'Invalid Date') return '';
+  return `Journal officiel n° ${law.jo_numero} du ${date}${law.jo_page ? `, p. ${law.jo_page}` : ''}`;
 }
 function ldjson(obj) { return `<script type="application/ld+json">${JSON.stringify(obj)}</script>`; }
 /*
@@ -260,7 +269,9 @@ export function buildCodeHead(law, nArticles, canonical) {
   const schema = {
     '@context': 'https://schema.org', '@type': 'Legislation', name: law.title,
     ...(law.reference ? { legislationIdentifier: law.reference } : {}),
-    ...(law.publication_date ? { datePublished: law.publication_date } : {}),
+    ...(joReferenceSsr(law)
+      ? { datePublished: law.jo_date, ...(law.publication_date ? { legislationDate: law.publication_date } : {}) }
+      : (law.publication_date ? { datePublished: law.publication_date } : {})),
     legislationJurisdiction: { '@type': m.isOhada ? 'Organization' : 'AdministrativeArea', name: m.jurisdiction },
     inLanguage: 'fr', isPartOf: { '@type': 'WebSite', name: 'Lexenegal', url: SITE }, url: canonical,
   };
@@ -300,9 +311,10 @@ export function buildCodeBody(law, articles, related) {
   }).join('\n');
   const n = articles && articles.length ? articles.length : 0;
   // Chapô SEO : référence + date de publication (données vérifiées en base)
+  const jo = joReferenceSsr(law);
   const refLine = [
     law.reference ? esc(law.reference) : '',
-    law.publication_date ? `publié le ${esc(formatDateFr(law.publication_date))}` : '',
+    jo ? `publié au ${esc(jo)}` : (law.publication_date ? `publié le ${esc(formatDateFr(law.publication_date))}` : ''),
   ].filter(Boolean).join(' - ');
   const descriptorCap = m.descriptor.charAt(0).toUpperCase() + m.descriptor.slice(1);
   const intro = `<p class="ssr-code-intro">${esc(m.baseName)}${refLine ? ` - ${refLine}` : ''}. `
@@ -969,7 +981,7 @@ async function fetchThemePage(slug) {
   return (data && data.theme) ? data : null;
 }
 async function fetchLaw(slug) {
-  return one(await sb(`laws_and_codes?slug=eq.${encodeURIComponent(slug)}&select=id,title,short_title,category,slug,reference,publication_date,description,abrogation_note,abrogated_by_slug&limit=1`));
+  return one(await sb(`laws_and_codes?slug=eq.${encodeURIComponent(slug)}&select=id,title,short_title,category,slug,reference,publication_date,description,abrogation_note,abrogated_by_slug,jo_numero,jo_date,jo_page&limit=1`));
 }
 /*
  * Liste des articles d'un texte, PAGINÉE : PostgREST plafonne chaque réponse à 1 000 lignes en
