@@ -714,7 +714,12 @@ const ArticlePage: React.FC = () => {
                             <Clock size={14} />
                             {choix.estActuelle ? (
                                 <>
-                                    En vigueur depuis le {new Date(currentVersion.effective_date).toLocaleDateString('fr-FR', { dateStyle: 'long' })}
+                                    {/* Version qui a une date de fin (ancien article non repris, abrogé le
+                                        03/09/2026) : « En vigueur du … au … », jamais « en vigueur depuis »
+                                        pour un texte qui ne l'est plus (constaté en production, 02/10/2026). */}
+                                    {currentVersion.expiration_date
+                                        ? libellePeriode(currentVersion, versionsBase, article.article_number)
+                                        : `En vigueur depuis le ${new Date(currentVersion.effective_date).toLocaleDateString('fr-FR', { dateStyle: 'long' })}`}
                                     {currentVersion.version_note && (
                                         <span className="version-note"> · {currentVersion.version_note}</span>
                                     )}
