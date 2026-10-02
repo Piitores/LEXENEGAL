@@ -54,3 +54,49 @@ describe('seoArticle : copie de api/render.js identique', () => {
         expect(api.texteSeoArticle(html[0])).toBe('Champ d’application. Le présent Code s’applique.');
     });
 });
+
+/*
+ * Fusion des codes 2026 (décisions du propriétaire du 02/10/2026) : un ancien article NON REPRIS reste
+ * dans le code comme article abrogé. Son titre serveur porte l'année du code d'origine et « (abrogé) »,
+ * sinon l'ancien article 13 de 1973 et l'article 13 en vigueur auraient le même titre dans Google.
+ * Paramètre facultatif de la copie serveur : sans lui, la règle reste celle de src/lib/seoArticle.ts
+ * (vérifié par les tests ci-dessus).
+ */
+describe('seoArticle : ancien article non repris (rendu serveur)', () => {
+    const SECU = { title: 'Code de la Sécurité sociale', short_title: 'Code de la Sécurité sociale', category: 'code' };
+    const TRAVAIL = { title: 'Code du Travail', short_title: 'Code du Travail', category: 'code' };
+
+    it('titre et description marqués « (abrogé) », année tirée des données', async () => {
+        const api = await charger('render.js');
+        const fusion = api.contexteFusion([{ article_id: 'a13', role: 'identite', ancien_numero: '13', en_vigueur_jusqu_au: '2026-09-03', numerotation_depuis: '1973-07-31' }]);
+        const art = { id: 'a13', num: 'Article 13 (Code de 1973)', article_number: '13' };
+        const ancien = api.articleAncien(art, fusion);
+        expect(ancien).toEqual({ libelle: 'Article 13', annee: '1973' });
+        expect(api.titreSeoArticle(art, SECU, ancien)).toBe('Article 13 du Code de la Sécurité sociale de 1973 (abrogé) | Lexenegal');
+        expect(api.descriptionSeoArticle(art, SECU, 'Texte.', ancien)).toBe('Article 13 du Code de la Sécurité sociale de 1973 (abrogé) : Texte.');
+        expect(api.descriptionSeoArticle(art, SECU, '', ancien))
+            .toBe('Texte intégral de l’article 13 du Code de la Sécurité sociale de 1973 (abrogé), avec la jurisprudence qui le cite.');
+        // L'article en vigueur de même numéro garde son titre habituel.
+        expect(api.titreSeoArticle({ num: 'Article 13', article_number: '13' }, SECU)).toBe(seo.titreSeoArticle({ num: 'Article 13', article_number: '13' }, SECU));
+    });
+
+    it('num sans mention d’année : année de la numérotation d’origine ; sinon pas d’année inventée', async () => {
+        const api = await charger('render.js');
+        const ligne = { article_id: 'l10', role: 'identite', ancien_numero: 'L.10.', en_vigueur_jusqu_au: '2026-09-03' };
+        const avecDate = api.contexteFusion([{ ...ligne, numerotation_depuis: '1997-12-01' }]);
+        const sansDate = api.contexteFusion([{ ...ligne, numerotation_depuis: null }]);
+        const art = { id: 'l10', num: 'L.10.', article_number: 'L.10.' };
+        expect(api.titreSeoArticle(art, TRAVAIL, api.articleAncien(art, avecDate))).toBe('Article L.10 du Code du Travail de 1997 (abrogé) | Lexenegal');
+        expect(api.titreSeoArticle(art, TRAVAIL, api.articleAncien(art, sansDate))).toBe('Article L.10 du Code du Travail (abrogé) | Lexenegal');
+        // Article qui n'est pas un ancien article non repris : rien.
+        expect(api.articleAncien({ id: 'autre', num: 'Article 3' }, avecDate)).toBeNull();
+    });
+
+    it('sans le paramètre, copie toujours identique à src/lib/seoArticle.ts', async () => {
+        const api = await charger('render.js');
+        for (const t of TEXTES) for (const a of ARTICLES) {
+            expect(api.titreSeoArticle(a, t, undefined)).toBe(seo.titreSeoArticle(a, t));
+            expect(api.descriptionSeoArticle(a, t, '', null)).toBe(seo.descriptionSeoArticle(a, t, ''));
+        }
+    });
+});

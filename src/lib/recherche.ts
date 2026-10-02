@@ -14,6 +14,7 @@
  */
 import { articleLabel } from './articleLabel';
 import { urlArticle, urlTexte } from './urls';
+import { normAncien, numeroAncienAffiche, requeteVersion } from './versionsArticle';
 
 // ---------------------------------------------------------------------------
 // Texte sans accents (filtres locaux : doctrine, etc.)
@@ -366,17 +367,29 @@ export const MAX_OPTIONS_CHOIX = 5;
  * Réponse de resolve_citation → carte à afficher (ou `null`). Liens construits par la règle
  * unique (urls.ts) : une convention collective part vers /ccn/…, jamais vers /code/ccn-….
  * « non publié » et intention « concept » → pas de carte (la liste gère).
+ * Fusion des codes 2026 (02/10/2026) : « L.56 CT » est résolu par la concordance vers l'article
+ * qui en a repris le sujet ; la réponse porte alors `ancien_numero` et `url_version`, et la carte
+ * mène à la rédaction de l'ancien article : « Article 137 (ancien art. L.56) ».
  */
 export function carteMeilleurResultat(data: any): MeilleurResultat | null {
     if (!data || data.intent !== 'authority') return null;
     const r = data.result;
     if (!r) return null;
     if (data.kind === 'norme' && r.status === 'ok' && r.code_slug && r.article_slug) {
+        const libelle = articleLabel({ article_number: r.article_number });
+        // Ancien article NON REPRIS : resolve_article renvoie son propre numéro comme ancien numéro.
+        // « Article L.10. (ancien art. L.10) » et un ?ancien=L10 sans effet : ni mention, ni
+        // paramètre (relecture du 02/10/2026).
+        const memeArticle = r.statut_concordance === 'non_repris'
+            || normAncien(r.ancien_numero) === normAncien(r.article_number);
+        const ancien = memeArticle ? '' : numeroAncienAffiche(r.ancien_numero);
         return {
             kind: 'article',
-            titre: articleLabel({ article_number: r.article_number }),
+            titre: ancien ? `${libelle} (ancien art. ${ancien})` : libelle,
             meta: r.code_title || r.code_slug,
-            href: urlArticle(r.code_slug, r.article_slug),
+            // Sans mention d'ancien numéro : l'adresse de l'article, datée seulement si la base a
+            // daté la version (?date=, choix de la rédaction d'un article non repris modifié).
+            href: ancien ? adresseVersion(r) : `${urlArticle(r.code_slug, r.article_slug)}${requeteVersion({ date: r.version_date ?? null })}`,
             codeSlug: r.code_slug,
             articleId: r.article_id ?? null,
         };
@@ -409,6 +422,18 @@ export function carteMeilleurResultat(data: any): MeilleurResultat | null {
         };
     }
     return null;
+}
+
+/**
+ * Adresse d'un article résolu dans son ancienne numérotation : `url_version` de la base
+ * (« /code/code-travail/art-137?ancien=L56&date=2015-03-04 ») si c'est bien l'adresse de cet
+ * article, sinon la même adresse reconstruite par la règle unique (urls.ts + versionsArticle.ts).
+ */
+function adresseVersion(r: any): string {
+    const base = urlArticle(r.code_slug, r.article_slug);
+    const reconstruite = `${base}${requeteVersion({ ancien: r.ancien_norm || normAncien(r.ancien_numero), date: r.version_date ?? null })}`;
+    const u = typeof r.url_version === 'string' ? r.url_version : '';
+    return u.startsWith(`${base}?`) ? u : reconstruite;
 }
 
 /**

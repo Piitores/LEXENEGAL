@@ -2,14 +2,15 @@ import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Scale, ExternalLink } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
 import { articleLabel } from '../../lib/articleLabel';
-import { normalizeArticleNumber } from '../../lib/articleRefResolver';
+import { resoudreRenvoi } from '../../lib/articleRefResolver';
 import { getCodeArticleIndex } from '../../lib/codeArticleIndex';
 import { findAllArticleCitations, PREFIX_BY_CODE } from '../../utils/articleLinkRenderer';
 import { urlArticle } from '../../lib/urls';
-import { lireAdresseArticle } from '../../lib/routeTexte';
+import { CODES_REFONDUS, lireAdresseArticle } from '../../lib/routeTexte';
 import { apercuArticle } from '../../lib/intituleArticle';
+import { lireVersionAffichee, resoudreAdresseArticle } from '../../lib/articlesDuCode';
+import { requeteVersion, type ParamsVersion } from '../../lib/versionsArticle';
 import '../ArticleHoverPreview/ArticleHoverPreview.css';
 
 /**
@@ -21,6 +22,15 @@ import '../ArticleHoverPreview/ArticleHoverPreview.css';
  *   liens `data-article-id` (CGI…) ET liens `/code/<code>/<article>` (COCC…) ou
  *   `/ccn/<convention>/<article>` (adresses : src/lib/urls.ts).
  * Utilisé sur le corps d'article, les extraits de la page de présentation, les annotations.
+ *
+ * Fusion des codes 2026 (02/10/2026) : `dateCitation` = date du texte qui contient les citations
+ * (publication_date du texte affiché, ou date d'effet d'une version antérieure affichée). Elle
+ * choisit la numérotation d'un code refondu et date l'adresse des renvois (?ancien=&date=).
+ * `renvoisRefondus` false : aucun lien vers un code refondu (la page ne sait pas dater ces renvois :
+ * concordance illisible pour un ancien article peut-être non repris, cf. dateCitationCarte).
+ * `numerotationPropreEnL` : le texte affiché a sa propre numérotation en « L. » (Code électoral…) ;
+ * ses « article L.28 » sans nom de code sont les siens, pas ceux du Code du travail
+ * (numerotationPropreEnL, relecture du 02/10/2026).
  */
 
 interface Apercu { intitule: string | null; texte: string }
@@ -41,26 +51,34 @@ const versTexte = (fragment: string): string => {
     return tmp.textContent || '';
 };
 
-async function fetchPreviewText(dataId: string | null, codeSlug?: string, articleSlug?: string): Promise<Apercu> {
+async function fetchPreviewText(
+    dataId: string | null, codeSlug?: string, articleSlug?: string, params: ParamsVersion = { date: null, ancien: null },
+): Promise<Apercu> {
     try {
         let id: string | undefined = dataId || undefined;
+        let numero: string | null = null;
+        let ancien = params.ancien;
         if (!id && codeSlug && articleSlug) {
-            const { data: code } = await supabase.from('laws_and_codes').select('id').eq('slug', codeSlug).maybeSingle();
-            if (code) {
-                const { data: art } = await supabase.from('articles').select('id').eq('slug', articleSlug).eq('code_id', code.id).maybeSingle();
-                id = art?.id;
-            }
+            // Texte retiré (code-travail-2026) ou ancien slug (article-l56) : suivis jusqu'à l'article
+            // qui en a repris le sujet (fusion des codes 2026).
+            const cible = await resoudreAdresseArticle(codeSlug, articleSlug);
+            id = cible?.id;
+            numero = cible?.article_number ?? null;
+            ancien = ancien ?? cible?.ancien ?? null;
         }
         if (!id) return INDISPONIBLE;
-        const { data } = await supabase.from('article_versions').select('content').eq('article_id', id).eq('is_current', true).single();
-        const apercu = apercuArticle(data?.content, versTexte);
+        const version = await lireVersionAffichee(id, { date: params.date, ancien }, numero);
+        const apercu = apercuArticle(version?.content, versTexte);
         return apercu.texte || apercu.intitule ? apercu : INDISPONIBLE;
     } catch {
         return INDISPONIBLE;
     }
 }
 
-const LinkedLegalContent: React.FC<{ html: string; className?: string }> = ({ html, className }) => {
+const LinkedLegalContent: React.FC<{
+    html: string; className?: string; dateCitation?: string | null;
+    renvoisRefondus?: boolean; numerotationPropreEnL?: boolean;
+}> = ({ html, className, dateCitation, renvoisRefondus = true, numerotationPropreEnL = false }) => {
     const ref = useRef<HTMLDivElement>(null);
     const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [pv, setPv] = useState<PreviewState | null>(null);
@@ -84,10 +102,12 @@ const LinkedLegalContent: React.FC<{ html: string; className?: string }> = ({ ht
         const codeName = a.getAttribute('data-code-name') || '';
         const rect = a.getBoundingClientRect();
         setPv({ top: rect.bottom + window.scrollY + 6, left: rect.left + window.scrollX, number, codeName, href: cible ? href : '', loading: true, apercu: null });
-        const key = dataId || href;
+        // La clé porte la version demandée : un même article peut s'afficher daté et non daté.
+        const params: ParamsVersion = { date: cible?.date ?? null, ancien: cible?.ancien ?? null };
+        const key = dataId ? `${dataId}${requeteVersion(params)}` : href;
         let apercu = previewCache.get(key);
         if (apercu === undefined) {
-            apercu = await fetchPreviewText(dataId, cible?.codeSlug, cible?.articleSlug);
+            apercu = await fetchPreviewText(dataId, cible?.codeSlug, cible?.articleSlug, params);
             previewCache.set(key, apercu);
         }
         setPv(prev => prev ? { ...prev, loading: false, apercu: apercu! } : null);
@@ -128,7 +148,9 @@ const LinkedLegalContent: React.FC<{ html: string; className?: string }> = ({ ht
             let cur: Node | null;
             while ((cur = walker.nextNode())) {
                 const tn = cur as Text;
-                const cites = findAllArticleCitations(tn.nodeValue || '');
+                const cites = findAllArticleCitations(tn.nodeValue || '', { numerotationPropreEnL })
+                    // Renvois vers un code refondu qu'on ne sait pas dater : laissés en texte.
+                    .filter((c) => renvoisRefondus || !CODES_REFONDUS.has(c.codeSlug));
                 if (cites.length) jobs.push({ tn, cites });
             }
             if (!jobs.length) return;
@@ -148,11 +170,13 @@ const LinkedLegalContent: React.FC<{ html: string; className?: string }> = ({ ht
                 let last = 0;
                 for (const c of cites) {
                     const prefix = PREFIX_BY_CODE[c.codeSlug] || '';
-                    const hit = indexes.get(c.codeSlug)?.get(normalizeArticleNumber(`${prefix}${c.articleNum}`));
-                    if (!hit) continue; // citation non résolue : on laisse le texte tel quel
+                    // Code refondu : la date du texte choisit l'ancienne ou la nouvelle numérotation.
+                    const renvoi = resoudreRenvoi({ numero: `${prefix}${c.articleNum}`, date: dateCitation }, indexes.get(c.codeSlug));
+                    const hit = renvoi?.article;
+                    if (!renvoi || !hit) continue; // citation non résolue : on laisse le texte tel quel
                     if (c.index > last) frag.appendChild(document.createTextNode(text.slice(last, c.index)));
                     const a = document.createElement('a');
-                    a.href = urlArticle(c.codeSlug, hit.slug);
+                    a.href = `${urlArticle(c.codeSlug, hit.slug)}${requeteVersion(renvoi.query)}`;
                     a.className = 'article-link';
                     a.setAttribute('data-code-name', hit.codeName);
                     a.setAttribute('data-linkified', '1');
@@ -168,7 +192,7 @@ const LinkedLegalContent: React.FC<{ html: string; className?: string }> = ({ ht
         })();
 
         return () => { cancelled = true; };
-    }, [html]);
+    }, [html, dateCitation, renvoisRefondus, numerotationPropreEnL]);
 
     const headerLabel = pv ? articleLabel({ article_number: pv.number }) : '';
 

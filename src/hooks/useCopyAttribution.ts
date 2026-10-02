@@ -5,9 +5,12 @@ import { urlArticle } from '../lib/urls';
 // texte collé ailleurs garde sa source + le lien de consultation.
 const SITE = 'https://www.lexenegal.sn';
 
-// Adresse publique de l'article (règle unique : src/lib/urls.ts).
-export function articleUrl(codeSlug: string, artSlug: string): string {
-  return `${SITE}${urlArticle(codeSlug, artSlug)}`;
+// Adresse publique de l'article (règle unique : src/lib/urls.ts). `requete` : paramètres de la
+// version copiée (« ?ancien=L56&date=2015-03-04 », fusion des codes 2026) ; seule une query
+// string est acceptée.
+export function articleUrl(codeSlug: string, artSlug: string, requete: string = ''): string {
+  const q = /^\?[A-Za-z0-9=&%._-]*$/.test(requete) ? requete : '';
+  return `${SITE}${urlArticle(codeSlug, artSlug)}${q}`;
 }
 
 // Pied de référence en texte brut (réutilisé par le bouton « Copier » et la copie manuelle).
@@ -22,6 +25,9 @@ const esc = (s: string) =>
 // Branche un écouteur global de copie (sélection + Ctrl/Cmd-C). Quand la sélection
 // se trouve dans un élément portant data-art-slug (carte d'article ou contenu
 // d'article), on ajoute au presse-papiers la référence et le lien de la page.
+// Mode daté (fusion des codes 2026) : data-art-num dit la version copiée (« Article 137
+// (version en vigueur le 4 mars 2015, ancien art. L.56) ») et data-art-query porte ses
+// paramètres, pour qu'un texte abrogé ne passe pas pour l'article en vigueur.
 export function useCopyAttribution(codeSlug?: string, codeTitle?: string) {
   useEffect(() => {
     if (!codeSlug) return;
@@ -41,7 +47,7 @@ export function useCopyAttribution(codeSlug?: string, codeTitle?: string) {
       const artSlug = card.getAttribute('data-art-slug') || '';
       if (!artSlug) return;
       const artNum = card.getAttribute('data-art-num') || '';
-      const url = articleUrl(codeSlug, artSlug);
+      const url = articleUrl(codeSlug, artSlug, card.getAttribute('data-art-query') || '');
       const ref = [artNum, codeTitle].filter(Boolean).join(', ');
 
       e.clipboardData.setData('text/plain', text + attributionFooter(artNum, codeTitle, url));
@@ -51,7 +57,7 @@ export function useCopyAttribution(codeSlug?: string, codeTitle?: string) {
         .join('');
       e.clipboardData.setData(
         'text/html',
-        `${htmlBody}<p>- ${esc(ref)}<br>Source : <a href="${url}">Lexenegal</a></p>`
+        `${htmlBody}<p>- ${esc(ref)}<br>Source : <a href="${esc(url)}">Lexenegal</a></p>`
       );
       e.preventDefault();
     };

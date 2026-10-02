@@ -9,7 +9,7 @@ describe('adresses publiques des textes', () => {
   });
 
   it('les autres textes restent sous /code/', () => {
-    expect(urlTexte('code-travail-2026')).toBe('/code/code-travail-2026');
+    expect(urlTexte('code-travail')).toBe('/code/code-travail');
     expect(urlArticle('code-penal', 'art-14')).toBe('/code/code-penal/art-14');
     expect(estConvention('code-assurances-cima')).toBe(false);
   });

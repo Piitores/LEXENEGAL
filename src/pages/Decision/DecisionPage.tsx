@@ -10,9 +10,15 @@ import DecisionActions from '../../components/DecisionActions/DecisionActions';
 import ConversionModal from '../../components/ConversionModal/ConversionModal';
 import { findAllArticleCitations, textToHtmlWithLinks } from '../../utils/articleLinkRenderer';
 import { urlArticle } from '../../lib/urls';
-import { chargerArticlesDesCodes } from '../../lib/articlesDuCode';
+import { chargerArticlesDesCodes, chargerConcordanceDesCodes } from '../../lib/articlesDuCode';
 import ArticleHoverPreview from '../../components/ArticleHoverPreview/ArticleHoverPreview';
-import { buildCodeIndex, buildSuccessions, codePourDecision, parseCitedString, normalizeToken, normalizeArticleNumber, type ResolvedArticle, type Succession } from '../../lib/articleRefResolver';
+import {
+    buildCodeIndex, buildSuccessions, codePourDecision, parseCitedString, normalizeToken,
+    construireIndexRenvoi, resoudreRenvoi,
+    type ResolvedArticle, type Succession, type LigneConcordance,
+} from '../../lib/articleRefResolver';
+import { CODES_REFONDUS, TEXTES_FUSIONNES, textesRetires } from '../../lib/routeTexte';
+import { requeteVersion } from '../../lib/versionsArticle';
 import { getDecisionHtml, isNewFormat } from '../../utils/decisionTextFormatter';
 import { logViewDecision, logDownloadPdf } from '../../utils/auditLogger';
 import ReportErrorModal from '../../components/ReportError/ReportErrorModal';
@@ -48,11 +54,17 @@ const DecisionPage: React.FC = () => {
     const [decision, setDecision] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
     const [articles, setArticles] = useState<ArticleInfo[]>([]);
+    // Concordance des codes refondus cités dans le corps (fusion des codes 2026) : [] = aucune.
+    const [concordances, setConcordances] = useState<Record<string, LigneConcordance[] | null>>({});
     const [codeIndex, setCodeIndex] = useState<Map<string, string>>(new Map());
-    // Texte en vigueur → texte qu'il a abrogé (ex. Code du travail 2026 → 1997), pour dater les renvois.
+    // Texte en vigueur → texte qu'il a abrogé (ex. décret 2021-1469 → arrêté général n° 5254 de
+    // 1954), pour dater les renvois. Les codes refondus en 2026 passent par leur concordance.
     const [successions, setSuccessions] = useState<Map<string, Succession>>(new Map());
-    // Références citées résolues en liens fiables (raw → article présent en base).
-    const [citedResolved, setCitedResolved] = useState<Record<string, ResolvedArticle>>({});
+    // Textes retirés par la fusion des codes 2026 (code-travail-2026…), absents de la base.
+    const [retires, setRetires] = useState<ReadonlySet<string>>(new Set());
+    // Références citées résolues en liens fiables (raw → article présent en base, et paramètres
+    // de version de son adresse : ?ancien=L56&date=<date de la décision>).
+    const [citedResolved, setCitedResolved] = useState<Record<string, ResolvedArticle & { date?: string; ancien?: string }>>({});
     // Auth : favoris/annotations/PDF ouverts à tout compte connecté (Pro reporté).
     const { isConnected } = useAuth();
 
@@ -82,15 +94,19 @@ const DecisionPage: React.FC = () => {
     // dans le texte (motifs de CODE_CONFIG), en lecture paginée. Avant, la page chargeait
     // tous les articles de la base d'une traite : tronqués en silence à 1 000 lignes, la
     // plupart des codes n'y figuraient pas et leurs renvois restaient du texte brut.
+    // Fusion des codes 2026 : la concordance des codes cités est lue avec (jamais d'exception ;
+    // illisible, un code refondu reste sans lien plutôt qu'avec un lien faux).
     useEffect(() => {
         setArticles([]);
+        setConcordances({});
         if (!decision) return;
         const codeSlugs = Array.from(new Set(findAllArticleCitations(getDecisionHtml(decision)).map((c) => c.codeSlug)));
         if (!codeSlugs.length) return;
         let active = true;
-        chargerArticlesDesCodes(codeSlugs)
-            .then((arts) => {
+        Promise.all([chargerArticlesDesCodes(codeSlugs), chargerConcordanceDesCodes(codeSlugs)])
+            .then(([arts, conc]) => {
                 if (!active) return;
+                setConcordances(conc);
                 setArticles(arts);
                 console.log(`📚 Loaded ${arts.length} articles for hyperlinking (${codeSlugs.join(', ')})`);
             })
@@ -105,57 +121,65 @@ const DecisionPage: React.FC = () => {
         if (!cites.length || codeIndex.size === 0) return;
         let active = true;
         (async () => {
-            const candidates: { raw: string; codeSlug: string; repli?: string; articleNumber: string }[] = [];
+            const dateDecision: string | null = decision?.date_decision ?? null;
+            const reperes: { raw: string; code: string; articleNumber: string }[] = [];
             for (const raw of cites) {
                 const refs = parseCitedString(raw);
                 if (refs.length !== 1) continue; // multi-réfs / aucune → texte (sécurité)
-                const trouve = codeIndex.get(normalizeToken(refs[0].codeToken));
+                let trouve = codeIndex.get(normalizeToken(refs[0].codeToken));
                 if (!trouve) continue; // code hors corpus → texte
-                // Le code visé dépend de la DATE de la décision : « L.97 CT » dans un arrêt de 2015
-                // renvoie au Code du travail de 1997, pas à celui de 2026 (arbitrage du 27/09/2026).
-                const { code, repli } = codePourDecision(trouve, decision?.date_decision, successions);
-                candidates.push({ raw, codeSlug: code, repli, articleNumber: refs[0].articleNumber });
+                // Sigle encore rattaché à un texte retiré par la fusion des codes 2026 (ref_code non
+                // fusionné) : le texte qui l'a absorbé.
+                if (retires.has(trouve)) trouve = TEXTES_FUSIONNES[trouve] ?? trouve;
+                reperes.push({ raw, code: trouve, articleNumber: refs[0].articleNumber });
+            }
+            if (!reperes.length) return;
+            const concordances = await chargerConcordanceDesCodes(reperes.map((r) => r.code));
+            if (!active) return;
+
+            const candidates: { raw: string; codeSlug: string; repli?: string; articleNumber: string }[] = [];
+            for (const r of reperes) {
+                const conc = concordances[r.code];
+                if (conc && conc.length) {
+                    // Code refondu (fusion des codes 2026) : un seul texte, deux numérotations ; la
+                    // date de la décision choisit la bonne (resoudreRenvoi), par la concordance.
+                    candidates.push({ raw: r.raw, codeSlug: r.code, articleNumber: r.articleNumber });
+                } else if (conc === null && CODES_REFONDUS.has(r.code)) {
+                    continue; // concordance illisible : pas de lien plutôt qu'un lien faux
+                } else {
+                    // Texte remplacé par un AUTRE texte : le code visé dépend de la DATE de la
+                    // décision (une décision de 2015 vise l'arrêté de 1954, pas le décret de 2021 ;
+                    // arbitrage du 27/09/2026).
+                    const { code, repli } = codePourDecision(r.code, dateDecision, successions);
+                    candidates.push({ raw: r.raw, codeSlug: code, repli, articleNumber: r.articleNumber });
+                }
             }
             if (!candidates.length) return;
             const codeSlugs = Array.from(new Set(candidates.flatMap((c) => (c.repli ? [c.codeSlug, c.repli] : [c.codeSlug]))));
-            // Lecture PAGINÉE et ordonnée : PostgREST plafonne en silence à 1 000 lignes, et deux
-            // codes cités (ex. Code du travail + COCC) les dépassent. Ordre de lecture (display_order,
-            // puis id) : à numéro égal, `chercher` garde le premier, soit le corps du code avant ses
-            // annexes (« Article 5 du Code pénal » ≠ article 5 de l'annexe III sur la cryptologie).
-            const data: any[] = [];
-            for (let from = 0; active; from += 1000) {
-                const { data: page, error } = await supabase
-                    .from('articles')
-                    .select('id, slug, article_number, laws_and_codes!inner(slug, short_title)')
-                    .in('laws_and_codes.slug', codeSlugs)
-                    .order('display_order')
-                    .order('id')
-                    .range(from, from + 999);
-                if (error || !page) break;
-                data.push(...page);
-                if (page.length < 1000) break;
+            // Lecture PAGINÉE et ordonnée (chargerArticlesDesCodes) : PostgREST plafonne en silence à
+            // 1 000 lignes, et deux codes cités (ex. Code du travail + COCC) les dépassent. Ordre de
+            // lecture (display_order, puis id) : à numéro égal, le premier l'emporte, soit le corps du
+            // code avant ses annexes (« Article 5 du Code pénal » ≠ article 5 de l'annexe III).
+            let arts: ResolvedArticle[] = [];
+            try {
+                arts = await chargerArticlesDesCodes(codeSlugs);
+            } catch (error) {
+                console.error('Error fetching cited articles:', error);
             }
+            if (!active) return;
             const byCode = new Map<string, ResolvedArticle[]>();
-            data.forEach((a: any) => {
-                const cs = a.laws_and_codes?.slug;
-                if (!cs) return;
-                const arr = byCode.get(cs) || [];
-                arr.push({ id: a.id, slug: a.slug, article_number: a.article_number, code_slug: cs, code_name: a.laws_and_codes?.short_title || cs });
-                byCode.set(cs, arr);
-            });
-            const resolved: Record<string, ResolvedArticle> = {};
-            const chercher = (code: string, num: string) =>
-                (byCode.get(code) || []).find(
-                    (a) => normalizeArticleNumber(a.article_number) === normalizeArticleNumber(num),
-                );
+            for (const a of arts) byCode.set(a.code_slug, [...(byCode.get(a.code_slug) || []), a]);
+            const index = new Map(codeSlugs.map((cs) => [cs, construireIndexRenvoi(byCode.get(cs) || [], concordances[cs] ?? [], cs)]));
+            const resolved: Record<string, ResolvedArticle & { date?: string; ancien?: string }> = {};
             for (const c of candidates) {
-                const hit = chercher(c.codeSlug, c.articleNumber) || (c.repli ? chercher(c.repli, c.articleNumber) : undefined);
-                if (hit) resolved[c.raw] = hit;
+                const ref = { numero: c.articleNumber, date: dateDecision };
+                const r = resoudreRenvoi(ref, index.get(c.codeSlug)) || (c.repli ? resoudreRenvoi(ref, index.get(c.repli)) : null);
+                if (r) resolved[c.raw] = { ...r.article, ...r.query };
             }
             if (active) setCitedResolved(resolved);
         })();
         return () => { active = false; };
-    }, [decision, codeIndex, successions]);
+    }, [decision, codeIndex, successions, retires]);
 
     const fetchDecision = async () => {
         setLoading(true);
@@ -246,8 +270,11 @@ const DecisionPage: React.FC = () => {
                 supabase.from('code_aliases').select('code_slug, alias'),
             ]);
             // Sans la liste des textes (et donc des successions), mieux vaut aucun lien qu'un lien
-            // faux : « CSS » d'un arrêt de 2015 pointerait vers le code de 2026, de même numérotation.
+            // faux : un texte remplacé (arrêté de 1954 → décret de 2021) serait daté au hasard. Les
+            // codes refondus en 2026 (même numérotation nue pour les deux CSS) sont datés par leur
+            // concordance, cf. resoudreRenvoi.
             if (laws) {
+                setRetires(textesRetires(laws.map((l: any) => l.slug)));
                 setSuccessions(buildSuccessions(laws));
                 setCodeIndex(buildCodeIndex(laws, (aliases || []).map((a: any) => ({ alias: a.alias, code_slug: a.code_slug }))));
             }
@@ -389,9 +416,10 @@ const DecisionPage: React.FC = () => {
     // Get the HTML content - handles both old (texte_integral) and new (texte_brut) formats
     const rawText = getDecisionHtml(decision);
 
-    // Transform article citations to clickable links
+    // Transform article citations to clickable links. La date de la décision choisit, pour un
+    // code refondu en 2026, l'ancienne ou la nouvelle numérotation, et date l'adresse du renvoi.
     const enrichedText = articles.length > 0
-        ? textToHtmlWithLinks(rawText, articles, 'code-travail')
+        ? textToHtmlWithLinks(rawText, articles, { dateCitation: decision.date_decision, concordances })
         : rawText;
 
     // Format date for SEO
@@ -571,9 +599,11 @@ const DecisionPage: React.FC = () => {
                                                     codeName={hit.code_name}
                                                     codeSlug={hit.code_slug}
                                                     articleSlug={hit.slug}
+                                                    date={hit.date}
+                                                    ancien={hit.ancien}
                                                 >
                                                     <a
-                                                        href={urlArticle(hit.code_slug, hit.slug)}
+                                                        href={`${urlArticle(hit.code_slug, hit.slug)}${requeteVersion(hit)}`}
                                                         className="article-link"
                                                         target="_blank"
                                                         rel="noreferrer"

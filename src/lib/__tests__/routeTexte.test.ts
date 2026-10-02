@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { adresseCanonique, lireAdresseArticle, slugDuTexte } from '../routeTexte';
+import { adresseCanonique, lireAdresseArticle, slugDuTexte, textesRetires, TEXTES_FUSIONNES } from '../routeTexte';
 
 describe('slugDuTexte', () => {
     it('retrouve le slug en base depuis chaque forme de route', () => {
@@ -45,12 +45,56 @@ describe('adresseCanonique', () => {
     });
 });
 
+describe('textes retirés par la fusion des codes 2026', () => {
+    // Avant la migration de données, code-travail-2026 existe : rien ne change.
+    const avant = textesRetires(['code-travail', 'code-travail-2026', 'code-securite-sociale-senegal', 'code-securite-sociale-2026']);
+    // Après : les deux lignes 2026 ont disparu, leurs adresses mènent au texte fusionné.
+    const apres = textesRetires(['code-travail', 'code-securite-sociale-senegal']);
+
+    it('un slug n’est retiré que s’il a quitté la base', () => {
+        expect([...avant]).toEqual([]);
+        expect([...apres].sort()).toEqual(['code-securite-sociale-2026', 'code-travail-2026']);
+        expect(TEXTES_FUSIONNES['code-travail-2026']).toBe('code-travail');
+    });
+
+    it('avant la migration : les adresses 2026 restent en place', () => {
+        expect(adresseCanonique('/code/code-travail-2026/art-137', { codeSlug: 'code-travail-2026', articleSlug: 'art-137' }, avant)).toBeNull();
+        expect(slugDuTexte({ slug: 'code-travail-2026' }, avant)).toBe('code-travail-2026');
+        expect(adresseCanonique('/code/code-travail-2026', { slug: 'code-travail-2026' })).toBeNull();
+    });
+
+    it('après la migration : texte et article mènent au texte fusionné', () => {
+        expect(adresseCanonique('/code/code-travail-2026', { slug: 'code-travail-2026' }, apres)).toBe('/code/code-travail');
+        expect(adresseCanonique('/code/code-travail-2026/art-137', { codeSlug: 'code-travail-2026', articleSlug: 'art-137' }, apres))
+            .toBe('/code/code-travail/art-137');
+        expect(adresseCanonique('/code/code-securite-sociale-2026/art-7', { codeSlug: 'code-securite-sociale-2026', articleSlug: 'art-7' }, apres))
+            .toBe('/code/code-securite-sociale-senegal/art-7');
+        expect(slugDuTexte({ codeSlug: 'code-travail-2026' }, apres)).toBe('code-travail');
+    });
+
+    it('la cible est canonique (pas de boucle) et les autres textes ne bougent pas', () => {
+        expect(adresseCanonique('/code/code-travail/art-137', { codeSlug: 'code-travail', articleSlug: 'art-137' }, apres)).toBeNull();
+        expect(adresseCanonique('/code/code-penal/art-14', { codeSlug: 'code-penal', articleSlug: 'art-14' }, apres)).toBeNull();
+    });
+});
+
 describe('lireAdresseArticle', () => {
     it('lit un renvoi /code/ et un renvoi /ccn/', () => {
-        expect(lireAdresseArticle('/code/cocc/art-12')).toEqual({ codeSlug: 'cocc', articleSlug: 'art-12' });
+        expect(lireAdresseArticle('/code/cocc/art-12')).toEqual({ codeSlug: 'cocc', articleSlug: 'art-12', date: null, ancien: null });
         expect(lireAdresseArticle('https://www.lexenegal.sn/ccn/banques/art-3?x=1'))
-            .toEqual({ codeSlug: 'ccn-banques', articleSlug: 'art-3' });
-        expect(lireAdresseArticle('/ccn/ccni-2019/art-1')).toEqual({ codeSlug: 'ccni-2019', articleSlug: 'art-1' });
+            .toEqual({ codeSlug: 'ccn-banques', articleSlug: 'art-3', date: null, ancien: null });
+        expect(lireAdresseArticle('/ccn/ccni-2019/art-1')).toEqual({ codeSlug: 'ccni-2019', articleSlug: 'art-1', date: null, ancien: null });
+    });
+
+    it('lit la version demandée (?date=, ?ancien=), ancre ignorée', () => {
+        expect(lireAdresseArticle('/code/code-travail/art-137?ancien=L56&date=2015-03-04'))
+            .toEqual({ codeSlug: 'code-travail', articleSlug: 'art-137', date: '2015-03-04', ancien: 'L56' });
+        expect(lireAdresseArticle('https://www.lexenegal.sn/code/code-travail/art-137?date=2015-03-04#al-2'))
+            .toEqual({ codeSlug: 'code-travail', articleSlug: 'art-137', date: '2015-03-04', ancien: null });
+        expect(lireAdresseArticle('/code/code-travail/art-137#x?date=2015-03-04'))
+            .toEqual({ codeSlug: 'code-travail', articleSlug: 'art-137', date: null, ancien: null });
+        expect(lireAdresseArticle('/code/code-travail/art-137?date=2015-02-30&ancien='))
+            .toEqual({ codeSlug: 'code-travail', articleSlug: 'art-137', date: null, ancien: null });
     });
 
     it('ignore ce qui n’est pas un article', () => {

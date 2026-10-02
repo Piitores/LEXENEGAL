@@ -153,6 +153,42 @@ async function trimCache(cacheName, maxEntries) {
   await Promise.all(keys.slice(0, keys.length - maxEntries).map((key) => cache.delete(key)));
 }
 
+/*
+ * Version datée d'un article (fusion des codes 2026, décision du propriétaire du 02/10/2026) :
+ * /code/<code>/<article>?date=AAAA-MM-JJ&ancien=L56 affiche la rédaction en vigueur à cette date,
+ * pas la version actuelle. Le filet hors-ligne ne doit donc jamais servir l'une à la place de
+ * l'autre (caches.match avec ignoreSearch confondait les deux).
+ */
+function estAdresseDeTexte(pathname) {
+  return pathname.startsWith('/code/') || pathname.startsWith('/ccn/');
+}
+
+function estVersionDatee(url) {
+  return url.searchParams.has('date') || url.searchParams.has('ancien');
+}
+
+/*
+ * Page en cache pour une navigation hors-ligne. Ailleurs que sous /code/ et /ccn/ : comme avant
+ * (query ignorée). Sous /code/ et /ccn/ : la même adresse exacte d'abord ; une version datée
+ * n'accepte qu'elle ; une adresse non datée accepte une variante (?node=…) mais jamais une
+ * version datée.
+ */
+async function pageEnCache(request, url) {
+  if (!estAdresseDeTexte(url.pathname)) return caches.match(request, { ignoreSearch: true });
+  const exacte = await caches.match(request);
+  if (exacte) return exacte;
+  if (estVersionDatee(url)) return undefined;
+  const cache = await caches.open(PAGE_CACHE);
+  const variantes = await cache.matchAll(request, { ignoreSearch: true });
+  return variantes.find((reponse) => {
+    try {
+      return !estVersionDatee(new URL(reponse.url));
+    } catch {
+      return false;
+    }
+  });
+}
+
 /* Course entre le réseau et un délai maximal : au-delà, on rend la main. */
 function fetchWithTimeout(request, timeoutMs) {
   return new Promise((resolve, reject) => {
@@ -198,7 +234,7 @@ async function handleNavigation(event) {
     return response;
   } catch (error) {
     if (cacheable) {
-      const cached = await caches.match(event.request, { ignoreSearch: true });
+      const cached = await pageEnCache(event.request, url);
       if (cached) return cached;
     }
     const offline = await caches.match('/offline.html');

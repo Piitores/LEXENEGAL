@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useCopyAttribution } from '../../hooks/useCopyAttribution';
 import { articleLabel } from '../../lib/articleLabel';
 import { titreSeoArticle, descriptionSeoArticle } from '../../lib/seoArticle';
@@ -18,7 +18,18 @@ import ActionButton from '../../components/ui/ActionButton';
 import CodeNavTree from '../../components/CodeNavTree/CodeNavTree';
 import { estConvention, urlArticle, urlTexte } from '../../lib/urls';
 import { slugDuTexte } from '../../lib/routeTexte';
-import { chargerArticlesDuCode, COLONNES_ARBRE } from '../../lib/articlesDuCode';
+import {
+    chargerArticlesDuCode, chargerConcordanceArticle, chercherAncienSlug, COLONNES_ARBRE,
+} from '../../lib/articlesDuCode';
+import type { LigneConcordance } from '../../lib/articleRefResolver';
+import {
+    lireParamsVersion, requeteVersion, choisirVersions, versionCourante, normAncien, jourDe,
+    libelleBandeauVersion, libelleVersionComparateur, libellePeriode, titreSectionVersion,
+    referenceCopie, libelleNonRepris, autresSuccesseurs, numeroAncienAffiche, mentionAnciens, listeFr,
+    dateCitationVersion, anciensNumerosCites,
+    type VersionArticle,
+} from '../../lib/versionsArticle';
+import { numerotationPropreEnL } from '../../utils/articleLinkRenderer';
 import {
     Article as CodeArticle, StructureNode, HierarchyNode,
     buildTreeFromNodes, buildTreeLegacy, getBreadcrumb, formatNodeLabel,
@@ -43,13 +54,10 @@ interface Article {
     is_active?: boolean;
 }
 
-interface ArticleVersion {
-    id: string;
-    content: string;
-    effective_date: string;
-    expiration_date: string | null;
+// Fusion des codes 2026 : `ancien_numero` distingue les versions reprises d'un ancien article
+// (plusieurs prédécesseurs peuvent être en vigueur sur le même intervalle).
+interface ArticleVersion extends VersionArticle {
     version_note: string | null;
-    is_current: boolean;
 }
 
 interface Law {
@@ -69,6 +77,8 @@ interface CitingDecision {
     date_decision: string;
     chambre: string;
     citation_text: string;
+    /** Anciens numéros cités (« L.56. »), quand le lien a été reporté sur l'article 2026. */
+    anciens_numeros: string[];
 }
 
 interface ArticleAnnotation {
@@ -125,6 +135,11 @@ const ArticlePage: React.FC = () => {
     const codeSlug = slugDuTexte(params);
     const { articleSlug } = params;
     const navigate = useNavigate();
+    // Version demandée par l'adresse (?date=AAAA-MM-JJ, ?ancien=L56) : fusion des codes 2026,
+    // décision du propriétaire du 02/10/2026. Lien depuis une décision = version en vigueur à sa
+    // date, visible de TOUS ; le canonical et le SEO restent ceux de la version courante.
+    const location = useLocation();
+    const paramsVersion = React.useMemo(() => lireParamsVersion(location.search), [location.search]);
 
     // « Retour au code » : on revient TOUJOURS à la page du code en cours de
     // consultation. (Auparavant un retour navigateur « intelligent » renvoyait vers
@@ -145,6 +160,11 @@ const ArticlePage: React.FC = () => {
     const adresseTexte = urlTexte(codeSlug || '');
     const [versions, setVersions] = useState<ArticleVersion[]>([]);
     const [currentVersion, setCurrentVersion] = useState<ArticleVersion | null>(null);
+    // Lignes de concordance de l'article (ancien article non repris, autres successeurs).
+    const [concordance, setConcordance] = useState<LigneConcordance[]>([]);
+    // Le texte a sa propre numérotation en « L. » (Code électoral…) : ses « article L.28 » sans nom
+    // de code sont les siens, pas ceux du Code du travail (numerotationPropreEnL, 02/10/2026).
+    const [numerotationEnL, setNumerotationEnL] = useState(false);
     const [loading, setLoading] = useState(true);
 
     // Arbre de navigation (même mécanique que la page Code)
@@ -211,6 +231,9 @@ const ArticlePage: React.FC = () => {
         setLoading(true);
         setPrevArticle(null);
         setNextArticle(null);
+        setConcordance([]);
+        // Ancienne adresse redirigée : le chargement continue sur la nouvelle (pas de « non trouvé »).
+        let redirige = false;
 
         try {
             // Get law info
@@ -244,7 +267,21 @@ const ArticlePage: React.FC = () => {
                     .select(`${COLONNES_ARBRE}, code_id, content_raw, modifications, notes`)
                     .eq('code_id', lawData.id)
                     .eq('slug', articleSlug)
-                    .single();
+                    .maybeSingle();
+
+                // Fusion des codes 2026 : l'ancien article repris ou éclaté n'existe plus ; son
+                // adresse (article-l56) mène à l'article qui en a repris le sujet (ligne « principal »
+                // de la concordance), dans la rédaction de l'ancien article. Rien dans la
+                // concordance (ou lecture en échec) : « Article non trouvé », comme avant.
+                if (!articleData && articleSlug) {
+                    const cible = await chercherAncienSlug(lawData.id, articleSlug);
+                    if (cible && cible.slug !== articleSlug) {
+                        redirige = true;
+                        const requete = requeteVersion({ ancien: cible.ancienNorm, date: paramsVersion.date });
+                        navigate(`${urlArticle(codeSlug || '', cible.slug)}${requete}${location.hash}`, { replace: true });
+                        return;
+                    }
+                }
 
                 if (articleData) {
                     setArticle(articleData as unknown as Article);
@@ -266,6 +303,7 @@ const ArticlePage: React.FC = () => {
                         ? buildTreeFromNodes(nodesData as StructureNode[], allArts)
                         : buildTreeLegacy(allArts);
                     setHierarchy(tree);
+                    setNumerotationEnL(numerotationPropreEnL(codeSlug, allArts.map(a => a.article_number)));
                     setTreeActiveNodeId(articleData.node_id ?? null);
                     if (articleData.node_id) {
                         const path = getBreadcrumb(articleData.node_id, tree) || [];
@@ -285,9 +323,10 @@ const ArticlePage: React.FC = () => {
 
                     if (versionsData && versionsData.length > 0) {
                         setVersions(versionsData);
-                        const current = versionsData.find(v => v.is_current);
-                        setCurrentVersion(current || versionsData[0]);
+                        // La plus récente des is_current, sinon la plus récente (versionCourante).
+                        setCurrentVersion(versionCourante(versionsData as ArticleVersion[]));
                     } else if (articleData.content_raw) {
+                        setVersions([]);
                         // Fallback (articles sans versions, ex. CGI) : « en vigueur depuis »
                         // = date d'institution du code (publication_date), pas la date du jour.
                         setCurrentVersion({
@@ -312,6 +351,16 @@ const ArticlePage: React.FC = () => {
                     }
                     if (nextData) {
                         setNextArticle({ slug: nextData.slug, number: nextData.article_number });
+                    }
+
+                    // Concordance (fusion des codes 2026), lue seulement quand elle peut servir : un
+                    // article abrogé (ancien article non repris ?) ou des versions reprises d'un
+                    // ancien article. Échec : [] (pas de bandeau, jamais de page cassée).
+                    const anciensNorms = (versionsData || [])
+                        .map((v: any) => normAncien(v.ancien_numero))
+                        .filter(Boolean);
+                    if (articleData.status === 'abrogé' || anciensNorms.length) {
+                        setConcordance(await chargerConcordanceArticle(lawData.id, articleData.id, anciensNorms));
                     }
 
                     // Fetch citing decisions
@@ -339,31 +388,36 @@ const ArticlePage: React.FC = () => {
         } catch (error) {
             console.error('Error fetching article:', error);
         } finally {
-            setLoading(false);
+            if (!redirige) setLoading(false);
         }
     };
 
     const fetchCitingDecisions = async (articleId: string) => {
         setLoadingDecisions(true);
         try {
-            const { data: links, error } = await supabase
+            // Décisions les plus récentes d'abord (tri sur la table liée, côté PostgREST) : après la
+            // fusion des codes 2026, art-137 hérite de toutes les décisions qui citaient L.56, et
+            // `.limit(10)` sans ordre en gardait 10 au hasard. Repli sur la lecture d'avant (sans
+            // anciens numéros), triée ici, si la requête triée échoue.
+            const decisionsLiees = 'decision:decisions(id, reference, slug, date_decision, chambre)';
+            const triee = await supabase
                 .from('decision_article_links')
-                .select(`
-                    citation_text,
-                    decision:decisions(
-                        id,
-                        reference,
-                        slug,
-                        date_decision,
-                        chambre
-                    )
-                `)
+                .select(`citation_text, anciens_numeros, ${decisionsLiees}`)
                 .eq('article_id', articleId)
+                .order('decision(date_decision)', { ascending: false, nullsFirst: false })
                 .limit(10);
+            const lecture = triee.error
+                ? await supabase
+                    .from('decision_article_links')
+                    .select(`citation_text, ${decisionsLiees}`)
+                    .eq('article_id', articleId)
+                    .limit(10)
+                : triee;
+            const { data: links, error } = lecture;
 
             if (error) throw error;
 
-            const decisions: CitingDecision[] = (links || [])
+            const decisions: CitingDecision[] = ((links || []) as any[])
                 .filter((l: any) => l.decision)
                 .map((l: any) => ({
                     id: l.decision.id,
@@ -371,8 +425,10 @@ const ArticlePage: React.FC = () => {
                     slug: l.decision.slug,
                     date_decision: l.decision.date_decision,
                     chambre: l.decision.chambre,
-                    citation_text: l.citation_text
-                }));
+                    citation_text: l.citation_text,
+                    anciens_numeros: Array.isArray(l.anciens_numeros) ? l.anciens_numeros.filter(Boolean) : [],
+                }))
+                .sort((a, b) => (b.date_decision || '').localeCompare(a.date_decision || ''));
 
             setCitingDecisions(decisions);
         } catch (error) {
@@ -387,6 +443,10 @@ const ArticlePage: React.FC = () => {
         if (!isAuthenticated) {
             setShowConversionModal(true);
             return;
+        }
+        // En mode daté, le comparateur s'ouvre sur la version affichée (comparée à l'actuelle).
+        if (!showComparison && !compareVersion && !choix.estActuelle) {
+            setCompareVersion(choix.versions.find((v) => v.id !== currentVersion?.id) ?? null);
         }
         setShowComparison(!showComparison);
     };
@@ -442,6 +502,29 @@ const ArticlePage: React.FC = () => {
         }
     };
 
+    // Version(s) affichée(s) pour l'adresse consultée (contrat de la fusion, §3). Sans paramètre :
+    // la version courante, exactement comme avant. L'article sans versions (repli content_raw) n'a
+    // que sa version courante.
+    const versionsBase: ArticleVersion[] = versions.length ? versions : (currentVersion ? [currentVersion] : []);
+    const choix = React.useMemo(
+        () => choisirVersions(versionsBase, paramsVersion, article?.article_number),
+        [versionsBase, paramsVersion, article?.article_number]
+    );
+    const versionsAffichees: ArticleVersion[] = choix.estActuelle
+        ? (currentVersion ? [currentVersion] : [])
+        : choix.versions;
+    const bandeauVersion = libelleBandeauVersion(choix, paramsVersion, versionsBase, article?.article_number);
+    const autresReprises = article && !choix.estActuelle ? autresSuccesseurs(concordance, choix.versions, article.id) : [];
+    // Ancien article NON REPRIS par le code refondu (ligne « identite » de la concordance).
+    const estNonRepris = !!article && concordance.some((l) => l.role === 'identite' && l.article_id === article.id);
+    // Bascule de numérotation : fin de l'ancienne (concordance), à défaut entrée en vigueur de la
+    // version courante. Une décision antérieure citait l'ancien texte.
+    const bascule = jourDe(concordance.find((l) => l.en_vigueur_jusqu_au)?.en_vigueur_jusqu_au)
+        || jourDe(currentVersion?.effective_date);
+    // Début de l'ancienne numérotation : avant, le numéro visait un code plus ancien (non
+    // transposable), on ne propose pas de « texte alors en vigueur ».
+    const numerotationDepuis = jourDe(concordance.find((l) => l.numerotation_depuis)?.numerotation_depuis);
+
     // Diff surligné entre l'ancienne version sélectionnée et la version courante.
     const diff = React.useMemo(
         () => (showComparison && compareVersion && currentVersion)
@@ -467,6 +550,15 @@ const ArticlePage: React.FC = () => {
             </div>
         );
     }
+
+    // Copie avec attribution : en mode daté, la référence dit quelle version a été copiée et
+    // l'adresse porte ses paramètres (useCopyAttribution lit data-art-query).
+    const copie = referenceCopie(articleLabel(article), choix, paramsVersion, versionsBase, article.article_number);
+    // Date des citations d'un texte affiché (renvois d'un code refondu) : celle d'une version
+    // reprise d'un ancien article est sa date d'effet, jamais antérieure au début de l'ancienne
+    // numérotation ; sinon la date de publication du texte (dateCitationVersion).
+    const dateDeCitation = (v: ArticleVersion): string | null =>
+        dateCitationVersion(v, law?.publication_date, numerotationDepuis);
 
     return (
         <div className="article-page">
@@ -546,11 +638,40 @@ const ArticlePage: React.FC = () => {
                     </div>
                 )}
 
-                {/* BANDEAU ABROGATION (article individuel abrogé) */}
+                {/* BANDEAU ABROGATION (article individuel abrogé). Ancien article non repris par le
+                    code refondu (fusion des codes 2026) : texte construit à partir de la référence du
+                    texte, jamais tiré de `notes`. */}
                 {(article.status === 'abrogé' || article.is_active === false) && (
                     <div className="article-abrogation-banner" role="note">
                         <span className="lab-icon" aria-hidden="true">⛔</span>
-                        <span>{article.notes || 'Cet article a été abrogé.'}</span>
+                        <span>{estNonRepris ? libelleNonRepris(law?.reference) : (article.notes || 'Cet article a été abrogé.')}</span>
+                    </div>
+                )}
+
+                {/* BANDEAU DE VERSION (fusion des codes 2026) : la version affichée n'est pas la
+                    version actuelle (lien daté depuis une décision, ancienne adresse). VISIBLE DE
+                    TOUS, hors de tout verrou de connexion. */}
+                {bandeauVersion && (
+                    <div className="article-version-banner" role="note">
+                        <Clock size={16} className="avb-icon" aria-hidden="true" />
+                        <div className="avb-texte">
+                            <p>
+                                {bandeauVersion} - <Link to={urlArticle(codeSlug || '', article.slug)}>voir la version actuelle</Link>
+                            </p>
+                            {autresReprises.map((r) => (
+                                <p key={r.ancienNorm}>
+                                    Le texte de l'ancien article {r.ancienAffiche} est aussi repris {r.articles.length > 1 ? 'aux articles' : "à l'article"}{' '}
+                                    {r.articles.map((a, i) => (
+                                        <React.Fragment key={a.slug}>
+                                            {i > 0 && (i === r.articles.length - 1 ? ' et ' : ', ')}
+                                            <Link to={`${urlArticle(codeSlug || '', a.slug)}${requeteVersion({ ancien: r.ancienNorm, date: paramsVersion.date })}`}>
+                                                {a.article_number}
+                                            </Link>
+                                        </React.Fragment>
+                                    ))}.
+                                </p>
+                            ))}
+                        </div>
                     </div>
                 )}
 
@@ -591,9 +712,21 @@ const ArticlePage: React.FC = () => {
                     <div className="version-info-wrapper" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px', marginTop: '16px' }}>
                         <div className="version-info" style={{ margin: 0 }}>
                             <Clock size={14} />
-                            En vigueur depuis le {new Date(currentVersion.effective_date).toLocaleDateString('fr-FR', { dateStyle: 'long' })}
-                            {currentVersion.version_note && (
-                                <span className="version-note"> · {currentVersion.version_note}</span>
+                            {choix.estActuelle ? (
+                                <>
+                                    En vigueur depuis le {new Date(currentVersion.effective_date).toLocaleDateString('fr-FR', { dateStyle: 'long' })}
+                                    {currentVersion.version_note && (
+                                        <span className="version-note"> · {currentVersion.version_note}</span>
+                                    )}
+                                </>
+                            ) : (
+                                // Version antérieure affichée : sa période (« En vigueur du … au … »).
+                                <>
+                                    {libellePeriode(versionsAffichees[0], versionsBase, article.article_number)}
+                                    {versionsAffichees.length === 1 && versionsAffichees[0].version_note && (
+                                        <span className="version-note"> · {versionsAffichees[0].version_note}</span>
+                                    )}
+                                </>
                             )}
                         </div>
 
@@ -654,10 +787,11 @@ const ArticlePage: React.FC = () => {
                                     }}
                                 >
                                     <option value="">Sélectionner une version...</option>
-                                    {versions.filter(v => !v.is_current).map(v => (
+                                    {/* Toutes les versions sauf la courante : filtre par id (les versions
+                                        reprises d'un ancien article peuvent porter is_current). */}
+                                    {versions.filter(v => v.id !== currentVersion.id).map(v => (
                                         <option key={v.id} value={v.id}>
-                                            Version du {new Date(v.effective_date).toLocaleDateString('fr-FR')}
-                                            {v.version_note ? ` (${v.version_note})` : ''}
+                                            {libelleVersionComparateur(v)}
                                         </option>
                                     ))}
                                 </select>
@@ -670,7 +804,8 @@ const ArticlePage: React.FC = () => {
                 <div
                     className={`article-content-wrapper ${showComparison && compareVersion ? 'side-by-side' : ''} ${(article.status === 'abrogé' || article.is_active === false) ? 'is-abroge' : ''}`}
                     data-art-slug={articleSlug}
-                    data-art-num={articleLabel(article)}
+                    data-art-num={copie.num}
+                    data-art-query={copie.requete || undefined}
                 >
                     {showComparison && compareVersion && isAuthenticated ? (
                         <>
@@ -678,7 +813,7 @@ const ArticlePage: React.FC = () => {
                             <div className="version-column version-old">
                                 <div className="version-column-header">
                                     <FileText size={14} />
-                                    Version du {new Date(compareVersion.effective_date).toLocaleDateString('fr-FR')}
+                                    {libelleVersionComparateur(compareVersion)}
                                 </div>
                                 <div
                                     className="article-text"
@@ -698,8 +833,19 @@ const ArticlePage: React.FC = () => {
                                 />
                             </div>
                         </>
+                    ) : versionsAffichees.length > 1 ? (
+                        // Plusieurs prédécesseurs en vigueur à la date : une section par version.
+                        versionsAffichees.map((v) => (
+                            <section key={v.id} className="article-version-section">
+                                <h2 className="article-version-section__titre">
+                                    {titreSectionVersion(v, articleLabel(article))}
+                                    <span className="article-version-section__periode">{libellePeriode(v, versionsBase, article.article_number)}</span>
+                                </h2>
+                                <LinkedLegalContent className="article-text" html={v.content} dateCitation={dateDeCitation(v)} numerotationPropreEnL={numerotationEnL} />
+                            </section>
+                        ))
                     ) : (
-                        <LinkedLegalContent className="article-text" html={currentVersion.content} />
+                        <LinkedLegalContent className="article-text" html={(versionsAffichees[0] ?? currentVersion).content} dateCitation={dateDeCitation(versionsAffichees[0] ?? currentVersion)} numerotationPropreEnL={numerotationEnL} />
                     )}
 
                     {/* ANNOTATIONS (Pastilles grises du CGI) */}
@@ -708,7 +854,7 @@ const ArticlePage: React.FC = () => {
                             {annotations.map(anno => (
                                 <div key={anno.id} className="article-annotation">
                                     {anno.title && <h4>{anno.title}</h4>}
-                                    <LinkedLegalContent className="annotation-content" html={anno.content_raw} />
+                                    <LinkedLegalContent className="annotation-content" html={anno.content_raw} dateCitation={law?.publication_date} numerotationPropreEnL={numerotationEnL} />
                                 </div>
                             ))}
                         </div>
@@ -765,29 +911,52 @@ const ArticlePage: React.FC = () => {
                         </p>
                     ) : (
                         <div className="citing-list">
-                            {citingDecisions.map(decision => (
-                                <Link
-                                    key={decision.id}
-                                    to={`/decision/${decision.slug}`}
-                                    className="citing-card"
-                                >
-                                    <div className="citing-card__icon">
-                                        <Scale size={16} />
-                                    </div>
-                                    <div className="citing-card__content">
-                                        <h3>{decision.titre}</h3>
-                                        <p className="citing-card__meta">
-                                            {decision.chambre} · {new Date(decision.date_decision).toLocaleDateString('fr-FR')}
-                                        </p>
-                                        {decision.citation_text && (
-                                            <p className="citing-card__excerpt">
-                                                "...{decision.citation_text}..."
-                                            </p>
+                            {citingDecisions.map(decision => {
+                                // Décision antérieure à la bascule qui citait un ancien numéro (lien
+                                // reporté par la fusion des codes 2026) : on le dit, et on mène au texte
+                                // alors en vigueur (?ancien=&date=). Le numéro de l'article affiché
+                                // lui-même (ancien article non repris) n'apprend rien : écarté.
+                                const anciensCites = anciensNumerosCites(decision.anciens_numeros, article.article_number);
+                                const anciens = anciensCites.map(numeroAncienAffiche).filter(Boolean);
+                                const jour = jourDe(decision.date_decision);
+                                const avantBascule = anciens.length > 0 && !!jour && !!bascule && jour < bascule;
+                                const texteAlors = avantBascule && !(numerotationDepuis && jour < numerotationDepuis)
+                                    ? `${urlArticle(codeSlug || '', article.slug)}${requeteVersion({
+                                        ancien: anciensCites.length === 1 ? anciensCites[0] : null,
+                                        date: jour,
+                                    })}`
+                                    : null;
+                                return (
+                                    <React.Fragment key={decision.id}>
+                                        <Link
+                                            to={`/decision/${decision.slug}`}
+                                            className="citing-card"
+                                        >
+                                            <div className="citing-card__icon">
+                                                <Scale size={16} />
+                                            </div>
+                                            <div className="citing-card__content">
+                                                <h3>{decision.titre}</h3>
+                                                <p className="citing-card__meta">
+                                                    {decision.chambre} · {new Date(decision.date_decision).toLocaleDateString('fr-FR')}
+                                                    {avantBascule && ` · cite ${mentionAnciens(anciens)}`}
+                                                </p>
+                                                {decision.citation_text && (
+                                                    <p className="citing-card__excerpt">
+                                                        "...{decision.citation_text}..."
+                                                    </p>
+                                                )}
+                                            </div>
+                                            <ChevronRight size={16} className="citing-card__arrow" />
+                                        </Link>
+                                        {texteAlors && (
+                                            <Link to={texteAlors} className="citing-card__version">
+                                                Texte alors en vigueur ({anciens.length > 1 ? `anciens articles ${listeFr(anciens)}` : `ancien article ${anciens[0]}`}, {new Date(decision.date_decision).toLocaleDateString('fr-FR')})
+                                            </Link>
                                         )}
-                                    </div>
-                                    <ChevronRight size={16} className="citing-card__arrow" />
-                                </Link>
-                            ))}
+                                    </React.Fragment>
+                                );
+                            })}
                         </div>
                     )}
                 </section>

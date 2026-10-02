@@ -1555,3 +1555,37 @@
         min-width: 9rem;
     }
 }
+
+/* ─────────────────────────────────────────────────────
+   FUSION DES CODES 2026 (02/10/2026) : version datée d'un article
+   Bandeau visible de tous quand la version affichée n'est pas la version actuelle
+   (lien depuis une décision, ancienne adresse d'article), sections par prédécesseur,
+   lien « texte alors en vigueur » sous une décision citante.
+   ───────────────────────────────────────────────────── */
+.article-version-banner {
+    display: flex; gap: 0.6rem; align-items: flex-start;
+    background: #fffbeb; border: 1px solid #fcd34d; border-left: 4px solid #d97706;
+    color: #78350f; padding: 0.85rem 1.1rem; border-radius: 8px;
+    margin: 0.5rem 0 1.25rem; font-size: 0.95rem; line-height: 1.5;
+}
+.article-version-banner .avb-icon { flex-shrink: 0; margin-top: 0.2rem; color: #d97706; }
+.article-version-banner .avb-texte p { margin: 0; }
+.article-version-banner .avb-texte p + p { margin-top: 0.35rem; }
+.article-version-banner a { color: #92400e; font-weight: 600; text-decoration: underline; }
+
+.article-version-section + .article-version-section {
+    margin-top: 1.75rem; padding-top: 1.25rem; border-top: 1px solid #E5E7EB;
+}
+.article-version-section__titre {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.75rem;
+    font-size: 1rem; font-weight: 600; color: #111827; margin: 0 0 0.75rem;
+}
+.article-version-section__periode { font-size: 0.85rem; font-weight: 400; color: #6B7280; }
+
+.citing-card__version {
+    align-self: flex-start;
+    margin: -4px 0 0 20px;
+    font-size: 0.85rem;
+    color: #047857;
+    text-decoration: underline;
+}

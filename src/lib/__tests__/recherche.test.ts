@@ -13,6 +13,10 @@ import {
 
 const fr = (n: number) => n.toLocaleString('fr-FR');
 
+// Texte réellement abrogé en base (abrogated_by_slug = decret-2021-1469-travail-femmes-enceintes).
+const ARRETE_5254 = 'arrete-general-n5254-i-g-t-l-s-a-o-f-du-19-juillet-1954-relatif';
+const TITRE_5254 = 'Arrêté général n° 5254 I.G.T.L.S./A.O.F du 19 juillet 1954 relatif aux conditions générales du travail des femmes';
+
 describe('texte sans accents', () => {
     it('retire accents et casse', () => {
         expect(sansAccents('Créance PRÉAVIS')).toBe('creance preavis');
@@ -240,6 +244,75 @@ describe('carte « Meilleur résultat »', () => {
     });
 });
 
+describe('carte « Meilleur résultat » : ancienne numérotation d’un code refondu (fusion des codes 2026)', () => {
+    // Réponse de resolve_citation('article L.56 du code du travail') après la migration : l'article
+    // qui a repris le sujet de L.56, avec l'ancien numéro et l'adresse de sa rédaction.
+    const l56 = (extra: Record<string, unknown> = {}) => carteMeilleurResultat({
+        kind: 'norme', intent: 'authority',
+        result: {
+            status: 'ok', code_slug: 'code-travail', article_id: 'id-137', article_slug: 'art-137', article_number: '137',
+            code_title: 'Code du Travail', url: '/code/code-travail/art-137',
+            ancien_numero: 'L.56.', ancien_norm: 'L56', statut_concordance: 'eclate', version_date: null,
+            url_version: '/code/code-travail/art-137?ancien=L56', ...extra,
+        },
+    });
+
+    it('titre « Article 137 (ancien art. L.56) » et adresse de la rédaction ancienne', () => {
+        expect(l56()).toEqual({
+            kind: 'article', titre: 'Article 137 (ancien art. L.56)', meta: 'Code du Travail',
+            href: '/code/code-travail/art-137?ancien=L56', codeSlug: 'code-travail', articleId: 'id-137',
+        });
+    });
+
+    it('version datée : url_version conservée', () => {
+        const c = l56({ version_date: '2015-03-04', url_version: '/code/code-travail/art-137?ancien=L56&date=2015-03-04' });
+        expect(c?.kind === 'article' && c.href).toBe('/code/code-travail/art-137?ancien=L56&date=2015-03-04');
+    });
+
+    it('url_version absente ou étrangère à l’article : adresse reconstruite par la règle unique', () => {
+        expect(l56({ url_version: undefined })?.kind === 'article' && (l56({ url_version: undefined }) as any).href)
+            .toBe('/code/code-travail/art-137?ancien=L56');
+        const c = l56({ url_version: 'https://ailleurs.example/x', version_date: '2015-03-04' });
+        expect(c?.kind === 'article' && c.href).toBe('/code/code-travail/art-137?ancien=L56&date=2015-03-04');
+    });
+
+    it('sans ancien numéro : carte inchangée', () => {
+        const c = carteMeilleurResultat({
+            kind: 'norme', intent: 'authority',
+            result: { status: 'ok', code_slug: 'code-travail', article_id: 'id-137', article_slug: 'art-137', article_number: '137', code_title: 'Code du Travail' },
+        });
+        expect(c).toMatchObject({ titre: 'Article 137', href: '/code/code-travail/art-137' });
+    });
+
+    // Ancien article NON REPRIS (relecture du 02/10/2026) : resolve_article renvoie son propre
+    // numéro comme ancien numéro. Ni « (ancien art. L.10) », ni ?ancien=L10 sans effet.
+    const l10 = (extra: Record<string, unknown> = {}) => carteMeilleurResultat({
+        kind: 'norme', intent: 'authority',
+        result: {
+            status: 'ok', code_slug: 'code-travail', article_id: 'id-l10', article_slug: 'article-l10', article_number: 'L.10.',
+            code_title: 'Code du Travail', url: '/code/code-travail/article-l10',
+            ancien_numero: 'L.10.', ancien_norm: 'L10', statut_concordance: 'non_repris', version_date: null,
+            url_version: '/code/code-travail/article-l10?ancien=L10', successeurs_secondaires: [], ...extra,
+        },
+    });
+
+    it('non repris : titre « Article L.10. » sans mention, adresse sans ?ancien', () => {
+        expect(l10()).toEqual({
+            kind: 'article', titre: 'Article L.10.', meta: 'Code du Travail',
+            href: '/code/code-travail/article-l10', codeSlug: 'code-travail', articleId: 'id-l10',
+        });
+    });
+
+    it('non repris daté : la date est gardée (rédaction alors en vigueur), pas ?ancien', () => {
+        const c = l10({ version_date: '2015-03-04', url_version: '/code/code-travail/article-l10?ancien=L10&date=2015-03-04' });
+        expect(c).toMatchObject({ titre: 'Article L.10.', href: '/code/code-travail/article-l10?date=2015-03-04' });
+    });
+
+    it('ancien numéro égal au numéro de l’article, statut absent : même traitement', () => {
+        expect(l10({ statut_concordance: undefined })).toMatchObject({ titre: 'Article L.10.', href: '/code/code-travail/article-l10' });
+    });
+});
+
 describe('carte « Meilleur résultat » : texte et abrogation', () => {
     // Réponse réelle de resolve_citation('article 10 du code électoral') : pas de code_title.
     const ambigue = {
@@ -277,8 +350,10 @@ describe('carte « Meilleur résultat » : texte et abrogation', () => {
         const enVigueur = completerMeilleurResultat(article('code-procedure-civile', 'id-46'), aucune);
         expect(enVigueur.kind === 'article' && enVigueur.estAbroge).toBe(false);
     });
-    it('texte abrogé en entier (Code du travail de 1997) : l’article et chaque option sont signalés', () => {
-        const c = completerMeilleurResultat(article('code-travail', 'id-l2'), { ...aucune, texteAbroge: true });
+    // Texte réellement abrogé en entier : l'arrêté général n° 5254 de 1954, remplacé par le décret
+    // 2021-1469. (Le Code du travail de 1997 n'est plus un texte à part depuis la fusion des codes 2026.)
+    it('texte abrogé en entier (arrêté général n° 5254 de 1954) : l’article et chaque option sont signalés', () => {
+        const c = completerMeilleurResultat(article(ARRETE_5254, 'id-a2'), { ...aucune, texteAbroge: true });
         expect(c.kind === 'article' && c.estAbroge).toBe(true);
         const choix = completerMeilleurResultat(carteMeilleurResultat(ambigue)!, { ...aucune, texteAbroge: true });
         expect(choix.kind === 'choix' && choix.options.every((o) => o.estAbroge)).toBe(true);
@@ -288,7 +363,7 @@ describe('carte « Meilleur résultat » : texte et abrogation', () => {
         expect(c.kind === 'choix' && c.options.map((o) => o.estAbroge)).toEqual([false, true]);
     });
     it('texte cité : abrogation du texte seulement ; décision inchangée', () => {
-        const texte = carteMeilleurResultat({ kind: 'texte', intent: 'authority', result: { status: 'ok', code_slug: 'code-travail', code_title: 'Code du Travail de 1997 (abrogé)' } })!;
+        const texte = carteMeilleurResultat({ kind: 'texte', intent: 'authority', result: { status: 'ok', code_slug: ARRETE_5254, code_title: TITRE_5254 } })!;
         const c = completerMeilleurResultat(texte, { ...aucune, texteAbroge: true });
         expect(c.kind === 'texte' && c.estAbroge).toBe(true);
         const decision = carteMeilleurResultat({ kind: 'decision', intent: 'authority', result: { status: 'ok', match: { slug: 'd', reference: 'Arrêt' } } })!;
@@ -299,7 +374,7 @@ describe('carte « Meilleur résultat » : texte et abrogation', () => {
 describe('aperçu de l’accueil', () => {
     it('le texte nommé vient en premier, liens par la règle unique, abrogation signalée', () => {
         const r = resultatsApercu({
-            texte: { code_slug: 'code-travail', code_title: 'Code du Travail de 1997 (abrogé)', est_abroge: true },
+            texte: { code_slug: ARRETE_5254, code_title: TITRE_5254, est_abroge: true },
             decisions: [{ id: 'd1', slug: 'arret-1', reference: 'Arrêt n° 1', chambre: 'Chambre sociale', juridiction: 'Cour suprême', date_decision: '2016-04-27' }],
             articles: [
                 { id: 'a1', article_slug: 'art-49', article_number: '49', code_slug: 'ccn-nettoiement-2014', code_title: 'Convention nettoiement', est_abroge: false },
@@ -307,7 +382,7 @@ describe('aperçu de l’accueil', () => {
             ],
         });
         expect(r.map((x) => x.type)).toEqual(['texte', 'decision', 'article']);
-        expect(r[0]).toMatchObject({ href: '/code/code-travail', estAbroge: true });
+        expect(r[0]).toMatchObject({ href: `/code/${ARRETE_5254}`, estAbroge: true });
         expect(r[1]).toMatchObject({ href: '/decision/arret-1', subtitle: 'Chambre sociale · 2016' });
         expect(r[2]).toMatchObject({ href: '/ccn/nettoiement-2014/art-49', title: 'Article 49', estAbroge: false });
     });

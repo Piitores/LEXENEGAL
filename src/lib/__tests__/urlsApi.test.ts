@@ -47,6 +47,16 @@ describe('texteDeLaRequete (api/render.js)', () => {
         expect(ancienne.recue).not.toBe(urlTexte(ancienne.slug));
     });
 
+    it('requête d’origine reportée sur une redirection, sans les paramètres des réécritures', async () => {
+        const { requeteConservee } = await charger('render.js');
+        expect(requeteConservee({ type: 'code', slug: 'code-travail-2026' })).toBe('');
+        expect(requeteConservee({ type: 'code', slug: 'code-travail-2026', node: 'Titre I' })).toBe('?node=Titre+I');
+        expect(requeteConservee({ type: 'article', code: 'code-travail-2026', slug: 'art-137', ancien: 'L56', date: '2015-03-04' }))
+            .toBe('?ancien=L56&date=2015-03-04');
+        expect(requeteConservee({ type: 'code', ccn: 'banques', x: ['1', '2'] })).toBe('?x=1&x=2');
+        expect(requeteConservee(undefined)).toBe('');
+    });
+
     it('requête ambiguë ou incomplète : null (le handler sert la coquille)', async () => {
         const { texteDeLaRequete } = await charger('render.js');
         // /code/code-penal?ccn=banques comme /ccn/banques?slug=code-penal (ou ?code= pour un
@@ -57,5 +67,51 @@ describe('texteDeLaRequete (api/render.js)', () => {
         // Paramètre répété (tableau) : pas de devinette.
         expect(texteDeLaRequete(['banques', 'transports'], undefined)).toBeNull();
         expect(texteDeLaRequete(undefined, ['code-penal', 'cocc'])).toBeNull();
+    });
+});
+
+/*
+ * Textes retirés par la fusion des codes 2026 (décision du propriétaire du 02/10/2026). Le 301 vient du
+ * relais de api/render.js (TEXTES_RETIRES), qui n'agit que si la ligne du texte a DISPARU de la base,
+ * donc après la migration de données.
+ * ⛔ Aucune règle statique de vercel.json ne doit capter ces adresses (relecture du 02/10/2026) : avant
+ * la migration, code-travail-2026 est le texte EN VIGUEUR. Une règle inconditionnelle le renverrait vers
+ * le code de 1997, dont le bandeau « Voir le texte en vigueur » pointe vers code-travail-2026 (boucle),
+ * et ses articles vers des adresses vides (art-137 n'existe pas sous code-travail avant la migration).
+ * Si le propriétaire veut aussi des règles statiques : lot distinct, déployé APRÈS la migration, avec
+ * son propre test.
+ */
+describe('textes retirés (fusion des codes 2026)', () => {
+    // Motif d'une source Vercel (« :x* » = plusieurs segments, « :x » = un segment).
+    const motif = (source: string) => new RegExp(`^${source.replace(/[.+?^${}()|[\]\\]/g, '\\$&')
+        .replace(/:\w+\*/g, '.*').replace(/:\w+/g, '[^/]+')}$`);
+
+    it('vercel.json ne redirige pas les textes retirés : leurs adresses vont au rendu serveur', async () => {
+        const { TEXTES_RETIRES } = await charger('render.js');
+        const fs = await import('fs');
+        const config = JSON.parse(fs.readFileSync(decodeURIComponent(new URL('../../../vercel.json', import.meta.url).pathname), 'utf8'));
+        const redirects: Array<{ source: string; destination: string; has?: unknown }> = config.redirects;
+        const rewrites: Array<{ source: string; destination: string }> = config.rewrites;
+        expect(Object.keys(TEXTES_RETIRES).sort()).toEqual(['code-securite-sociale-2026', 'code-travail-2026']);
+        // Le motif reconnaît bien les formes de vercel.json (contrôle du contrôle).
+        expect(motif('/code/ccn-:nom').test('/code/ccn-banques')).toBe(true);
+        expect(motif('/code/:codeSlug/:articleSlug').test('/code/code-travail-2026/art-137')).toBe(true);
+        for (const ancien of Object.keys(TEXTES_RETIRES)) {
+            for (const adresse of [`/code/${ancien}`, `/code/${ancien}/art-1`, `/code/${ancien}/art-137`]) {
+                // Seule la règle de l'apex, conditionnée à l'hôte lexenegal.sn (« has »), peut s'appliquer.
+                expect(redirects.filter((r) => !r.has && motif(r.source).test(adresse)).map((r) => r.source)).toEqual([]);
+                // Première réécriture qui capte l'adresse : le rendu serveur, seul à savoir si le texte existe encore.
+                const rw = rewrites.find((r) => motif(r.source).test(adresse));
+                expect(rw && rw.destination).toMatch(/^\/api\/render\?type=(code|article)&/);
+            }
+        }
+    });
+
+    it('les adresses de texte restent la règle commune (un texte retiré n’est pas une convention)', async () => {
+        const { TEXTES_RETIRES, urlTexte } = await charger('render.js');
+        for (const [ancien, nouveau] of Object.entries(TEXTES_RETIRES)) {
+            expect(urlTexte(ancien)).toBe(urls.urlTexte(ancien));
+            expect(urlTexte(nouveau)).toBe(`/code/${nouveau}`);
+        }
     });
 });

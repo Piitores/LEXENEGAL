@@ -21,8 +21,10 @@ import {
 } from '../../lib/codeTree';
 import { useCopyAttribution, attributionFooter, articleUrl } from '../../hooks/useCopyAttribution';
 import { urlArticle, urlTexte } from '../../lib/urls';
-import { slugDuTexte } from '../../lib/routeTexte';
-import { chargerArticlesDuCode, COLONNES_LECTURE } from '../../lib/articlesDuCode';
+import { CODES_REFONDUS, slugDuTexte } from '../../lib/routeTexte';
+import { chargerArticlesDuCode, chargerConcordanceDesCodes, COLONNES_LECTURE } from '../../lib/articlesDuCode';
+import { dateCitationCarte, datesNonRepris, type LigneConcordance } from '../../lib/articleRefResolver';
+import { numerotationPropreEnL } from '../../utils/articleLinkRenderer';
 import { correspond, texteCherchable } from '../../lib/rechercheDansLeTexte';
 import './CodePage.css';
 import '../../styles/legal-content.css';
@@ -62,7 +64,16 @@ const articleToPlainText = (art: Article, abroge = false): string => {
 
 // ── Carte d'un article (gère le repli du préambule + le bouton Copier) ──
 
-const ArticleCard: React.FC<{ art: Article; slug: string | undefined; codeTitle?: string; texteAbroge?: boolean }> = ({ art, slug, codeTitle, texteAbroge = false }) => {
+// `dateCitation` : date qui date les renvois de l'article vers un code refondu (fusion des codes
+// 2026 : « article L.56 du Code du travail » dans une convention de 2014 mène à l'article qui l'a
+// repris, dans sa rédaction de 2014). En principe la date de publication du texte affiché, mais la
+// veille de la bascule pour un ancien article non repris (dateCitationCarte). `renvoisRefondus`
+// false : aucun lien vers un code refondu (concordance illisible). `numerotationEnL` : le texte
+// affiché a sa propre numérotation en « L. » (Code électoral…), cf. numerotationPropreEnL.
+const ArticleCard: React.FC<{
+    art: Article; slug: string | undefined; codeTitle?: string; texteAbroge?: boolean;
+    dateCitation?: string | null; renvoisRefondus?: boolean; numerotationEnL?: boolean;
+}> = ({ art, slug, codeTitle, texteAbroge = false, dateCitation, renvoisRefondus = true, numerotationEnL = false }) => {
     const preambule = isPreambule(art);
     // Préambule replié par défaut ; articles normaux toujours ouverts.
     const [open, setOpen] = useState(!preambule);
@@ -136,7 +147,12 @@ const ArticleCard: React.FC<{ art: Article; slug: string | undefined; codeTitle?
                 <>
                     <div className="article-body">
                         {art.content_html ? (
-                            <LinkedLegalContent html={art.content_html} />
+                            <LinkedLegalContent
+                                html={art.content_html}
+                                dateCitation={dateCitation}
+                                renvoisRefondus={renvoisRefondus}
+                                numerotationPropreEnL={numerotationEnL}
+                            />
                         ) : (
                             art.content_raw || '(Contenu non disponible)'
                         )}
@@ -184,6 +200,10 @@ const CodePage: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     // Parties d'un même code (législative / réglementaire) pour la bascule d'en-tête.
     const [parties, setParties] = useState<{ slug: string; partie: string | null }[]>([]);
+    // Fusion des codes 2026 (02/10/2026) : anciens articles non repris d'un code refondu → date de
+    // leurs renvois (datesNonRepris). Vide pour tout autre code, et tant que la concordance est vide ;
+    // null si elle est illisible.
+    const [nonRepris, setNonRepris] = useState<Map<string, string> | null>(() => new Map());
 
     // Toute copie de texte d'un article emporte la référence LexeSenegal + le lien.
     useCopyAttribution(slug, law?.title);
@@ -276,7 +296,18 @@ const CodePage: React.FC = () => {
 
             // Articles : lecture PAGINÉE (PostgREST tronque en silence à 1 000 lignes : les
             // 104 derniers articles de l'AUSCGIE, qui en compte 1 104, étaient invisibles).
-            const allArticles = await chargerArticlesDuCode<Article>(lawData.id, COLONNES_LECTURE);
+            // Code refondu (fusion des codes 2026) : sa concordance, lue une seule fois, dit quels
+            // articles sont d'anciens articles non repris (leurs renvois sont datés autrement).
+            // chargerConcordanceDesCodes ne lève jamais : null si la lecture échoue.
+            const [allArticles, concordance] = await Promise.all([
+                chargerArticlesDuCode<Article>(lawData.id, COLONNES_LECTURE),
+                CODES_REFONDUS.has(lawData.slug)
+                    ? chargerConcordanceDesCodes([lawData.slug]).then((c) => (c[lawData.slug] === undefined ? [] : c[lawData.slug]))
+                    : Promise.resolve([] as LigneConcordance[]),
+            ]);
+            // AVANT les articles : les renvois d'une carte sont liés à son premier affichage
+            // (LinkedLegalContent ne revient pas sur un lien déjà posé), la date doit être juste d'emblée.
+            setNonRepris(datesNonRepris(concordance));
             setArticles(allArticles);
             setTotalArticles(allArticles.length);
 
@@ -414,6 +445,19 @@ const CodePage: React.FC = () => {
         () => new Set(preambuleArticles.map(a => a.id)),
         [preambuleArticles]
     );
+
+    // Renvois d'une carte (fusion des codes 2026, 02/10/2026) : date de citation (date de publication
+    // du texte, veille de la bascule pour un ancien article non repris), lien ou non vers un code
+    // refondu, et numérotation propre en « L. » du texte affiché (un « article L.28 » sans nom de code
+    // y vise ses propres articles, pas le Code du travail).
+    const numerotationEnL = useMemo(
+        () => numerotationPropreEnL(slug, articles.map(a => a.article_number)),
+        [slug, articles]
+    );
+    const citationDe = (art: Article) => {
+        const { date, renvoisRefondus } = dateCitationCarte(art, law?.publication_date, nonRepris);
+        return { dateCitation: date, renvoisRefondus, numerotationEnL };
+    };
 
     const selectedArticles = useMemo(() => {
         if (!selectedNode) return [];
@@ -612,7 +656,7 @@ const CodePage: React.FC = () => {
                     {!filteredArticles && preambuleArticles.length > 0 && (
                         <div className="preambule-top articles-list">
                             {preambuleArticles.map(art => (
-                                <ArticleCard key={art.id} art={art} slug={slug} codeTitle={law?.title} texteAbroge={!!(law?.abrogated_by_slug || law?.abrogation_note)} />
+                                <ArticleCard key={art.id} art={art} slug={slug} codeTitle={law?.title} texteAbroge={!!(law?.abrogated_by_slug || law?.abrogation_note)} {...citationDe(art)} />
                             ))}
                         </div>
                     )}
@@ -735,7 +779,7 @@ const CodePage: React.FC = () => {
                                         </div>
                                     ) : (
                                         selectedArticles.map(art => (
-                                            <ArticleCard key={art.id} art={art} slug={slug} codeTitle={law?.title} texteAbroge={!!(law?.abrogated_by_slug || law?.abrogation_note)} />
+                                            <ArticleCard key={art.id} art={art} slug={slug} codeTitle={law?.title} texteAbroge={!!(law?.abrogated_by_slug || law?.abrogation_note)} {...citationDe(art)} />
                                         ))
                                     )}
                                 </div>

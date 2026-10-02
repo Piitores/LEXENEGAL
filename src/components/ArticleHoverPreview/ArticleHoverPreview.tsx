@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { supabase } from '../../lib/supabase';
 import { Scale, ExternalLink } from 'lucide-react';
 import { articleLabel } from '../../lib/articleLabel';
 import { urlArticle } from '../../lib/urls';
 import { apercuArticle } from '../../lib/intituleArticle';
+import { lireVersionAffichee, resoudreAdresseArticle } from '../../lib/articlesDuCode';
+import { numeroAncienAffiche, requeteVersion } from '../../lib/versionsArticle';
 import './ArticleHoverPreview.css';
 
 
@@ -15,6 +16,10 @@ interface ArticleHoverPreviewProps {
     codeName: string;
     codeSlug: string;
     articleSlug: string;
+    /** Version demandée (fusion des codes 2026) : la version en vigueur à la date de la citation. */
+    date?: string | null;
+    /** Ancien numéro normalisé (?ancien=L56) dont la version reprend le texte. */
+    ancien?: string | null;
     children: React.ReactNode;
 }
 
@@ -24,11 +29,15 @@ const ArticleHoverPreview: React.FC<ArticleHoverPreviewProps> = ({
     codeName,
     codeSlug,
     articleSlug,
+    date,
+    ancien,
     children
 }) => {
     const [isHovered, setIsHovered] = useState(false);
     const [content, setContent] = useState<string | null>(null);
     const [intitule, setIntitule] = useState<string | null>(null);
+    // « ancien art. L.56 » quand l'aperçu montre la rédaction d'un ancien article.
+    const [mentionAncien, setMentionAncien] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [position, setPosition] = useState({ top: 0, left: 0 });
     const triggerRef = useRef<HTMLSpanElement>(null);
@@ -43,25 +52,23 @@ const ArticleHoverPreview: React.FC<ArticleHoverPreviewProps> = ({
         setLoading(true);
         try {
             // Résolution de l'id : direct si fourni, sinon via le couple (code, slug)
-            // - les renvois COCC ne portent qu'un slug dans leur href.
+            // - les renvois COCC ne portent qu'un slug dans leur href. Fusion des codes 2026 : un
+            // ancien slug (article-l56) mène à l'article qui l'a repris, avec son ancien numéro.
             let resolvedId = articleId;
+            let numero: string | null = articleNumber;
+            let ancienEffectif = ancien ?? null;
             if (!resolvedId && articleSlug && codeSlug) {
-                const { data: code } = await supabase
-                    .from('laws_and_codes').select('id').eq('slug', codeSlug).maybeSingle();
-                if (code) {
-                    const { data: art } = await supabase
-                        .from('articles').select('id').eq('slug', articleSlug).eq('code_id', code.id).maybeSingle();
-                    resolvedId = art?.id;
-                }
+                const cible = await resoudreAdresseArticle(codeSlug, articleSlug);
+                resolvedId = cible?.id;
+                numero = cible?.article_number ?? articleNumber;
+                ancienEffectif = ancienEffectif ?? cible?.ancien ?? null;
             }
             if (!resolvedId) { setContent('Contenu non disponible'); return; }
 
-            const { data } = await supabase
-                .from('article_versions')
-                .select('content')
-                .eq('article_id', resolvedId)
-                .eq('is_current', true)
-                .single();
+            // Version robuste : courante (ou la plus récente) sans paramètre ; sinon la version en
+            // vigueur à la date demandée (choisirVersions). Plus de `.eq('is_current', true).single()`.
+            const data = await lireVersionAffichee(resolvedId, { date: date ?? null, ancien: ancienEffectif }, numero);
+            setMentionAncien(data && !data.is_current && data.ancien_numero ? numeroAncienAffiche(data.ancien_numero) : null);
 
             if (data) {
                 // Le contenu est du HTML : on en extrait le texte lisible (sinon les
@@ -125,7 +132,7 @@ const ArticleHoverPreview: React.FC<ArticleHoverPreviewProps> = ({
                             {/* Header */}
                             <div className="preview-header">
                                 <Scale size={14} />
-                                <span>{articleLabel({ article_number: articleNumber })}</span>
+                                <span>{articleLabel({ article_number: articleNumber })}{mentionAncien ? ` (ancien art. ${mentionAncien})` : ''}</span>
                                 <span className="preview-code">{codeName}</span>
                             </div>
 
@@ -143,7 +150,7 @@ const ArticleHoverPreview: React.FC<ArticleHoverPreviewProps> = ({
 
                             {/* Footer */}
                             <a
-                                href={urlArticle(codeSlug, articleSlug)}
+                                href={`${urlArticle(codeSlug, articleSlug)}${requeteVersion({ date, ancien })}`}
                                 className="preview-link"
                             >
                                 Voir l'article complet <ExternalLink size={12} />

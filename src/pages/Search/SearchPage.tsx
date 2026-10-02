@@ -63,7 +63,7 @@ interface ArticleHit {
     // search_articles_hybrid), qui s'en servent seulement pour classer les abrogés après
     // (× 0,6). On la lit à part, à partir des ids déjà obtenus, avec la même règle que la
     // base (fn_poids_vigueur, search_apercu) : article au statut « abrogé » OU texte
-    // abrogé en entier (laws_and_codes.abrogated_by_slug, ex. Code du travail de 1997).
+    // abrogé en entier (laws_and_codes.abrogated_by_slug, ex. arrêté général n° 5254 de 1954).
     est_abroge?: boolean;
 }
 

@@ -9,19 +9,89 @@
 
 import React from 'react';
 import ArticleHoverPreview from '../components/ArticleHoverPreview/ArticleHoverPreview';
-import { indexerParNumero, normalizeArticleNumber } from '../lib/articleRefResolver';
+import {
+    construireIndexRenvoi, resoudreRenvoi,
+    type IndexRenvoi, type LigneConcordance, type RenvoiResolu,
+} from '../lib/articleRefResolver';
 import { urlArticle } from '../lib/urls';
+import { requeteVersion } from '../lib/versionsArticle';
 
 /**
  * Configuration des codes avec leurs patterns de détection
  */
-const CODE_CONFIG: { code: string; prefixes: string[]; patterns: RegExp[] }[] = [
+/*
+ * `neutre` : citation capturée pour qu'aucun motif suivant (le générique du Code du travail) ne la
+ * prenne, mais jamais reliée (absente des résultats de findAllArticleCitations).
+ */
+const CODE_CONFIG: { code: string; prefixes: string[]; patterns: RegExp[]; neutre?: boolean }[] = [
+    // Urbanisme - partie législative (articles L.) et réglementaire (articles R.),
+    // rangées dans deux codes distincts : le préfixe L./R. cité route vers le bon.
+    // Placés AVANT le Code du travail : les chevauchements sont écartés dans l'ordre de cette
+    // liste, et le motif générique du travail (« Art. L.N ») capturait « Article L.12 du Code de
+    // l'urbanisme » comme L.12 du Code du travail. Numéros composés capturés (« L.12-1 », « L.5 bis »)
+    // pour la même raison.
+    {
+        code: 'code-de-l-urbanisme',
+        prefixes: ['L.'],
+        patterns: [
+            /Art(?:icle)?[.\s]*L[.\s]*(\d+(?:-\d+)?(?:\s?(?:bis|ter|quater)\b)?)\s+(?:du\s+)?Code\s+de\s+l['’]?\s*[Uu]rbanisme/gi,
+        ]
+    },
+    {
+        code: 'code-de-l-urbanisme-reglementaire',
+        prefixes: ['R.'],
+        patterns: [
+            /Art(?:icle)?[.\s]*R[.\s]*(\d+(?:-\d+)?(?:\s?(?:bis|ter|quater)\b)?)\s+(?:du\s+)?Code\s+de\s+l['’]?\s*[Uu]rbanisme/gi,
+        ]
+    },
+    // Construction - partie législative (L.) et réglementaire (R.)
+    {
+        code: 'code-de-la-construction',
+        prefixes: ['L.'],
+        patterns: [
+            /Art(?:icle)?[.\s]*L[.\s]*(\d+(?:-\d+)?(?:\s?(?:bis|ter|quater)\b)?)\s+(?:du\s+)?Code\s+de\s+la\s+[Cc]onstruction/gi,
+        ]
+    },
+    {
+        code: 'code-de-la-construction-reglementaire',
+        prefixes: ['R.'],
+        patterns: [
+            /Art(?:icle)?[.\s]*R[.\s]*(\d+(?:-\d+)?(?:\s?(?:bis|ter|quater)\b)?)\s+(?:du\s+)?Code\s+de\s+la\s+[Cc]onstruction/gi,
+        ]
+    },
+    // Numéros « L. » d'AUTRES codes, nommés après le numéro (« article L.68 du Code électoral »,
+    // « article L.12 du code de l'environnement ») : le motif générique du travail ci-dessous les
+    // lisait comme des renvois au Code du travail, d'où des liens faux (relecture du 02/10/2026).
+    // Capturés AVANT lui pour être neutralisés, SANS lien : le Code électoral en base est celui de
+    // 2021 (loi n° 2021-35), renuméroté, alors que l'essentiel des décisions qui le citent lui sont
+    // antérieures (vérifié en base : en 2019, « article L.122 » = réclamation contre la liste des
+    // candidats ; L.122 de 2021 = caution). Les relier demanderait de dater la citation, comme pour
+    // les codes refondus. (Apostrophe droite ou typographique : « l'environnement », « l’environnement ».)
+    {
+        code: 'code-electoral',
+        neutre: true,
+        prefixes: ['L.'],
+        patterns: [
+            /Art(?:icle)?[.\s]*L[.\s]*O?[.\s]*(\d+(?:-\d+)?(?:\s?(?:bis|ter|quater)\b)?)\s+du\s+Code\s+[ée]lectoral/gi,
+        ]
+    },
+    {
+        code: 'autre-code-en-l',
+        neutre: true,
+        prefixes: ['L.'],
+        patterns: [
+            /Art(?:icle)?[.\s]*L[.\s]*(\d+(?:-\d+)?(?:\s?(?:bis|ter|quater)\b)?)\s+(?:du|de\s+la|de\s+l['’]\s*|des)\s*Code\s+(?:de\s+l['’]\s*environnement|de\s+la\s+route|de\s+l['’]\s*assainissement|de\s+l['’]\s*hygi[èe]ne|de\s+la\s+sant[ée]|des\s+assurances|de\s+proc[ée]dure)/gi,
+        ]
+    },
+    // Code du travail : numérotation « L. » du code de 1997 (fusion des codes 2026 : elle passe par
+    // la concordance, cf. resoudreRenvoi). Le suffixe est capturé : « L.29-1 » était lu L.29 et
+    // « L.76 bis » L.76, soit, une fois relié par sujet, le successeur d'un AUTRE article.
     {
         code: 'code-travail',
         prefixes: ['L.'],
         patterns: [
-            /Art(?:icle)?[.\s]*L[.\s]*(\d+)/gi,
-            /L[.\s]*(\d+)\s+du\s+Code\s+du\s+Travail/gi,
+            /Art(?:icle)?[.\s]*L[.\s]*(\d+(?:-\d+)?(?:\s?(?:bis|ter|quater)\b)?)/gi,
+            /L[.\s]*(\d+(?:-\d+)?(?:\s?(?:bis|ter|quater)\b)?)\s+du\s+Code\s+du\s+Travail/gi,
         ]
     },
     {
@@ -84,50 +154,19 @@ const CODE_CONFIG: { code: string; prefixes: string[]; patterns: RegExp[] }[] = 
         code: 'ohada-suretes',
         prefixes: [''],
         patterns: [
-            /Art(?:icle)?[.\s]*(\d+)\s+(?:de\s+l[''])?(?:Acte\s+Uniforme|AU)\s+(?:portant\s+)?(?:sur\s+les?\s+)?[Ss][ûu]ret[ée]s?/gi,
+            /Art(?:icle)?[.\s]*(\d+)\s+(?:de\s+l['’])?(?:Acte\s+Uniforme|AU)\s+(?:portant\s+)?(?:sur\s+les?\s+)?[Ss][ûu]ret[ée]s?/gi,
             /Art(?:icle)?[.\s]*(\d+)\s+AU[.\s]*S/gi,
-            /Art(?:icle)?[.\s]*(\d+)\s+(?:de\s+l[''])?OHADA\s+[Ss][ûu]ret[ée]s?/gi,
+            /Art(?:icle)?[.\s]*(\d+)\s+(?:de\s+l['’])?OHADA\s+[Ss][ûu]ret[ée]s?/gi,
         ]
     },
     {
         code: 'ohada-droit-commercial-general',
         prefixes: [''],
         patterns: [
-            /Art(?:icle)?[.\s]*(\d+)\s+(?:de\s+l[''])?(?:Acte\s+Uniforme|AU)\s+(?:portant\s+sur\s+le\s+)?[Dd]roit\s+[Cc]ommercial/gi,
+            /Art(?:icle)?[.\s]*(\d+)\s+(?:de\s+l['’])?(?:Acte\s+Uniforme|AU)\s+(?:portant\s+sur\s+le\s+)?[Dd]roit\s+[Cc]ommercial/gi,
             /Art(?:icle)?[.\s]*(\d+)\s+AU[.\s]*D\.?C\.?G?/gi,
-            /Art(?:icle)?[.\s]*(\d+)\s+(?:de\s+l[''])?AUDCG/gi,
-            /Art(?:icle)?[.\s]*(\d+)\s+(?:de\s+l[''])?OHADA\s+[Cc]ommercial/gi,
-        ]
-    },
-    // Urbanisme - partie législative (articles L.) et réglementaire (articles R.),
-    // rangées dans deux codes distincts : le préfixe L./R. cité route vers le bon.
-    {
-        code: 'code-de-l-urbanisme',
-        prefixes: ['L.'],
-        patterns: [
-            /Art(?:icle)?[.\s]*L[.\s]*(\d+)\s+(?:du\s+)?Code\s+de\s+l['']?\s*[Uu]rbanisme/gi,
-        ]
-    },
-    {
-        code: 'code-de-l-urbanisme-reglementaire',
-        prefixes: ['R.'],
-        patterns: [
-            /Art(?:icle)?[.\s]*R[.\s]*(\d+)\s+(?:du\s+)?Code\s+de\s+l['']?\s*[Uu]rbanisme/gi,
-        ]
-    },
-    // Construction - partie législative (L.) et réglementaire (R.)
-    {
-        code: 'code-de-la-construction',
-        prefixes: ['L.'],
-        patterns: [
-            /Art(?:icle)?[.\s]*L[.\s]*(\d+)\s+(?:du\s+)?Code\s+de\s+la\s+[Cc]onstruction/gi,
-        ]
-    },
-    {
-        code: 'code-de-la-construction-reglementaire',
-        prefixes: ['R.'],
-        patterns: [
-            /Art(?:icle)?[.\s]*R[.\s]*(\d+)\s+(?:du\s+)?Code\s+de\s+la\s+[Cc]onstruction/gi,
+            /Art(?:icle)?[.\s]*(\d+)\s+(?:de\s+l['’])?AUDCG/gi,
+            /Art(?:icle)?[.\s]*(\d+)\s+(?:de\s+l['’])?OHADA\s+[Cc]ommercial/gi,
         ]
     },
     // Pétrolier - numérotation à plat (pas de préfixe) ; on route vers la partie
@@ -159,7 +198,19 @@ interface ArticleInfo {
     code_name: string;
 }
 
-interface RenderOptions {
+/**
+ * Contexte de résolution des renvois (fusion des codes 2026, 02/10/2026).
+ * - dateCitation : date de la décision, ou du texte qui contient la citation. Elle choisit la
+ *   numérotation d'un code refondu (1997 ou 2026) et date l'adresse (?date=).
+ * - concordances : concordance de chaque code cité (chargerConcordanceDesCodes) ; [] = aucune,
+ *   null = illisible. Absente : comportement d'avant la fusion.
+ */
+export interface OptionsRenvoi {
+    dateCitation?: string | null;
+    concordances?: Record<string, LigneConcordance[] | null>;
+}
+
+interface RenderOptions extends OptionsRenvoi {
     articles: ArticleInfo[];
     codeSlug?: string;
 }
@@ -172,10 +223,38 @@ export interface MatchResult {
     codeSlug: string;
 }
 
+/** Slugs du Code du travail (le texte retiré code-travail-2026 compris, avant la migration). */
+const TEXTES_DU_TRAVAIL: ReadonlySet<string> = new Set(['code-travail', 'code-travail-2026']);
+
 /**
- * Trouve toutes les citations d'articles dans un texte
+ * Le texte affiché a-t-il sa propre numérotation en « L. » (Code électoral, de l'urbanisme, de la
+ * construction, de la route, de l'assainissement, de l'hygiène : vérifié en base le 02/10/2026),
+ * sans être le Code du travail ? Un « article L.28 » qui n'y nomme aucun code vise alors ses propres
+ * articles, et non le Code du travail (cf. findAllArticleCitations). `numeros` : article_number des
+ * articles du texte affiché.
  */
-export function findAllArticleCitations(text: string): MatchResult[] {
+export function numerotationPropreEnL(texteSlug: string | null | undefined, numeros: (string | null | undefined)[]): boolean {
+    if (!texteSlug || TEXTES_DU_TRAVAIL.has(texteSlug)) return false;
+    return numeros.some((n) => /^L[.\s]*O?[.\s]*(?:\d|premier)/i.test((n || '').trim()));
+}
+
+/** Options de détection, selon le texte qui contient les citations. */
+export interface OptionsDetection {
+    /** cf. numerotationPropreEnL : les renvois « L. » qui ne nomment pas le Code du travail sont
+     *  ceux du texte lui-même, on ne les relie pas au Code du travail. */
+    numerotationPropreEnL?: boolean;
+}
+
+/** La citation nomme le Code du travail (dans la correspondance, ou juste après). */
+const nommeLeCodeDuTravail = (text: string, start: number, end: number): boolean =>
+    /Code\s+d[eu]\s+Travail/i.test(text.slice(start, end))
+    || /^\s*,?\s+du\s+Code\s+d[eu]\s+Travail/i.test(text.slice(end));
+
+/**
+ * Trouve toutes les citations d'articles dans un texte. `options` : contexte du texte qui contient
+ * les citations (sans options : comportement de toujours, pour les décisions).
+ */
+export function findAllArticleCitations(text: string, options: OptionsDetection = {}): MatchResult[] {
     const results: MatchResult[] = [];
     const usedRanges: { start: number; end: number }[] = [];
 
@@ -194,14 +273,24 @@ export function findAllArticleCitations(text: string): MatchResult[] {
                     r => (start >= r.start && start < r.end) || (end > r.start && end <= r.end)
                 );
 
+                // Texte à numérotation propre en « L. » (Code électoral…) : son « article L.28 » est le
+                // sien. Relecture du 02/10/2026 : il menait au L.28 du Code du travail.
+                if (!overlaps && config.code === 'code-travail' && options.numerotationPropreEnL
+                    && !nommeLeCodeDuTravail(text, start, end)) {
+                    continue;
+                }
+
                 if (!overlaps) {
-                    results.push({
-                        index: match.index,
-                        length: match[0].length,
-                        fullMatch: match[0],
-                        articleNum: match[1],
-                        codeSlug: config.code
-                    });
+                    // Citation neutralisée (autre code en « L. ») : elle réserve sa place, sans lien.
+                    if (!config.neutre) {
+                        results.push({
+                            index: match.index,
+                            length: match[0].length,
+                            fullMatch: match[0],
+                            articleNum: match[1],
+                            codeSlug: config.code
+                        });
+                    }
                     usedRanges.push({ start, end });
                 }
             }
@@ -213,20 +302,38 @@ export function findAllArticleCitations(text: string): MatchResult[] {
 }
 
 /**
- * Index { code → { numéro normalisé → article } }. Les articles doivent arriver dans l'ordre de
- * lecture de chaque code (chargerArticlesDesCodes : code_id, display_order, id) : à numéro égal,
- * le premier l'emporte (indexerParNumero), soit le corps du code avant ses annexes.
+ * Index des renvois de chaque code. Les articles doivent arriver dans l'ordre de lecture de chaque
+ * code (chargerArticlesDesCodes : code_id, display_order, id) : à numéro égal, le premier l'emporte
+ * (indexerParNumero), soit le corps du code avant ses annexes. Un code refondu y ajoute son
+ * ancienne numérotation (concordance).
  */
-function indexerParCode(articles: ArticleInfo[]): Record<string, Map<string, ArticleInfo>> {
+function indexerParCode(articles: ArticleInfo[], concordances?: OptionsRenvoi['concordances']): Record<string, IndexRenvoi<ArticleInfo>> {
     const parCode: Record<string, ArticleInfo[]> = {};
     for (const art of articles) {
         (parCode[art.code_slug] ||= []).push(art);
     }
-    const articleMaps: Record<string, Map<string, ArticleInfo>> = {};
+    const index: Record<string, IndexRenvoi<ArticleInfo>> = {};
     for (const [code, arts] of Object.entries(parCode)) {
-        articleMaps[code] = indexerParNumero(arts);
+        // Sans contexte de concordance : [] (comportement d'avant la fusion).
+        const lignes = concordances ? (code in concordances ? concordances[code] : []) : [];
+        index[code] = construireIndexRenvoi(arts, lignes, code);
     }
-    return articleMaps;
+    return index;
+}
+
+/** Cible d'une citation détectée, avec sa date de citation. */
+function resoudreCitation(
+    citation: MatchResult,
+    index: Record<string, IndexRenvoi<ArticleInfo>>,
+    dateCitation?: string | null,
+): RenvoiResolu<ArticleInfo> | null {
+    const prefix = PREFIX_BY_CODE[citation.codeSlug] || '';
+    return resoudreRenvoi({ numero: `${prefix}${citation.articleNum}`, date: dateCitation }, index[citation.codeSlug]);
+}
+
+/** Adresse d'un renvoi résolu : celle de l'article, avec ?ancien=&date= pour une version datée. */
+export function adresseRenvoi(r: RenvoiResolu<{ code_slug: string; slug: string }>): string {
+    return `${urlArticle(r.article.code_slug, r.article.slug)}${requeteVersion(r.query)}`;
 }
 
 /**
@@ -236,10 +343,10 @@ export function renderTextWithArticleLinks(
     text: string,
     options: RenderOptions
 ): React.ReactNode[] {
-    const { articles } = options;
+    const { articles, dateCitation, concordances } = options;
 
-    // Créer des maps pour recherche rapide par code
-    const articleMaps = indexerParCode(articles);
+    // Index des renvois par code (numérotation actuelle, et ancienne pour un code refondu)
+    const index = indexerParCode(articles, concordances);
 
     const citations = findAllArticleCitations(text);
     const result: React.ReactNode[] = [];
@@ -257,12 +364,10 @@ export function renderTextWithArticleLinks(
         }
 
         // Chercher l'article
-        const codeMap = articleMaps[citation.codeSlug];
-        const prefix = PREFIX_BY_CODE[citation.codeSlug] || '';
-        const articleKey = normalizeArticleNumber(`${prefix}${citation.articleNum}`);
-        const article = codeMap?.get(articleKey);
+        const renvoi = resoudreCitation(citation, index, dateCitation);
+        const article = renvoi?.article;
 
-        if (article) {
+        if (renvoi && article) {
             result.push(
                 <ArticleHoverPreview
                     key={`article-${keyIndex++}`}
@@ -271,9 +376,11 @@ export function renderTextWithArticleLinks(
                     codeName={article.code_name}
                     codeSlug={article.code_slug}
                     articleSlug={article.slug}
+                    date={renvoi.query.date}
+                    ancien={renvoi.query.ancien}
                 >
                     <a
-                        href={urlArticle(article.code_slug, article.slug)}
+                        href={adresseRenvoi(renvoi)}
                         target="_blank"
                         rel="noopener noreferrer"
                     >
@@ -305,14 +412,16 @@ export function renderTextWithArticleLinks(
 }
 
 /**
- * Version simplifiée qui retourne du HTML string
+ * Version simplifiée qui retourne du HTML string. `options` : date de la citation (date de la
+ * décision) et concordances des codes cités, pour les codes refondus en 2026 (le troisième
+ * paramètre était autrefois un slug de code par défaut, inutilisé).
  */
 export function textToHtmlWithLinks(
     text: string,
     articles: ArticleInfo[],
-    _codeSlug: string = 'code-travail'
+    options: OptionsRenvoi = {}
 ): string {
-    const articleMaps = indexerParCode(articles);
+    const index = indexerParCode(articles, options.concordances);
 
     const citations = findAllArticleCitations(text);
 
@@ -320,13 +429,13 @@ export function textToHtmlWithLinks(
     let result = text;
     for (let i = citations.length - 1; i >= 0; i--) {
         const c = citations[i];
-        const codeMap = articleMaps[c.codeSlug];
-        const prefix = PREFIX_BY_CODE[c.codeSlug] || '';
-        const articleKey = normalizeArticleNumber(`${prefix}${c.articleNum}`);
-        const article = codeMap?.get(articleKey);
+        const renvoi = resoudreCitation(c, index, options.dateCitation);
+        const article = renvoi?.article;
 
-        if (article) {
-            const link = `<a href="${urlArticle(article.code_slug, article.slug)}" class="article-link" data-article-id="${article.id}" target="_blank" rel="noopener noreferrer">${c.fullMatch}</a>`;
+        if (renvoi && article) {
+            // « & » échappé dans l'attribut : ?ancien=L56&amp;date=2015-03-04
+            const href = adresseRenvoi(renvoi).replace(/&/g, '&amp;');
+            const link = `<a href="${href}" class="article-link" data-article-id="${article.id}" target="_blank" rel="noopener noreferrer">${c.fullMatch}</a>`;
             result = result.substring(0, c.index) + link + result.substring(c.index + c.length);
         }
     }

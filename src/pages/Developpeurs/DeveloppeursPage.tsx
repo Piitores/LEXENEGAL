@@ -1,7 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plug, KeyRound, Terminal, Gauge, AlertCircle, Quote, ExternalLink, Sparkles } from 'lucide-react';
 import SEO from '../../components/SEO/SEO';
+import { chargerTextesRetires } from '../../lib/articlesDuCode';
 import './DeveloppeursPage.css';
 
 /*
@@ -75,6 +76,18 @@ const DeveloppeursPage: React.FC = () => {
     useEffect(() => {
         document.title = 'API pour développeurs | Lexenegal';
         return () => { document.title = 'Lexenegal'; };
+    }, []);
+
+    // Fusion des codes 2026 (décision du propriétaire du 02/10/2026) : la désignation du Code du
+    // travail ne change qu'avec la migration de données. Tant que code-travail-2026 existe en base,
+    // code-travail désigne encore le code de 1997 et l'API suit la règle d'avant : on la décrit telle
+    // quelle (comme AdresseCanonique, on attend que le slug ait disparu de la base). Lecture en
+    // échec : aucun texte retiré, donc l'ancienne rédaction.
+    const [codesFusionnes, setCodesFusionnes] = useState(false);
+    useEffect(() => {
+        let actif = true;
+        chargerTextesRetires().then((r) => { if (actif) setCodesFusionnes(r.has('code-travail-2026')); });
+        return () => { actif = false; };
     }, []);
 
     return (
@@ -204,15 +217,31 @@ const DeveloppeursPage: React.FC = () => {
                             </dl>
                         </div>
                     ))}
-                    <p className="dev-note">
-                        Un article se désigne par son code et son numéro : le nom
-                        (<code>code du travail</code>), le sigle (<code>CT</code>) ou l’identifiant
-                        d’URL (<code>code-travail-2026</code>) fonctionnent tous. Sans précision,
-                        « code du travail » et <code>CT</code> désignent le code en vigueur ; le code
-                        abrogé de 1997 se désigne par <code>CT 1997</code>, par l’identifiant
-                        <code>code-travail</code> ou par un numéro en « L. ». Une décision se désigne
-                        par l’identifiant qui figure dans son adresse sur lexenegal.sn.
-                    </p>
+                    {/* Fusion des codes 2026 (décision du propriétaire du 02/10/2026) : un seul Code du
+                        travail, identifiant code-travail ; l'ancien code de 1997 n'est plus un texte à
+                        part, sa numérotation « L. » est rattachée par sujet aux articles de 2026.
+                        Rédaction d'avant tant que la migration de données n'est pas passée. */}
+                    {codesFusionnes ? (
+                        <p className="dev-note">
+                            Un article se désigne par son code et son numéro : le nom
+                            (<code>code du travail</code>), le sigle (<code>CT</code>) ou l’identifiant
+                            d’URL (<code>code-travail</code>) fonctionnent tous et désignent le Code du
+                            travail en vigueur (loi n° 2026-18 du 3 septembre 2026). Un numéro en « L. »
+                            relève de l’ancienne numérotation (code de 1997) : il est rattaché à l’article
+                            de 2026 qui en a repris le sujet. Une décision se désigne par l’identifiant
+                            qui figure dans son adresse sur lexenegal.sn.
+                        </p>
+                    ) : (
+                        <p className="dev-note">
+                            Un article se désigne par son code et son numéro : le nom
+                            (<code>code du travail</code>), le sigle (<code>CT</code>) ou l’identifiant
+                            d’URL (<code>code-travail-2026</code>) fonctionnent tous. Sans précision,
+                            « code du travail » et <code>CT</code> désignent le code en vigueur ; le code
+                            abrogé de 1997 se désigne par <code>CT 1997</code>, par l’identifiant
+                            <code>code-travail</code> ou par un numéro en « L. ». Une décision se désigne
+                            par l’identifiant qui figure dans son adresse sur lexenegal.sn.
+                        </p>
+                    )}
                 </section>
 
                 {/* ── Quotas ──────────────────────────────────────────────── */}
