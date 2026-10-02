@@ -263,8 +263,10 @@ describe('libellés', () => {
     });
 
     it('sélecteur du comparateur : la note, à défaut l’ancien numéro', () => {
-        expect(libelleVersionComparateur(L56_1997)).toBe('Version du 01/12/1997 (Ancien article L.56)');
-        expect(libelleVersionComparateur(L57)).toBe('Version du 01/12/1997 (Ancien article L.57)');
+        expect(libelleVersionComparateur(L56_1997)).toBe('Ancien article L.56 - version du 01/12/1997');
+        expect(libelleVersionComparateur(L57)).toBe('Ancien article L.57 - version du 01/12/1997');
+        expect(libelleVersionComparateur(v('l87', '1997-12-01', { ancien_numero: 'L.87.', lien_ancien: 'numero',
+            version_note: 'Ancien article L.87 (même numéro)' }))).toBe('Ancien article L.87 (même numéro) - version du 01/12/1997');
         expect(libelleVersionComparateur(v('x', '2013-01-01'))).toBe('Version du 01/01/2013');
         expect(titreSectionVersion(L57, 'Article 137')).toBe('Ancien article L.57');
         expect(titreSectionVersion(V2026, 'Article 137')).toBe('Article 137');

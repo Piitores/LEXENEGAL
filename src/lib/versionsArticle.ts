@@ -408,6 +408,9 @@ export function anciensNumerosCites(
 export function libelleVersionComparateur(v: VersionArticle): string {
     const note = v.version_note
         || (v.ancien_numero ? `Ancien article ${numeroAncienAffiche(v.ancien_numero)}` : '');
+    // Copie d'un ancien article : l'ancien numéro d'abord, la date ensuite, sans parenthèses
+    // imbriquées (« Ancien article L.87 (même numéro) - version du 01/12/1997 », 02/10/2026).
+    if (/^Ancien article /.test(note)) return `${note} - version du ${dateCourte(v.effective_date)}`;
     return `Version du ${dateCourte(v.effective_date)}${note ? ` (${note})` : ''}`;
 }
 
