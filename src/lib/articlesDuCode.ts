@@ -230,7 +230,7 @@ export async function lireVersionAffichee(
     params: Partial<ParamsVersion> | null | undefined,
     articleNumber?: string | null,
 ): Promise<VersionArticle | null> {
-    const colonnes = 'id, content, effective_date, expiration_date, is_current, ancien_numero, version_note';
+    const colonnes = 'id, content, effective_date, expiration_date, is_current, ancien_numero, version_note, lien_ancien';
     const avecParams = !!(params?.date || params?.ancien);
     let q = supabase.from('article_versions').select(colonnes).eq('article_id', articleId);
     q = avecParams

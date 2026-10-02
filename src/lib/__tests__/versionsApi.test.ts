@@ -46,6 +46,7 @@ const PARAMS = [
     { date: '2010-05-01', ancien: null }, { date: '2027-01-01', ancien: null }, { date: '1990-01-01', ancien: null },
     { date: '2026-09-02', ancien: null }, { date: '2026-09-03', ancien: null }, { date: '2015-02-30', ancien: null },
     { date: '2000-01-01', ancien: 'L36' }, { date: '2000-01-01', ancien: '3' }, { date: '2010-01-01', ancien: 'L10' },
+    { date: '2015-03-04', ancien: 'L87' }, { date: null, ancien: 'L93' }, { date: '2010-01-01', ancien: 'L1' },
 ];
 const ARTICLES: Array<[V[], string | undefined]> = [
     [ART_137, '137'], [ART_137, undefined], [ART_3, '3'], [[], '1'],
@@ -58,6 +59,12 @@ const ARTICLES: Array<[V[], string | undefined]> = [
     [[v('x1', '1997-12-01', { ancien_numero: 'L.9.', expiration_date: '2003-01-01' }),
         v('x2', '2005-01-01', { ancien_numero: 'L.9.', expiration_date: '2010-01-01' }),
         v('x3', '2026-09-03', { is_current: true })], '40'],
+    // Copie « même numéro » (lien_ancien = 'numero', 02/10/2026) : comparateur seulement.
+    [[v('v87', '2026-09-03', { is_current: true }),
+        v('l93', '1997-12-01', { ancien_numero: 'L.93.', expiration_date: '2026-09-03', lien_ancien: 'sujet' }),
+        v('l87', '1997-12-01', { ancien_numero: 'L.87.', expiration_date: '2026-09-03', lien_ancien: 'numero' })], '87'],
+    [[v('v1', '2026-09-03', { is_current: true }),
+        v('l1', '1997-12-01', { ancien_numero: 'L.1.', expiration_date: '2026-09-03', lien_ancien: 'numero' })], '1'],
 ];
 
 describe('copie de api/render.js : cas du contrat (§1 et §3)', () => {

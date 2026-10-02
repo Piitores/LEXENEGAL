@@ -362,3 +362,31 @@ describe('anciensNumerosCites', () => {
         expect(anciensNumerosCites(['L.56.'], null)).toEqual(['L.56.']);
     });
 });
+
+describe('copies « même numéro » (comparateur seulement, décision du 02/10/2026)', () => {
+    // Art. 87 de 2026 : reprend le SUJET de l'ancien L.93 ; l'ancien L.87 (autre sujet) n'est copié
+    // que pour la comparaison.
+    const V87 = v('v87', '2026-09-03', { is_current: true });
+    const L93 = v('l93', '1997-12-01', { ancien_numero: 'L.93.', expiration_date: '2026-09-03', lien_ancien: 'sujet' });
+    const L87 = v('l87', '1997-12-01', { ancien_numero: 'L.87.', expiration_date: '2026-09-03', lien_ancien: 'numero' });
+    const ART_87 = [V87, L93, L87];
+
+    it('une date seule ne retient jamais la copie « même numéro »', () => {
+        expect(ids(choisirVersions(ART_87, { date: '2015-03-04', ancien: null }, '87').versions)).toEqual(['l93']);
+    });
+    it('?ancien= vers la copie « même numéro » : aucun bandeau, version actuelle', () => {
+        const c = choisirVersions(ART_87, { date: '2015-03-04', ancien: 'L87' }, '87');
+        expect(c.estActuelle).toBe(true);
+        expect(ids(c.versions)).toEqual(['v87']);
+    });
+    it('la copie de même sujet reste retenue', () => {
+        expect(ids(choisirVersions(ART_87, { date: null, ancien: 'L93' }, '87').versions)).toEqual(['l93']);
+    });
+    it('un article sans prédécesseur par sujet : la copie « même numéro » ne devient pas sa version datée', () => {
+        const ART_1 = [v('v1', '2026-09-03', { is_current: true }),
+            v('l1', '1997-12-01', { ancien_numero: 'L.1.', expiration_date: '2026-09-03', lien_ancien: 'numero' })];
+        const c = choisirVersions(ART_1, { date: '2010-01-01', ancien: null }, '1');
+        expect(c.estActuelle).toBe(true);
+        expect(ids(c.versions)).toEqual(['v1']);
+    });
+});

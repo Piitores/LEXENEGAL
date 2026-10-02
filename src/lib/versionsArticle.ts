@@ -23,6 +23,20 @@ export interface VersionArticle {
     /** Numéro ancien brut (« L.56. ») dont la version reprend le texte ; NULL = l'article lui-même. */
     ancien_numero?: string | null;
     version_note?: string | null;
+    /**
+     * Copie d'un ancien article (fusion des codes 2026) : 'sujet' = successeur par la concordance ;
+     * 'numero' = ancien article de MÊME NUMÉRO, copié pour la SEULE comparaison (décision du
+     * propriétaire du 02/10/2026), jamais retenu comme « version en vigueur à une date ».
+     */
+    lien_ancien?: string | null;
+}
+
+/**
+ * Copie « même numéro » (lien_ancien = 'numero') : elle n'a aucun lien juridique avec l'article
+ * (l'ancien L.87 n'est pas l'ancêtre de l'art. 87 de 2026), elle ne sert qu'au comparateur.
+ */
+export function estCopieMemeNumero(v: Pick<VersionArticle, 'lien_ancien'>): boolean {
+    return v.lien_ancien === 'numero';
 }
 
 /** Paramètres d'adresse d'une version : `date` validée, `ancien` normalisé (normAncien). */
@@ -246,7 +260,8 @@ export function choisirVersions<V extends VersionArticle>(
     params: Partial<ParamsVersion> | null | undefined,
     articleNumber?: string | null,
 ): ChoixVersions<V> {
-    const toutes = versions || [];
+    // Les copies « même numéro » ne sont proposées que par le comparateur (02/10/2026).
+    const toutes = (versions || []).filter((v) => !estCopieMemeNumero(v));
     const courante = versionCourante(toutes);
     const actuelle: ChoixVersions<V> = { versions: courante ? [courante] : [], estActuelle: true, horsPeriode: null };
     if (!courante) return actuelle;

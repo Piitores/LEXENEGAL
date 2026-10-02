@@ -759,7 +759,9 @@ function ordonner(vs) {
  * Sortie : { versions (ordre des dates d'effet puis des anciens numéros), estActuelle, horsPeriode }.
  */
 export function choisirVersions(versions, params, articleNumber) {
-  const toutes = versions || [];
+  // Copies « même numéro » (lien_ancien = 'numero', 02/10/2026) : comparateur seulement, jamais
+  // retenues comme version en vigueur à une date (copie de src/lib/versionsArticle.ts).
+  const toutes = (versions || []).filter((v) => v.lien_ancien !== 'numero');
   const courante = versionCourante(toutes);
   const actuelle = { versions: courante ? [courante] : [], estActuelle: true, horsPeriode: null };
   if (!courante) return actuelle;
@@ -1656,7 +1658,7 @@ async function fetchConcordance(codeId) {
 }
 // Toutes les versions d'un article (choix d'une version datée).
 async function fetchVersions(artId) {
-  return sb(`article_versions?article_id=eq.${artId}&select=id,content,effective_date,expiration_date,is_current,ancien_numero,version_note&order=effective_date.desc,id&limit=${PAGE_POSTGREST}`);
+  return sb(`article_versions?article_id=eq.${artId}&select=id,content,effective_date,expiration_date,is_current,ancien_numero,version_note,lien_ancien&order=effective_date.desc,id&limit=${PAGE_POSTGREST}`);
 }
 async function fetchCurrentVersion(artId) {
   try {
