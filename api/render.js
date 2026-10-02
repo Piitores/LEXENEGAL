@@ -1719,6 +1719,18 @@ export default async function handler(req, res) {
         : shell;
       return res.end(out);
     };
+    /*
+     * Contenu INTROUVABLE (slug inexistant, texte masqué) : 404, même coquille, même noindex.
+     * Avant le 03/10/2026, la coquille partait en 200 (« soft 404 ») : une redirection oubliée restait
+     * invisible (aucune 404 dans les journaux, Search Console la rangeait en « Soft 404 »). Le lecteur
+     * voit toujours la page « non trouvé » de l'application. ⚠️ À n'appeler QUE sur une absence
+     * certaine : toute lecture en échec (base, redirections, concordance) répond 503, jamais 404,
+     * sinon une page valide sortirait de l'index sur une panne passagère.
+     */
+    const serveIntrouvable = () => {
+      res.statusCode = 404;
+      return serveShell(60, true);
+    };
     // cache : durée plus courte quand la concordance n'a pas pu être lue (erreur passagère), pour
     // qu'une page rendue sans elle ne reste pas 24 h au CDN.
     const serveHtml = (headHtml, bodyHtml, cache = 'public, s-maxage=86400, stale-while-revalidate=604800') => {
@@ -1764,7 +1776,7 @@ export default async function handler(req, res) {
       const nouveau = TEXTES_RETIRES[ancienTexte];
       let cibleLaw = null;
       try { cibleLaw = await fetchLaw(nouveau); } catch (e) { return serve503(); }
-      if (!cibleLaw) return serveShell(60, true);
+      if (!cibleLaw) return serveIntrouvable();
       const reste = requeteConservee(q);
       if (!artSlug) return serve301Fusion(`${SITE}${urlTexte(nouveau)}${reste}`);
       let artCible = null;
@@ -1805,11 +1817,11 @@ export default async function handler(req, res) {
       if (!d) {
         // Slug inconnu : peut-être un ancien slug → 301 vers le nouveau avant de renoncer.
         let redir = null;
-        try { redir = await fetchDoctrineRedirect(slug); } catch (e) { /* */ }
+        try { redir = await fetchDoctrineRedirect(slug); } catch (e) { return serve503(); }
         if (redir && redir.new_slug && redir.new_slug !== slug) {
           return serve301(`${SITE}/doctrine-fiscale/${encodeURIComponent(redir.new_slug)}`);
         }
-        return serveShell(60, true);
+        return serveIntrouvable();
       }
       const canonical = `${SITE}/doctrine-fiscale/${slug}`;
       let arts = [];
@@ -1827,7 +1839,7 @@ export default async function handler(req, res) {
       if (!slug) return serveShell();
       let gd = null;
       try { gd = await fetchGuide(slug); } catch (e) { return serve503(); }
-      if (!gd) return serveShell(60, true);
+      if (!gd) return serveIntrouvable();
       const canonical = `${SITE}/guides/${slug}`;
       return serveHtml(buildGuideHead(gd, canonical), buildGuideBody(gd));
     }
@@ -1842,7 +1854,7 @@ export default async function handler(req, res) {
       if (!slug) return serveShell();
       let data = null;
       try { data = await fetchThemePage(slug); } catch (e) { return serve503(); }
-      if (!data) return serveShell(60, true);
+      if (!data) return serveIntrouvable();
       const canonical = `${SITE}/jurisprudence/theme/${slug}`;
       return serveHtml(buildThemeHead(data, canonical), buildThemeBody(data));
     }
@@ -1859,7 +1871,7 @@ export default async function handler(req, res) {
       try { law = await fetchLaw(slug); } catch (e) { return serve503(); }
       if (!law) {
         if (TEXTES_RETIRES[slug]) return redirigerTexteRetire(slug, null);
-        return serveShell(60, true);
+        return serveIntrouvable();
       }
       let articles = [];
       try { articles = await fetchCodeArticles(law.id); } catch (e) { /* */ }
@@ -1888,7 +1900,7 @@ export default async function handler(req, res) {
       try { law = await fetchLaw(codeSlug); } catch (e) { return serve503(); }
       if (!law) {
         if (TEXTES_RETIRES[codeSlug]) return redirigerTexteRetire(codeSlug, artSlug);
-        return serveShell(60, true);
+        return serveIntrouvable();
       }
       let art = null;
       let conc = null;
@@ -1919,10 +1931,13 @@ export default async function handler(req, res) {
           const repriseCourte = cibleAncienSlug(fusion, short);
           if (repriseCourte) return versReprise(repriseCourte);
           let alt = null;
-          try { alt = await fetchArticle(law.id, short); } catch (e) { /* */ }
+          try { alt = await fetchArticle(law.id, short); } catch (e) { return serve503(); }
           if (alt) return serve301(adresseArticle(short));
         }
-        return serveShell(60, true);
+        // Concordance illisible (panne) : l'adresse est peut-être un ancien slug à rediriger. 503
+        // (Google réessaiera), jamais 404.
+        if (conc && conc.transitoire) return serve503();
+        return serveIntrouvable();
       }
       const canonical = `${SITE}${urlArticle(codeSlug, artSlug)}`;
       /*
@@ -1971,15 +1986,15 @@ export default async function handler(req, res) {
     if (!decision) {
       // Décision fusionnée lors d'un dédoublonnage : 301 vers la décision gardée.
       let redir = null;
-      try { redir = await fetchDecisionRedirect(slug); } catch (e) { /* */ }
+      try { redir = await fetchDecisionRedirect(slug); } catch (e) { return serve503(); }
       if (redir && redir.new_slug && redir.new_slug !== slug) {
         return serve301(`${SITE}/decision/${encodeURIComponent(redir.new_slug)}`);
       }
       // Décision masquée (existe mais is_active=false) → 410 Gone ; sinon coquille noindex.
       let gone = false;
-      try { gone = (await sbRpc('rpc_decision_gone', { p_slug: slug })) === true; } catch (e) { /* */ }
+      try { gone = (await sbRpc('rpc_decision_gone', { p_slug: slug })) === true; } catch (e) { return serve503(); }
       if (gone) return serveGone();
-      return serveShell(60, true);
+      return serveIntrouvable();
     }
     const [cited, related] = await Promise.all([
       decision.id ? fetchCitedArticles(decision.id) : [],

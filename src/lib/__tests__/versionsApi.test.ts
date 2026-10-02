@@ -419,7 +419,7 @@ const APRES: Etat = {
  * fetch simulé. panne (table article_concordance seulement) : 'absente' = 404 (table inexistante),
  * 'reseau' = fetch rejeté. journal : adresses demandées (chemin et requête).
  */
-type Panne = null | 'absente' | 'reseau';
+type Panne = null | 'absente' | 'reseau' | 'redirections';
 function simuler(etat: Etat, journal: string[], panne: Panne) {
     return async (url: unknown) => {
         const u = new URL(String(url), 'https://sb.test');
@@ -433,6 +433,9 @@ function simuler(etat: Etat, journal: string[], panne: Panne) {
             if (panne === 'absente') return reponse({ message: 'relation does not exist' }, 404);
             if (Number(p.get('offset') || 0) > 0) return reponse([]);
             return reponse(etat.conc.filter((l) => l.code_id === eq('code_id')));
+        }
+        if (table === 'decision_slug_redirects' || table === 'doctrine_slug_redirects') {
+            return panne === 'redirections' ? reponse({ message: 'erreur' }, 500) : reponse([]);
         }
         if (table === 'laws_and_codes') return reponse(etat.laws.filter((l) => l.slug === eq('slug')));
         if (table === 'articles') {
@@ -545,7 +548,8 @@ describe('handler de api/render.js (Supabase simulé)', () => {
             { 'Content-Type': HTML, 'Cache-Control': CACHE_PAGE }, '81d3b41c2b206ca4469a9823ab4b7a6654d97a180f62cb6994e25d124a0c187c'],
         ['ancien slug préfixé : 301 vers le slug court', { type: 'article', code: 'code-travail', slug: 'code-travail-article-l56' }, 301,
             { Location: `${SITE}/code/code-travail/article-l56`, 'Cache-Control': 'public, s-maxage=86400' }, empreinte('')],
-        ['article inconnu : coquille noindex', { type: 'article', code: 'code-travail', slug: 'article-l999' }, 200,
+        // Vraie 404 depuis le 03/10/2026 (avant : coquille noindex en 200, « soft 404 ») ; même corps.
+        ['article inconnu : 404, coquille noindex', { type: 'article', code: 'code-travail', slug: 'article-l999' }, 404,
             { 'Content-Type': HTML, 'Cache-Control': 'public, s-maxage=60' }, 'eba2248df803a34814fe29aa7ed81d1ffb846541c96e1204de250e2ba0f7d674'],
     ];
 
@@ -600,6 +604,12 @@ describe('handler de api/render.js (Supabase simulé)', () => {
             expect({ nom, statut: absente.statut, entetes: absente.entetes, sha: empreinte(absente.corps) }).toEqual({ nom, statut, entetes, sha });
             // Jamais de page cassée ; la page rendue sans concordance ne reste que 5 minutes au CDN.
             const reseau = await appel(AVANT, q, 'reseau');
+            if (statut === 404) {
+                // Adresse introuvable ET concordance illisible : peut-être un ancien slug à rediriger.
+                // 503 (Google réessaiera), jamais 404 sur une panne.
+                expect({ nom, statut: reseau.statut }).toEqual({ nom, statut: 503 });
+                continue;
+            }
             const attendus = entetes['Cache-Control'] === CACHE_PAGE ? { ...entetes, 'Cache-Control': 'public, s-maxage=300' } : entetes;
             expect({ nom, statut: reseau.statut, entetes: reseau.entetes, sha: empreinte(reseau.corps) }).toEqual({ nom, statut, entetes: attendus, sha });
         }
@@ -661,5 +671,22 @@ describe('handler de api/render.js (Supabase simulé)', () => {
         expect(a136.corps).not.toContain('rel="prev"');
         expect(a136.corps).toContain('<a href="/code/code-travail/art-137" rel="next">Article 137 →</a>');
         expect(a136.journal.filter((a) => a.includes('or=(display_order')).every((a) => a.includes('&id=not.in.(al10)&is_active=eq.true'))).toBe(true);
+    });
+
+    // Vraies 404 (03/10/2026) : uniquement sur une absence certaine, 503 dès qu'une lecture échoue.
+    it('décision, guide et doctrine introuvables : 404, coquille noindex', async () => {
+        for (const q of [{ type: 'decision', slug: 'cs-inconnue' }, { type: 'guide', slug: 'guide-inconnu' },
+            { type: 'doctrine', slug: 'doctrine-inconnue' }, { type: 'code', slug: 'code-inconnu' }]) {
+            const r = await appel(APRES, q);
+            expect({ q, statut: r.statut, cache: r.entetes['Cache-Control'] }).toEqual({ q, statut: 404, cache: 'public, s-maxage=60' });
+            expect(r.corps).toContain('<meta name="robots" content="noindex, follow" />');
+        }
+    });
+
+    it('recherche de redirection en panne : 503, jamais 404', async () => {
+        for (const q of [{ type: 'decision', slug: 'cs-inconnue' }, { type: 'doctrine', slug: 'doctrine-inconnue' }]) {
+            const r = await appel(APRES, q, 'redirections');
+            expect({ q, statut: r.statut, cache: r.entetes['Cache-Control'] }).toEqual({ q, statut: 503, cache: 'no-store' });
+        }
     });
 });
