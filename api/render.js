@@ -81,10 +81,14 @@ export const TEXTES_RETIRES = {
   'code-securite-sociale-2026': 'code-securite-sociale-senegal',
 };
 // Paramètres posés par les réécritures de vercel.json : jamais recopiés dans une redirection.
-const CLES_REECRITURE = ['type', 'slug', 'code', 'ccn'];
+const CLES_REECRITURE = ['type', 'slug', 'code', 'ccn', 'codeSlug', 'articleSlug', 'segment'];
 /*
  * Requête d'origine à reporter sur une redirection (« ?node=…&date=… »), sans les paramètres internes
- * des réécritures. Vercel fusionne ceux-ci avec ceux de l'adresse demandée dans req.query.
+ * des réécritures. Vercel fusionne ceux-ci avec ceux de l'adresse demandée dans req.query, Y COMPRIS
+ * les noms des segments de la règle source (« /code/:codeSlug/:articleSlug » ajoute codeSlug et
+ * articleSlug) : constaté en production le 02/10/2026, /code/code-travail-2026/art-2 redirigeait vers
+ * /code/code-travail/art-2?codeSlug=code-travail-2026&articleSlug=art-2. Toute nouvelle réécriture
+ * vers /api/render ajoute ici ses noms de segments (vercel.json).
  */
 export function requeteConservee(query, exclues = CLES_REECRITURE) {
   const params = new URLSearchParams();

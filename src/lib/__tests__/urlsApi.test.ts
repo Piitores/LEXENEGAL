@@ -55,6 +55,23 @@ describe('texteDeLaRequete (api/render.js)', () => {
             .toBe('?ancien=L56&date=2015-03-04');
         expect(requeteConservee({ type: 'code', ccn: 'banques', x: ['1', '2'] })).toBe('?x=1&x=2');
         expect(requeteConservee(undefined)).toBe('');
+        // Vercel ajoute aussi les NOMS des segments de la règle source (production, 02/10/2026).
+        expect(requeteConservee({ type: 'article', code: 'code-travail-2026', slug: 'art-2',
+            codeSlug: 'code-travail-2026', articleSlug: 'art-2' })).toBe('');
+        expect(requeteConservee({ type: 'code', ccn: 'banques', segment: 'banques', node: 'Titre I' })).toBe('?node=Titre+I');
+    });
+
+    it('chaque nom de segment des réécritures vers /api/render est écarté de la requête reportée', async () => {
+        const { readFileSync } = await import('node:fs');
+        const { requeteConservee } = await charger('render.js');
+        const conf = JSON.parse(readFileSync(new URL('../../../vercel.json', import.meta.url), 'utf8'));
+        const noms = new Set<string>();
+        for (const r of conf.rewrites || []) {
+            if (!String(r.destination).startsWith('/api/render')) continue;
+            for (const m of String(r.source).matchAll(/:(\w+)/g)) noms.add(m[1]);
+        }
+        expect(noms.size).toBeGreaterThan(0);
+        for (const nom of noms) expect(requeteConservee({ [nom]: 'x' })).toBe('');
     });
 
     it('requête ambiguë ou incomplète : null (le handler sert la coquille)', async () => {
