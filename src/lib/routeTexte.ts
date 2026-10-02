@@ -23,8 +23,10 @@ export interface ParamsTexte {
 
 /**
  * Textes retirés par la fusion des codes 2026 (décision du propriétaire du 02/10/2026 : un seul Code
- * du travail, un seul Code de la sécurité sociale) → texte qui les remplace. Côté serveur, vercel.json
- * les redirige en 301, chemin et paramètres conservés ; même règle dans api/render.js et le MCP.
+ * du travail, un seul Code de la sécurité sociale) → texte qui les remplace. Côté serveur, c'est
+ * api/render.js qui les redirige en 301 (TEXTES_RETIRES), chemin et paramètres conservés, et seulement
+ * une fois la ligne retirée de la base : une règle statique de vercel.json, déployée avant la migration,
+ * aurait renvoyé le code 2026 vers celui de 1997 (relecture du 02/10/2026). Même règle dans le MCP.
  */
 export const TEXTES_FUSIONNES: Readonly<Record<string, string>> = {
     'code-travail-2026': 'code-travail',
