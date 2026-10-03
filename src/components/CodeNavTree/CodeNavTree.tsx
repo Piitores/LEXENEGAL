@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight } from 'lucide-react';
 import { articleLabel } from '../../lib/articleLabel';
 import { urlArticle } from '../../lib/urls';
-import { HierarchyNode, countArticles, computeMaxArticlesInLevel, formatNodeLabel, NODE_KIND } from '../../lib/codeTree';
+import { HierarchyNode, countArticles, computeMaxArticlesInLevel, formatNodeLabel, NODE_KIND, segmentsNoeud } from '../../lib/codeTree';
 import './CodeNavTree.css';
 
 interface CodeNavTreeProps {
@@ -99,17 +99,16 @@ const CodeNavTree: React.FC<CodeNavTreeProps> = ({
                             exit={{ height: 0, opacity: 0, overflow: 'hidden' }}
                             transition={{ duration: 0.2 }}
                         >
-                            {/* Children */}
-                            {hasChildren && (
-                                <div className="tree-children">
-                                    {node.children.map(ch => renderTreeNode(ch, depth + 1))}
+                            {/* Sous-divisions et pastilles d'articles, dans l'ordre de lecture : un
+                                article rattaché au chapitre AVANT sa première section s'affiche
+                                avant elle (cf. `segmentsNoeud`). */}
+                            {segmentsNoeud(node).map((seg, i) => seg.kind === 'divisions' ? (
+                                <div key={`d${i}`} className="tree-children">
+                                    {seg.nodes.map(ch => renderTreeNode(ch, depth + 1))}
                                 </div>
-                            )}
-
-                            {/* Article chips */}
-                            {hasArticles && (
-                                <div className="tree-articles">
-                                    {node.articles.map(art => (
+                            ) : (
+                                <div key={`a${i}`} className="tree-articles">
+                                    {seg.articles.map(art => (
                                         <Link
                                             key={art.id}
                                             to={urlArticle(slug || '', art.slug)}
@@ -120,7 +119,7 @@ const CodeNavTree: React.FC<CodeNavTreeProps> = ({
                                         </Link>
                                     ))}
                                 </div>
-                            )}
+                            ))}
                         </motion.div>
                     )}
                 </AnimatePresence>

@@ -325,10 +325,65 @@ export const countArticles = (node: HierarchyNode): number => {
     return c;
 };
 
-// Tous les articles sous un nœud (récursif, dans l'ordre de l'arbre).
+// ORDRE DE LECTURE d'un nœud : ses sous-divisions et les articles qui lui sont rattachés
+// DIRECTEMENT, entrelacés selon leur rang (`display_order`). Un nœud porte les deux à la fois
+// quand un article précède la première section de son chapitre : Code de l'électricité,
+// art. 13, en tête du chapitre III, avant ses sections. L'arbre affichait toujours les
+// sous-divisions d'abord : l'art. 13 apparaissait après l'art. 32 (signalé le 2026-10-03).
+// L'ordre des sous-divisions (`position`) et celui des articles sont conservés ; seule leur
+// imbrication change. Une sous-division sans article reste collée à celle qui la précède.
+const rangCache = new WeakMap<HierarchyNode, number>();
+const premierRang = (node: HierarchyNode): number => {
+    const connu = rangCache.get(node);
+    if (connu !== undefined) return connu;
+    let r = Infinity;
+    for (const a of node.articles) if (a.display_order < r) r = a.display_order;
+    for (const ch of node.children) {
+        const c = premierRang(ch);
+        if (c < r) r = c;
+    }
+    rangCache.set(node, r);
+    return r;
+};
+
+export type SegmentNoeud =
+    | { kind: 'articles'; articles: Article[] }
+    | { kind: 'divisions'; nodes: HierarchyNode[] };
+
+// Contenu d'un nœud en segments consécutifs (pastilles d'articles / sous-divisions), dans
+// l'ordre de lecture. Pour le cas courant (articles puis sections, ou l'un sans l'autre) :
+// au plus deux segments, comme avant.
+export const segmentsNoeud = (node: HierarchyNode): SegmentNoeud[] => {
+    const segs: SegmentNoeud[] = [];
+    const pousserArticle = (a: Article) => {
+        const der = segs[segs.length - 1];
+        if (der && der.kind === 'articles') der.articles.push(a);
+        else segs.push({ kind: 'articles', articles: [a] });
+    };
+    const pousserNoeud = (n: HierarchyNode) => {
+        const der = segs[segs.length - 1];
+        if (der && der.kind === 'divisions') der.nodes.push(n);
+        else segs.push({ kind: 'divisions', nodes: [n] });
+    };
+    let i = 0;
+    let cle = -Infinity;
+    for (const ch of node.children) {
+        const r = premierRang(ch);
+        if (r !== Infinity) cle = r;
+        while (i < node.articles.length && node.articles[i].display_order < cle) pousserArticle(node.articles[i++]);
+        pousserNoeud(ch);
+    }
+    while (i < node.articles.length) pousserArticle(node.articles[i++]);
+    return segs;
+};
+
+// Tous les articles sous un nœud (récursif, dans l'ordre de lecture : cf. `segmentsNoeud`).
 export const getArticlesForNode = (node: HierarchyNode): Article[] => {
-    const result: Article[] = [...node.articles];
-    node.children.forEach(ch => result.push(...getArticlesForNode(ch)));
+    const result: Article[] = [];
+    for (const seg of segmentsNoeud(node)) {
+        if (seg.kind === 'articles') result.push(...seg.articles);
+        else seg.nodes.forEach(ch => result.push(...getArticlesForNode(ch)));
+    }
     return result;
 };
 
