@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Search, BookOpen, Scale, Shield, LogOut, User, Globe2, FileText, ChevronDown, Settings, Briefcase } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import useAuth from '../../hooks/useAuth';
+import { lireIndiceSession } from '../../lib/indiceSession';
 import { urlTexte } from '../../lib/urls';
 import './Navbar.css';
 
@@ -79,7 +80,14 @@ function Navbar({ scrolled }: { scrolled: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [openDD, setOpenDD] = useState<string | null>(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, loading } = useAuth();
+  // Tant que useAuth n'a pas répondu (getSession + profiles), l'en-tête suit la session
+  // STOCKÉE, lue en synchrone (lib/indiceSession.ts) : plus de « Connexion » affiché une
+  // seconde à un membre connecté avant l'avatar et « Admin » (saut de tous les liens).
+  const [indice] = useState(lireIndiceSession);
+  const connecte = loading ? indice.connecte : !!user;
+  const adminVisible = loading ? indice.admin : isAdmin;
+  const nomAffiche = user?.email?.split('@')[0] ?? indice.nom;
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -123,7 +131,7 @@ function Navbar({ scrolled }: { scrolled: boolean }) {
           <NavDropdown id="autour" label="Autour de la loi" icon={<FileText size={16} />} items={AUTOUR} openDD={openDD} setOpenDD={setOpenDD} onNavigate={closeAll} />
 
           {/* Admin Link - Only visible for admins */}
-          {isAdmin && (
+          {adminVisible && (
             <Link to="/admin" className="navbar__link navbar__link--admin" onClick={closeAll}>
               <Shield size={16} />
               Admin
@@ -131,7 +139,7 @@ function Navbar({ scrolled }: { scrolled: boolean }) {
           )}
 
           {/* Auth : menu avatar déroulant */}
-          {user ? (
+          {connecte ? (
             <div
               className="navbar__user"
               onMouseEnter={() => setUserMenuOpen(true)}
@@ -144,7 +152,7 @@ function Navbar({ scrolled }: { scrolled: boolean }) {
                 onClick={() => setUserMenuOpen((o) => !o)}
               >
                 <span className="navbar__avatar"><User size={15} /></span>
-                <span className="navbar__user-name">{user.email?.split('@')[0]}</span>
+                <span className="navbar__user-name">{nomAffiche}</span>
                 <ChevronDown size={14} className={`nav-dd__chevron ${userMenuOpen ? 'nav-dd__chevron--open' : ''}`} />
               </button>
               <div className={`navbar__user-panel ${userMenuOpen ? 'navbar__user-panel--open' : ''}`}>

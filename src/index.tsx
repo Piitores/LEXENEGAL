@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import { flushSync } from 'react-dom';
 import App from './App';
 import './styles/tokens.css';
 import './styles/global.css';
@@ -25,9 +26,15 @@ if (container && ssr && window.location.pathname !== '/') {
 }
 if (container) {
   const root = createRoot(container);
-  root.render(
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>
-  );
+  // Premier rendu SYNCHRONE (flushSync) : l'en-tête React est dans le DOM avant que le
+  // navigateur ne peigne le contenu serveur qu'on vient de sortir du splash. Sans cela,
+  // une image s'affichait avec le texte serveur et SANS en-tête, puis l'en-tête surgissait
+  // à l'image suivante (relevé du 05/10/2026, à chaque ouverture).
+  flushSync(() => {
+    root.render(
+      <React.StrictMode>
+        <App />
+      </React.StrictMode>
+    );
+  });
 }

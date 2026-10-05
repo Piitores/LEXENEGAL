@@ -455,3 +455,24 @@
  }
 /* Le menu utilisateur (déconnexion) ne doit jamais être compressé/masqué */
 .navbar__user-menu { flex-shrink: 0; }
+
+/* ─── En-tête d'un membre connecté (relevé du 05/10/2026) ───
+   Avec l'avatar, le nom et « Admin », la barre ne tenait plus dans le conteneur de 1 200 px :
+   liens sur deux lignes (« Corpus / National »), logo rogné en « LEXENEGA », de 1 161 à 1 440 px
+   et au-delà. Rien ne se compresse plus ; le nom est raccourci (points de suspension) et, faute
+   de place, masqué VISUELLEMENT seulement (il reste le nom accessible du bouton) : toujours pour
+   un administrateur, sous 1 280 px pour un membre. Mesuré sans débordement de 1 161 à 1 920 px,
+   nom court ou long, membre ou administrateur. */
+@media (min-width: 1161px) {
+  .navbar__logo { flex-shrink: 0; }
+  .navbar__link, .nav-dd__btn, .navbar__user-trigger { white-space: nowrap; }
+  .navbar__menu:has(.navbar__user) { gap: 18px; }
+  .navbar__container:has(.navbar__user) .navbar__search-icon { margin-right: 0.75rem; }
+  .navbar__user-name { display: block; max-width: 8em; overflow: hidden; text-overflow: ellipsis; }
+  .navbar__menu:has(.navbar__link--admin) .navbar__user-name {
+    position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+  }
+}
+@media (min-width: 1161px) and (max-width: 1279px) {
+  .navbar__user-name { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+}
