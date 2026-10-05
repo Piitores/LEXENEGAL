@@ -187,6 +187,20 @@ function textToParagraphs(raw) {
   return blocks.map((b) => b.replace(/\s*\n\s*/g, ' ').replace(/\s+/g, ' ').trim())
     .filter((b) => b.length > 2).map((b) => `<p>${esc(b)}</p>`).join('\n');
 }
+/*
+ * Texte d'une décision : la MÊME source que la page (getDecisionHtml, src/utils/decisionTextFormatter.ts).
+ * ⛔ Jamais texte_brut quand texte_integral est structuré : la pseudonymisation (charte Juricaf du
+ * 22/06/2026, voie médiane) a été appliquée à texte_integral, PAS à texte_brut, qui garde l'en-tête
+ * d'origine (noms des parties, naissance, domicile, téléphone). Jusqu'au 05/10/2026 ce rendu servait
+ * texte_brut en priorité : ces données partaient dans le HTML lu par Google alors que la page affichait
+ * les initiales. texte_brut n'est retenu que là où la page le retient (identique à texte_integral).
+ */
+function texteDecisionAffiche(d) {
+  const i = d.texte_integral || '';
+  if (/class="master-composition"|class="decision-body"|<div class=/.test(i)) return i;
+  if (i.includes('COMPOSITION DE LA JURIDICTION')) return i;
+  return d.texte_brut || i;
+}
 function wrapContent(inner) { return `<div id="ssr-content" class="ssr-prerender">${inner}</div>`; }
 
 /* ---------- DÉCISION ---------- */
@@ -298,7 +312,7 @@ export function buildDecisionBody(d, cited, related, bascules) {
   const motscles = (d.mots_cles && d.mots_cles.length)
     ? `<p class="ssr-motscles"><strong>Mots-clés :</strong> ${esc(d.mots_cles.join(', '))}</p>` : '';
   const resume = d.resume ? `<section class="ssr-resume"><h2>Résumé</h2><p>${esc(stripHtml(d.resume))}</p></section>` : '';
-  const corps = textToParagraphs(d.texte_brut || d.texte_integral || '');
+  const corps = textToParagraphs(texteDecisionAffiche(d));
   const cites = (cited && cited.length)
     ? `<section class="ssr-cited"><h2>Textes et articles cités</h2><ul>${entreesArticlesCites(cited, d.date_decision, bascules)
         .map((e) => (e.href ? `<li><a href="${esc(e.href)}">${esc(e.label)}</a></li>` : `<li>${esc(e.label)}</li>`))
