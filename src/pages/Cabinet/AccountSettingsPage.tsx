@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { traduireErreurAuth } from '../../lib/authErrors';
+import { supprimerCompteVerifie } from '../../lib/suppressionCompte';
 import './AccountSettingsPage.css';
 
 type Feedback = { type: 'ok' | 'err'; text: string } | null;
@@ -114,16 +115,25 @@ const AccountSettingsPage: React.FC = () => {
         if (deleteConfirmText.trim().toUpperCase() !== 'SUPPRIMER') return;
         setDeleting(true);
         setDeleteMsg(null);
-        try {
-            const { error } = await supabase.functions.invoke('delete-account', { method: 'POST' });
-            if (error) throw error;
+        // Sur une erreur, l'état du compte est VÉRIFIÉ avant d'afficher « Échec » : une coupure
+        // côté client n'arrête pas la suppression côté serveur (lib/suppressionCompte.ts).
+        const issue = await supprimerCompteVerifie(
+            () => supabase.functions.invoke('delete-account', { method: 'POST' }),
+            () => supabase.auth.getUser(),
+        );
+        if (issue === 'supprime') {
             // Compte + données effacés : on vide la session locale et on renvoie à l'accueil.
             try { await supabase.auth.signOut({ scope: 'local' }); } catch { /* session déjà invalide */ }
             window.location.assign('/?compte=supprime');
-        } catch (err: any) {
-            setDeleteMsg({ type: 'err', text: "Échec de la suppression. Réessayez, ou écrivez à contact@lexenegal.sn." });
-            setDeleting(false);
+            return;
         }
+        setDeleteMsg({
+            type: 'err',
+            text: issue === 'echec'
+                ? "Échec de la suppression. Réessayez, ou écrivez à contact@lexenegal.sn."
+                : "La connexion a été interrompue : impossible de confirmer la suppression. Rechargez la page avant de réessayer, ou écrivez à contact@lexenegal.sn.",
+        });
+        setDeleting(false);
     };
 
     const logout = async () => {
