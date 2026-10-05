@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight } from 'lucide-react';
 import { articleLabel } from '../../lib/articleLabel';
 import { urlArticle } from '../../lib/urls';
-import { HierarchyNode, countArticles, computeMaxArticlesInLevel, formatNodeLabel, NODE_KIND, segmentsNoeud } from '../../lib/codeTree';
+import { HierarchyNode, countArticles, computeMaxArticlesInLevel, formatNodeLabel, segmentsNoeud } from '../../lib/codeTree';
 import './CodeNavTree.css';
 
 interface CodeNavTreeProps {
@@ -58,9 +58,13 @@ const CodeNavTree: React.FC<CodeNavTreeProps> = ({
                     </span>
                     <span className="tree-node-label">
                         {(() => {
+                            // Le SEUL badge de formatNodeLabel, jamais un repli sur le type : il est vide
+                            // exprès quand l'intitulé dit déjà le niveau (« Préambule ») ou pour une division
+                            // sans numéro ; le type brut affichait « DIVISION » et « PRÉAMBULE Préambule ».
+                            // Même règle dans api/render.js (arbreHtmlSsr) et CodePage (cartes de structure).
                             const { badge, label } = formatNodeLabel(node);
                             return <>
-                                <span className="node-type">{badge || NODE_KIND[node.type] || node.type}</span>
+                                <span className="node-type">{badge}</span>
                                 <span className="node-name" title={label}>{label}</span>
                             </>;
                         })()}

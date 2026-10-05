@@ -757,7 +757,9 @@ const ArticlePage: React.FC = () => {
                                             className={`ah-row ah-row--${n.type}`}
                                             to={`${adresseTexte}?node=${encodeURIComponent(n.name)}`}
                                         >
-                                            {badge && <span className={`ah-badge ah-badge--${n.type}`}>{badge}</span>}
+                                            {/* Espace entre badge et intitulé (texte lu par Google : « Livre III PROCÉDURES »,
+                                                pas « Livre IIIPROCÉDURES ») ; sans effet visuel, la ligne est en flex. */}
+                                            {badge && <><span className={`ah-badge ah-badge--${n.type}`}>{badge}</span>{' '}</>}
                                             <span className="ah-label">{label}</span>
                                         </Link>
                                     );

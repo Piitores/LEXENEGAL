@@ -1674,10 +1674,11 @@ export function arbreHtmlSsr(law, art, noeuds, arts) {
   const noeud = (n) => {
     const ouvert = ouverts.has(n.id);
     const tog = (n.children.length || n.articles.length) ? (ouvert ? ' is-open' : '') : ' is-ph';
+    // Le seul badge, jamais un repli sur le type (« division », « Préambule Préambule ») : comme CodeNavTree.tsx.
     const { badge, label } = formatNodeLabelSsr(n);
     const nb = compterSsr(n);
     let h = `<div class="ssr-tn"><div class="ssr-th${actif != null && n.id === actif ? ' is-active' : ''}"><span class="ssr-tt${tog}"></span>`
-      + `<span class="ssr-tl"><span class="ssr-ty">${esc(badge || NODE_KIND_SSR[n.type] || n.type)}</span> <span class="ssr-tm">${esc(label)}</span>`
+      + `<span class="ssr-tl"><span class="ssr-ty">${esc(badge)}</span> <span class="ssr-tm">${esc(label)}</span>`
       + `${n.note ? '<span class="ssr-tnota" aria-hidden="true"></span>' : ''}</span><span class="ssr-tc" data-n="${nb}"></span></div>`
       + `<div class="ssr-td"><i style="width:${(nb / max) * 100}%"></i></div>`;
     if (ouvert) {

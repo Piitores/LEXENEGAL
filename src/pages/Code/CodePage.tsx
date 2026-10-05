@@ -18,7 +18,7 @@ import ActionButton from '../../components/ui/ActionButton';
 import {
     Law, Article, HierarchyNode,
     buildTreeFromNodes, buildTreeLegacy, countArticles, getArticlesForNode,
-    getBreadcrumb, collectAllNodeIds, computeMaxArticlesInLevel, formatNodeLabel, NODE_KIND,
+    getBreadcrumb, collectAllNodeIds, computeMaxArticlesInLevel, formatNodeLabel,
     isPreambule,
 } from '../../lib/codeTree';
 import { useCopyAttribution, attributionFooter, articleUrl } from '../../hooks/useCopyAttribution';
@@ -832,7 +832,8 @@ const CodePage: React.FC = () => {
                                                 className="structure-card"
                                                 onClick={() => selectNode(child)}
                                             >
-                                                <div className="sc-type">{scBadge || NODE_KIND[child.type] || child.type}</div>
+                                                {/* Le seul badge, jamais le type brut (cf. CodeNavTree). */}
+                                                <div className="sc-type">{scBadge}</div>
                                                 <div className="sc-name">{scLabel}</div>
                                                 <div className="sc-bar">
                                                     <div className="sc-bar-fill" style={{ width: `${pct}%` }} />

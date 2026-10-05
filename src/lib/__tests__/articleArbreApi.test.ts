@@ -71,8 +71,8 @@ describe('page article du rendu serveur : copies de src/lib/codeTree.ts', () => 
         expect(html.indexOf('/code/code-x/1"')).toBeLessThan(html.indexOf('>Principe<'));
         expect(html).not.toContain('/code/code-x/5"');
         expect(html).toContain('<span class="ssr-tnota" aria-hidden="true"></span>');
-        // Orphelin regroupé en fin, comme la page React.
-        expect(html).toContain('<span class="ssr-ty">division</span> <span class="ssr-tm">Autres dispositions</span>');
+        // Orphelin regroupé en fin, comme la page React (badge vide : jamais le type brut « division »).
+        expect(html).toContain('<span class="ssr-ty"></span> <span class="ssr-tm">Autres dispositions</span>');
     });
 
     it('buildArticleBody : tout le contenu reste en texte et en liens, les boutons sont des emplacements vides', async () => {
