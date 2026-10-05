@@ -66,10 +66,14 @@ const JurisprudencePage: React.FC = () => {
                 <header className="juris-hub__header">
                     <span className="juris-hub__eyebrow"><Scale size={14} /> Jurisprudence</span>
                     <h1>Jurisprudence du Sénégal et de l'OHADA</h1>
+                    {/* Même texte, mot pour mot, que le rendu serveur (api/render.js,
+                        buildJurisprudenceBody) : la bascule serveur -> React ne doit rien changer. */}
                     <p className="juris-hub__intro">
-                        Consultez les décisions de justice en texte intégral : Cour suprême, Cour de
-                        cassation, Conseil constitutionnel, cours d'appel et tribunaux, ainsi que la
-                        CCJA (OHADA). Chaque décision est reliée aux articles de codes qu'elle cite.
+                        Consultez les <strong>décisions de justice du Sénégal</strong> en texte
+                        intégral : Cour suprême, Cour de cassation, Conseil constitutionnel, cours
+                        d'appel et tribunaux, ainsi que la <strong>Cour commune de justice et
+                        d'arbitrage (CCJA)</strong> de l'OHADA. Chaque décision est reliée aux
+                        articles de codes qu'elle cite.
                     </p>
                     <form className="juris-hub__search" onSubmit={submitSearch} role="search">
                         <Search size={18} />
@@ -94,7 +98,7 @@ const JurisprudencePage: React.FC = () => {
                     <>
                         {matieres.length > 0 && (
                             <section className="juris-hub__section">
-                                <h2><Landmark size={18} /> Par matière</h2>
+                                <h2><Landmark size={18} /> Jurisprudence par matière</h2>
                                 <ul className="juris-hub__grid juris-hub__grid--matieres">
                                     {matieres.map((t) => (
                                         <li key={t.slug}>
@@ -110,7 +114,7 @@ const JurisprudencePage: React.FC = () => {
 
                         {sujets.length > 0 && (
                             <section className="juris-hub__section">
-                                <h2><Tags size={18} /> Par thème</h2>
+                                <h2><Tags size={18} /> Jurisprudence par thème</h2>
                                 <ul className="juris-hub__grid">
                                     {sujets.map((t) => (
                                         <li key={t.slug}>

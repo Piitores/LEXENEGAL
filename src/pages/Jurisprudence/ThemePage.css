@@ -1,4 +1,8 @@
 /* Page-thème de jurisprudence (chantier Strategie-SEO-Contenu-Topical) */
+/* ATTENTION, double rendu : la version serveur (api/render.js, buildThemeBody) est habillée À L'IDENTIQUE par le
+   bloc « theme » de api/_ssr/styles.js (mêmes marges, tailles, couleurs). Toute modification de
+   géométrie ici (padding, largeur, tailles de police, interlignes, espacements) doit y être reportée,
+   sinon la bascule serveur -> React se remet à « sauter ». */
 
 .theme-page {
     background: var(--color-bg);

@@ -58,10 +58,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <!-- Feuille Google Fonts NON bloquante (preload puis bascule en stylesheet) : elle
-       coûtait ~0,9 s de rendu bloqué en 4G lente. Les polices restent en display=swap. -->
+       coûtait ~0,9 s de rendu bloqué en 4G lente. Les polices restent en display=swap.
+       Une fois la feuille appliquée (second « load »), on demande Playfair Display 600 : la version
+       serveur n'emploie que des polices locales, si bien que rien ne la réclamait avant la bascule vers
+       React ; le titre React s'affichait alors une fraction de seconde dans la police de repli (05/10/2026). -->
   <link rel="preload" as="style"
     href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap"
-    onload="this.onload=null;this.rel='stylesheet'">
+    onload="this.onload=function(){if(document.fonts)document.fonts.load('600 1em Playfair Display')};this.rel='stylesheet'">
   <noscript><link rel="stylesheet"
     href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap"></noscript>
 

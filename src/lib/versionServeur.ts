@@ -28,6 +28,11 @@ export const SELECTEUR_CHARGEMENT = [
     '#app .decisionPage .loading-bar-container',
     '#app .theme-page__loading',
     '#app .guides-page__loading',
+    '#app .juris-hub__loading',
+    // « > .spinner » : ConventionsListPage réutilise .corpus-loading pour « Aucune convention… »,
+    // qui n'est pas un chargement.
+    '#app .corpus-loading > .spinner',
+    '#app .doctrine-detail__container > .doctrine-loading',
 ].join(', ');
 
 export const SELECTEUR_INTERROMPU = '#app .chargement-interrompu';

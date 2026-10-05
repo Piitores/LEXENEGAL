@@ -62,6 +62,7 @@ const DoctrineDetailPage: React.FC = () => {
         setLoading(true);
         setNotFound(false);
         setEchec(false);
+        setArticlesVises([]);
         (async () => {
             const { data, error } = await avecReprise(() => supabase
                 .from('doctrine')
@@ -85,25 +86,24 @@ const DoctrineDetailPage: React.FC = () => {
                 // Table des redirections illisible : on ne sait pas, ce n'est pas « introuvable ».
                 if (redirError) setEchec(true);
                 else setNotFound(true);
-            } else setDoctrine(data as DoctrineDetail);
+            } else {
+                // Articles visés chargés AVANT de quitter « Chargement… » : la lettre s'affiche d'un bloc,
+                // sans « Articles concernés » qui surgissait ensuite en poussant la page, et la version
+                // serveur (#ssr-keep, qui contient déjà ce bloc) reste à l'écran jusque-là.
+                // Métadonnée secondaire : une lecture en échec laisse la liste vide, comme avant.
+                const { data: liens } = await supabase
+                    .from('article_doctrine_links')
+                    .select('articles(slug, num, num_court, article_number, display_order, is_active, laws_and_codes(slug, title, short_title, category))')
+                    .eq('doctrine_id', (data as DoctrineDetail).id)
+                    .limit(60);
+                if (!active) return;
+                setArticlesVises(articlesDeDoctrine((liens || []) as any));
+                setDoctrine(data as DoctrineDetail);
+            }
             setLoading(false);
         })();
         return () => { active = false; };
     }, [slug, tentative]);
-
-    useEffect(() => {
-        if (!doctrine) return;
-        let active = true;
-        (async () => {
-            const { data } = await supabase
-                .from('article_doctrine_links')
-                .select('articles(slug, num, num_court, article_number, display_order, is_active, laws_and_codes(slug, title, short_title, category))')
-                .eq('doctrine_id', doctrine.id)
-                .limit(60);
-            if (active) setArticlesVises(articlesDeDoctrine((data || []) as any));
-        })();
-        return () => { active = false; };
-    }, [doctrine]);
 
     // Titre de page côté SPA : même règle que le rendu serveur (src/lib/seoDoctrine.ts).
     useEffect(() => {

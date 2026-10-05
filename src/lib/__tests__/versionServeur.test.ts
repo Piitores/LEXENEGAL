@@ -36,6 +36,22 @@ describe('surveillerVersionServeur', () => {
     it('chaque état de chargement surveillé figure dans le sélecteur', () => {
         expect(SELECTEUR_CHARGEMENT.split(', ')).toContain(CODE_LOADING);
         expect(SELECTEUR_INTERROMPU).toBe('#app .chargement-interrompu');
+        // Pages dont la version serveur est habillée comme React (05/10/2026) : sans leur état de
+        // chargement ici, #ssr-keep serait retiré dès le montage du morceau de route.
+        for (const s of ['#app .juris-hub__loading', '#app .corpus-loading > .spinner', '#app .doctrine-detail__container > .doctrine-loading']) {
+            expect(SELECTEUR_CHARGEMENT.split(', ')).toContain(s);
+        }
+    });
+
+    it('chaque état surveillé est aussi replié dans le bloc body.ssr-live d\'App.css (les deux listes)', async () => {
+        const { readFileSync } = await import('node:fs');
+        const css = readFileSync(decodeURIComponent(new URL('../../App.css', import.meta.url).pathname), 'utf8');
+        const regles = css.split('\n').filter((l) => l.startsWith('body.ssr-live #app')).join('\n');
+        for (const s of SELECTEUR_CHARGEMENT.split(', ')) {
+            const classe = s.match(/\.[\w-]+(?![\s\S]*\.[\w-]+)/)?.[0];
+            expect(classe, s).toBeTruthy();
+            expect(regles, s).toContain(classe as string);
+        }
     });
 
     it('garde la version serveur pendant le chargement, la retire quand la page est prête', () => {

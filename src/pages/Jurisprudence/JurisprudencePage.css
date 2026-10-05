@@ -1,4 +1,7 @@
 /* Hub Jurisprudence — porte d'entrée du pilier, distincte de /search */
+/* ATTENTION, double rendu : la version serveur (api/render.js, buildJurisprudenceBody) est habillée À L'IDENTIQUE
+   par le bloc « jurisprudence » de api/_ssr/styles.js. Toute modification de géométrie ici doit y
+   être reportée (dont la taille du bouton « Rechercher », reproduite en emplacement vide de 112,7 x 35,2 px). */
 
 .juris-hub {
     background: var(--color-bg);
