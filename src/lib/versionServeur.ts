@@ -1,8 +1,8 @@
 /**
  * Retrait de la version serveur (#ssr-keep, cf. src/index.tsx) quand la page React est prête.
  *
- * Extrait d'App.tsx (05/10/2026) pour être testé sans navigateur : le DOM et le MutationObserver
- * sont fournis par l'appelant.
+ * Extrait d'App.tsx (05/10/2026) pour être testé sans navigateur : le DOM, le MutationObserver et
+ * le bandeau sont fournis par l'appelant (components/ChargementInterrompu/SurveillanceVersionServeur).
  *
  * Règles :
  *  - on retire la version serveur dès que plus aucun état « Chargement… » NI « Chargement
@@ -10,8 +10,12 @@
  *  - « Chargement interrompu » (components/ChargementInterrompu) la GARDE : c'est le meilleur
  *    contenu disponible, et une erreur ne doit jamais faire place à un écran vide ou à
  *    « introuvable » (Soft 404). Un « Réessayer » réussi la retire comme un premier chargement ;
- *  - filet de sécurité : au bout de 20 s, on la retire si un état « Chargement… » est encore
- *    monté (chargement qui ne finirait jamais), mais PAS si la page est en échec.
+ *  - filet de sécurité, au bout de 20 s : la version serveur n'est JAMAIS retirée. Page encore en
+ *    chargement (requête lente, rafraîchissement de session interminable, « Réessayer » en cours) :
+ *    on la GARDE et on montre le bandeau « Réessayer » (le même que celui de ChargementInterrompu).
+ *    Retirer la version serveur ne laissait qu'une roue, puis « Chargement interrompu » sans aucun
+ *    texte (rapports « pannes » et « react » du 05/10/2026). Page en échec : le bandeau de
+ *    ChargementInterrompu est déjà là, celui du filet reste caché (jamais deux bandeaux).
  *
  * ⚠️ Le rappel doit venir d'un MutationObserver, jamais d'un minuteur : il s'exécute dans la même
  * tâche que la mise à jour du DOM par React, AVANT le rendu à l'écran. Le navigateur ne peint donc
@@ -37,7 +41,7 @@ export const SELECTEUR_CHARGEMENT = [
 
 export const SELECTEUR_INTERROMPU = '#app .chargement-interrompu';
 
-/** Filet de sécurité : délai au-delà duquel un chargement sans fin cède la place à React. */
+/** Filet de sécurité : délai au-delà duquel un chargement encore en cours fait apparaître « Réessayer ». */
 export const FILET_VERSION_SERVEUR_MS = 20_000;
 
 export interface EnvironnementVersionServeur {
@@ -47,6 +51,8 @@ export interface EnvironnementVersionServeur {
     observer: (rappel: () => void) => { disconnect: () => void };
     /** Retire #ssr-keep et la classe body.ssr-live. */
     retirer: () => void;
+    /** Montre (true) ou cache (false) le bandeau « Réessayer » du filet de sécurité. */
+    bandeau: (visible: boolean) => void;
 }
 
 /** Surveille #app et retire la version serveur au bon moment. Rend la fonction de nettoyage. */
@@ -54,25 +60,41 @@ export function surveillerVersionServeur(env: EnvironnementVersionServeur): () =
     let observateur: { disconnect: () => void } | null = null;
     let minuterie: ReturnType<typeof setTimeout> | undefined;
     let fini = false;
+    let echu = false;
+    let bandeauVisible = false;
 
+    const montrerBandeau = (visible: boolean) => {
+        if (visible === bandeauVisible) return;
+        bandeauVisible = visible;
+        env.bandeau(visible);
+    };
     const terminer = () => {
         if (fini) return;
         fini = true;
         observateur?.disconnect();
         clearTimeout(minuterie);
+        montrerBandeau(false);
         env.retirer();
     };
     const verifier = () => {
-        if (!env.present(`${SELECTEUR_CHARGEMENT}, ${SELECTEUR_INTERROMPU}`)) terminer();
+        if (fini) return;
+        const enChargement = env.present(SELECTEUR_CHARGEMENT);
+        const interrompu = env.present(SELECTEUR_INTERROMPU);
+        // Page prête (ni chargement ni échec) : seul cas où la version serveur cède la place.
+        if (!enChargement && !interrompu) { terminer(); return; }
+        // Après l'échéance, page encore en chargement : bandeau du filet. Page en échec : celui de
+        // ChargementInterrompu suffit.
+        if (echu) montrerBandeau(enChargement && !interrompu);
     };
 
     observateur = env.observer(verifier);
-    // Page en échec à l'échéance : la version serveur reste, l'observateur reste branché.
-    minuterie = setTimeout(() => { if (!env.present(SELECTEUR_INTERROMPU)) terminer(); }, FILET_VERSION_SERVEUR_MS);
+    // Échéance : on ne retire RIEN, on propose « Réessayer » si la page charge encore.
+    minuterie = setTimeout(() => { echu = true; verifier(); }, FILET_VERSION_SERVEUR_MS);
     verifier();
 
     return () => {
         observateur?.disconnect();
         clearTimeout(minuterie);
+        montrerBandeau(false);
     };
 }

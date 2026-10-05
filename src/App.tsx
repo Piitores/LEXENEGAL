@@ -41,7 +41,7 @@ import AccountNudge from './components/AccountNudge/AccountNudge';
 import InstallPrompt from './components/Pwa/InstallPrompt';
 import UpdateBanner from './components/Pwa/UpdateBanner';
 import { recordOrigin } from './lib/authRedirect';
-import { surveillerVersionServeur } from './lib/versionServeur';
+import SurveillanceVersionServeur from './components/ChargementInterrompu/SurveillanceVersionServeur';
 import './App.css';
 
 // Gère le défilement à la navigation :
@@ -125,31 +125,6 @@ function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Contenu serveur conservé sous React (cf. src/index.tsx) : on le retire dès que
-  // plus aucun état « Chargement… » n'est monté dans #app, ou au bout de 20 s (filet
-  // de sécurité) ; un état « Chargement interrompu » le garde. Un MutationObserver, et
-  // non un minuteur : son rappel s'exécute dans la même tâche que la mise à jour du DOM
-  // par React, AVANT le rendu à l'écran. Le navigateur ne peint donc jamais l'état
-  // intermédiaire « contenu React + contenu serveur en dessous », qui comptait comme un
-  // décalage de mise en page de 0,5 à 1,0. Règles et sélecteurs : lib/versionServeur.ts.
-  useEffect(() => {
-    const keep = document.getElementById('ssr-keep');
-    const app = document.getElementById('app');
-    if (!keep || !app) return;
-    return surveillerVersionServeur({
-      present: (selecteur) => !!document.querySelector(selecteur),
-      observer: (rappel) => {
-        const observateur = new MutationObserver(rappel);
-        observateur.observe(app, { childList: true, subtree: true });
-        return observateur;
-      },
-      retirer: () => {
-        document.getElementById('ssr-keep')?.remove();
-        document.body.classList.remove('ssr-live');
-      },
-    });
-  }, []);
-
   // Retire le splash anti-FOUC une fois l'app React montée (le design est prêt).
   useEffect(() => {
     const splash = document.getElementById('app-splash');
@@ -172,6 +147,8 @@ function App() {
               tant qu'aucune page n'en monte, l'en-tête du rendu serveur (déjà
               correct et spécifique à l'URL) fait autorité. */}
           <div className="app">
+            {/* Retrait de la version serveur (#ssr-keep) et filet de 20 s : cf. ce composant. */}
+            <SurveillanceVersionServeur />
             <AmbientEffects />
             <Navbar scrolled={scrolled} />
             <ErrorBoundary>

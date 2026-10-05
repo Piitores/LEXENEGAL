@@ -13,9 +13,9 @@ import './ChargementInterrompu.css';
  *
  * Version serveur encore affichée (body.ssr-live, cf. src/index.tsx) : elle RESTE, c'est le
  * meilleur contenu disponible. Le bloc de page ci-dessous est alors replié à hauteur 0 (App.css)
- * et App.tsx ne retire pas #ssr-keep tant qu'il est monté ; un bandeau fixe, hors du flux (aucun
- * décalage de mise en page), propose « Réessayer ». Un « Réessayer » réussi remplace la version
- * serveur par la page React, comme un premier chargement.
+ * et SurveillanceVersionServeur ne retire pas #ssr-keep tant qu'il est monté ; un bandeau fixe,
+ * hors du flux (aucun décalage de mise en page), propose « Réessayer ». Un « Réessayer » réussi
+ * remplace la version serveur par la page React, comme un premier chargement.
  *
  * `encart` : échec d'un bloc SECONDAIRE dans une page chargée (texte d'une lettre de doctrine,
  * décisions citant un article). Compact, sans bandeau et sans effet sur la version serveur.
@@ -54,16 +54,23 @@ const ChargementInterrompu: React.FC<Props> = ({ onReessayer, pleineHauteur = fa
                     <RefreshCw size={16} aria-hidden="true" /> Réessayer
                 </button>
             </div>
-            {/* Bandeau visible SEULEMENT tant que la version serveur est affichée (CSS). */}
-            {typeof document !== 'undefined' && createPortal(
-                <div className="chargement-interrompu-bandeau" role="status">
-                    <span>Chargement interrompu : version simplifiée affichée.</span>
-                    <button type="button" onClick={onReessayer}>Réessayer</button>
-                </div>,
-                document.body,
-            )}
+            <BandeauVersionServeur message="Chargement interrompu : version simplifiée affichée." onReessayer={onReessayer} />
         </>
     );
 };
+
+/**
+ * Bandeau fixe « Réessayer », visible SEULEMENT tant que la version serveur est affichée (CSS :
+ * body.ssr-live). Partagé par ChargementInterrompu et par le filet de 20 s (lib/versionServeur.ts).
+ */
+export const BandeauVersionServeur: React.FC<{ message: string; onReessayer: () => void }> = ({ message, onReessayer }) => (
+    typeof document !== 'undefined' ? createPortal(
+        <div className="chargement-interrompu-bandeau" role="status">
+            <span>{message}</span>
+            <button type="button" onClick={onReessayer}>Réessayer</button>
+        </div>,
+        document.body,
+    ) : null
+);
 
 export default ChargementInterrompu;
