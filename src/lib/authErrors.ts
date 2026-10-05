@@ -3,6 +3,7 @@
  * Supabase parle anglais et ses messages sont techniques ; l'utilisateur
  * doit comprendre quoi corriger sans deviner.
  */
+import { estDelaiDepasse } from './delaiRequetes';
 
 export interface ErreurAuth {
     message?: string;
@@ -78,4 +79,26 @@ export function traduireErreurAuth(err: ErreurAuth | null | undefined): string {
         return "L'adresse e-mail n'est pas valide.";
     }
     return message;
+}
+
+/**
+ * Requêtes d'authentification NON IDEMPOTENTES (lib/delaiRequetes.ts, borne de 120 s) : le serveur
+ * envoie le courriel avant de répondre, et un code ne sert qu'une fois. Quand la réponse n'arrive pas
+ * à temps, l'issue est INCERTAINE : le message ne doit jamais affirmer l'échec (un nouvel essai
+ * recevrait « User already registered », un code déjà consommé, ou un second courriel).
+ */
+export type ActionAuthNonIdempotente = 'inscription' | 'verification' | 'lien' | 'reinitialisation' | 'renvoi';
+
+const REPONSE_TARDIVE: Record<ActionAuthNonIdempotente, string> = {
+    inscription: 'Le serveur a tardé à répondre : votre compte a peut-être été créé. Vérifiez votre boîte mail (un code de vérification a pu partir) ou essayez de vous connecter avant de recommencer.',
+    verification: 'Le serveur a tardé à répondre : votre adresse a peut-être été vérifiée. Essayez de vous connecter ; si le code est refusé, cliquez sur « Renvoyer le code ».',
+    lien: "Le serveur a tardé à répondre : le lien de connexion est peut-être parti. Vérifiez votre boîte mail (et les courriers indésirables) avant d'en redemander un.",
+    reinitialisation: "Le serveur a tardé à répondre : l'e-mail de réinitialisation est peut-être parti. Vérifiez votre boîte mail (et les courriers indésirables) avant de recommencer.",
+    renvoi: "Le serveur a tardé à répondre : un nouveau code est peut-être parti. Vérifiez votre boîte mail avant d'en redemander un.",
+};
+
+/** Comme traduireErreurAuth, mais un délai dépassé donne le message d'issue incertaine de `action`. */
+export function traduireErreurAuthPour(err: unknown, action: ActionAuthNonIdempotente): string {
+    if (estDelaiDepasse(err)) return REPONSE_TARDIVE[action];
+    return traduireErreurAuth(err as ErreurAuth | null | undefined);
 }

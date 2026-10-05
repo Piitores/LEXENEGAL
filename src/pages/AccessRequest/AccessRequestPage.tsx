@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Shield, ArrowRight, Loader2, CheckCircle2, User, Phone, Mail, Briefcase, MessageSquare } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { estDelaiDepasse } from '../../lib/delaiRequetes';
 import './AccessRequestPage.css';
 
 
@@ -63,6 +64,12 @@ const AccessRequestPage: React.FC = () => {
             });
 
             if (response.error) {
+                // Réponse tardive (borne de 120 s, lib/delaiRequetes.ts) : la fonction a pu envoyer la
+                // demande ; on ne dit pas qu'elle a échoué, sinon le lecteur la renverrait en double.
+                if (estDelaiDepasse(response.error)) {
+                    setError("Le serveur a tardé à répondre : votre demande a peut-être été transmise. Attendez quelques minutes avant de la renvoyer ; notre équipe vous répondra à l'adresse indiquée.");
+                    return;
+                }
                 throw new Error(response.error.message || "Erreur lors de l'envoi");
             }
 

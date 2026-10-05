@@ -2,7 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { popReturnPath } from '../../lib/authRedirect';
-import { traduireErreurAuth, estEmailNonConfirme } from '../../lib/authErrors';
+import { traduireErreurAuth, traduireErreurAuthPour, estEmailNonConfirme } from '../../lib/authErrors';
+import { estDelaiDepasse } from '../../lib/delaiRequetes';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, User, ArrowRight, Check, Loader2, Wand2, KeyRound } from 'lucide-react';
 import './AuthPage.css';
@@ -107,7 +108,7 @@ const AuthPage: React.FC = () => {
             if (error) throw error;
             setMessage('Lien envoyé. Ouvrez votre boîte mail et cliquez sur « Se connecter à LEXENEGAL ».');
         } catch (err: any) {
-            setError(traduireErreurAuth(err));
+            setError(traduireErreurAuthPour(err, 'lien'));
         } finally {
             setLoading(false);
         }
@@ -125,7 +126,7 @@ const AuthPage: React.FC = () => {
             if (error) throw error;
             setMessage('Si un compte existe pour cette adresse, un e-mail de réinitialisation vient de partir.');
         } catch (err: any) {
-            setError(traduireErreurAuth(err));
+            setError(traduireErreurAuthPour(err, 'reinitialisation'));
         } finally {
             setLoading(false);
         }
@@ -165,7 +166,9 @@ const AuthPage: React.FC = () => {
             setMessage('Nouveau code envoyé. Pensez à vérifier vos courriers indésirables.');
             setResendIn(RESEND_COOLDOWN);
         } catch (err: any) {
-            setError(traduireErreurAuth(err));
+            setError(traduireErreurAuthPour(err, 'renvoi'));
+            // Réponse tardive : un code a peut-être été envoyé, le délai entre deux envois s'applique.
+            if (estDelaiDepasse(err)) setResendIn(RESEND_COOLDOWN);
         }
     };
 
@@ -189,7 +192,7 @@ const AuthPage: React.FC = () => {
                 setTimeout(() => navigate(popReturnPath()), 1500);
             }
         } catch (err: any) {
-            setError(traduireErreurAuth(err));
+            setError(traduireErreurAuthPour(err, 'verification'));
         } finally {
             setLoading(false);
         }
@@ -226,7 +229,7 @@ const AuthPage: React.FC = () => {
                 setMessage('Saisissez le code de sécurité reçu par e-mail.');
             }
         } catch (err: any) {
-            setError(traduireErreurAuth(err));
+            setError(traduireErreurAuthPour(err, 'inscription'));
         } finally {
             setLoading(false);
             isRegistering.current = false;
@@ -250,7 +253,7 @@ const AuthPage: React.FC = () => {
                     setResendIn(RESEND_COOLDOWN);
                     setError(null);
                     setMessage(resendErr
-                        ? "Votre adresse n'a pas encore été vérifiée. " + traduireErreurAuth(resendErr)
+                        ? "Votre adresse n'a pas encore été vérifiée. " + traduireErreurAuthPour(resendErr, 'renvoi')
                         : "Votre adresse n'a pas encore été vérifiée : un nouveau code vient de vous être envoyé par e-mail.");
                     return;
                 }

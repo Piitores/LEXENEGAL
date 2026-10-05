@@ -28,8 +28,15 @@ describe('supprimerCompteVerifie', () => {
         expect(await supprimerCompteVerifie(async () => ({ error: http401 }), async () => disparu)).toBe('supprime');
     });
 
-    it('le compte existe toujours : « echec »', async () => {
-        expect(await supprimerCompteVerifie(async () => ({ error: DELAI }), async () => present)).toBe('echec');
+    it('erreur du serveur et compte toujours là : « echec »', async () => {
+        const http500 = { name: 'FunctionsHttpError', message: 'Edge Function returned a non-2xx status code', context: { status: 500 } };
+        expect(await supprimerCompteVerifie(async () => ({ error: http500 }), async () => present)).toBe('echec');
+    });
+
+    it('délai dépassé (borne de 120 s) et compte encore là : « incertain » (suppression peut-être en cours), jamais « echec »', async () => {
+        const DELAI_120 = { ...DELAI, context: new DOMException('Aucune réponse du serveur après 120 s (délai maximal dépassé)', 'TimeoutError') };
+        expect(await supprimerCompteVerifie(async () => ({ error: DELAI_120 }), async () => present)).toBe('incertain');
+        expect(await supprimerCompteVerifie(async () => ({ error: DELAI }), async () => present)).toBe('incertain');
     });
 
     it('vérification impossible (réseau) : « incertain », pas d’échec affirmé', async () => {

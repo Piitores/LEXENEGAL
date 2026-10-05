@@ -20,9 +20,10 @@ const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
  * réponse laissait une page sur « Chargement du code… » pour toujours (05/10/2026). Les requêtes
  * du client (PostgREST, RPC, auth, fonctions edge) passent donc par un délai maximal ; à
  * l'expiration elles échouent, et la page affiche « Chargement interrompu » avec « Réessayer ».
- * Exemptées : rafraîchissement de session (/auth/v1/token), stockage et fonctions edge non
- * idempotentes. Durées (en-têtes : borne totale ; corps : borne d'inactivité) et raisons des
- * exemptions : `delaiRequetes.ts`. On appelle `fetch` au moment de la requête (et non
+ * Bornes propres : rafraîchissement de session 60 s, requêtes non idempotentes (inscription, code,
+ * courriels, fonctions edge delete-account, admin-delete-user, send-contact-email) 120 s ; seul le
+ * stockage est sans borne. Durées (en-têtes : borne totale ; corps : borne d'inactivité) et raisons :
+ * `delaiRequetes.ts`. On appelle `fetch` au moment de la requête (et non
  * une référence prise au chargement du module) pour suivre un éventuel remplacement du global.
  */
 export const supabase = createClient(url, anonKey, {

@@ -62,25 +62,74 @@ export interface DelaisRequete {
 
 const DELAIS_PAR_DEFAUT: DelaisRequete = { reponseMs: DELAI_REPONSE_MS, inactiviteCorpsMs: DELAI_INACTIVITE_CORPS_MS };
 
-/** Fonctions edge NON idempotentes : la couper côté client ne l'arrête pas côté serveur. */
+/**
+ * Délai d'arrivée des en-têtes du RAFRAÎCHISSEMENT de session (/auth/v1/token?grant_type=refresh_token).
+ *
+ * Pourquoi une borne propre, et pourquoi 60 s (relecture finale du 05/10/2026) :
+ *  - SANS borne (exemption de bf78433), un membre au jeton expiré (retour sur le site plus d'une heure
+ *    après) dont la requête de rafraîchissement ne reçoit jamais de réponse voyait TOUTE l'application
+ *    figée : getSession() attend l'initialisation de supabase-js, qui attend ce rafraîchissement, et
+ *    chaque lecture PostgREST attend getSession() AVANT même de partir (aucune borne ne pouvait jouer) ;
+ *  - À 15 s, supabase-js le RELANÇAIT avec le MÊME refresh_token, que le serveur avait pu consommer :
+ *    « already used », erreur non réessayable, session effacée (rapport « react »). La boucle de relance
+ *    de _refreshAccessToken (auth-js 2.89) ne relance que si la tentative suivante part moins de
+ *    AUTO_REFRESH_TICK_DURATION_MS = 30 s après le début : au-delà de 30 s, AUCUNE relance. 60 s laisse
+ *    une marge large à une connexion lente, et le même jeton n'est plus renvoyé qu'à la demande suivante
+ *    de session, comme après un rechargement de page (que l'exemption n'empêchait pas non plus).
+ * Une erreur de délai est « réessayable » pour supabase-js : la session est GARDÉE (aucune déconnexion),
+ * getSession() rend une session vide et les lectures partent avec la clé publique.
+ */
+export const DELAI_RAFRAICHISSEMENT_MS = 60_000;
+
+/**
+ * Délai d'arrivée des en-têtes des requêtes NON IDEMPOTENTES, en ms : la couper côté client ne l'arrête
+ * pas côté serveur, et la relancer peut la doubler (deux courriels, un code OTP déjà consommé, « User
+ * already registered »). Borne LONGUE, jamais absente : sans borne, une connexion morte avant le serveur
+ * laissait le bouton tourner sans fin. À l'expiration, l'interface dit que l'issue est INCERTAINE
+ * (« vérifiez votre boîte mail ou essayez de vous connecter »), jamais qu'elle a échoué.
+ */
+export const DELAI_NON_IDEMPOTENT_MS = 120_000;
+
+/** Fonctions edge non idempotentes. delete-account n'a aucune borne côté serveur (suppression en cascade). */
 const FONCTIONS_NON_IDEMPOTENTES = /\/functions\/v1\/(delete-account|admin-delete-user|send-contact-email)(?:[/?#]|$)/;
 
 /**
- * Requêtes exemptées de délai :
- *  - `/storage/v1/` : envoi de fichiers, durée légitime sans borne avec la taille de l'envoi (le
- *    site n'en envoie aucun aujourd'hui ; l'exemption évite qu'un futur envoi soit coupé) ;
- *  - `/auth/v1/token` : supabase-js RELANCE un rafraîchissement coupé avec le MÊME refresh_token.
- *    Si le serveur l'a déjà consommé (plus de 10 s avant la relance), il répond « already used »,
- *    erreur non réessayable, et supabase-js EFFACE la session : le membre est déconnecté pour une
- *    simple lenteur (rapport « react » du 05/10/2026). Un code PKCE est lui aussi à usage unique ;
- *  - les fonctions edge non idempotentes (delete-account, admin-delete-user, send-contact-email) :
- *    le serveur continue après une coupure côté client. delete-account, en particulier, n'a
- *    aucune borne côté serveur (client service-role, suppression en cascade) : l'écran affichait
- *    « Échec de la suppression » pendant que le compte était supprimé.
- * Tout le reste (PostgREST, RPC, fonction edge `search`…) est en lecture et peut être relancé.
+ * Points d'authentification non idempotents : GoTrue envoie le courriel AVANT de répondre (/signup, /otp,
+ * /recover, /resend) et un code OTP ne sert qu'une fois (/verify).
+ */
+const AUTH_NON_IDEMPOTENTS = /\/auth\/v1\/(signup|verify|otp|recover|resend)(?:[/?#]|$)/;
+
+/** Rafraîchissement de session : SEUL grant_type=refresh_token ; password et pkce gardent la borne normale. */
+const RAFRAICHISSEMENT = /\/auth\/v1\/token\?(?:[^#]*&)?grant_type=refresh_token(?:[&#]|$)/;
+
+/**
+ * Requêtes exemptées de TOUT délai : `/storage/v1/` seulement (envoi de fichiers, durée légitime sans
+ * borne avec la taille de l'envoi ; le site n'en envoie aucun aujourd'hui).
  */
 export function estExempteDeDelai(url: string): boolean {
-    return url.includes('/storage/v1/') || url.includes('/auth/v1/token') || FONCTIONS_NON_IDEMPOTENTES.test(url);
+    return url.includes('/storage/v1/');
+}
+
+/**
+ * Bornes d'une requête selon son adresse (null : aucune borne) :
+ *  - stockage : aucune (estExempteDeDelai) ;
+ *  - rafraîchissement de session : DELAI_RAFRAICHISSEMENT_MS (60 s) ;
+ *  - fonctions edge et points d'authentification non idempotents : DELAI_NON_IDEMPOTENT_MS (120 s) ;
+ *  - tout le reste : `defaut` (15 s). Ce reste n'est PAS fait que de lectures : connexion par mot de
+ *    passe et échange PKCE (/auth/v1/token?grant_type=password|pkce), mise à jour du compte
+ *    (/auth/v1/user), et des ÉCRITURES PostgREST (signalement d'erreur de ReportErrorModal, favoris et
+ *    dossiers de DecisionActions et CabinetPage, profil d'AccountSettingsPage, notes de DecisionPage,
+ *    signalements et RPC admin_* d'AdminPage). Une écriture coupée à 15 s a pu être validée par le
+ *    serveur : son message d'échec peut être faux, et un nouvel essai la doubler (un signalement en
+ *    double, par exemple). Elles restent à 15 s : la base les borne elle-même à 8 s
+ *    (statement_timeout), leur réponse ne tarde donc que si la connexion est morte.
+ * Le corps garde partout la borne d'INACTIVITÉ `defaut.inactiviteCorpsMs`.
+ */
+export function delaisPour(url: string, defaut: DelaisRequete = DELAIS_PAR_DEFAUT): DelaisRequete | null {
+    if (estExempteDeDelai(url)) return null;
+    if (RAFRAICHISSEMENT.test(url)) return { ...defaut, reponseMs: DELAI_RAFRAICHISSEMENT_MS };
+    if (FONCTIONS_NON_IDEMPOTENTES.test(url) || AUTH_NON_IDEMPOTENTS.test(url)) return { ...defaut, reponseMs: DELAI_NON_IDEMPOTENT_MS };
+    return defaut;
 }
 
 function urlDe(input: RequestInfo | URL): string {
@@ -172,9 +221,10 @@ function avecInactiviteBornee(reponse: Response, ms: number, expirer: () => Erro
  *
  * - Un signal déjà fourni par l'appelant (`.abortSignal()` de PostgREST, `signal` des fonctions
  *   edge) est RESPECTÉ : son annulation est relayée telle quelle, avec son motif.
- * - En-têtes : borne TOTALE (DELAI_REPONSE_MS). À l'expiration, la promesse est rejetée avec une
- *   erreur `TimeoutError` explicite, quel que soit le navigateur (certains rejettent un
- *   `AbortError` générique au lieu du motif).
+ * - En-têtes : borne TOTALE, DELAI_REPONSE_MS ou la borne propre à l'adresse (delaisPour :
+ *   rafraîchissement de session 60 s, requêtes non idempotentes 120 s, stockage sans borne). À
+ *   l'expiration, la promesse est rejetée avec une erreur `TimeoutError` explicite, quel que soit le
+ *   navigateur (certains rejettent un `AbortError` générique au lieu du motif).
  * - Corps : borne d'INACTIVITÉ (DELAI_INACTIVITE_CORPS_MS), minuterie relancée à chaque morceau
  *   reçu et arrêtée à la fin de la lecture. Le corps est relayé par un flux qui échoue avec la
  *   même erreur `TimeoutError` ; la requête sous-jacente est annulée.
@@ -184,7 +234,8 @@ export function avecDelaiMaximal(
     delais: DelaisRequete = DELAIS_PAR_DEFAUT,
 ): typeof fetch {
     return (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-        if (estExempteDeDelai(urlDe(input))) return fetchDeBase(input, init);
+        const bornes = delaisPour(urlDe(input), delais);
+        if (!bornes) return fetchDeBase(input, init);
 
         const controleur = new AbortController();
         let motifDelai: Error | null = null;
@@ -202,11 +253,11 @@ export function avecDelaiMaximal(
             else signalAppelant.addEventListener('abort', () => controleur.abort(signalAppelant.reason), { once: true });
         }
 
-        const minuterie = setTimeout(expirer('reponse', delais.reponseMs), delais.reponseMs);
+        const minuterie = setTimeout(expirer('reponse', bornes.reponseMs), bornes.reponseMs);
         return fetchDeBase(input, { ...init, signal: controleur.signal }).then(
             (reponse) => {
                 clearTimeout(minuterie);
-                return avecInactiviteBornee(reponse, delais.inactiviteCorpsMs, expirer('corps', delais.inactiviteCorpsMs));
+                return avecInactiviteBornee(reponse, bornes.inactiviteCorpsMs, expirer('corps', bornes.inactiviteCorpsMs));
             },
             (erreur) => {
                 clearTimeout(minuterie);

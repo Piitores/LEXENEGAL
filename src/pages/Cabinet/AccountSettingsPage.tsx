@@ -131,7 +131,7 @@ const AccountSettingsPage: React.FC = () => {
             type: 'err',
             text: issue === 'echec'
                 ? "Échec de la suppression. Réessayez, ou écrivez à contact@lexenegal.sn."
-                : "La connexion a été interrompue : impossible de confirmer la suppression. Rechargez la page avant de réessayer, ou écrivez à contact@lexenegal.sn.",
+                : "Impossible de confirmer la suppression (connexion interrompue ou réponse tardive) : elle est peut-être en cours. Rechargez la page dans quelques minutes avant de réessayer, ou écrivez à contact@lexenegal.sn.",
         });
         setDeleting(false);
     };

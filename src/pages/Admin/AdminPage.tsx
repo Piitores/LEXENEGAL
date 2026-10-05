@@ -11,6 +11,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
+import { estDelaiDepasse } from '../../lib/delaiRequetes';
 import {
     LayoutDashboard, Users, FileText, BookOpen, Shield,
     AlertTriangle, Crown, Loader2, LogOut, History, X, Star,
@@ -217,7 +218,13 @@ const AdminPage: React.FC = () => {
     const deleteUser = async (u: User) => {
         if (!window.confirm(`Supprimer définitivement le compte ${u.email} ? Cette action est irréversible.`)) return;
         const { error } = await supabase.functions.invoke('admin-delete-user', { body: { user_id: u.id } });
-        if (error) { window.alert("Échec de la suppression : " + error.message); return; }
+        if (error) {
+            // Réponse tardive (borne de 120 s, lib/delaiRequetes.ts) : la suppression a pu aboutir côté serveur.
+            window.alert(estDelaiDepasse(error)
+                ? 'Le serveur a tardé à répondre : le compte a peut-être été supprimé. Rechargez la liste avant de recommencer.'
+                : "Échec de la suppression : " + error.message);
+            return;
+        }
         setUsers(users.filter(x => x.id !== u.id));
     };
 

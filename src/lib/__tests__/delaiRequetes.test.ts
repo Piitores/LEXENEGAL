@@ -1,9 +1,11 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
 import {
-    avecDelaiMaximal, estDelaiDepasse, estExempteDeDelai,
+    avecDelaiMaximal, estDelaiDepasse, estExempteDeDelai, delaisPour,
     DELAI_REPONSE_MS, DELAI_INACTIVITE_CORPS_MS, NOM_ERREUR_DELAI, MENTION_DELAI,
+    DELAI_RAFRAICHISSEMENT_MS, DELAI_NON_IDEMPOTENT_MS,
 } from '../delaiRequetes';
+import { lockAuthBorne } from '../authLock';
 
 /*
  * Délai maximal des requêtes (incident du 05/10/2026 : « Chargement du code… » sans fin, une
@@ -215,17 +217,46 @@ describe('avecDelaiMaximal', () => {
         expect(estExempteDeDelai('https://exemple.supabase.co/rest/v1/articles')).toBe(false);
     });
 
-    it('exempte le jeton d’authentification et les fonctions edge non idempotentes, pas les lectures', () => {
+    it('bornes par adresse : stockage seul exempté ; rafraîchissement 60 s ; non idempotents 120 s ; le reste 15 s', () => {
+        // Relecture finale (05/10/2026) : /auth/v1/token n'est plus exempté sans borne, et seul
+        // grant_type=refresh_token a sa borne propre (password et pkce : borne normale).
         const base = 'https://exemple.supabase.co';
-        expect(estExempteDeDelai(`${base}/auth/v1/token?grant_type=refresh_token`)).toBe(true);
-        expect(estExempteDeDelai(`${base}/auth/v1/token?grant_type=pkce`)).toBe(true);
-        expect(estExempteDeDelai(`${base}/functions/v1/delete-account`)).toBe(true);
-        expect(estExempteDeDelai(`${base}/functions/v1/admin-delete-user`)).toBe(true);
-        expect(estExempteDeDelai(`${base}/functions/v1/send-contact-email`)).toBe(true);
-        expect(estExempteDeDelai(`${base}/functions/v1/search`)).toBe(false);
-        expect(estExempteDeDelai(`${base}/functions/v1/delete-account-preview`)).toBe(false);
-        expect(estExempteDeDelai(`${base}/auth/v1/user`)).toBe(false);
-        expect(estExempteDeDelai(`${base}/rest/v1/rpc/search_articles`)).toBe(false);
+        const reponse = (u: string) => delaisPour(u)?.reponseMs ?? null;
+        expect(DELAI_RAFRAICHISSEMENT_MS).toBe(60_000);
+        expect(DELAI_NON_IDEMPOTENT_MS).toBe(120_000);
+        expect(reponse(`${base}/storage/v1/object/pieces/a.pdf`)).toBeNull();
+        expect(reponse(`${base}/auth/v1/token?grant_type=refresh_token`)).toBe(60_000);
+        expect(reponse(`${base}/auth/v1/token?grant_type=password`)).toBe(DELAI_REPONSE_MS);
+        expect(reponse(`${base}/auth/v1/token?grant_type=pkce`)).toBe(DELAI_REPONSE_MS);
+        expect(reponse(`${base}/auth/v1/token?grant_type=refresh_token_x`)).toBe(DELAI_REPONSE_MS);
+        for (const f of ['delete-account', 'admin-delete-user', 'send-contact-email']) {
+            expect(reponse(`${base}/functions/v1/${f}`), f).toBe(120_000);
+        }
+        for (const a of ['signup', 'verify', 'otp', 'recover', 'resend']) {
+            expect(reponse(`${base}/auth/v1/${a}`), a).toBe(120_000);
+            expect(reponse(`${base}/auth/v1/${a}?redirect_to=https%3A%2F%2Fx`), a).toBe(120_000);
+        }
+        expect(reponse(`${base}/functions/v1/search`)).toBe(DELAI_REPONSE_MS);
+        expect(reponse(`${base}/functions/v1/delete-account-preview`)).toBe(DELAI_REPONSE_MS);
+        expect(reponse(`${base}/auth/v1/user`)).toBe(DELAI_REPONSE_MS);
+        expect(reponse(`${base}/auth/v1/signups`)).toBe(DELAI_REPONSE_MS);
+        expect(reponse(`${base}/rest/v1/rpc/search_articles`)).toBe(DELAI_REPONSE_MS);
+        // Le corps garde partout la borne d'inactivité.
+        expect(delaisPour(`${base}/functions/v1/delete-account`)?.inactiviteCorpsMs).toBe(DELAI_INACTIVITE_CORPS_MS);
+        for (const u of ['/auth/v1/token?grant_type=refresh_token', '/auth/v1/token?grant_type=password', '/functions/v1/delete-account', '/auth/v1/signup']) {
+            expect(estExempteDeDelai(base + u), u).toBe(false);
+        }
+    });
+
+    it('requête non idempotente (inscription) : pas coupée à 15 s, coupée à 120 s, jamais en suspens', async () => {
+        vi.useFakeTimers();
+        const { f } = fetchMuet();
+        let erreur: unknown = 'en suspens';
+        avecDelaiMaximal(f)('https://exemple.supabase.co/auth/v1/signup', { method: 'POST' }).catch((e) => { erreur = e; });
+        await vi.advanceTimersByTimeAsync(DELAI_NON_IDEMPOTENT_MS - 1);
+        expect(erreur).toBe('en suspens');
+        await vi.advanceTimersByTimeAsync(1);
+        expect(erreur).toMatchObject({ name: NOM_ERREUR_DELAI });
     });
 });
 
@@ -318,7 +349,7 @@ describe('client Supabase muni du délai (chaîne réelle supabase-js)', () => {
         expect(estDelaiDepasse(error)).toBe(true);
     });
 
-    it('rafraîchissement de session : jamais coupé, donc jamais renvoyé avec le même refresh_token', async () => {
+    it('rafraîchissement de session lent (16 s) : pas coupé à 15 s, donc jamais renvoyé avec le même refresh_token', async () => {
         // Rapport « react » (D2b) : coupé à 15 s, il était relancé avec le MÊME jeton, que le
         // serveur avait pu consommer (« already used », puis session effacée).
         vi.useFakeTimers();
@@ -335,5 +366,93 @@ describe('client Supabase muni du délai (chaîne réelle supabase-js)', () => {
         await p;
         espion.mockRestore();
         expect(corps).toHaveLength(1);
+    });
+
+    it('rafraîchissement sans réponse : échec réessayable à 60 s, sans relance du même jeton (au-delà des 30 s de supabase-js)', async () => {
+        vi.useFakeTimers();
+        const { f, appels } = fetchMuet();
+        const espion = vi.spyOn(console, 'error').mockImplementation(() => {});
+        let issue: { error: unknown } | 'en suspens' = 'en suspens';
+        client(f).auth.refreshSession({ refresh_token: 'jeton-A' }).then((r) => { issue = r; });
+        await vi.advanceTimersByTimeAsync(DELAI_RAFRAICHISSEMENT_MS - 1);
+        expect(issue).toBe('en suspens');
+        await vi.advanceTimersByTimeAsync(1 + 60_000);
+        espion.mockRestore();
+        expect(issue).not.toBe('en suspens');
+        const erreur = (issue as unknown as { error: { name?: string } }).error;
+        // Réessayable : supabase-js GARDE la session (aucune déconnexion pour une lenteur).
+        expect(erreur?.name).toBe('AuthRetryableFetchError');
+        expect(estDelaiDepasse(erreur)).toBe(true);
+        expect(appels).toHaveLength(1);
+    });
+
+    it('connexion par mot de passe sur connexion morte : échec borné (15 s), plus de bouton qui tourne sans fin', async () => {
+        // Relecture finale : le motif « /auth/v1/token » exemptait aussi grant_type=password.
+        vi.useFakeTimers();
+        const { f } = fetchMuet();
+        const espion = vi.spyOn(console, 'error').mockImplementation(() => {});
+        let issue: unknown = 'en suspens';
+        client(f).auth.signInWithPassword({ email: 'essai@exemple.invalid', password: 'factice-de-test' }).then((r) => { issue = r; });
+        await vi.advanceTimersByTimeAsync(DELAI_REPONSE_MS + 1_000);
+        espion.mockRestore();
+        expect(issue).not.toBe('en suspens');
+        expect(estDelaiDepasse((issue as { error: unknown }).error)).toBe(true);
+    });
+});
+
+/*
+ * Relecture finale (05/10/2026) : membre au jeton d'accès EXPIRÉ (site rouvert plus d'une heure après) et
+ * rafraîchissement qui ne reçoit jamais de réponse. Avec /auth/v1/token exempté de toute borne, aucune
+ * lecture ne partait jamais : getSession() attend l'initialisation de supabase-js, qui attend ce
+ * rafraîchissement. Session SIMULÉE, aucun compte réel ; client supabase-js réel, enveloppe de l'application.
+ */
+describe('jeton expiré + point d’authentification muet (client réel)', () => {
+    const CLE = 'sb-exemple-auth-token';
+    function stockageAvecSessionExpiree() {
+        const maintenant = Math.floor(Date.now() / 1000);
+        const session = {
+            access_token: 'jeton.factice.expire', refresh_token: 'rafraichissement-factice', token_type: 'bearer',
+            expires_in: 3600, expires_at: maintenant - 600,
+            user: { id: '00000000-0000-0000-0000-000000000001', aud: 'authenticated', role: 'authenticated', email: 'membre@exemple.invalid', app_metadata: {}, user_metadata: {}, created_at: '2026-01-01T00:00:00Z' },
+        };
+        const m = new Map<string, string>([[CLE, JSON.stringify(session)]]);
+        return { getItem: (k: string) => m.get(k) ?? null, setItem: (k: string, v: string) => { m.set(k, v); }, removeItem: (k: string) => { m.delete(k); }, m };
+    }
+    /** /auth/v1/token ne répond jamais (sauf annulation par signal) ; le reste répond tout de suite. */
+    function fetchJetonMuet() {
+        const appels: { url: string; corps: string }[] = [];
+        const f = ((input: RequestInfo | URL, init?: RequestInit) => {
+            const url = String(input instanceof Request ? input.url : input);
+            appels.push({ url, corps: String(init?.body ?? '') });
+            if (url.includes('/auth/v1/token')) {
+                return new Promise<Response>((_ok, ko) => {
+                    const s = init?.signal;
+                    if (s) s.addEventListener('abort', () => ko(s.reason));
+                });
+            }
+            return Promise.resolve(new Response('[]', { status: 200, headers: { 'Content-Type': 'application/json' } }));
+        }) as typeof fetch;
+        return { f, appels };
+    }
+
+    it('la lecture PostgREST finit par partir (clé publique), la session est gardée', async () => {
+        vi.useFakeTimers();
+        const espion = vi.spyOn(console, 'error').mockImplementation(() => {});
+        const stockage = stockageAvecSessionExpiree();
+        const { f, appels } = fetchJetonMuet();
+        const c = createClient('https://exemple.supabase.co', 'cle-anon', {
+            auth: { storage: stockage, persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, lock: lockAuthBorne },
+            global: { fetch: avecDelaiMaximal(f) },
+        });
+        let issue: unknown = 'en suspens';
+        c.from('laws_and_codes').select('id').eq('slug', 'cocc').maybeSingle().then((r) => { issue = r; });
+        // Initialisation (un rafraîchissement borné à 60 s) puis lecture de la session (un second) : 120 s au plus.
+        await vi.advanceTimersByTimeAsync(2 * DELAI_RAFRAICHISSEMENT_MS + 1_000);
+        espion.mockRestore();
+        expect(issue).not.toBe('en suspens');
+        expect(appels.filter((a) => a.url.includes('/rest/v1/'))).toHaveLength(1);
+        // Échec réessayable : aucune déconnexion pour une lenteur.
+        expect(stockage.m.has(CLE)).toBe(true);
+        c.auth.stopAutoRefresh();
     });
 });
