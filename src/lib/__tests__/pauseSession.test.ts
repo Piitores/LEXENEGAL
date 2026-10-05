@@ -2,7 +2,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
 import { avecDelaiMaximal, estRafraichissement, DELAI_RAFRAICHISSEMENT_MS } from '../delaiRequetes';
 import { lockAuthBorne } from '../authLock';
-import { stockageAvecPause, suspendreSession, sessionSuspendue, reprendreSession, PAUSE_SESSION_MS } from '../pauseSession';
+import { avecPauseSurEchec, stockageAvecPause, suspendreSession, sessionSuspendue, reprendreSession, PAUSE_SESSION_MS } from '../pauseSession';
 
 /*
  * Membre au jeton EXPIRÉ (site rouvert plus d'une heure après) et rafraîchissement sans réponse
@@ -154,6 +154,96 @@ describe('jeton expiré + rafraîchissement sans réponse (client réel, verrous
         expect(data.session?.access_token).toBe('neuf');
         expect(JSON.parse(base.m.get(CLE) as string).access_token).toBe('neuf');
         expect(sessionSuspendue()).toBe(false);
+        c.auth.stopAutoRefresh();
+    });
+});
+
+/*
+ * Rafraîchissement en ÉCHEC IMMÉDIAT (contrôle du 06/10/2026) : hors ligne, refus de connexion, ou
+ * 502/503/504 de l'authentification. supabase-js relance pendant ~25 s puis garde la session ; sans
+ * pause, chaque getSession() suivant recommence (2 min de roue après une navigation interne).
+ */
+describe('avecPauseSurEchec', () => {
+    const REFRESH = 'https://exemple.supabase.co/auth/v1/token?grant_type=refresh_token';
+    const reponse = (status: number) => () => Promise.resolve(new Response('{}', { status }));
+
+    it('suspend sur un rejet ou un 502/503/504 du rafraîchissement, et sur rien d’autre', async () => {
+        for (const status of [502, 503, 504]) {
+            reprendreSession();
+            await avecPauseSurEchec(reponse(status) as typeof fetch)(REFRESH);
+            expect(sessionSuspendue(), String(status)).toBe(true);
+        }
+        reprendreSession();
+        await expect(avecPauseSurEchec((() => Promise.reject(new TypeError('Failed to fetch'))) as typeof fetch)(REFRESH)).rejects.toThrow('Failed to fetch');
+        expect(sessionSuspendue()).toBe(true);
+        for (const status of [200, 400, 500]) {
+            reprendreSession();
+            await avecPauseSurEchec(reponse(status) as typeof fetch)(REFRESH);
+            expect(sessionSuspendue(), String(status)).toBe(false);
+        }
+        // Autres adresses : jamais de pause, même en échec.
+        await expect(avecPauseSurEchec((() => Promise.reject(new TypeError('Failed to fetch'))) as typeof fetch)('https://exemple.supabase.co/rest/v1/t')).rejects.toThrow();
+        await avecPauseSurEchec(reponse(503) as typeof fetch)('https://exemple.supabase.co/auth/v1/token?grant_type=password');
+        expect(sessionSuspendue()).toBe(false);
+    });
+});
+
+describe('jeton expiré + rafraîchissement en échec immédiat (client réel, verrous simulés)', () => {
+    async function scenario(panne: 'rejet' | 503, avecPause: boolean) {
+        vi.useFakeTimers();
+        vi.stubGlobal('navigator', { locks: verrousFifo() });
+        vi.spyOn(console, 'error').mockImplementation(() => {});
+        const t0 = Date.now();
+        const base = stockageBrut();
+        const journal: number[] = [];
+        const f = ((input: RequestInfo | URL) => {
+            const url = String(input instanceof Request ? input.url : input);
+            if (url.includes('/auth/v1/token')) {
+                journal.push((Date.now() - t0) / 1000);
+                return panne === 'rejet'
+                    ? Promise.reject(new TypeError('Failed to fetch'))
+                    : Promise.resolve(new Response('upstream unavailable', { status: 503 }));
+            }
+            return Promise.resolve(new Response('[]', { status: 200, headers: { 'Content-Type': 'application/json' } }));
+        }) as typeof fetch;
+        const avecDelai = avecDelaiMaximal(f, undefined, (u) => { if (estRafraichissement(u)) suspendreSession(); });
+        const c = createClient('https://exemple.supabase.co', 'cle-anon', {
+            auth: { storage: stockageAvecPause(base), persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, lock: lockAuthBorne },
+            global: { fetch: avecPause ? avecPauseSurEchec(avecDelai) : avecDelai },
+        });
+        const rendues: Record<string, number> = {};
+        const lire = (nom: string) => { c.from('t').select('id').then(() => { rendues[nom] = (Date.now() - t0) / 1000; }); };
+        return { c, base, journal, rendues, lire };
+    }
+
+    for (const panne of ['rejet', 503] as const) {
+        it(`${panne} : après la première série de relances, une navigation interne part aussitôt`, async () => {
+            const { c, base, journal, rendues, lire } = await scenario(panne, true);
+            lire('A1'); lire('A2'); lire('A3');
+            await vi.advanceTimersByTimeAsync(30_000);
+            expect(Object.keys(rendues).sort()).toEqual(['A1', 'A2', 'A3']);
+            for (const n of ['A1', 'A2', 'A3']) expect(rendues[n], n).toBeLessThanOrEqual(27);
+            const envoyes = journal.length;
+            // Navigation interne à 40 s : rendue sans nouvelle série de relances.
+            await vi.advanceTimersByTimeAsync(10_000);
+            lire('B1'); lire('B2'); lire('B3');
+            await vi.advanceTimersByTimeAsync(1_000);
+            for (const n of ['B1', 'B2', 'B3']) expect(rendues[n], n).toBeLessThanOrEqual(41);
+            expect(journal.length).toBe(envoyes);
+            expect(base.m.has(CLE)).toBe(true); // session gardée, pas de déconnexion
+            c.auth.stopAutoRefresh();
+        });
+    }
+
+    it('contre-épreuve sans le correctif : la navigation interne attend une nouvelle série de relances', async () => {
+        const { c, rendues, lire } = await scenario('rejet', false);
+        lire('A1');
+        await vi.advanceTimersByTimeAsync(40_000);
+        lire('B1');
+        await vi.advanceTimersByTimeAsync(5_000);
+        expect(rendues.B1).toBeUndefined();
+        await vi.advanceTimersByTimeAsync(120_000);
+        expect(rendues.B1).toBeGreaterThanOrEqual(60); // mesuré : 101,6 s, soit 61,6 s de roue
         c.auth.stopAutoRefresh();
     });
 });

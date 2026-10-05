@@ -137,7 +137,8 @@ export function delaisPour(url: string, defaut: DelaisRequete = DELAIS_PAR_DEFAU
     return defaut;
 }
 
-function urlDe(input: RequestInfo | URL): string {
+/** Adresse d'une requête, quelle que soit la forme de son premier argument. */
+export function urlDe(input: RequestInfo | URL): string {
     if (typeof input === 'string') return input;
     if (input instanceof URL) return input.href;
     return (input as Request).url ?? String(input);

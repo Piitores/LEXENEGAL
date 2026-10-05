@@ -16,7 +16,15 @@
  * pause, la boucle de rafraîchissement de supabase-js (toutes les 30 s) retente une fois, et le membre
  * retrouve son compte dès que le serveur répond (ou au rechargement de la page). Toute écriture ou
  * suppression de la session (connexion, déconnexion) met fin à la pause.
+ *
+ * Même remède quand le rafraîchissement ÉCHOUE TOUT DE SUITE (contrôle du 06/10/2026) : hors ligne,
+ * refus de connexion, ou réponse 502/503/504 de l'authentification. supabase-js le relance alors
+ * pendant environ 25 s (attentes de 0,2 à 12,8 s), garde la session, et le getSession() suivant
+ * recommence : 2 min de roue après une navigation interne hors ligne, page jamais prête quand seule
+ * l'authentification tombe. Cf. avecPauseSurEchec.
  */
+
+import { estRafraichissement, urlDe } from './delaiRequetes';
 
 /** Durée du masquage après un rafraîchissement sans réponse, en ms. */
 export const PAUSE_SESSION_MS = 120_000;
@@ -59,6 +67,37 @@ export function stockageAvecPause(base: StockageSession): StockageSession {
             if (estCleSession(cle)) reprendreSession();
             base.removeItem(cle);
         },
+    };
+}
+
+/**
+ * Statuts que supabase-js tient pour une panne passagère du serveur d'authentification
+ * (NETWORK_ERROR_CODES d'auth-js) : il garde la session et relance le rafraîchissement.
+ * Les autres échecs (400 « refresh token already used »…) effacent la session : pas de pause.
+ */
+const STATUTS_PANNE_PASSAGERE = [502, 503, 504];
+
+/**
+ * Enveloppe `fetchDeBase` : un rafraîchissement de session qui échoue (requête rejetée, ou réponse
+ * 502/503/504) suspend la session. Les tentatives suivantes de supabase-js pour CE rafraîchissement
+ * vont au bout (elles ne relisent pas le stockage) ; si l'une aboutit, la session écrite met fin à
+ * la pause. Le délai dépassé des EN-TÊTES arrive aussi ici en rejet ; celui du CORPS n'est vu que par
+ * le rappel `surDelaiDepasse` d'avecDelaiMaximal (supabase.ts), qui reste donc nécessaire.
+ */
+export function avecPauseSurEchec(fetchDeBase: typeof fetch): typeof fetch {
+    return (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+        const requete = fetchDeBase(input, init);
+        if (!estRafraichissement(urlDe(input))) return requete;
+        return requete.then(
+            (reponse) => {
+                if (STATUTS_PANNE_PASSAGERE.includes(reponse.status)) suspendreSession();
+                return reponse;
+            },
+            (erreur) => {
+                suspendreSession();
+                throw erreur;
+            },
+        );
     };
 }
 
