@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase';
 import useAuth from '../../hooks/useAuth';
 import { lireIndiceSession } from '../../lib/indiceSession';
 import { urlTexte } from '../../lib/urls';
+import { PRIORITE_BASSE } from '../../lib/imagesSecondaires';
 import './Navbar.css';
 
 interface DDItem { label: string; to?: string; soon?: boolean; }
@@ -112,7 +113,9 @@ function Navbar({ scrolled }: { scrolled: boolean }) {
     <nav className={`navbar ${isScrolled ? 'navbar--scrolled' : ''}`}>
       <div className="navbar__container container">
         <Link to="/" className="navbar__logo" onClick={closeAll}>
-          <img src="/icon-512.png" alt="" className="navbar__logo-img" />
+          {/* icon-192 (17 Ko) au lieu d'icon-512 (123 Ko) pour 44 px ; priorité basse, taille réservée :
+              elle ne retient plus l'événement load et ne décale rien (lib/imagesSecondaires.ts). */}
+          <img src="/icon-192.png" alt="" className="navbar__logo-img" width={44} height={44} decoding="async" {...PRIORITE_BASSE} />
           <span>LEXENEGAL</span>
         </Link>
 

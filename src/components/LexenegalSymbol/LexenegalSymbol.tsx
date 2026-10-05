@@ -1,4 +1,5 @@
 import React from 'react';
+import { PRIORITE_BASSE } from '../../lib/imagesSecondaires';
 
 interface LexenegalSymbolProps {
     size?: number;
@@ -17,9 +18,14 @@ const LexenegalSymbol: React.FC<LexenegalSymbolProps> = ({
     opacity = 1
 }) => {
     return (
+        // Filigrane (1,2 Mo) : chargé à la demande et en priorité basse, il ne retient plus
+        // l'événement load (lib/imagesSecondaires.ts).
         <img 
             src="/lexenegal_new_logo.svg" 
             alt="Lexenegal Symbol" 
+            loading="lazy"
+            decoding="async"
+            {...PRIORITE_BASSE}
             style={{ width: 'auto', height: size, opacity, objectFit: 'contain' }}
             className={className}
         />
