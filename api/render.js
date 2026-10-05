@@ -1896,7 +1896,10 @@ export function buildHomeBody(codes) {
     ${nav}
   </article>`);
 }
-const CAT_LABELS = { code: 'Codes', loi: 'Lois', decret: 'Décrets', arrete: 'Arrêtés', ohada: 'Actes uniformes OHADA' };
+// Libellés des catégories de laws_and_codes (toutes celles de la base au 06/10/2026). cima et
+// convention_collective reprennent les mots du front (homeStats.ts, recherche.ts) : sans eux, le HTML
+// servi portait les intertitres bruts « cima » et « convention_collective ».
+const CAT_LABELS = { code: 'Codes', loi: 'Lois', decret: 'Décrets', arrete: 'Arrêtés', ohada: 'Actes uniformes OHADA', cima: 'CIMA', convention_collective: 'Conventions collectives' };
 export function buildCodesHead(canonical) {
   const title = 'Tous les codes et textes juridiques du Sénégal | Lexenegal';
   const description = 'Liste complète des codes, lois, décrets, arrêtés et Actes uniformes OHADA consultables en texte intégral sur Lexenegal - la mémoire juridique du Sénégal.';
@@ -1942,7 +1945,7 @@ export function buildCodesBody(texts, branches = [], comptes = null) {
   }).join('\n');
   // catégories hors liste connue (au cas où), placées en fin
   const extra = Object.keys(groups).filter((k) => !order.includes(k)).map((k) => {
-    return `<section><h2>${esc(k)}</h2><ul>${groups[k].map(lien).join('\n')}</ul></section>`;
+    return `<section><h2>${esc(lireCle(CAT_LABELS, k) || k)}</h2><ul>${groups[k].map(lien).join('\n')}</ul></section>`;
   }).join('\n');
   return wrapContent(`<div class="ssr-codes ssr-ed">
     <header class="ssr-codes-hero"><div class="ssr-codes-hero-c">

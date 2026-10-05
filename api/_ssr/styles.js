@@ -714,7 +714,7 @@ export const STYLES_SSR = {
 #ssr-content .ssr-codes-index h2{margin:28px 0 12px;font-size:1.2rem}
 #ssr-content .ssr-codes-index ul{list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:4px 24px;font-size:14.4px}
 #ssr-content .ssr-codes-index a{color:#047857}
-@media print{#ssr-content *{-webkit-text-stroke:0!important}#ssr-content .ssr-codes{min-height:0}#ssr-content .ssr-codes-hero{padding:0 0 20px}#ssr-content :is(.ssr-codes-recherche,.ssr-codes-onglets){display:none!important}#ssr-content .ssr-codes-embleme{color:#047857}}
+@media print{#ssr-content *{-webkit-text-stroke:0!important}#ssr-content .ssr-codes{min-height:0}#ssr-content .ssr-codes-hero{padding:0 0 20px}#ssr-content :is(.ssr-codes-recherche,.ssr-codes-onglets,.ssr-codes-grille~.ssr-codes-index){display:none!important}#ssr-content .ssr-codes-embleme{color:#047857}}
 @media (max-width:1024px){#ssr-content .ssr-codes-grille{grid-template-columns:repeat(2,1fr)}}
 @media (max-width:768px){#ssr-content .ssr-codes-grille{grid-template-columns:1fr}#ssr-content .ssr-codes-hero{padding-top:120px}}
 `,

@@ -67,6 +67,17 @@ describe('codes (rendu serveur habillé)', () => {
         expect(html).not.toContain('ssr-codes-grille');
         expect(html).toContain('<li><a href="/code/code-du-travail">Code du travail</a></li>');
     });
+    it('toutes les catégories de la base ont un intitulé : plus de « cima » ni « convention_collective » bruts', async () => {
+        const { buildCodesBody } = await charger('render.js');
+        const html = buildCodesBody([
+            ...textes,
+            { slug: 'reglement-cima-x', title: 'Règlement CIMA X', short_title: null, category: 'cima', branche_slug: null },
+            { slug: 'ccn-x', title: 'Convention collective X', short_title: null, category: 'convention_collective', branche_slug: null },
+        ], branches, null);
+        expect(html).toContain('<h2>CIMA</h2>');
+        expect(html).toContain('<h2>Conventions collectives</h2>');
+        expect(html).not.toMatch(/<h2>[a-z_]+<\/h2>/);
+    });
 });
 
 describe('doctrine (rendu serveur habillé)', () => {
