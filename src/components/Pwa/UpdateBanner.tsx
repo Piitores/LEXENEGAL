@@ -6,6 +6,7 @@ import './Pwa.css';
 
 /**
  * Enregistre le service worker et signale les nouvelles versions.
+ * ⛔ Sans effet aujourd'hui : le service worker est désactivé (SERVICE_WORKER_ACTIF, lib/pwa.ts).
  *
  * Le rechargement n'est jamais imposé : une consultation en cours (un article long,
  * une recherche) ne doit pas être interrompue par un rafraîchissement automatique.

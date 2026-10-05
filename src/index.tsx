@@ -11,7 +11,8 @@ import './styles/print.css';
  * Contenu serveur (api/render.js) : au lieu de le laisser détruire par React au
  * montage (createRoot vide #app), on le déplace dans #ssr-keep, juste après #app,
  * et on retire le splash. Le lecteur (et la métrique LCP) voit donc le texte dès
- * le HTML reçu ; App.tsx retire #ssr-keep quand la page React a fini de charger.
+ * le HTML reçu ; SurveillanceVersionServeur (monté par App.tsx) retire #ssr-keep quand la page
+ * React a fini de charger.
  * L'accueil garde le splash : sa version serveur est trop sommaire pour être montrée.
  */
 const container = document.getElementById('app');
@@ -30,6 +31,10 @@ if (container) {
   // navigateur ne peigne le contenu serveur qu'on vient de sortir du splash. Sans cela,
   // une image s'affichait avec le texte serveur et SANS en-tête, puis l'en-tête surgissait
   // à l'image suivante (relevé du 05/10/2026, à chaque ouverture).
+  // ⚠️ Effet de bord constaté : les effets montés ici s'exécutent AVANT l'événement load. Le
+  // service worker, qui ne s'enregistrait jamais en production (écouteur load posé trop tard),
+  // s'installait alors et rechargeait la page à la première visite. Il est désormais désactivé
+  // explicitement (SERVICE_WORKER_ACTIF, lib/pwa.ts) ; ne pas compter sur l'ordre des événements.
   flushSync(() => {
     root.render(
       <React.StrictMode>
