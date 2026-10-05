@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { lockAuthBorne } from './authLock';
-import { avecDelaiMaximal } from './delaiRequetes';
+import { avecDelaiMaximal, estRafraichissement, DELAI_REPONSE_MS, DELAI_INACTIVITE_CORPS_MS } from './delaiRequetes';
+import { stockageAvecPause, stockageNavigateur, suspendreSession } from './pauseSession';
 
 const url = import.meta.env.VITE_SUPABASE_URL || '';
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
@@ -25,8 +26,18 @@ const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
  * stockage est sans borne. Durées (en-têtes : borne totale ; corps : borne d'inactivité) et raisons :
  * `delaiRequetes.ts`. On appelle `fetch` au moment de la requête (et non
  * une référence prise au chargement du module) pour suivre un éventuel remplacement du global.
+ *
+ * ⚠️ `auth.storage` : un rafraîchissement de session sans réponse (60 s) MASQUE la session
+ * pendant 2 min (`pauseSession.ts`) : sinon chaque lecture relançait un rafraîchissement de 60 s,
+ * l'une après l'autre (pages prêtes après 3 à 9 min pour un membre au jeton expiré).
  */
 export const supabase = createClient(url, anonKey, {
-    auth: { lock: lockAuthBorne },
-    global: { fetch: avecDelaiMaximal((input, init) => fetch(input, init)) },
+    auth: { lock: lockAuthBorne, storage: stockageAvecPause(stockageNavigateur()) },
+    global: {
+        fetch: avecDelaiMaximal(
+            (input, init) => fetch(input, init),
+            { reponseMs: DELAI_REPONSE_MS, inactiviteCorpsMs: DELAI_INACTIVITE_CORPS_MS },
+            (adresse) => { if (estRafraichissement(adresse)) suspendreSession(); },
+        ),
+    },
 });

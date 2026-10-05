@@ -102,6 +102,11 @@ const AUTH_NON_IDEMPOTENTS = /\/auth\/v1\/(signup|verify|otp|recover|resend)(?:[
 /** Rafraîchissement de session : SEUL grant_type=refresh_token ; password et pkce gardent la borne normale. */
 const RAFRAICHISSEMENT = /\/auth\/v1\/token\?(?:[^#]*&)?grant_type=refresh_token(?:[&#]|$)/;
 
+/** Vrai pour la requête de rafraîchissement de session (cf. lib/pauseSession.ts). */
+export function estRafraichissement(url: string): boolean {
+    return RAFRAICHISSEMENT.test(url);
+}
+
 /**
  * Requêtes exemptées de TOUT délai : `/storage/v1/` seulement (envoi de fichiers, durée légitime sans
  * borne avec la taille de l'envoi ; le site n'en envoie aucun aujourd'hui).
@@ -228,13 +233,17 @@ function avecInactiviteBornee(reponse: Response, ms: number, expirer: () => Erro
  * - Corps : borne d'INACTIVITÉ (DELAI_INACTIVITE_CORPS_MS), minuterie relancée à chaque morceau
  *   reçu et arrêtée à la fin de la lecture. Le corps est relayé par un flux qui échoue avec la
  *   même erreur `TimeoutError` ; la requête sous-jacente est annulée.
+ * - `surDelaiDepasse(url)` est appelé à chaque expiration (supabase.ts : un rafraîchissement de
+ *   session sans réponse suspend la session, cf. lib/pauseSession.ts).
  */
 export function avecDelaiMaximal(
     fetchDeBase: typeof fetch,
     delais: DelaisRequete = DELAIS_PAR_DEFAUT,
+    surDelaiDepasse?: (url: string) => void,
 ): typeof fetch {
     return (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-        const bornes = delaisPour(urlDe(input), delais);
+        const url = urlDe(input);
+        const bornes = delaisPour(url, delais);
         if (!bornes) return fetchDeBase(input, init);
 
         const controleur = new AbortController();
@@ -242,6 +251,7 @@ export function avecDelaiMaximal(
         const expirer = (phase: 'reponse' | 'corps', ms: number) => () => {
             motifDelai = erreurDelai(phase, ms);
             controleur.abort(motifDelai);
+            try { surDelaiDepasse?.(url); } catch { /* le rappel ne doit jamais empêcher l'échec */ }
             return motifDelai;
         };
 
