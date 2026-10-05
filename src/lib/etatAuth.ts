@@ -20,8 +20,19 @@ import { deriveEntitlements, type Entitlements, type ProfileRights } from './ent
  *    admin inconnus donc refusés, et l'indice d'en-tête mémorisé n'est PAS écrasé (sinon un
  *    administrateur perdait « Admin » au premier rendu suivant, cf. lib/indiceSession.ts) ;
  *  - ⛔ le rappel d'onAuthStateChange ne doit jamais attendre la lecture (interblocage avec
- *    l'initialisation de supabase-js, cf. hooks/useAuth.ts) : elle part dans une tâche à part.
+ *    l'initialisation de supabase-js, cf. hooks/useAuth.ts) : elle part dans une tâche à part ;
+ *  - lecture de la SESSION en échec (verrou d'authentification tenu par un autre onglet plus de 5 s,
+ *    cf. authLock.ts) : elle est relancée par une minuterie (1 s, puis 2, 4, 8… jusqu'à 30 s, tant
+ *    qu'un composant est abonné) ET dès qu'un nouveau composant s'abonne. Sans cela, une première
+ *    lecture en échec laissait `loading` vrai jusqu'au prochain événement d'authentification : un
+ *    membre connecté voyait la doctrine « réservée aux membres » (relecture finale du 05/10/2026).
+ *    Un événement reçu pendant une lecture qui échoue est repris tout de suite (setTimeout 0).
  */
+
+/** Première relance d'une lecture de session en échec, en ms ; doublée à chaque échec suivant. */
+export const RELANCE_SESSION_MS = 1_000;
+/** Plafond de l'intervalle entre deux relances, en ms. */
+export const RELANCE_SESSION_MAX_MS = 30_000;
 
 export interface EtatAuth extends Entitlements {
     loading: boolean;
@@ -60,6 +71,11 @@ export function creerEtatAuth(dep: DependancesAuth): MagasinAuth {
     let droitsLusPour: string | null = null;
     let desabonner: (() => void) | null = null;
     let minuterie: ReturnType<typeof setTimeout> | undefined;
+    /** Relance après un échec de lecture de la session, et nombre d'échecs consécutifs. */
+    let relance: ReturnType<typeof setTimeout> | undefined;
+    let echecs = 0;
+    /** Vrai tant que la dernière lecture de la session a échoué (état peut-être périmé). */
+    let enEchec = false;
 
     const publier = (nouvel: EtatAuth) => {
         etat = nouvel;
@@ -100,16 +116,29 @@ export function creerEtatAuth(dep: DependancesAuth): MagasinAuth {
             aReprendre = true;
             return enCours;
         }
+        clearTimeout(relance);
         enCours = (async () => {
             try {
                 do {
                     aReprendre = false;
                     await lireUneFois();
                 } while (aReprendre);
+                echecs = 0;
+                enEchec = false;
             } catch (e) {
                 // getSession indisponible (verrou d'authentification, cf. authLock.ts) : l'état
-                // reste tel quel, la lecture sera retentée au prochain événement ou abonné.
+                // reste tel quel, et la lecture est RELANCÉE (minuterie, nouvel abonné, événement).
                 console.error('Lecture de la session impossible :', e);
+                enEchec = true;
+                if (abonnes.size > 0) {
+                    // Un événement reçu pendant cette lecture : repris tout de suite. Sinon, attente
+                    // croissante (1 s, 2 s, 4 s… 30 s) : un verrou tenu par un autre onglet se libère seul.
+                    const attente = aReprendre ? 0 : Math.min(RELANCE_SESSION_MS * 2 ** echecs, RELANCE_SESSION_MAX_MS);
+                    echecs++;
+                    clearTimeout(relance);
+                    relance = setTimeout(() => { charger(); }, attente);
+                }
+                aReprendre = false;
             } finally {
                 enCours = null;
             }
@@ -128,6 +157,7 @@ export function creerEtatAuth(dep: DependancesAuth): MagasinAuth {
 
     const arreter = () => {
         clearTimeout(minuterie);
+        clearTimeout(relance);
         desabonner?.();
         desabonner = null;
     };
@@ -137,8 +167,9 @@ export function creerEtatAuth(dep: DependancesAuth): MagasinAuth {
         abonner: (rappel) => {
             abonnes.add(rappel);
             if (abonnes.size === 1) demarrer();
-            // Droits en échec pour le compte connecté : retentés à l'arrivée d'un composant.
-            else if (!enCours && etat.user && droitsLusPour !== etat.user.id) charger();
+            // Session ou droits en échec (état encore inconnu, lecture de session ratée, droits du
+            // compte connecté non lus) : relus à l'arrivée d'un composant, sans attendre la minuterie.
+            else if (!enCours && (etat.loading || enEchec || (etat.user && droitsLusPour !== etat.user.id))) charger();
             return () => {
                 abonnes.delete(rappel);
                 if (abonnes.size === 0) arreter();
