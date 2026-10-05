@@ -45,15 +45,21 @@
  *  prête). Valeurs recalées le 05/10/2026 sur un LOT TIRÉ AU HASARD dans la base (46 pages de tous types hors
  *  des 11 pages de calage, plus les 6 pages où le relecteur avait vu basculer le LCP ; 1440x900 et 390x844,
  *  soit 104 vues ; Supabase retenu 3 s puis relâché), chaque essai refait sur tout le lot :
- *   - texte courant en Inter ('Lx Inter', 'Lx Inter Roboto') : +0,84 em, la plus petite valeur (au centième)
- *     sans aucune bascule. À 0,135 (valeur calée sur les seules pages de calage) : 3 vues sur 104 basculaient
- *     en 390 px (chapô de la page-thème droit du travail et du guide « créer une entreprise », qui gagnent une
- *     ligne chez React ; premier paragraphe du guide divorce, dont la ligne la plus longue est plus large chez
- *     React). À 0,80, 0,825 et 0,83, le chapô du guide « créer une entreprise » repasse encore sous React.
- *     ⚠️ Une ligne ENTIÈRE de plus chez React n'est couverte par construction qu'à partir de la moitié de
- *     l'interligne (0,85 em à 1,7 ; 0,875 em à 1,75) : à 0,84 elle l'est sur le lot grâce à l'arrondi au pixel
- *     d'ascent et de descent et à quelques pixels de largeur. Si une bascule réapparaît hors du lot sur un
- *     paragraphe qui gagne une ligne, monter à 0,9 (aucun effet visible mesuré entre 0,84 et 0,9) ;
+ *   - texte courant en Inter ('Lx Inter', 'Lx Inter Roboto') : +0,95 em. Une ligne ENTIÈRE de plus chez React
+ *     (chapô ou paragraphe qui gagne une ligne) est couverte par construction dès que la marge atteint la
+ *     moitié de l'interligne (0,875 em à 1,75, le plus grand du texte courant Inter) ; 0,95 la couvre jusqu'à
+ *     un interligne de 1,9. Historique : 0,84 em, plus petite valeur sans bascule sur le lot (à 0,135, 3 vues
+ *     sur 104 basculaient en 390 px ; à 0,80-0,83, le chapô du guide « créer une entreprise »), ne couvrait une
+ *     ligne de plus que grâce à l'arrondi ; la relecture « rendu » du 05/10/2026 a trouvé hors lot un chapô qui
+ *     gagne une ligne chez React avec 0,40 % de réserve (thème contentieux électoral en 390). Choix de 0,95 :
+ *     Chrome arrondit ascent et descent SÉPARÉMENT au pixel, et une marge qui change l'écart ascent - descent
+ *     décale la ligne de base d'un pixel par rapport à Inter. Mesuré (repère en ligne de base, faces de faces.py
+ *     pour 400, 500 et 600-700) sur les 48 couples taille x interligne du texte serveur en Inter des premiers
+ *     écrans (114 pages, 1440 et 390, 5 538 lignes) : 576 lignes décalées d'un pixel à 0,84, 914 à 0,90 (dont
+ *     le corps des guides, 16,32 px / 1,75) et 38 à 0,95 (de 0,875 à 1,25 : 47 à 54 de 0,88 à 0,89, 21 à 0,965
+ *     et 36 à 0,98, ces deux-là sans passe complète). Ce relevé, fait sur un élément isolé, ne voit pas les
+ *     éléments en ligne à interligne propre : seule la passe complète tranche. À 0,90, 12 vues sur 126 (guides)
+ *     se dégradaient de +0,8 à +2,2 points au premier écran ; à 0,95, voir Contrôles ;
  *   - texte courant en Georgia ('Lx Georgia') : +0,05 em. Sans marge, 2 vues basculaient (douanes art-194 en
  *     1440, loi cybercriminalité art-2 en 390) : même police que React, même place au demi-pixel près, et la
  *     boîte de texte React, arrondie autrement, a 1 px de plus que la serveur. Chrome arrondit ascent et descent
@@ -65,10 +71,15 @@
  *   - titres ('Lx Playfair', 'Lx Playfair Noto') : +0,135 em, inchangé, sans rétrécir leur chasse : aucune
  *     bascule ne venait d'un titre, et un titre serveur plus étroit perdrait des lignes là où il est lui-même
  *     l'élément LCP (titre des décisions en 390 px, h1 de la doctrine : 9 vues sur 104).
- *  Contrôles : zéro bascule sur les 104 vues du lot (la production, mesurée de la même façon : 1 bascule,
- *  procédure civile art-800 en 1440, et aucun LCP serveur sur les 6 vues de doctrine) et sur les 22 vues des
- *  pages de calage ; premier écran (% de pixels différents serveur/React) inchangé : moyenne 3,41 -> 3,41 sur le lot, 3,71 ->
- *  3,65 sur les pages de calage, aucune vue en hausse de plus de 0,12 point. ⚠️ La marge étire verticalement
+ *  Contrôles (marge Inter 0,84, 05/10/2026) : zéro bascule sur les 104 vues du lot (la production, mesurée de
+ *  la même façon : 1 bascule, procédure civile art-800 en 1440, et aucun LCP serveur sur les 6 vues de
+ *  doctrine) et sur les 22 vues des pages de calage. Contrôles (marge Inter 0,95, 06/10/2026) : zéro bascule
+ *  sur les 126 vues du lot et des pages de calage et sur les 102 vues du lot du relecteur « rendu » (51 pages
+ *  tirées au hasard) ; premier écran (% de pixels différents serveur/React) inchangé : moyenne 3,45 -> 3,46 sur
+ *  le lot et le calage (une seule vue en hausse de plus de 0,5 point : /guides en 390, +0,97, dont la
+ *  description des cartes est un élément en ligne à interligne propre chez React), 3,13 -> 3,12 sur le lot du
+ *  relecteur (aucune vue en hausse de plus de 0,11 point) ; réserve du chapô du thème contentieux électoral en
+ *  390 : 0,79 % -> 1,57 %. ⚠️ La marge étire verticalement
  *  le fond, la bordure et le padding d'un élément « inline » : dans un bloc serveur, tout élément de texte qui
  *  porte un fond ou une bordure doit être en flex, inline-flex, inline-block ou block (c'est le cas partout).
  *  font-display:optional : si une police locale n'est pas prête à la première image (processeur lent), le

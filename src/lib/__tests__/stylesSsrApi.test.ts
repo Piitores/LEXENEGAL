@@ -201,14 +201,18 @@ describe('index.html : cadre générique et jeu unique de polices', () => {
             expect(a - 0.917).toBeGreaterThan(0);
         }
     });
-    it('marge LCP recalée sur un lot tiré au hasard : Inter 0,84 em, Georgia 0,05 em, titres 0,135 em', () => {
+    it('marge LCP : Inter 0,95 em (une ligne entière couverte par construction), Georgia 0,05 em, titres 0,135 em', () => {
         // Marge = métrique effective (override x size-adjust) moins la métrique de la police imitée, égale en
         // haut et en bas. Valeurs et justification : api/_ssr/styles.js, MARGE LCP.
         const METRIQUES: Record<string, [number, number, number]> = {
-            'Lx Inter': [0.969, 0.241, 0.84], 'Lx Inter Roboto': [0.969, 0.241, 0.84],
+            'Lx Inter': [0.969, 0.241, 0.95], 'Lx Inter Roboto': [0.969, 0.241, 0.95],
             'Lx Playfair': [1.082, 0.251, 0.135], 'Lx Playfair Noto': [1.082, 0.251, 0.135],
             'Lx Georgia': [0.917, 0.2192, 0.05],
         };
+        // Une ligne de plus chez React (la boîte de texte grandit d'un interligne) est couverte par construction
+        // quand la marge ajoutée en haut ET en bas atteint la moitié de l'interligne le plus grand du texte
+        // courant Inter (chapôs et paragraphes : 1,7 ; 1,75 sur les guides) : 2 x 0,95 em >= 1,75 em.
+        expect(2 * METRIQUES['Lx Inter'][2]).toBeGreaterThanOrEqual(1.75);
         for (const [regle] of INDEX.matchAll(/@font-face\{[^}]*\}/g)) {
             const famille = (regle.match(/font-family:'([^']+)'/) || [])[1];
             const [asc, desc, marge] = METRIQUES[famille];
