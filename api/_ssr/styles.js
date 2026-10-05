@@ -91,6 +91,16 @@
  * print, calqué sur src/styles/print.css (emplacements, colonnes et blocs que React n'imprime pas masqués,
  * badges en noir sur blanc).
  *
+ * ⚠️ FEUILLES REACT CHARGÉES À LA DEMANDE : la feuille d'une page React (morceau de route) arrive PENDANT la
+ * phase serveur et s'applique aussi au texte serveur quand ses sélecteurs ne sont pas limités à la page React.
+ * Ce qu'elle change à la géométrie du texte serveur le fait recouler (décalage compté par le CLS). Cas relevé
+ * le 05/10/2026 (relecture « rendu ») : les renvois d'article (.article-link, a[data-article-id]) de
+ * legal-content.css (marge intérieure 1px 5px, graisse 600, « § » en ::after) faisaient sauter le texte d'une
+ * ligne 0,6 s après l'affichage (CLS 0,028 sur /code/code-penal/art-124 en 1440, 1 234 articles concernés).
+ * Leur géométrie finale est donc recopiée dans les blocs article et code (legal-content.css) et dans le bloc
+ * decision (DecisionPage.css : 2px 6px) ; la règle React, quand elle arrive, ne change plus que la peinture
+ * (soulignement en dégradé, transitions). Le fond n'est PAS recopié : élément « inline » (cf. marge LCP).
+ *
  * ⚠️ DOUBLE RENDU : chaque bloc recopie la feuille React de sa page. Toute retouche de géométrie
  * (marges, largeurs, tailles, interlignes, ordre des blocs) se reporte ici ET dans le gabarit de
  * render.js, sinon la bascule serveur -> React se remet à sauter :
@@ -215,6 +225,9 @@ export const STYLES_SSR = {
 #ssr-content .ssr-article-body .bareme-table td:last-child{text-align:right;font-family:'Courier New',monospace;font-size:.9rem}
 #ssr-content .ssr-article .ssr-a-box.is-abroge .ssr-article-body{font-style:italic}
 #ssr-content .ssr-article .ssr-a-box.is-abroge .ssr-article-body,#ssr-content .ssr-article .ssr-a-box.is-abroge .ssr-article-body *{color:#9CA3AF!important}
+#ssr-content .ssr-article-body :is(.article-link,a[data-article-id]){font-weight:600;padding:1px 5px;margin:0 1px;border-radius:4px;text-decoration:none;position:relative}
+#ssr-content .ssr-article-body :is(.article-link,a[data-article-id])::after{content:"§";font-size:.75em;margin-left:3px;opacity:.5;color:#047857}
+#ssr-content .ssr-article .ssr-a-box.is-abroge .ssr-article-body :is(.article-link,a[data-article-id])::after{color:#9CA3AF}
 #ssr-content .ssr-article .ssr-citing{margin:48px 0 0;padding:40px 0 0;border-top:1px solid #E5E7EB}
 #ssr-content .ssr-article .ssr-citing h2{display:flex;align-items:center;gap:10px;font-family:var(--ssr-titre);-webkit-text-stroke:var(--ssr-trait-600) currentColor;font-size:1.35rem;font-weight:600;line-height:1.7;letter-spacing:-.02em;color:#111827;margin:0 0 24px}
 #ssr-content .ssr-article .ssr-citing h2::before{content:"";flex:none;width:20px;height:20px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23047857' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m14 13-8.381 8.38a1 1 0 0 1-3.001-3l8.384-8.381M16 16l6-6M21.5 10.5l-8-8M8 8l6-6M8.5 7.5l8 8'/%3E%3C/svg%3E")}
@@ -374,6 +387,9 @@ export const STYLES_SSR = {
 #ssr-content .ssr-code .ssr-ac__body :is(.art-tableau,.bareme-table,.alinea-tableau){width:100%;border-collapse:collapse;margin:1rem 0;display:block;overflow-x:auto;font-size:.95rem;}
 #ssr-content .ssr-code .ssr-ac__body :is(.art-tableau,.bareme-table,.alinea-tableau) :is(th,td){border:1px solid #E5E7EB;padding:.5rem .7rem;text-align:left;vertical-align:top;}
 #ssr-content .ssr-code .ssr-ac.is-abroge .ssr-ac__body,#ssr-content .ssr-code .ssr-ac.is-abroge .ssr-ac__body *{color:#9CA3AF;font-style:italic;}
+#ssr-content .ssr-code .ssr-ac__body :is(.article-link,a[data-article-id]){font-weight:600;padding:1px 5px;margin:0 1px;border-radius:4px;text-decoration:none;position:relative;}
+#ssr-content .ssr-code .ssr-ac__body :is(.article-link,a[data-article-id])::after{content:"§";font-size:.75em;margin-left:3px;opacity:.5;color:#047857;}
+#ssr-content .ssr-code .ssr-ac.is-abroge .ssr-ac__body :is(.article-link,a[data-article-id])::after{color:#9CA3AF;}
 #ssr-content .ssr-code .ssr-ac.is-abroge .ssr-ac__num{background:#F8F9FB;color:#9CA3AF;}
 #ssr-content .ssr-code .ssr-ac__tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px;padding-top:12px;border-top:1px solid #F0F1F3;}
 #ssr-content .ssr-code .ssr-ac__tags span{font-size:.68rem;padding:2px 8px;background:#F3F4F6;color:#6B7280;border-radius:4px;}
@@ -478,6 +494,8 @@ export const STYLES_SSR = {
 #ssr-content .ssr-decision .legal-content-wrapper{position:relative;overflow:hidden}
 #ssr-content .ssr-decision .legal-content{position:relative;z-index:1}
 #ssr-content .ssr-decision .legal-content a{color:inherit}
+#ssr-content .ssr-decision .legal-content :is(.article-link,a[data-article-id]){color:#047857;font-weight:600;padding:2px 6px;margin:0 1px;border-radius:4px;text-decoration:none;position:relative}
+#ssr-content .ssr-decision .legal-content :is(.article-link,a[data-article-id])::after{content:"§";font-size:.75em;margin-left:3px;opacity:.5;color:#047857}
 #ssr-content .ssr-decision .legal-content p{margin:1.25rem 0;line-height:1.9;text-align:justify;text-indent:1.5rem;font-size:1rem;color:#111827;letter-spacing:.01em}
 #ssr-content .ssr-decision .legal-content p:first-of-type{text-indent:0}
 #ssr-content .ssr-decision .legal-content p.visa+p:not(.visa){margin-top:2rem}

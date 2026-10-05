@@ -101,6 +101,43 @@ describe('blocs de mise en forme de la version serveur (api/_ssr/styles.js)', ()
         expect(impression('decision')).toMatch(/\.ssr-dc-tags li,\.ssr-dc-badge\)\{background:#fff!important;color:#000!important;/);
     });
 
+    /*
+     * Feuilles React chargées à la demande (relecture « rendu » du 05/10/2026) : les renvois d'article de
+     * legal-content.css et de DecisionPage.css ne sont pas limités à la page React. Arrivés pendant la phase
+     * serveur, ils faisaient recouler le texte serveur (CLS 0,028 sur /code/code-penal/art-124 en 1440).
+     * Les blocs portent donc leur géométrie FINALE, relue ici dans les feuilles React elles-mêmes.
+     */
+    it('renvois d’article : géométrie finale de legal-content.css (article, code) et de DecisionPage.css (décision)', async () => {
+        const { STYLES_SSR } = await charger('_ssr/styles.js');
+        const lireCss = (chemin: string) => readFileSync(decodeURIComponent(new URL(`../../${chemin}`, import.meta.url).pathname), 'utf8');
+        /** Déclarations d'un bloc dont le sélecteur commence exactement par `selecteur`. */
+        const bloc = (css: string, selecteur: RegExp) => {
+            const m = css.match(new RegExp(selecteur.source + '\\s*\\{([^}]*)\\}'));
+            expect(m, String(selecteur)).toBeTruthy();
+            return Object.fromEntries(m![1].split(';').map((d) => d.split(':').map((x) => x.trim())).filter((d) => d.length === 2 && d[0]));
+        };
+        const GEOMETRIE = ['font-weight', 'padding', 'margin', 'border-radius'];
+        const GEOMETRIE_APRES = ['content', 'font-size', 'margin-left'];
+        const verifier = (cssReact: string, prefixeReact: string, cssSsr: string, prefixeSsr: string) => {
+            const lien = bloc(cssReact, new RegExp(`${prefixeReact}\\.article-link,\\s*${prefixeReact}a\\[data-article-id\\]`));
+            const apres = bloc(cssReact, new RegExp(`${prefixeReact}\\.article-link::after,\\s*${prefixeReact}a\\[data-article-id\\]::after`));
+            const echapper = (x: string) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const ssr = bloc(cssSsr, new RegExp(echapper(`${prefixeSsr} :is(.article-link,a[data-article-id])`)));
+            const ssrApres = bloc(cssSsr, new RegExp(echapper(`${prefixeSsr} :is(.article-link,a[data-article-id])::after`)));
+            // Même valeur à l'écriture près (« 0.75em » = « .75em », guillemets simples ou doubles).
+            const norme = (v?: string) => v?.replace(/"/g, "'").replace(/(^|[\s(])0\./g, '$1.');
+            for (const p of GEOMETRIE) expect(norme(ssr[p]), `${prefixeSsr} ${p}`).toBe(norme(lien[p]));
+            for (const p of GEOMETRIE_APRES) expect(norme(ssrApres[p]), `${prefixeSsr}::after ${p}`).toBe(norme(apres[p]));
+            expect(ssr['text-decoration']).toBe('none');
+            // Pas de fond recopié : la marge LCP étirerait le fond d'un élément « inline ».
+            expect(ssr.background).toBeUndefined();
+        };
+        const legal = lireCss('styles/legal-content.css');
+        verifier(legal, '', STYLES_SSR.article, '#ssr-content .ssr-article-body');
+        verifier(legal, '', STYLES_SSR.code, '#ssr-content .ssr-code .ssr-ac__body');
+        verifier(lireCss('pages/Decision/DecisionPage.css'), '\\.legal-content ', STYLES_SSR.decision, '#ssr-content .ssr-decision .legal-content');
+    });
+
     it('polices : seulement les variables du jeu commun (aucune police web, aucun @font-face propre)', async () => {
         const { STYLES_SSR } = await charger('_ssr/styles.js');
         for (const t of TYPES) {
