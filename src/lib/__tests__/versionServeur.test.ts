@@ -98,7 +98,7 @@ describe('surveillerVersionServeur', () => {
         expect(etat.retiree).toBe(true);
     });
 
-    it('filet de 20 s, page ENCORE en chargement : la version serveur reste, le bandeau « Réessayer » paraît', () => {
+    it('filet de 20 s, page ENCORE en chargement : la version serveur reste, le bandeau d’information paraît', () => {
         vi.useFakeTimers();
         const { env, etat, montes } = fauxDom();
         montes.add(CODE_LOADING);
@@ -111,8 +111,9 @@ describe('surveillerVersionServeur', () => {
         expect(etat.bandeau).toBe(true);
     });
 
-    it('« Réessayer » cliqué AVANT 20 s (interrompu -> chargement) : à l’échéance, version serveur gardée + bandeau', () => {
+    it('« Réessayer » cliqué AVANT 20 s (interrompu -> chargement) : version serveur gardée, bandeau 20 s après le clic', () => {
         // Rapport « pannes » (s1b) : interrompu à 15,5 s, clic à 16,5 s, version serveur retirée à 20,4 s.
+        // Le filet mesure la tentative EN COURS : son échéance est réarmée au clic (16,5 + 20 = 36,5 s).
         vi.useFakeTimers();
         const { env, etat, rendre, montes } = fauxDom();
         montes.add('#app .article-loading');
@@ -124,6 +125,11 @@ describe('surveillerVersionServeur', () => {
         rendre('#app .article-loading'); // clic sur « Réessayer »
         vi.advanceTimersByTime(FILET_VERSION_SERVEUR_MS - 16_500);
         expect(etat.retiree).toBe(false);
+        expect(etat.bandeau).toBe(false); // 20 s depuis l'ouverture, 3,5 s seulement depuis le clic
+        vi.advanceTimersByTime(16_500 - 1);
+        expect(etat.bandeau).toBe(false);
+        vi.advanceTimersByTime(1);
+        expect(etat.retiree).toBe(false);
         expect(etat.bandeau).toBe(true);
         // La nouvelle tentative échoue : bandeau de ChargementInterrompu seul, version serveur gardée.
         rendre(SELECTEUR_INTERROMPU);
@@ -131,11 +137,44 @@ describe('surveillerVersionServeur', () => {
         expect(etat.retiree).toBe(false);
         // Puis réussit : la version serveur cède la place à la page, comme un premier chargement.
         rendre('#app .article-loading');
-        expect(etat.bandeau).toBe(true);
+        expect(etat.bandeau).toBe(false); // nouvelle tentative : nouvelle échéance
         rendre('#app .article-page');
         expect(etat.retiree).toBe(true);
         expect(etat.bandeau).toBe(false);
         expect(etat.deconnecte).toBe(true);
+    });
+
+    it('« Réessayer » cliqué APRÈS l’échéance : pas de bandeau à l’instant du clic, échéance réarmée', () => {
+        // Relecture finale (filetApresEcheance) : échec à 15 s, clic à 40 s, bandeau émis à 40 000 ms.
+        vi.useFakeTimers();
+        const { env, etat, rendre, montes } = fauxDom();
+        const emis: Array<[number, boolean]> = [];
+        const t0 = Date.now();
+        const env2 = { ...env, bandeau: (v: boolean) => { emis.push([Date.now() - t0, v]); env.bandeau(v); } };
+        montes.add(CODE_LOADING);
+        surveillerVersionServeur(env2);
+        vi.advanceTimersByTime(15_000);
+        rendre(SELECTEUR_INTERROMPU);
+        vi.advanceTimersByTime(25_000);
+        rendre(CODE_LOADING); // « Réessayer » à 40 s
+        expect(emis.filter(([, v]) => v)).toEqual([]);
+        vi.advanceTimersByTime(FILET_VERSION_SERVEUR_MS - 1);
+        expect(etat.bandeau).toBe(false);
+        vi.advanceTimersByTime(1);
+        expect(etat.bandeau).toBe(true);
+        expect(emis.filter(([, v]) => v)).toEqual([[60_000, true]]);
+        expect(etat.retiree).toBe(false);
+    });
+
+    it('le composant du filet ne propose jamais de rechargement : message d’information, sans bouton', async () => {
+        // Relecture finale (s8b) : à 120 kbit/s, « Réessayer » = window.location.reload() jetait la lecture en
+        // cours (prête à 71 s au lieu de 48,8 s). « Réessayer » sans rechargement reste à ChargementInterrompu.
+        const { readFileSync } = await import('node:fs');
+        const lire = (f: string) => readFileSync(decodeURIComponent(new URL(`../../components/ChargementInterrompu/${f}`, import.meta.url).pathname), 'utf8');
+        const surveillance = lire('SurveillanceVersionServeur.tsx');
+        expect(surveillance).not.toMatch(/reload\(|onReessayer/);
+        expect(surveillance).toContain("Chargement en cours… la page complète s\\'affichera dès qu\\'elle sera prête.");
+        expect(lire('ChargementInterrompu.tsx')).toMatch(/\{onReessayer && <button/);
     });
 
     it('chargement lent qui aboutit après 20 s : bandeau, puis retrait de la version serveur', () => {

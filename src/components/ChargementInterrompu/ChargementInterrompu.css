@@ -77,6 +77,8 @@ body.ssr-live .chargement-interrompu-bandeau {
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
     font: 500 0.9rem/1.4 system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
 }
+/* Bandeau d'information du filet de 20 s : sans bouton, marges égales. */
+body.ssr-live .chargement-interrompu-bandeau--info { padding: 10px 16px; }
 body.ssr-live .chargement-interrompu-bandeau button {
     flex: none;
     border: none;

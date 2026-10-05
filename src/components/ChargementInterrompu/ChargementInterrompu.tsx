@@ -60,14 +60,15 @@ const ChargementInterrompu: React.FC<Props> = ({ onReessayer, pleineHauteur = fa
 };
 
 /**
- * Bandeau fixe « Réessayer », visible SEULEMENT tant que la version serveur est affichée (CSS :
- * body.ssr-live). Partagé par ChargementInterrompu et par le filet de 20 s (lib/versionServeur.ts).
+ * Bandeau fixe, visible SEULEMENT tant que la version serveur est affichée (CSS : body.ssr-live).
+ * Partagé par ChargementInterrompu (avec « Réessayer », sans rechargement) et par le filet de 20 s
+ * (lib/versionServeur.ts : simple information, SANS bouton, la page charge encore).
  */
-export const BandeauVersionServeur: React.FC<{ message: string; onReessayer: () => void }> = ({ message, onReessayer }) => (
+export const BandeauVersionServeur: React.FC<{ message: string; onReessayer?: () => void }> = ({ message, onReessayer }) => (
     typeof document !== 'undefined' ? createPortal(
-        <div className="chargement-interrompu-bandeau" role="status">
+        <div className={`chargement-interrompu-bandeau${onReessayer ? '' : ' chargement-interrompu-bandeau--info'}`} role="status">
             <span>{message}</span>
-            <button type="button" onClick={onReessayer}>Réessayer</button>
+            {onReessayer && <button type="button" onClick={onReessayer}>Réessayer</button>}
         </div>,
         document.body,
     ) : null
