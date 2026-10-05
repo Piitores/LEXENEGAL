@@ -316,8 +316,17 @@ const NODE_KIND_SSR = {
   partie: 'Partie', livre: 'Livre', titre: 'Titre', chapitre: 'Chapitre',
   section: 'Section', 'sous-section': 'Sous-section', paragraphe: 'Paragraphe', division: '',
   'point-lettre': 'Point',
+  sous_section: 'Sous-section', 'sous-chapitre': 'Sous-chapitre', 'sous-paragraphe': 'Sous-paragraphe',
+  annexe: 'Annexe', preambule: 'Préambule', promulgation: 'Promulgation',
 };
+// Lecture d'une table par une clé venue de la base (ou de l'adresse) : jamais une clé héritée de
+// Object.prototype (« constructor », « __proto__ » rendaient une fonction ou un objet).
+const lireCle = (table, cle) => (Object.hasOwn(table, cle) ? table[cle] : undefined);
+// Texte littéral dans une expression régulière (un type de nœud « chapitre( » faisait tomber la page en 500).
+const echapperRe = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const contientMotSsr = (texte, mot) => new RegExp(`(^|[^a-z0-9])${echapperRe(deburrSsr(mot))}($|[^a-z0-9])`).test(deburrSsr(texte));
 const TYPE_WORDS_SSR = 'titre|chapitre|sous-section|section|paragraphe|partie|livre|division';
+const MOTS_NUMERO_SSR = `${TYPE_WORDS_SSR}|sous-paragraphe|sous-chapitre|§`;
 const ORDINALS_SSR = {
   premier: '1', premiere: '1', deuxieme: '2', second: '2', seconde: '2',
   troisieme: '3', quatrieme: '4', cinquieme: '5', sixieme: '6', septieme: '7',
@@ -346,32 +355,51 @@ function numToArabicOrNullSsr(token) {
   const suffix = suf ? ' ' + suf[1].toLowerCase() : '';
   const core = t.replace(/\b(bis|ter|quater|quinquies)\b/ig, '').trim();
   if (/^[0-9]+$/.test(core)) return core + suffix;
-  if (ORDINALS_SSR[deburrSsr(core)]) return ORDINALS_SSR[deburrSsr(core)] + suffix;
+  const ordinal = lireCle(ORDINALS_SSR, deburrSsr(core));
+  if (ordinal) return ordinal + suffix;
   const r = romanToIntSsr(core);
   if (r > 0) return String(r) + suffix;
   return null;
 }
+// COPIE de lireNumero (src/lib/codeTree.ts) : colonne numero ramenée au seul numéro (« TITRE IV » -> « IV »).
+function lireNumeroSsr(numero) {
+  let t = String(numero || '').trim();
+  let mot = null;
+  const p = t.match(new RegExp(`^(${MOTS_NUMERO_SSR})(?![A-Za-zÀ-ÿ])\\s*(.*)$`, 'i'));
+  if (p) { mot = p[1]; t = p[2].trim(); }
+  else {
+    const s = t.match(new RegExp(`^(\\S+)\\s+(${TYPE_WORDS_SSR})$`, 'i'));
+    if (s && numToArabicOrNullSsr(s[1])) { mot = s[2]; t = s[1]; }
+  }
+  const q = t.match(/^(\S+?(?:\s+(?:bis|ter|quater|quinquies))?)\s*[)\].:°\u2014\u2013-]+\s+(.+)$/i)
+    || t.match(/^(\S+?(?:\s+(?:bis|ter|quater|quinquies))?)\s+(?!(?:bis|ter|quater|quinquies)$)(.+)$/i);
+  if (q && (numToArabicOrNullSsr(q[1]) || /^[A-Za-z]$/.test(q[1]))) return { num: q[1], mot, reste: q[2].trim() };
+  return { num: t.replace(/\s*[.:\u2014\u2013-]+$/, ''), mot, reste: '' };
+}
 export function formatNodeLabelSsr(n) {
-  let kind = NODE_KIND_SSR[n.type] ?? n.type;
-  let num = (n.numero || '').trim();
+  let kind = lireCle(NODE_KIND_SSR, n.type) ?? n.type;
   let label = (n.intitule || n.name || '').trim();
+  const lu = lireNumeroSsr(n.numero || '');
+  let num = lu.num;
+  if (lu.mot) kind = lireCle(NODE_KIND_SSR, deburrSsr(lu.mot)) ?? kind;
+  if (!label && lu.reste) label = lu.reste;
   let stripped = false;
   const mType = label.match(new RegExp(`^\\s*(${TYPE_WORDS_SSR})\\s+(\\S+?)(\\s+(?:bis|ter|quater))?\\s*[${SEP_NIVEAU}]+\\s*(.*)$`, 'i'))
     || label.match(new RegExp(`^\\s*(${TYPE_WORDS_SSR})\\s+(\\S+?)(\\s+(?:bis|ter|quater))?\\s+(.*)$`, 'i'));
   if (mType && numToArabicOrNullSsr((mType[2] + (mType[3] || '')).trim())) {
-    kind = NODE_KIND_SSR[deburrSsr(mType[1])] ?? titleWordSsr(mType[1]);
+    kind = lireCle(NODE_KIND_SSR, deburrSsr(mType[1])) ?? titleWordSsr(mType[1]);
     if (!num || !numToArabicOrNullSsr(num)) num = (mType[2] + (mType[3] || '')).trim();
     label = (mType[4] || '').trim();
     stripped = true;
   }
   if (!stripped) {
     const mOrd = label.match(/^\s*([A-Za-zÀ-ÿ]+)\s*(.*)$/);
-    if (mOrd && ORDINALS_SSR[deburrSsr(mOrd[1])]) {
+    if (mOrd && lireCle(ORDINALS_SSR, deburrSsr(mOrd[1]))) {
       if (!num || !numToArabicOrNullSsr(num)) num = mOrd[1];
       let rest = (mOrd[2] || '').trim();
       const mt = rest.match(new RegExp(`^(${TYPE_WORDS_SSR})\\b\\s*[${SEP_NIVEAU}]*\\s*(.*)$`, 'i'));
-      if (mt) { kind = NODE_KIND_SSR[deburrSsr(mt[1])] ?? titleWordSsr(mt[1]); rest = (mt[2] || '').trim(); }
-      label = rest;
+      if (mt) { kind = lireCle(NODE_KIND_SSR, deburrSsr(mt[1])) ?? titleWordSsr(mt[1]); rest = (mt[2] || '').trim(); }
+      label = rest.replace(/^[\s.:\u2014\u2013-]+/, '');
     }
   }
   if (!stripped) {
@@ -381,7 +409,7 @@ export function formatNodeLabelSsr(n) {
       const estNum = !!jeton && (!!numToArabicOrNullSsr(jeton) || /^[A-Za-z]$/.test(jeton));
       const memeQueNum = !!jeton && !!num && deburrSsr(jeton) === deburrSsr(num);
       if ((m4[1] && (estNum || !jeton)) || (memeQueNum && estNum)) {
-        if (m4[1]) kind = NODE_KIND_SSR[deburrSsr(m4[1])] ?? titleWordSsr(m4[1]);
+        if (m4[1]) kind = lireCle(NODE_KIND_SSR, deburrSsr(m4[1])) ?? titleWordSsr(m4[1]);
         if (jeton && (!num || !numToArabicOrNullSsr(num))) num = jeton;
         label = '';
       }
@@ -389,10 +417,11 @@ export function formatNodeLabelSsr(n) {
   }
   const arab = numToArabicOrNullSsr(num);
   const lettre = /^[A-Za-z]$/.test(num);
+  const libre = !!num && num === lu.num && deburrSsr(num) !== deburrSsr(label);
   let badge = '';
-  if (kind && (arab || lettre)) badge = `${kind} ${num}`;
+  if (arab || lettre || libre) badge = kind ? `${kind} ${num}` : num;
   else if (kind) {
-    const hasKind = new RegExp(`\\b${kind}\\b`, 'i').test(label) || /\bPARTIE\b/i.test(label);
+    const hasKind = contientMotSsr(label, kind) || /\bPARTIE\b/i.test(label);
     badge = hasKind ? '' : kind;
   }
   return { badge, label };

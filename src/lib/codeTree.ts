@@ -68,9 +68,25 @@ export const NODE_KIND: Record<string, string> = {
     // au public » (loi 2008-09). Sans cette entrée, le badge affichait le type brut
     // « POINT-LETTRE » et perdait la lettre.
     'point-lettre': 'Point',
+    // Types présents en base sans libellé jusqu'au 05/10/2026 : le badge affichait le type BRUT
+    // (« sous_section 3 » sur 114 nœuds du CGI, « annexe », « sous-chapitre », « preambule »).
+    sous_section: 'Sous-section', 'sous-chapitre': 'Sous-chapitre', 'sous-paragraphe': 'Sous-paragraphe',
+    annexe: 'Annexe', preambule: 'Préambule', promulgation: 'Promulgation',
 };
 
+// Lecture d'une table par une clé venue de la base : jamais une clé héritée de Object.prototype
+// (« constructor », « __proto__ » rendaient une fonction ou un objet au lieu de undefined).
+const lire = <T,>(table: Record<string, T>, cle: string): T | undefined =>
+    Object.prototype.hasOwnProperty.call(table, cle) ? table[cle] : undefined;
+// Texte littéral dans une expression régulière (un type de nœud « chapitre( » levait une SyntaxError).
+const echapperRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+// Le mot (« Préambule », « Sous-section ») figure-t-il déjà dans le texte, accents et casse ignorés ?
+const contientMot = (texte: string, mot: string) =>
+    new RegExp(`(^|[^a-z0-9])${echapperRe(deburr(mot))}($|[^a-z0-9])`).test(deburr(texte));
+
 const TYPE_WORDS = 'titre|chapitre|sous-section|section|paragraphe|partie|livre|division';
+// Mots de niveau reconnus en tête de la colonne `numero` (« TITRE IV », « sous-paragraphe 1 », « § 2 »).
+const MOTS_NUMERO = `${TYPE_WORDS}|sous-paragraphe|sous-chapitre|§`;
 
 const ORDINALS: Record<string, string> = {
     premier: '1', premiere: '1', deuxieme: '2', second: '2', seconde: '2',
@@ -103,10 +119,35 @@ function numToArabicOrNull(token: string): string | null {
     const suffix = suf ? ' ' + suf[1].toLowerCase() : '';
     const core = t.replace(/\b(bis|ter|quater|quinquies)\b/ig, '').trim();
     if (/^[0-9]+$/.test(core)) return core + suffix;
-    if (ORDINALS[deburr(core)]) return ORDINALS[deburr(core)] + suffix;
+    const ordinal = lire(ORDINALS, deburr(core));
+    if (ordinal) return ordinal + suffix;
     const r = romanToInt(core);
     if (r > 0) return String(r) + suffix;
     return null;
+}
+
+/*
+ * Colonne `numero` telle que la base la porte, ramenée au seul numéro (05/10/2026). Elle contient
+ * souvent le MOT DE NIVEAU (« TITRE IV », « Chapitre premier », « PREMIÈRE PARTIE », « § 1 ») et
+ * parfois le titre (« Chapitre IV. Sociétés de construction… ») : le numéro n'était alors pas
+ * reconnu et DISPARAISSAIT du badge (« Titre » seul, 946 nœuds, 19,5 % des articles). Rend
+ * { num, mot (mot de niveau lu, ou null), reste (titre collé au numéro) }. Un numéro qui n'est pas
+ * un chiffre (« unique », « préliminaire », « 2-1 », « 1ère », « PREMFER ») est gardé TEL QUEL :
+ * c'est la donnée de la source, l'effacer serait perdre un mot.
+ */
+function lireNumero(numero: string): { num: string; mot: string | null; reste: string } {
+    let t = numero.trim();
+    let mot: string | null = null;
+    const p = t.match(new RegExp(`^(${MOTS_NUMERO})(?![A-Za-zÀ-ÿ])\\s*(.*)$`, 'i'));
+    if (p) { mot = p[1]; t = p[2].trim(); }
+    else {
+        const s = t.match(new RegExp(`^(\\S+)\\s+(${TYPE_WORDS})$`, 'i'));
+        if (s && numToArabicOrNull(s[1])) { mot = s[2]; t = s[1]; }
+    }
+    const q = t.match(/^(\S+?(?:\s+(?:bis|ter|quater|quinquies))?)\s*[)\].:°\u2014\u2013-]+\s+(.+)$/i)
+        || t.match(/^(\S+?(?:\s+(?:bis|ter|quater|quinquies))?)\s+(?!(?:bis|ter|quater|quinquies)$)(.+)$/i);
+    if (q && (numToArabicOrNull(q[1]) || /^[A-Za-z]$/.test(q[1]))) return { num: q[1], mot, reste: q[2].trim() };
+    return { num: t.replace(/\s*[.:\u2014\u2013-]+$/, ''), mot, reste: '' };
 }
 
 /**
@@ -121,9 +162,14 @@ function numToArabicOrNull(token: string): string | null {
 export function formatNodeLabel(
     n: { type: string; numero?: string | null; intitule?: string | null; name?: string }
 ): { badge: string; label: string } {
-    let kind = NODE_KIND[n.type] ?? n.type;
-    let num = (n.numero || '').trim();
+    let kind = lire(NODE_KIND, n.type) ?? n.type;
     let label = (n.intitule || n.name || '').trim();
+    // Forme 1 : colonne `numero`, ramenée au seul numéro (« TITRE IV » donne « IV », « PREMIÈRE
+    // PARTIE » donne « PREMIÈRE ») ; son mot de niveau, s'il est connu, donne le badge.
+    const lu = lireNumero(n.numero || '');
+    let num = lu.num;
+    if (lu.mot) kind = lire(NODE_KIND, deburr(lu.mot)) ?? kind;
+    if (!label && lu.reste) label = lu.reste;
     let stripped = false;
 
     // Forme 2 : « TYPE <jeton> [séparateur] reste » — jeton = chiffre / romain / ordinal.
@@ -132,7 +178,7 @@ export function formatNodeLabel(
         label.match(new RegExp(`^\\s*(${TYPE_WORDS})\\s+(\\S+?)(\\s+(?:bis|ter|quater))?\\s*[)\\].:°—–-]+\\s*(.*)$`, 'i'))
         || label.match(new RegExp(`^\\s*(${TYPE_WORDS})\\s+(\\S+?)(\\s+(?:bis|ter|quater))?\\s+(.*)$`, 'i'));
     if (mType && numToArabicOrNull((mType[2] + (mType[3] || '')).trim())) {
-        kind = NODE_KIND[deburr(mType[1])] ?? titleWord(mType[1]);
+        kind = lire(NODE_KIND, deburr(mType[1])) ?? titleWord(mType[1]);
         if (!num || !numToArabicOrNull(num)) num = (mType[2] + (mType[3] || '')).trim();
         label = (mType[4] || '').trim();
         stripped = true;
@@ -141,12 +187,13 @@ export function formatNodeLabel(
     // Forme 3 : « ORDINAL [TYPE] reste » (intitulé abîmé : ordinal collé, type parfois perdu).
     if (!stripped) {
         const mOrd = label.match(/^\s*([A-Za-zÀ-ÿ]+)\s*(.*)$/);
-        if (mOrd && ORDINALS[deburr(mOrd[1])]) {
+        if (mOrd && lire(ORDINALS, deburr(mOrd[1]))) {
             if (!num || !numToArabicOrNull(num)) num = mOrd[1];
             let rest = (mOrd[2] || '').trim();
             const mt = rest.match(new RegExp(`^(${TYPE_WORDS})\\b\\s*[)\\].:°—–-]*\\s*(.*)$`, 'i'));
-            if (mt) { kind = NODE_KIND[deburr(mt[1])] ?? titleWord(mt[1]); rest = (mt[2] || '').trim(); }
-            label = rest;
+            if (mt) { kind = lire(NODE_KIND, deburr(mt[1])) ?? titleWord(mt[1]); rest = (mt[2] || '').trim(); }
+            // Séparateur resté en tête (« DEUXIEME.- DE LA RESPONSABILITE… ») : retiré.
+            label = rest.replace(/^[\s.:\u2014\u2013-]+/, '');
         }
     }
 
@@ -170,7 +217,7 @@ export function formatNodeLabel(
             const estNum = !!jeton && (!!numToArabicOrNull(jeton) || /^[A-Za-z]$/.test(jeton));
             const memeQueNum = !!jeton && !!num && deburr(jeton) === deburr(num);
             if ((m4[1] && (estNum || !jeton)) || (memeQueNum && estNum)) {
-                if (m4[1]) kind = NODE_KIND[deburr(m4[1])] ?? titleWord(m4[1]);
+                if (m4[1]) kind = lire(NODE_KIND, deburr(m4[1])) ?? titleWord(m4[1]);
                 // ⚠️ `numero` porte parfois la CHAÎNE ENTIÈRE (« LIVRE PREMIER ») : elle
                 // n'est pas un numéro, il faut la remplacer par le jeton, sinon le badge
                 // retombe sur le seul mot de niveau et le numéro DISPARAÎT.
@@ -189,12 +236,16 @@ export function formatNodeLabel(
     // Code de la Marine Marchande, « A. Exceptions… » de la loi 2008-09 sur le droit
     // d'auteur) : sans ce cas, le badge tombait sur le repli et la LETTRE disparaissait.
     // Les romains I, V et X passent par `arab`, qui est non nul pour eux — donc inchangés.
+    // Numéro de la colonne `numero` qui n'est pas un chiffre (« unique », « préliminaire », « 2-1 »,
+    // « 1ère ») : affiché tel quel (05/10/2026), sauf s'il répète l'intitulé (« Signature »). Division
+    // sans mot de niveau : le numéro seul (« I », puis « EMBAUCHE »), au lieu de rien.
     const arab = numToArabicOrNull(num);
     const lettre = /^[A-Za-z]$/.test(num);
+    const libre = !!num && num === lu.num && deburr(num) !== deburr(label);
     let badge = '';
-    if (kind && (arab || lettre)) badge = `${kind} ${num}`;
+    if (arab || lettre || libre) badge = kind ? `${kind} ${num}` : num;
     else if (kind) {
-        const hasKind = new RegExp(`\\b${kind}\\b`, 'i').test(label) || /\bPARTIE\b/i.test(label);
+        const hasKind = contientMot(label, kind) || /\bPARTIE\b/i.test(label);
         badge = hasKind ? '' : kind;
     }
     return { badge, label };
