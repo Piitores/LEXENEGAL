@@ -88,6 +88,13 @@ describe('blocs de mise en forme de la version serveur (api/_ssr/styles.js)', ()
         const { STYLES_SSR } = await charger('_ssr/styles.js');
         for (const t of TYPES) expect(STYLES_SSR[t], t).toContain('@media print{');
         const impression = (t: string) => (STYLES_SSR[t] as string).split('@media print{')[1];
+        // Trait de graisse des titres (-webkit-text-stroke) retiré à l'impression : il dédoublait le texte
+        // des titres dans la couche texte du PDF (« GGarde arde à à vue vue »).
+        for (const t of TYPES) {
+            const blocs = (STYLES_SSR[t] as string).split('@media print{').slice(1);
+            expect(blocs.length, t).toBeGreaterThan(0);
+            for (const b of blocs) expect(b.startsWith('#ssr-content *{-webkit-text-stroke:0!important}'), t).toBe(true);
+        }
         expect(impression('article')).toMatch(/:is\(\.ssr-a-somm,\.ssr-act,\.ssr-citing,\.ssr-artnav,\.ssr-a-tree,\.ssr-ver--vide\)\{display:none!important\}/);
         expect(impression('article')).toMatch(/\.ssr-ah-badge\{background:#fff!important;color:#000!important;border-color:#000!important\}/);
         expect(impression('code')).toMatch(/:is\(\.ssr-st,\.ssr-code__toggle,[^)]*\.ssr-dv__tabs,\.ssr-dv__nav,/);
