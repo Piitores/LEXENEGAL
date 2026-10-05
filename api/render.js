@@ -142,7 +142,9 @@ function joReferenceSsr(law) {
   if (!date || date === 'Invalid Date') return '';
   return `Journal officiel n° ${law.jo_numero} du ${date}${law.jo_page ? `, p. ${law.jo_page}` : ''}`;
 }
-function ldjson(obj) { return `<script type="application/ld+json">${JSON.stringify(obj)}</script>`; }
+// « < » écrit \u003c : un « </script> » venu de la base (référence, titre) ne peut plus fermer le bloc.
+// Le JSON reste valide et identique une fois lu.
+function ldjson(obj) { return `<script type="application/ld+json">${JSON.stringify(obj).replace(/</g, '\\u003c')}</script>`; }
 /*
  * data-rh="true" : marque de propriété de react-helmet-async.
  *
@@ -225,7 +227,9 @@ function paragrapheDecisionSsr(segment) {
 }
 export function texteDecisionEnHtml(texte) {
   if (!texte) return '';
-  let text = String(texte).replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+  // Suites de sauts de ligne ramenées à deux : la découpe en paragraphes (\n\n+) ne change pas, et les
+  // expressions non ancrées (\n*…) ne coûtent plus un temps quadratique sur une longue suite de sauts.
+  let text = String(texte).replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
   let html = '';
   const compo = compositionDecisionSsr(text);
   if (compo.html) { html += compo.html + '\n'; text = compo.reste; }
@@ -300,7 +304,7 @@ const ICONES_SSR = {
   Tags: '<path d="M13.172 2a2 2 0 0 1 1.414.586l6.71 6.71a2.4 2.4 0 0 1 0 3.408l-4.592 4.592a2.4 2.4 0 0 1-3.408 0l-6.71-6.71A2 2 0 0 1 6 9.172V3a1 1 0 0 1 1-1z"/><path d="M2 7v6.172a2 2 0 0 0 .586 1.414l6.71 6.71a2.4 2.4 0 0 0 3.191.193"/><circle cx="10.5" cy="6.5" r=".5" fill="currentColor"/>',
 };
 function iconeSsr(nom, taille, trait = 2, classe = '') {
-  return `<svg${classe ? ` class="${classe}"` : ''} aria-hidden="true" focusable="false" width="${taille}" height="${taille}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${trait}" stroke-linecap="round" stroke-linejoin="round">${ICONES_SSR[nom] || ICONES_SSR.FolderOpen}</svg>`;
+  return `<svg${classe ? ` class="${classe}"` : ''} aria-hidden="true" focusable="false" width="${taille}" height="${taille}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${trait}" stroke-linecap="round" stroke-linejoin="round">${lireCle(ICONES_SSR, nom) || ICONES_SSR.FolderOpen}</svg>`;
 }
 
 // Copie de isPreambule (src/lib/codeTree.ts) : mêmes préambules en tête de page que React.
@@ -663,7 +667,7 @@ function buildRelatedBlock(related) {
   const CAT = { code: 'Code', loi: 'Loi', decret: 'Décret', arrete: 'Arrêté', circulaire: 'Circulaire',
     ohada: 'OHADA', uemoa: 'UEMOA', cima: 'CIMA', convention_collective: 'Convention', jors: 'JO' };
   const card = (i) => `<a href="${esc(urlTexte(i.slug))}" class="related-card">`
-    + `<span class="related-card__badge">${esc(CAT[i.category] || 'Texte')}</span>`
+    + `<span class="related-card__badge">${esc(lireCle(CAT, i.category) || 'Texte')}</span>`
     + `<span class="related-card__title">${esc(i.short_title || i.title)}</span></a>`;
   const grp = (title, items) => (items.length
     ? `<div class="related-group"><h3 class="related-group__title">${title}</h3><div class="related-grid">${items.map(card).join('')}</div></div>`
@@ -703,7 +707,7 @@ const texteAbrogeSsr = (law) => !!(law && (law.abrogated_by_slug || law.abrogati
 
 // Bloc « Présentation » : même logique et même texte que TextPresentation.tsx.
 export function presentationTexteSsr(law, nbArticles) {
-  const nature = NATURES_TEXTE[law.category] || 'Texte juridique';
+  const nature = lireCle(NATURES_TEXTE, law.category) || 'Texte juridique';
   const date = law.publication_date ? formatDateFr(law.publication_date) : '';
   const dateOk = date && date !== 'Invalid Date';
   const description = law.description && String(law.description).trim() ? law.description : '';
@@ -1808,14 +1812,16 @@ async function getShell(req) {
   } catch (e) { /* ignore */ }
   return null;
 }
-function injectIntoShell(shell, headHtml, bodyHtml) {
+export function injectIntoShell(shell, headHtml, bodyHtml) {
   let html = shell;
   html = html.replace(/<title>[\s\S]*?<\/title>/i, '');
   html = html.replace(/<meta\s+name="description"[\s\S]*?\/>/i, '');
   html = html.replace(/<meta\s+property="og:[^"]*"[^>]*\/>/gi, '');
   html = html.replace(/<meta\s+property="twitter:[^"]*"[^>]*\/>/gi, '');
-  html = html.replace(/<\/head>/i, `${headHtml}\n</head>`);
-  html = html.replace(/<div id="app">\s*<\/div>/i, `<div id="app">${bodyHtml}</div>`);
+  // Fonctions de remplacement : une chaîne de remplacement interpréterait les motifs « $` », « $' », « $& »
+  // ou « $$ » d'une valeur de la base (la coquille entière, scripts compris, était recopiée dans la page).
+  html = html.replace(/<\/head>/i, () => `${headHtml}\n</head>`);
+  html = html.replace(/<div id="app">\s*<\/div>/i, () => `<div id="app">${bodyHtml}</div>`);
   return html;
 }
 
@@ -1867,8 +1873,9 @@ export function buildCodesBody(texts, branches = [], comptes = null) {
     siens.forEach((c) => dansGrille.add(c));
     const couleur = COULEUR_SSR.test(String(b.color || '')) ? b.color : '#047857';
     const liens = siens.map((c) => {
-      const n = comptes && comptes[c.slug] != null
-        ? `<span class="ssr-codes-n">${esc(comptes[c.slug])} art.</span>`
+      const nb = comptes ? lireCle(comptes, c.slug) : undefined;
+      const n = nb != null
+        ? `<span class="ssr-codes-n">${esc(nb)} art.</span>`
         : '<span class="ssr-codes-n" aria-hidden="true"></span>';
       return `<li><a href="${esc(urlTexte(c.slug))}"><span>${esc(c.short_title || c.title)}</span>${n}</a></li>`;
     }).join('\n');
@@ -1880,7 +1887,7 @@ export function buildCodesBody(texts, branches = [], comptes = null) {
   const sections = order.filter((k) => groups[k] && groups[k].length).map((k) => {
     const restants = groups[k].filter((c) => !dansGrille.has(c));
     if (!restants.length) return '';
-    return `<section><h2>${esc(CAT_LABELS[k] || k)}</h2><ul>${restants.map(lien).join('\n')}</ul></section>`;
+    return `<section><h2>${esc(lireCle(CAT_LABELS, k) || k)}</h2><ul>${restants.map(lien).join('\n')}</ul></section>`;
   }).join('\n');
   // catégories hors liste connue (au cas où), placées en fin
   const extra = Object.keys(groups).filter((k) => !order.includes(k)).map((k) => {
@@ -2241,7 +2248,7 @@ export function buildJurisprudenceBody(themes) {
   const list = themes || [];
   const matieres = list.filter((t) => t.matiere);
   const sujets = list.filter((t) => !t.matiere);
-  const li = (t) => `<li><a href="/jurisprudence/theme/${esc(t.slug)}">${esc(t.label)}</a>${t.cached_total ? ` <span class="ssr-theme-art-n">${t.cached_total} décisions</span>` : ''}</li>`;
+  const li = (t) => `<li><a href="/jurisprudence/theme/${esc(t.slug)}">${esc(t.label)}</a>${t.cached_total ? ` <span class="ssr-theme-art-n">${esc(t.cached_total)} décisions</span>` : ''}</li>`;
   return wrapContent(`<div class="ssr-jurisprudence"><article>
     <header>
       <span class="ssr-juris-eyebrow">${iconeSsr('Scale', 14)} Jurisprudence</span>
@@ -2627,7 +2634,7 @@ export default async function handler(req, res) {
      * directement à l'article qui l'a repris. Texte cible introuvable : coquille noindex comme avant.
      */
     const redirigerTexteRetire = async (ancienTexte, artSlug) => {
-      const nouveau = TEXTES_RETIRES[ancienTexte];
+      const nouveau = lireCle(TEXTES_RETIRES, ancienTexte);
       let cibleLaw = null;
       try { cibleLaw = await fetchLaw(nouveau); } catch (e) { return serve503(); }
       if (!cibleLaw) return serveIntrouvable();
@@ -2724,7 +2731,7 @@ export default async function handler(req, res) {
       let law = null;
       try { law = await fetchLaw(slug); } catch (e) { return serve503(); }
       if (!law) {
-        if (TEXTES_RETIRES[slug]) return redirigerTexteRetire(slug, null);
+        if (lireCle(TEXTES_RETIRES, slug)) return redirigerTexteRetire(slug, null);
         return serveIntrouvable();
       }
       // Plan léger, premiers contenus et première division lancés AVANT les articles, en parallèle : aucun
@@ -2757,7 +2764,7 @@ export default async function handler(req, res) {
       let law = null;
       try { law = await fetchLaw(codeSlug); } catch (e) { return serve503(); }
       if (!law) {
-        if (TEXTES_RETIRES[codeSlug]) return redirigerTexteRetire(codeSlug, artSlug);
+        if (lireCle(TEXTES_RETIRES, codeSlug)) return redirigerTexteRetire(codeSlug, artSlug);
         return serveIntrouvable();
       }
       let art = null;
