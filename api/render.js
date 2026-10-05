@@ -653,11 +653,21 @@ export function buildCodeHead(law, nArticles, canonical) {
   };
   return headBlock({ title, description, keywords, canonical, ogType: 'website', schema });
 }
+/*
+ * Bandeaux d'abrogation de la page article, BOÎTE FLEX comme ArticlePage.tsx (icône à part, texte en retrait
+ * après elle) : en ligne, le texte se repliait sous l'icône et le bandeau n'avait pas le même nombre de lignes
+ * que celui de React (+23 px à la bascule en 390 px, Constitution art. 87-1). Styles en ligne gardés comme
+ * repli ; le bloc « article » de api/_ssr/styles.js les remplace.
+ */
+const STYLE_BANDEAU_ABROGE = 'background:#fef2f2;border:1px solid #fca5a5;border-left:4px solid #dc2626;color:#991b1b;padding:0.85rem 1.1rem;border-radius:8px;margin:0 0 1.25rem;';
+const bandeauAbrogeSsr = (contenu, classe = '') => `<div class="ssr-abrogation${classe}" role="note" style="${STYLE_BANDEAU_ABROGE}">`
+  + `<span class="ssr-lab-icon" aria-hidden="true">⛔</span><span>${contenu}</span></div>`;
+// Texte entier abrogé (.law-abrogation-banner de ArticlePage.tsx).
 function abrogationBanner(law) {
   if (!law || !law.abrogation_note) return '';
   const link = law.abrogated_by_slug
     ? ` <a href="${esc(urlTexte(law.abrogated_by_slug))}">Voir le texte en vigueur →</a>` : '';
-  return `<div class="ssr-abrogation" style="background:#fef2f2;border:1px solid #fca5a5;border-left:4px solid #dc2626;color:#991b1b;padding:0.85rem 1.1rem;border-radius:8px;margin:0 0 1.25rem;">⛔ ${esc(law.abrogation_note)}${link}</div>`;
+  return bandeauAbrogeSsr(`${esc(law.abrogation_note)}${link}`, ' ssr-abrogation--texte');
 }
 
 // Bloc SSR « Textes & codes liés » — mêmes classes que le composant client
@@ -822,7 +832,7 @@ export function divisionParDefautSsr(articles, plan, racine = null, premierArtic
 
 // Colonne « Sommaire » (ordinateur) : en-tête réel ; recherche, boutons et arbre en emplacements, aux
 // nombres de lignes de l'arbre React (division racine active dépliée : pastilles puis sous-divisions).
-function colonneSommaireSsr(law, forme, nbArticles) {
+function colonneSommaireSsr(law, forme, nbArticles, parties = []) {
   const racines = forme.racines == null ? 15 : Math.min(forme.racines, 20);
   // Largeur d'une pastille d'article ≈ celle de son libellé (articleLabel) en Inter 11,52 px : lettres
   // étroites, larges, capitales ou courantes, plus 18 px de marges et de bordure.
@@ -833,7 +843,8 @@ function colonneSommaireSsr(law, forme, nbArticles) {
     : forme.puces.slice(0, 30).map((a) => `<i style="width:${largeur(a)}px"></i>`).join('');
   const enfants = '<i class="ssr-st__row ssr-st__row--sub"></i>'.repeat(Math.min(forme.enfants || 0, 10));
   return `<aside class="ssr-st" aria-hidden="true"><div class="ssr-st__in">`
-    + `<div class="ssr-st__head"><div class="ssr-st__sur">Code sénégalais</div><div class="ssr-st__title">${esc(law.title)}</div></div>`
+    + `<div class="ssr-st__head"><div class="ssr-st__sur">Code sénégalais</div><div class="ssr-st__title">${esc(law.title)}</div>`
+    + `${(parties || []).length > 1 ? toggleParties(parties, law.slug, false) : ''}</div>`
     + `<i class="ssr-st__search"></i><span class="ssr-st__ctl"><i></i><i></i></span>`
     + `<span class="ssr-st__tree"><i class="ssr-st__row is-active"></i>${puces ? `<span class="ssr-st__chips">${puces}</span>` : ''}${enfants}`
     + `${'<i class="ssr-st__row"></i>'.repeat(Math.max(racines - 1, 0))}</span>`
@@ -908,7 +919,7 @@ function divisionSsr(law, forme, contenus, exclus) {
  * repris (rôle « identite ») sortent du sommaire du code en vigueur et forment une liste à part, en fin
  * de page ; le compteur ne retient que les articles en vigueur (fusion des codes 2026, 02/10/2026).
  */
-export function buildCodeBody(law, articles, related, fusion = null, plan = null, contenus = null, racine = null) {
+export function buildCodeBody(law, articles, related, fusion = null, plan = null, contenus = null, racine = null, parties = []) {
   const m = codeSeoMeta(law);
   const anciens = fusion && fusion.anciens && fusion.anciens.size ? fusion.anciens : null;
   // Code fusionné : un article désactivé n'est pas listé (cf. articleDuSommaire). Hors fusion : tous.
@@ -942,7 +953,7 @@ export function buildCodeBody(law, articles, related, fusion = null, plan = null
   // Articles écartés du sommaire (code fusionné) : aucune carte serveur ne doit y mener.
   const horsSommaire = new Set(fusion ? (articles || []).filter((a) => !articleDuSommaire(fusion, a)).map((a) => a.id) : []);
   return wrapContent(`<div class="ssr-code">
-  ${colonneSommaireSsr(law, forme, (articles || []).length)}
+  ${colonneSommaireSsr(law, forme, (articles || []).length, parties)}
   <article class="ssr-code__main">
     <h1>${esc(m.baseName)}${esc(m.geo)} - ${esc(m.descriptor)}</h1>
     ${intro}
@@ -1494,7 +1505,6 @@ function aussiRepris(fusion, law, art, v, params) {
   return `<p class="ssr-version-aussi">Le texte de l'ancien article ${esc(numeroAncienAffiche(brut))} est aussi repris ${ou}.</p>`;
 }
 const STYLE_BANDEAU_VERSION = 'background:#fffbeb;border:1px solid #fcd34d;border-left:4px solid #d97706;color:#78350f;padding:0.85rem 1.1rem;border-radius:8px;margin:0 0 1.25rem;';
-const STYLE_BANDEAU_ABROGE = 'background:#fef2f2;border:1px solid #fca5a5;border-left:4px solid #dc2626;color:#991b1b;padding:0.85rem 1.1rem;border-radius:8px;margin:0 0 1.25rem;';
 /*
  * Éléments propres à une page d'article d'un code fusionné : { ancien, h1, avantTitre, apresTitre,
  * contenu, motsCles }, ou null hors fusion (rendu inchangé).
@@ -1514,7 +1524,7 @@ export function fusionArticle({ fusion, law, art, choix = null, params = null, v
   let avantTitre = '';
   let contenu = null;
   if (ancien) {
-    avantTitre += `<div class="ssr-abrogation" role="note" style="${STYLE_BANDEAU_ABROGE}">⛔ ${esc(libelleNonRepris(law.reference))}</div>`;
+    avantTitre += bandeauAbrogeSsr(esc(libelleNonRepris(law.reference)));
   }
   if (choix && !choix.estActuelle && choix.versions && choix.versions.length) {
     const texte = libelleBandeauVersion(choix, params, versions || choix.versions, art.article_number);
@@ -1706,10 +1716,31 @@ const jourMoisAn = (d) => {
 };
 
 /*
+ * Parties sœurs d'un code (même code_famille : Législative / Réglementaire), législative d'abord, comme la
+ * bascule .partie-toggle de ArticlePage.tsx et CodePage.tsx. liens = false : libellés seuls (colonne
+ * « Sommaire » de la page d'un texte, zone aria-hidden où un lien serait atteignable sans être annoncé).
+ */
+export function trierParties(parties) {
+  return [...(parties || [])].filter((p) => p && p.slug)
+    .sort((a, b) => (a.partie === 'legislative' ? 0 : 1) - (b.partie === 'legislative' ? 0 : 1));
+}
+export function toggleParties(parties, slugActif, liens = true) {
+  const btn = (p) => {
+    const label = p.partie === 'reglementaire' ? 'Réglementaire' : 'Législative';
+    if (p.slug === slugActif) return `<span class="ssr-pt__btn is-actif"${liens ? ' role="tab" aria-selected="true"' : ''}>${label}</span>`;
+    return liens
+      ? `<a class="ssr-pt__btn" role="tab" aria-selected="false" href="${esc(urlTexte(p.slug))}">${label}</a>`
+      : `<span class="ssr-pt__btn">${label}</span>`;
+  };
+  return `<div class="ssr-pt"${liens ? ' role="tablist" aria-label="Partie du code"' : ''}>${trierParties(parties).map(btn).join('')}</div>`;
+}
+
+/*
  * fa (facultatif) : résultat de fusionArticle (code fusionné en 2026). Sans lui, aucun élément de la
  * fusion n'apparaît dans la page.
  * habillage (facultatif) : { arbre: HTML de la colonne de gauche, version: ligneVersionSsr(…), bascule et
- * depuis : dates de la fusion, pour les cartes des décisions }.
+ * depuis : dates de la fusion, pour les cartes des décisions, parties : textes sœurs (code_famille) pour la
+ * bascule Législative / Réglementaire }.
  * Absent ou vide : colonne et ligne de version en emplacements gris de même taille.
  */
 export function buildArticleBody(law, art, contentHtml, citing, chemin, voisins, fa = null, habillage = null) {
@@ -1731,14 +1762,23 @@ export function buildArticleBody(law, art, contentHtml, citing, chemin, voisins,
 
   // Bandeau d'un article abrogé hors fusion (ArticlePage.tsx) ; l'ancien article non repris a le sien (fa).
   const abroge = art.status === 'abrogé' || art.is_active === false;
-  const bandeauArticle = abroge && !(fa && fa.ancien)
-    ? `<div class="ssr-abrogation" role="note">⛔ ${esc(art.notes || 'Cet article a été abrogé.')}</div>` : '';
+  const bandeauArticle = abroge && !(fa && fa.ancien) ? bandeauAbrogeSsr(esc(art.notes || 'Cet article a été abrogé.')) : '';
   // Marque « ! » d'une nota (sans son texte) ; jamais sur un ancien article de 1997 (notes internes).
   const nota = art.notes && !abroge && !(fa && fa.ancien) ? '<span class="ssr-nota" aria-hidden="true"></span>' : '';
   const v = hab.version;
-  const versionHtml = v
+  const ligneVersion = v
     ? `<p class="ssr-ver">${esc(v.texte)}${v.note ? `<span class="ssr-ver-note"> · ${esc(v.note)}</span>` : ''}</p>`
     : '<p class="ssr-ver ssr-ver--vide" aria-hidden="true"></p>';
+  // Texte modificateur (dernier élément de article.modifications), à droite de la ligne de version et
+  // repassant dessous quand la place manque, comme .version-info-wrapper d'ArticlePage.tsx (+32 px à la
+  // bascule en 390 px quand il manquait). Texte seul : le lien React ne mène nulle part (href="#").
+  const modifs = Array.isArray(art.modifications) ? art.modifications.filter((m) => m != null && String(m).trim()) : [];
+  const versionHtml = modifs.length
+    ? `<div class="ssr-ver-wrap">${ligneVersion}<div class="ssr-modif"><span>${esc(modifs[modifs.length - 1])}</span></div></div>`
+    : ligneVersion;
+  // Bascule Législative / Réglementaire entre les parties d'un même code (.partie-toggle d'ArticlePage.tsx).
+  const parties = Array.isArray(hab.parties) ? hab.parties : [];
+  const toggleHtml = parties.length > 1 ? `\n    ${toggleParties(parties, law.slug)}` : '';
 
   // Code fusionné : une décision antérieure à la bascule citait un ancien numéro (lien reporté) ; on le
   // dit et on mène au texte alors en vigueur, comme ArticlePage.tsx (sauf avant la numérotation d'origine).
@@ -1774,7 +1814,7 @@ export function buildArticleBody(law, art, contentHtml, citing, chemin, voisins,
   // contentHtml = HTML déjà généré par notre pipeline (de confiance) -> injecté tel quel
   return wrapContent(`<article class="ssr-article"><div class="ssr-a-layout"><div class="ssr-a-main">
     <span class="ssr-a-somm" aria-hidden="true"></span>
-    ${filHtml}
+    ${filHtml}${toggleHtml}
     ${abrogationBanner(law)}${bandeauArticle}${fa ? fa.avantTitre : ''}
     <header class="ssr-a-head">${emplacementHtml}
     <h1>${esc((fa && fa.h1) || numLabel)}${nota}</h1>
@@ -1877,7 +1917,8 @@ export function buildCodesBody(texts, branches = [], comptes = null) {
       const n = nb != null
         ? `<span class="ssr-codes-n">${esc(nb)} art.</span>`
         : '<span class="ssr-codes-n" aria-hidden="true"></span>';
-      return `<li><a href="${esc(urlTexte(c.slug))}"><span>${esc(c.short_title || c.title)}</span>${n}</a></li>`;
+      // Espace entre les deux span (sans effet dans la boîte flex) : ancre « Code X 110 art. », et non « Code X110 art. ».
+      return `<li><a href="${esc(urlTexte(c.slug))}"><span>${esc(c.short_title || c.title)}</span> ${n}</a></li>`;
     }).join('\n');
     return `<section class="ssr-codes-carte${siens.length ? '' : ' ssr-codes-carte--bientot'}" style="--c:${couleur}">
       <div class="ssr-codes-carte-tete"><span class="ssr-codes-icone">${iconeSsr(b.icon, 28, 1.5)}</span><div><h2>${esc(b.label)}</h2>${b.description ? `<p>${esc(b.description)}</p>` : ''}</div></div>
@@ -2385,7 +2426,15 @@ async function fetchThemePage(slug) {
   return (data && data.theme) ? data : null;
 }
 async function fetchLaw(slug) {
-  return one(await sb(`laws_and_codes?slug=eq.${encodeURIComponent(slug)}&select=id,title,short_title,category,slug,reference,publication_date,description,abrogation_note,abrogated_by_slug,jo_numero,jo_date,jo_page&limit=1`));
+  return one(await sb(`laws_and_codes?slug=eq.${encodeURIComponent(slug)}&select=id,title,short_title,category,slug,reference,publication_date,description,abrogation_note,abrogated_by_slug,jo_numero,jo_date,jo_page,code_famille,partie&limit=1`));
+}
+// Parties sœurs d'un code (bascule Législative / Réglementaire), actives seulement : aucune requête hors
+// famille. Lue dans le lot parallèle de la page ; échec = pas de bascule (page servie quand même).
+async function fetchPartiesSoeurs(law) {
+  if (!law || !law.code_famille) return [];
+  try {
+    return await sb(`laws_and_codes?code_famille=eq.${encodeURIComponent(law.code_famille)}&is_active=eq.true&select=slug,partie&order=slug`);
+  } catch (e) { return []; }
 }
 /*
  * Liste des articles d'un texte, PAGINÉE : PostgREST plafonne chaque réponse à 1 000 lignes en
@@ -2439,7 +2488,7 @@ async function fetchRelatedTexts(codeId) {
   } catch (e) { return []; }
 }
 async function fetchArticle(codeId, artSlug) {
-  return one(await sb(`articles?code_id=eq.${codeId}&slug=eq.${encodeURIComponent(artSlug)}&select=id,num,num_court,article_number,slug,content_html,node_id,display_order,is_active,status,notes&limit=1`));
+  return one(await sb(`articles?code_id=eq.${codeId}&slug=eq.${encodeURIComponent(artSlug)}&select=id,num,num_court,article_number,slug,content_html,node_id,display_order,is_active,status,notes,modifications&limit=1`));
 }
 // Plan du code (structure_nodes) : sert à situer l'article dans sa hiérarchie et à dessiner l'arbre
 // de la colonne de gauche (même ordre que la page React : position). Chargé en une requête puis
@@ -2739,12 +2788,12 @@ export default async function handler(req, res) {
       const planP = fetchPlanLeger(law.id), contenusP = fetchPremiersArticles(law.id), racineP = fetchPremiereRacine(law.id);
       let articles = [];
       try { articles = await fetchCodeArticles(law.id); } catch (e) { /* */ }
-      const [related, conc, plan, contenus, racine] = await Promise.all([
-        fetchRelatedTexts(law.id), fetchConcordance(law.id), planP, contenusP, racineP]);
+      const [related, conc, plan, contenus, racine, parties] = await Promise.all([
+        fetchRelatedTexts(law.id), fetchConcordance(law.id), planP, contenusP, racineP, fetchPartiesSoeurs(law)]);
       const canonical = `${SITE}${urlTexte(slug)}`;
       // Code fusionné en 2026 : le compteur ne retient que les articles en vigueur.
       const fusion = contexteFusion(conc.lignes);
-      return serveHtml(buildCodeHead(law, nombreArticlesEnVigueur(articles, fusion), canonical) + styleSsr('code'), buildCodeBody(law, articles, related, fusion, plan, contenus, racine),
+      return serveHtml(buildCodeHead(law, nombreArticlesEnVigueur(articles, fusion), canonical) + styleSsr('code'), buildCodeBody(law, articles, related, fusion, plan, contenus, racine, parties),
         conc.transitoire ? CACHE_COURT : undefined);
     }
 
@@ -2828,7 +2877,7 @@ export default async function handler(req, res) {
       // texte de l'article reste servi quoi qu'il arrive.
       // Arbre de la colonne de gauche et ligne de version (habillage de la page, cf. buildArticleBody) :
       // deux lectures légères de plus, dans le même lot parallèle.
-      const [content, citing, noeuds, voisins, articlesArbre, versionsLegeres] = await Promise.all([
+      const [content, citing, noeuds, voisins, articlesArbre, versionsLegeres, parties] = await Promise.all([
         art.content_html ? Promise.resolve(art.content_html)
           : (versions ? Promise.resolve((versionCourante(versions) || {}).content || '') : fetchCurrentVersion(art.id)),
         // Les plus récentes d'abord pour tous les textes : mêmes premières cartes que la page React.
@@ -2837,6 +2886,8 @@ export default async function handler(req, res) {
         fetchVoisins(law.id, art.display_order, art.id, filtreVoisins),
         fetchArticlesArbre(law.id, !art.node_id),
         versions ? Promise.resolve(versions) : fetchVersionsLegeres(art.id),
+        // Parties sœurs (bascule Législative / Réglementaire), comme ArticlePage.tsx.
+        fetchPartiesSoeurs(law),
       ]);
       const chemin = cheminDansLePlan(art.node_id, noeuds);
       const fa = fusionArticle({ fusion, law, art, choix, params, versions });
@@ -2850,6 +2901,7 @@ export default async function handler(req, res) {
         // Bascule de numérotation (code fusionné) : cartes des décisions antérieures.
         bascule: fusion ? (fusion.bascule || jourDe((versionCourante(versionsLegeres || []) || {}).effective_date) || null) : null,
         depuis: fusion ? fusion.depuis : null,
+        parties,
       };
       return serveHtml(buildArticleHead(law, art, canonical, texteSeoArticle(content), fa) + styleSsr('article'),
         buildArticleBody(law, art, affiche, citing, chemin, voisins, fa, habillage),

@@ -320,7 +320,8 @@ const CodesListPage: React.FC = () => {
                                                     >
                                                         <FileText size={16} />
                                                         <span>{code.short_name}</span>
-                                                        <span className="theme-code-count">{code.articles_count} art.</span>
+                                                        {/* Espace sans effet visuel (boîte flex) : ancre « Code X 110 art. » et non « Code X110 art. ». */}
+                                                        {' '}<span className="theme-code-count">{code.articles_count} art.</span>
                                                         <ChevronRight size={14} />
                                                     </Link>
                                                 ))}

@@ -247,7 +247,8 @@ describe('rendu serveur : page d’un article de code fusionné', () => {
         const art = { id: 'al10', slug: 'article-l10', article_number: 'L.10.', num: 'Article L.10 (Code de 1997)', notes: 'Absent de la source MJ initiale' };
         const fa = api.fusionArticle({ fusion: f, law: LAW, art });
         expect(fa.h1).toBe('Article L.10 du Code de 1997 (abrogé)');
-        expect(fa.avantTitre).toContain('⛔ Article non repris par la loi n° 2026-18 du 3 septembre 2026 ; il reste consultable dans sa rédaction antérieure.');
+        // Bandeau en boîte flex comme ArticlePage.tsx (05/10/2026) : icône à part, texte en retrait.
+        expect(fa.avantTitre).toContain('<span class="ssr-lab-icon" aria-hidden="true">⛔</span><span>Article non repris par la loi n° 2026-18 du 3 septembre 2026 ; il reste consultable dans sa rédaction antérieure.</span>');
         expect(fa.avantTitre).not.toContain('Absent');
         expect(fa.apresTitre).toBe('');
         const head = api.buildArticleHead(LAW, art, 'https://www.lexenegal.sn/code/code-travail/article-l10', 'Texte.', fa);
@@ -557,8 +558,9 @@ describe('handler de api/render.js (Supabase simulé)', () => {
             { 'Content-Type': HTML, 'Cache-Control': CACHE_PAGE }, 'b34f95ffa392f4098c1b620009a4d974ae664f0d04c72abda3306ead0f107b9f'],
         ['page d’un code non fusionné', { type: 'code', slug: 'code-penal' }, 200,
             { 'Content-Type': HTML, 'Cache-Control': CACHE_PAGE }, 'ba7f859a618eba7f19ad05b0f78d77e888c04d203e8998607bf5b2f1b71a53e1'],
+        // Refigé le 05/10/2026 : bandeau d'abrogation du texte en boîte flex (icône à part), même texte, même lien.
         ['ancien article de 1997, paramètres ignorés', { type: 'article', code: 'code-travail', slug: 'article-l56', ancien: 'L56', date: '2015-03-04' }, 200,
-            { 'Content-Type': HTML, 'Cache-Control': CACHE_PAGE }, '78e56ccd540f046487947cd8315466071344e77c11c4081f182d6a591dccc58d'],
+            { 'Content-Type': HTML, 'Cache-Control': CACHE_PAGE }, 'd7b3a8cf0e930867ba06dfaaec4b1bbab35aedccd9bb5783c67e63498462daa6'],
         ['code 1997 sous code-travail', { type: 'code', slug: 'code-travail' }, 200,
             { 'Content-Type': HTML, 'Cache-Control': CACHE_PAGE }, 'b4b7803b578cc69d50a63650ad9645d51b7fd262f449cc4870570b6045447c1f'],
         // code-travail-2026 est AUJOURD'HUI le texte en vigueur : servi en 200, jamais redirigé.
@@ -588,12 +590,16 @@ describe('handler de api/render.js (Supabase simulé)', () => {
      * texte toujours lu, articles de l'arbre et versions sans contenu (habillage de la page), le tout
      * dans le même lot parallèle. Page d'un texte (05/10/2026) : plus les trois lectures de l'habillage
      * serveur (plan léger, premiers contenus, première division), lancées en parallèle des articles, et
-     * leur colonne node_id.
+     * leur colonne node_id. Correctifs du 05/10/2026 : colonnes code_famille et partie du texte (bascule
+     * Législative / Réglementaire, lecture des parties sœurs seulement pour un texte d'une famille) et
+     * modifications de l'article (texte modificateur sous la ligne de version).
      */
     const sansAjoutsFusion = (journal: string[]) => journal
         .filter((a) => !a.startsWith('/rest/v1/article_concordance?'))
         .map((a) => a.replace(',display_order,is_active&', ',display_order&')
-            .replace('select=id,num,num_court,article_number,slug,is_active&', 'select=num,num_court,article_number,slug&'));
+            .replace('select=id,num,num_court,article_number,slug,is_active&', 'select=num,num_court,article_number,slug&')
+            .replace(',jo_page,code_famille,partie&', ',jo_page&')
+            .replace(',status,notes,modifications&', ',status,notes&'));
     const LOI_PENAL = '/rest/v1/laws_and_codes?slug=eq.code-penal&select=id,title,short_title,category,slug,reference,publication_date,description,abrogation_note,abrogated_by_slug,jo_numero,jo_date,jo_page&limit=1';
 
     it('concordance vide : mêmes requêtes qu’avant la fusion, plus la seule lecture de la concordance', async () => {

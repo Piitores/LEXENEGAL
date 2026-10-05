@@ -51,7 +51,10 @@ describe('codes (rendu serveur habillé)', () => {
         const html = buildCodesBody(textes, branches, { 'code-du-travail': 410 });
         expect(html).toContain('<h1>Tous les codes et textes juridiques du Sénégal</h1>');
         for (const t of textes) expect(html.split(`href="/code/${t.slug}"`).length - 1).toBe(1);
-        expect(html).toContain('<span>Code du travail</span><span class="ssr-codes-n">410 art.</span>');
+        // Titre et nombre d'articles séparés : ancre « Code du travail 410 art. » (05/10/2026).
+        expect(html).toContain('<span>Code du travail</span> <span class="ssr-codes-n">410 art.</span>');
+        const ancre = /<a href="\/code\/code-du-travail">([\s\S]*?)<\/a>/.exec(html)![1].replace(/<[^>]+>/g, '');
+        expect(ancre).toBe('Code du travail 410 art.');
         expect(html).toContain('<h2>Travail &amp; Protection sociale</h2>');
         expect(html).toContain('<span>Prochainement</span>');
         expect(html).not.toContain('<h2>Autres</h2>');

@@ -213,6 +213,9 @@
 
 .version-info svg {
     color: #9CA3AF;
+    /* L'horloge garde ses 14 px : sans cela, une note de version longue l'écrasait jusqu'à 8 px et
+       la ligne n'avait plus la même largeur que celle de la version serveur (api/_ssr/styles.js). */
+    flex-shrink: 0;
 }
 
 .version-note {

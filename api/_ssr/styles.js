@@ -54,6 +54,13 @@ export const STYLES_SSR = {
 #ssr-content .ssr-article .ssr-version::before{content:"";position:absolute;left:1.1rem;top:1.05rem;width:16px;height:16px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23D97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 6v6l4 2'/%3E%3C/svg%3E")}
 #ssr-content .ssr-article .ssr-abrogation{background:#fff!important;border:1px solid #E5E7EB!important;border-left:4px solid #DC2626!important;color:#991B1B!important;font-weight:500}
 #ssr-content .ssr-article .ssr-abrogation a,#ssr-content .ssr-article .ssr-version a{color:inherit;font-weight:600;text-decoration:underline}
+#ssr-content .ssr-article .ssr-abrogation{display:flex;gap:.6rem;align-items:flex-start}
+#ssr-content .ssr-article .ssr-lab-icon{font-size:1.05rem;line-height:1.4;color:#DC2626}
+#ssr-content .ssr-article .ssr-abrogation--texte{font-weight:400}
+#ssr-content .ssr-article .ssr-abrogation--texte a{color:#DC2626;white-space:nowrap}
+#ssr-content .ssr-article .ssr-pt{display:inline-flex;gap:2px;margin:-18px 0 28px;padding:3px;background:#F3F4F6;border:1px solid #E5E7EB;border-radius:9px}
+#ssr-content .ssr-article .ssr-pt__btn{font-size:.78rem;font-weight:600;padding:6px 14px;border-radius:6px;color:#6B7280;text-decoration:none}
+#ssr-content .ssr-article .ssr-pt__btn.is-actif{background:#047857;color:#fff}
 #ssr-content .ssr-article .ssr-a-head{margin:0 0 32px}
 #ssr-content .ssr-article .ssr-ah{display:flex;flex-direction:column;gap:.3rem;margin:0 0 1.1rem;padding-left:.9rem;border-left:2px solid #166534}
 #ssr-content .ssr-article .ssr-ah-row{display:flex;align-items:center;gap:.55rem;color:#4B5563}
@@ -69,6 +76,11 @@ export const STYLES_SSR = {
 #ssr-content .ssr-article .ssr-ver::before{content:"";flex:none;width:14px;height:14px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 6v6l4 2'/%3E%3C/svg%3E")}
 #ssr-content .ssr-article .ssr-ver-note{color:#047857;font-style:italic}
 #ssr-content .ssr-article .ssr-ver--vide::after{content:"";width:min(260px,70%);height:12px;border-radius:6px;background:#EDEFF2}
+#ssr-content .ssr-article .ssr-ver-wrap{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin:16px 0 0}
+#ssr-content .ssr-article .ssr-ver-wrap>.ssr-ver{margin:0}
+#ssr-content .ssr-article .ssr-ver-wrap>.ssr-ver--vide{flex:1 0 60%}
+#ssr-content .ssr-article .ssr-modif{text-align:right;font-size:.85rem;line-height:1.7;color:#2563EB}
+#ssr-content .ssr-article .ssr-modif span{text-decoration:underline}
 #ssr-content .ssr-article .ssr-act{display:flex;flex-wrap:wrap;gap:12px;margin:0 0 24px}
 #ssr-content .ssr-article .ssr-act span{height:39.78px;width:173.28px;border:1px solid #E5E7EB;border-radius:8px;background:#fff linear-gradient(#EFF1F4,#EFF1F4) 42px 50%/55% 10px no-repeat}
 #ssr-content .ssr-article .ssr-act span+span{width:226.06px}
@@ -190,6 +202,9 @@ export const STYLES_SSR = {
 #ssr-content .ssr-code .ssr-st__head{padding-bottom:16px;border-bottom:1px solid #F0F1F3;margin-bottom:16px;}
 #ssr-content .ssr-code .ssr-st__sur{font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:#9CA3AF;margin-bottom:4px;}
 #ssr-content .ssr-code .ssr-st__title{font-size:1.05rem;line-height:1.3;}
+#ssr-content .ssr-code .ssr-pt{display:flex;gap:2px;margin-top:12px;background:#F8F9FB;border:1px solid #E5E7EB;border-radius:8px;padding:2px;}
+#ssr-content .ssr-code .ssr-pt__btn{flex:1;text-align:center;font-size:.72rem;font-weight:600;padding:6px 8px;border-radius:6px;color:#9CA3AF;}
+#ssr-content .ssr-code .ssr-pt__btn.is-actif{background:#047857;color:#fff;}
 #ssr-content .ssr-code .ssr-st__search{height:33px;background:#F8F9FB;border:1px solid #E5E7EB;border-radius:8px;margin-bottom:12px;}
 #ssr-content .ssr-code .ssr-st__ctl{display:flex;align-items:center;gap:12px;height:15px;margin-bottom:16px;}
 #ssr-content .ssr-code .ssr-st__ctl i{width:68px;height:8px;border-radius:4px;background:rgba(4,120,87,.13);}
