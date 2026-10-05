@@ -90,6 +90,74 @@
     #ssr-keep .ssr-toc ul{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px 16px;font-size:0.92rem;}
     #ssr-keep .ssr-presentation{padding:18px 20px;background:#FFFFFF;border:1px solid #E5E7EB;border-radius:12px;}
     @media (max-width:768px){#ssr-keep{padding:88px 12px 32px;}#ssr-keep h1{font-size:1.6rem;}}
+    /* ===== Polices de la version serveur : JEU UNIQUE, pour toutes les pages =====
+       Aucune police web (elle ferait recouler le texte à son arrivée) : des polices LOCALES (local(),
+       aucune requête), recalées sur la page React. Une famille introuvable est sautée (repli suivant).
+       - 'Lx Inter' = Arial à la chasse d'Inter ; 'Lx Inter Roboto' pour Android (sans Arial) ;
+       - 'Lx Playfair' = Georgia ROMAIN à la chasse de Playfair Display (Georgia gras est 12 à 13 % trop
+         large) ; la graisse est rendue par un trait (-webkit-text-stroke, sans effet sur la mise en page :
+         --ssr-trait-600 / --ssr-trait-700) ; 'Lx Playfair Noto' pour Android.
+       Chasse : size-adjust PAR CLASSE de caractères (unicode-range : minuscules, capitales, chiffres,
+       espaces ; le reste sur la face sans plage), moindres carrés sur 1 787 lignes de texte réel des pages
+       servies, vérifiés dans Chrome (05/10/2026, macOS) : écart absolu moyen de largeur 0,6 % (Inter) et
+       0,4 % (Playfair), contre 0,8 % et 1,3 % avec un facteur unique ; capitales seules 0,5 %. Roboto et
+       Noto Serif : facteur unique, mesuré sur leurs versions Google Fonts, à vérifier sur appareil.
+       Ligne de base : ascent/descent-override = métriques effectives d'Inter (0,969/0,241 em) et de
+       Playfair Display (1,082/0,251 em), divisées par le size-adjust de chaque face.
+       MARGE LCP (technique unique) : +0,135 em ajoutés à ascent ET à descent de toutes les faces. La ligne
+       de base et la mise en page ne bougent pas (hauteurs de ligne toujours explicites, cf. la garde
+       ci-dessous), mais la boîte de texte que mesure le LCP grandit : le bloc serveur reste le plus grand
+       candidat après la bascule vers React. C'est la plus petite valeur qui tient sur les 10 pages de
+       référence en 1440 et 390 px (Chrome arrondit ascent et descent au pixel : à 0,13 em, le chapô de la
+       page-thème en 390 px repasse sous celui de React).
+       font-display:optional : si une police locale n'est pas prête à la première image (processeur lent),
+       le texte garde la police de repli plutôt que de recouler ensuite.
+       Les blocs par type de page (api/_ssr/styles.js) n'emploient que les variables de #ssr-content. */
+    @font-face{font-family:'Lx Inter';src:local('Arial'),local('ArialMT');font-weight:100 449;size-adjust:106.6%;ascent-override:103.56%;descent-override:35.27%;line-gap-override:0%;font-display:optional}
+    @font-face{font-family:'Lx Inter';src:local('Arial'),local('ArialMT');font-weight:100 449;size-adjust:107.5%;ascent-override:102.7%;descent-override:34.98%;line-gap-override:0%;font-display:optional;unicode-range:U+61-7A,U+DF-F6,U+F8-FF,U+153}
+    @font-face{font-family:'Lx Inter';src:local('Arial'),local('ArialMT');font-weight:100 449;size-adjust:98.76%;ascent-override:111.79%;descent-override:38.07%;line-gap-override:0%;font-display:optional;unicode-range:U+41-5A,U+C0-D6,U+D8-DE,U+152,U+178}
+    @font-face{font-family:'Lx Inter';src:local('Arial'),local('ArialMT');font-weight:100 449;size-adjust:108.05%;ascent-override:102.17%;descent-override:34.8%;line-gap-override:0%;font-display:optional;unicode-range:U+30-39}
+    @font-face{font-family:'Lx Inter';src:local('Arial'),local('ArialMT');font-weight:100 449;size-adjust:101.53%;ascent-override:108.74%;descent-override:37.03%;line-gap-override:0%;font-display:optional;unicode-range:U+20,U+A0,U+202F}
+    @font-face{font-family:'Lx Inter';src:local('Arial'),local('ArialMT');font-weight:450 549;size-adjust:107.7%;ascent-override:102.51%;descent-override:34.91%;line-gap-override:0%;font-display:optional}
+    @font-face{font-family:'Lx Inter';src:local('Arial'),local('ArialMT');font-weight:450 549;size-adjust:109.18%;ascent-override:101.12%;descent-override:34.44%;line-gap-override:0%;font-display:optional;unicode-range:U+61-7A,U+DF-F6,U+F8-FF,U+153}
+    @font-face{font-family:'Lx Inter';src:local('Arial'),local('ArialMT');font-weight:450 549;size-adjust:99.48%;ascent-override:110.98%;descent-override:37.8%;line-gap-override:0%;font-display:optional;unicode-range:U+41-5A,U+C0-D6,U+D8-DE,U+152,U+178}
+    @font-face{font-family:'Lx Inter';src:local('Arial'),local('ArialMT');font-weight:450 549;size-adjust:110.8%;ascent-override:99.64%;descent-override:33.94%;line-gap-override:0%;font-display:optional;unicode-range:U+30-39}
+    @font-face{font-family:'Lx Inter';src:local('Arial'),local('ArialMT');font-weight:450 549;size-adjust:96.41%;ascent-override:114.51%;descent-override:39%;line-gap-override:0%;font-display:optional;unicode-range:U+20,U+A0,U+202F}
+    @font-face{font-family:'Lx Inter';src:local('Arial Bold'),local('Arial-BoldMT');font-weight:550 900;size-adjust:101%;ascent-override:109.31%;descent-override:37.23%;line-gap-override:0%;font-display:optional}
+    @font-face{font-family:'Lx Inter';src:local('Arial Bold'),local('Arial-BoldMT');font-weight:550 900;size-adjust:101.86%;ascent-override:108.38%;descent-override:36.91%;line-gap-override:0%;font-display:optional;unicode-range:U+61-7A,U+DF-F6,U+F8-FF,U+153}
+    @font-face{font-family:'Lx Inter';src:local('Arial Bold'),local('Arial-BoldMT');font-weight:550 900;size-adjust:98.99%;ascent-override:111.53%;descent-override:37.98%;line-gap-override:0%;font-display:optional;unicode-range:U+41-5A,U+C0-D6,U+D8-DE,U+152,U+178}
+    @font-face{font-family:'Lx Inter';src:local('Arial Bold'),local('Arial-BoldMT');font-weight:550 900;size-adjust:107.65%;ascent-override:102.55%;descent-override:34.93%;line-gap-override:0%;font-display:optional;unicode-range:U+30-39}
+    @font-face{font-family:'Lx Inter';src:local('Arial Bold'),local('Arial-BoldMT');font-weight:550 900;size-adjust:94.93%;ascent-override:116.3%;descent-override:39.61%;line-gap-override:0%;font-display:optional;unicode-range:U+20,U+A0,U+202F}
+    @font-face{font-family:'Lx Playfair';src:local('Georgia');font-weight:100 499;size-adjust:99.8%;ascent-override:121.94%;descent-override:38.68%;line-gap-override:0%;font-display:optional}
+    @font-face{font-family:'Lx Playfair';src:local('Georgia');font-weight:100 499;size-adjust:102.54%;ascent-override:118.69%;descent-override:37.64%;line-gap-override:0%;font-display:optional;unicode-range:U+61-7A,U+DF-F6,U+F8-FF,U+153}
+    @font-face{font-family:'Lx Playfair';src:local('Georgia');font-weight:100 499;size-adjust:94.98%;ascent-override:128.13%;descent-override:40.64%;line-gap-override:0%;font-display:optional;unicode-range:U+41-5A,U+C0-D6,U+D8-DE,U+152,U+178}
+    @font-face{font-family:'Lx Playfair';src:local('Georgia');font-weight:100 499;size-adjust:88.38%;ascent-override:137.7%;descent-override:43.68%;line-gap-override:0%;font-display:optional;unicode-range:U+30-39}
+    @font-face{font-family:'Lx Playfair';src:local('Georgia');font-weight:100 499;size-adjust:95.46%;ascent-override:127.49%;descent-override:40.44%;line-gap-override:0%;font-display:optional;unicode-range:U+20,U+A0,U+202F}
+    @font-face{font-family:'Lx Playfair';src:local('Georgia');font-weight:500 649;size-adjust:101.6%;ascent-override:119.78%;descent-override:37.99%;line-gap-override:0%;font-display:optional}
+    @font-face{font-family:'Lx Playfair';src:local('Georgia');font-weight:500 649;size-adjust:104.48%;ascent-override:116.48%;descent-override:36.94%;line-gap-override:0%;font-display:optional;unicode-range:U+61-7A,U+DF-F6,U+F8-FF,U+153}
+    @font-face{font-family:'Lx Playfair';src:local('Georgia');font-weight:500 649;size-adjust:98.78%;ascent-override:123.2%;descent-override:39.08%;line-gap-override:0%;font-display:optional;unicode-range:U+41-5A,U+C0-D6,U+D8-DE,U+152,U+178}
+    @font-face{font-family:'Lx Playfair';src:local('Georgia');font-weight:500 649;size-adjust:92.78%;ascent-override:131.17%;descent-override:41.6%;line-gap-override:0%;font-display:optional;unicode-range:U+30-39}
+    @font-face{font-family:'Lx Playfair';src:local('Georgia');font-weight:500 649;size-adjust:92.17%;ascent-override:132.04%;descent-override:41.88%;line-gap-override:0%;font-display:optional;unicode-range:U+20,U+A0,U+202F}
+    @font-face{font-family:'Lx Playfair';src:local('Georgia');font-weight:650 900;size-adjust:102.5%;ascent-override:118.73%;descent-override:37.66%;line-gap-override:0%;font-display:optional}
+    @font-face{font-family:'Lx Playfair';src:local('Georgia');font-weight:650 900;size-adjust:105.43%;ascent-override:115.43%;descent-override:36.61%;line-gap-override:0%;font-display:optional;unicode-range:U+61-7A,U+DF-F6,U+F8-FF,U+153}
+    @font-face{font-family:'Lx Playfair';src:local('Georgia');font-weight:650 900;size-adjust:100.63%;ascent-override:120.94%;descent-override:38.36%;line-gap-override:0%;font-display:optional;unicode-range:U+41-5A,U+C0-D6,U+D8-DE,U+152,U+178}
+    @font-face{font-family:'Lx Playfair';src:local('Georgia');font-weight:650 900;size-adjust:94.99%;ascent-override:128.12%;descent-override:40.64%;line-gap-override:0%;font-display:optional;unicode-range:U+30-39}
+    @font-face{font-family:'Lx Playfair';src:local('Georgia');font-weight:650 900;size-adjust:90.68%;ascent-override:134.21%;descent-override:42.57%;line-gap-override:0%;font-display:optional;unicode-range:U+20,U+A0,U+202F}
+    @font-face{font-family:'Lx Inter Roboto';src:local('Roboto'),local('Roboto-Regular');font-weight:100 449;size-adjust:107.4%;ascent-override:102.79%;descent-override:35.01%;line-gap-override:0%;font-display:optional}
+    @font-face{font-family:'Lx Inter Roboto';src:local('Roboto'),local('Roboto-Regular');font-weight:450 549;size-adjust:108.4%;ascent-override:101.85%;descent-override:34.69%;line-gap-override:0%;font-display:optional}
+    @font-face{font-family:'Lx Inter Roboto';src:local('Roboto Medium'),local('Roboto-Medium');font-weight:550 900;size-adjust:108.6%;ascent-override:101.66%;descent-override:34.62%;line-gap-override:0%;font-display:optional}
+    @font-face{font-family:'Lx Playfair Noto';src:local('Noto Serif'),local('NotoSerif-Regular');font-weight:100 499;size-adjust:94.2%;ascent-override:129.19%;descent-override:40.98%;line-gap-override:0%;font-display:optional}
+    @font-face{font-family:'Lx Playfair Noto';src:local('Noto Serif'),local('NotoSerif-Regular');font-weight:500 649;size-adjust:95.9%;ascent-override:126.9%;descent-override:40.25%;line-gap-override:0%;font-display:optional}
+    @font-face{font-family:'Lx Playfair Noto';src:local('Noto Serif'),local('NotoSerif-Regular');font-weight:650 900;size-adjust:96.7%;ascent-override:125.85%;descent-override:39.92%;line-gap-override:0%;font-display:optional}
+    @font-face{font-family:'Lx Playfair';font-style:italic;src:local('Georgia Italic'),local('Georgia-Italic');font-weight:100 900;size-adjust:95%;ascent-override:128.11%;descent-override:40.63%;line-gap-override:0%;font-display:optional}
+    #ssr-content{
+      --ssr-ui:'Lx Inter','Lx Inter Roboto',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
+      --ssr-titre:'Lx Playfair','Lx Playfair Noto',Georgia,'Times New Roman',serif;
+      --ssr-texte:Georgia,'Times New Roman',serif;
+      --ssr-trait-600:.018em;--ssr-trait-700:.03em;
+    }
+    /* Garde : aucun texte serveur n'hérite de line-height:normal (hauteur de ligne = ascent + descent). */
+    #ssr-keep,#ssr-content{line-height:1.5;}
   </style>
   <!-- Splash anti-FOUC : couvre le bref affichage du HTML serveur (SEO) avant que React ne prenne la main.
        ⚠️ Retiré dès le démarrage par src/index.tsx quand un contenu serveur est présent (hors accueil). -->

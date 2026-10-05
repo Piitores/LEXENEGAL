@@ -64,20 +64,27 @@ describe('code fusionné (rendu serveur)', () => {
 
     /*
      * Sortie attendue FIGÉE sur celle de buildCodeBody avant la fusion (HEAD du 02/10/2026, mêmes
-     * entrées) : comparer l'appel avec null à l'appel sans argument ne prouverait rien, les deux
-     * suivent le même chemin.
+     * entrées), refigée le 05/10/2026 avec l'habillage serveur calqué sur la page React (sans plan ni
+     * contenus : colonne et division en emplacements) : comparer l'appel avec null à l'appel sans argument
+     * ne prouverait rien, les deux suivent le même chemin.
      */
     const CORPS_AVANT_FUSION = [
-        '<div id="ssr-content" class="ssr-prerender"><article>',
-        '    ',
+        '<div id="ssr-content" class="ssr-prerender"><div class="ssr-code">',
+        '  <aside class="ssr-st" aria-hidden="true"><div class="ssr-st__in"><div class="ssr-st__head"><div class="ssr-st__sur">Code sénégalais</div><div class="ssr-st__title">Code du Travail</div></div><i class="ssr-st__search"></i><span class="ssr-st__ctl"><i></i><i></i></span><span class="ssr-st__tree"><i class="ssr-st__row is-active"></i><span class="ssr-st__chips"><i style="width:98px"></i><i style="width:63px"></i><i style="width:63px"></i></span><i class="ssr-st__row"></i><i class="ssr-st__row"></i><i class="ssr-st__row"></i><i class="ssr-st__row"></i><i class="ssr-st__row"></i><i class="ssr-st__row"></i><i class="ssr-st__row"></i><i class="ssr-st__row"></i><i class="ssr-st__row"></i><i class="ssr-st__row"></i><i class="ssr-st__row"></i><i class="ssr-st__row"></i><i class="ssr-st__row"></i><i class="ssr-st__row"></i></span></div></aside>',
+        '  <article class="ssr-code__main">',
         '    <h1>Code du Travail du Sénégal - texte intégral et version consolidée</h1>',
         '    <p class="ssr-code-intro">Code du Travail - Loi n° 2026-18 du 3 septembre 2026. Texte intégral et version consolidée, 3 articles, consultable gratuitement article par article, avec la jurisprudence et les textes liés.</p>',
+        '    <i class="ssr-code__toggle" aria-hidden="true"></i>',
         '    ',
+        '    ',
+        '    <section class="ssr-tp" aria-label="Présentation du texte"><div class="ssr-tp__meta"><span class="ssr-tp__nature">Code</span><span class="ssr-tp__chip">3 articles</span></div><p class="ssr-tp__fallback">Code du Travail - texte intégral consolidé, à jour et structuré article par article, dans le corpus du droit sénégalais sur Lexenegal. Texte institué par : Loi n° 2026-18 du 3 septembre 2026.</p></section>',
+        '    <div class="ssr-dv__report" aria-hidden="true"><i></i></div><div class="ssr-dv__bc"><i aria-hidden="true"></i><span class="ssr-dv__pill">Version en vigueur</span></div><div class="ssr-dv__head"><span class="ssr-dv__h2" aria-hidden="true"><i></i><i></i></span><i class="ssr-dv__meta" aria-hidden="true"></i><i class="ssr-dv__print" aria-hidden="true"></i></div><div class="ssr-dv__tabs" aria-hidden="true"><i></i></div><div class="ssr-dv__carte" aria-hidden="true"><span class="ssr-dv__carte-tete"><i></i><i></i></span><i></i><i></i><i class="ssr-dv__carte-lien"></i></div><div class="ssr-dv__nav" aria-hidden="true"><i></i></div>',
         '    <nav class="ssr-toc" aria-label="Articles"><h2>Articles · Code du Travail</h2><ul><li><a href="/code/code-travail/art-premier">Article premier</a></li>',
         '<li><a href="/code/code-travail/art-2">Article 2</a></li>',
         '<li><a href="/code/code-travail/article-l10">Article L.10 (Code de 1997)</a></li></ul></nav>',
         '    ',
-        '  </article></div>',
+        '  </article>',
+        '</div></div>',
     ].join('\n');
 
     it('sans concordance : sommaire et compteur d’avant la fusion, à l’identique', async () => {

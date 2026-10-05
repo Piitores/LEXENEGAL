@@ -259,9 +259,10 @@ describe('rendu serveur : page d’un article de code fusionné', () => {
     });
 
     /*
-     * Sorties attendues FIGÉES sur celles de buildArticleHead et buildArticleBody avant la fusion (HEAD du
-     * 02/10/2026, mêmes entrées) : comparer l'appel avec null à l'appel sans argument ne prouverait rien,
-     * les deux suivent le même chemin.
+     * Sorties attendues FIGÉES : en-tête sur celui d'avant la fusion (HEAD du 02/10/2026, mêmes entrées),
+     * corps sur celui de la page article habillée comme la page React (05/10/2026, option A : arbre et
+     * ligne de version en emplacements vides faute de données). Comparer l'appel avec null à l'appel
+     * sans argument ne prouverait rien, les deux suivent le même chemin.
      */
     it('sans contexte de fusion, en-tête et corps d’avant la fusion, à l’identique', async () => {
         const api = await charger('render.js');
@@ -291,14 +292,20 @@ describe('rendu serveur : page d’un article de code fusionné', () => {
             '  <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Legislation","name":"Article 5 - Code Pénal","legislationIdentifier":"5","inLanguage":"fr","isPartOf":{"@type":"Legislation","name":"Code Pénal","url":"https://www.lexenegal.sn/code/code-penal"},"legislationJurisdiction":{"@type":"AdministrativeArea","name":"Sénégal"},"url":"https://www.lexenegal.sn/code/code-penal/art-5"},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Codes et textes","item":"https://www.lexenegal.sn/codes"},{"@type":"ListItem","position":2,"name":"Code Pénal","item":"https://www.lexenegal.sn/code/code-penal"},{"@type":"ListItem","position":3,"name":"Article 5","item":"https://www.lexenegal.sn/code/code-penal/art-5"}]}]</script>',
         ].join('\n');
         const CORPS = [
-            '<div id="ssr-content" class="ssr-prerender"><article>',
-            '    <nav class="ssr-bc" aria-label="Fil d\'Ariane"><a href="/code/code-penal">Code Pénal</a> › Article 5</nav>',
+            '<div id="ssr-content" class="ssr-prerender"><article class="ssr-article"><div class="ssr-a-layout"><div class="ssr-a-main">',
+            '    <span class="ssr-a-somm" aria-hidden="true"></span>',
+            '    <nav class="ssr-bc" aria-label="Fil d\'Ariane"><a href="/codes">Codes</a><span class="ssr-chev" aria-hidden="true"></span><a href="/code/code-penal">Code Pénal</a><span class="ssr-chev" aria-hidden="true"></span><span class="ssr-bc-cur">Article 5</span></nav>',
             '    ',
+            '    <header class="ssr-a-head">',
             '    <h1>Article 5</h1>',
-            '    <div class="ssr-article-body"><p>T</p></div>',
-            '    ',
-            '    ',
-            '  </article></div>',
+            '    <p class="ssr-ver ssr-ver--vide" aria-hidden="true"></p></header>',
+            '    <div class="ssr-act" aria-hidden="true"><span></span><span></span><span></span></div>',
+            '    <div class="ssr-a-box"><div class="ssr-article-body"><p>T</p></div></div>',
+            '    <section class="ssr-citing"><h2>Décisions citant cet article</h2><div class="ssr-cc-vide" aria-hidden="true"></div></section>',
+            '    <div class="ssr-artnav" aria-hidden="true"><span class="ssr-nav-prev ssr-nav--vide" aria-hidden="true"></span><span class="ssr-nav-retour" aria-hidden="true"></span><span class="ssr-nav-next ssr-nav--vide" aria-hidden="true"></span></div>',
+            '  </div>',
+            '  <div class="ssr-a-tree ssr-a-tree--vide" aria-hidden="true"></div>',
+            '  </div></article></div>',
         ].join('\n');
         expect(api.buildArticleHead(law, art, canon, 'Texte.', null)).toBe(ENTETE);
         expect(api.buildArticleHead(law, art, canon, 'Texte.')).toBe(ENTETE);
@@ -487,8 +494,12 @@ describe('handler de api/render.js (Supabase simulé)', () => {
         // La coquille est lue une fois, dans process.cwd()/dist/index.html, puis gardée en mémoire.
         const cwd = vi.spyOn(process, 'cwd').mockReturnValue(dossierCoquille);
         try { await api.default({ query, headers: { host: 'test' }, url: '/api/render' }, res); } finally { cwd.mockRestore(); }
-        return { statut: res.statusCode, entetes: res.headers, corps: res.body, journal };
+        // Le bloc de mise en forme de la page (<style id="ssr-style-TYPE">, api/_ssr/styles.js) est vérifié à
+        // part (stylesSsrApi.test.ts) : les corps et empreintes figés ici portent sur le balisage.
+        const styles = res.body.match(/<style id="ssr-style-[a-z]+">/g) || [];
+        return { statut: res.statusCode, entetes: res.headers, corps: sansStyleSsr(res.body), styles, journal };
     };
+    const sansStyleSsr = (html: string) => html.replace(/<style id="ssr-style-[a-z]+">[\s\S]*?<\/style>/, '');
     const empreinte = (s: string) => createHash('sha256').update(s).digest('hex');
     const CACHE_PAGE = 'public, s-maxage=86400, stale-while-revalidate=604800';
     const HTML = 'text/html; charset=utf-8';
@@ -497,8 +508,11 @@ describe('handler de api/render.js (Supabase simulé)', () => {
 
     /*
      * Concordance vide (aujourd'hui) : réponses FIGÉES sur celles du handler avant la fusion (HEAD du
-     * 02/10/2026, même simulation). Le corps de l'article 5 est écrit en entier ; pour les autres
-     * adresses, son empreinte sha256.
+     * 02/10/2026, même simulation), corps des pages d'article et des pages de texte refigés le 05/10/2026
+     * (version serveur habillée comme la page React : arbre, ligne de version, cartes des décisions ;
+     * colonne Sommaire, présentation, division ouverte et premières cartes d'articles), mêmes mots et
+     * mêmes liens qu'avant (seule la date des décisions passe en jj/mm/aaaa, comme React). Le corps de
+     * l'article 5 est écrit en entier ; pour les autres adresses, son empreinte sha256.
      */
     const CORPS_PENAL_5 = [
         '<!doctype html><html lang="fr"><head><meta charset="utf-8" />',
@@ -521,31 +535,37 @@ describe('handler de api/render.js (Supabase simulé)', () => {
         '  <meta data-rh="true" property="twitter:description" content="Article 5 du Code Pénal du Sénégal : Rédaction actuelle de l’article 5." />',
         '  <meta data-rh="true" property="twitter:image" content="https://www.lexenegal.sn/og-image.svg" />',
         '  <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Legislation","name":"Article 5 - Code Pénal","legislationIdentifier":"5","inLanguage":"fr","isPartOf":{"@type":"Legislation","name":"Code Pénal","url":"https://www.lexenegal.sn/code/code-penal"},"legislationJurisdiction":{"@type":"AdministrativeArea","name":"Sénégal"},"url":"https://www.lexenegal.sn/code/code-penal/art-5"},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Codes et textes","item":"https://www.lexenegal.sn/codes"},{"@type":"ListItem","position":2,"name":"Code Pénal","item":"https://www.lexenegal.sn/code/code-penal"},{"@type":"ListItem","position":3,"name":"Article 5","item":"https://www.lexenegal.sn/code/code-penal/art-5"}]}]</script>',
-        '</head><body><div id="app"><div id="ssr-content" class="ssr-prerender"><article>',
-        '    <nav class="ssr-bc" aria-label="Fil d\'Ariane"><a href="/code/code-penal">Code Pénal</a> › Article 5</nav>',
+        '</head><body><div id="app"><div id="ssr-content" class="ssr-prerender"><article class="ssr-article"><div class="ssr-a-layout"><div class="ssr-a-main">',
+        '    <span class="ssr-a-somm" aria-hidden="true"></span>',
+        '    <nav class="ssr-bc" aria-label="Fil d\'Ariane"><a href="/codes">Codes</a><span class="ssr-chev" aria-hidden="true"></span><a href="/code/code-penal">Code Pénal</a><span class="ssr-chev" aria-hidden="true"></span><span class="ssr-bc-cur">Article 5</span></nav>',
         '    ',
+        '    <header class="ssr-a-head">',
         '    <h1>Article 5</h1>',
-        '    <div class="ssr-article-body"><p>Rédaction actuelle de l’article 5.</p></div>',
-        '    <section class="ssr-citing"><h2>Décisions citant cet article</h2><ul><li><a href="/decision/cs-2015-12">Arrêt n° 12</a> - Chambre criminelle (4 mars 2015)</li></ul></section>',
-        '    <nav class="ssr-artnav" aria-label="Article précédent et suivant"><a href="/code/code-penal/art-4" rel="prev">← Article 4</a> · <a href="/code/code-penal/art-6" rel="next">Article 6 →</a></nav>',
-        '  </article></div></div></body></html>',
+        '    <p class="ssr-ver">En vigueur depuis le 25 novembre 2016</p></header>',
+        '    <div class="ssr-act" aria-hidden="true"><span></span><span></span><span></span></div>',
+        '    <div class="ssr-a-box"><div class="ssr-article-body"><p>Rédaction actuelle de l’article 5.</p></div></div>',
+        '    <section class="ssr-citing"><h2>Décisions citant cet article</h2><ul><li class="ssr-cc"><a href="/decision/cs-2015-12">Arrêt n° 12</a> <span class="ssr-cc-m">Chambre criminelle · 04/03/2015</span><span class="ssr-cc-x">"...article 5..."</span></li></ul></section>',
+        '    <nav class="ssr-artnav" aria-label="Article précédent et suivant"><a class="ssr-nav-prev" href="/code/code-penal/art-4" rel="prev">Article 4</a><span class="ssr-nav-retour" aria-hidden="true"></span><a class="ssr-nav-next" href="/code/code-penal/art-6" rel="next">Article 6</a></nav>',
+        '  </div>',
+        '  <nav class="ssr-a-tree" aria-label="Sommaire du texte"><div class="ssr-troot"><div class="ssr-tn"><div class="ssr-th"><span class="ssr-tt"></span><span class="ssr-tl"><span class="ssr-ty">Partie</span> <span class="ssr-tm">Dispositions</span></span><span class="ssr-tc" data-n="3"></span></div><div class="ssr-td"><i style="width:100%"></i></div></div></div></nav>',
+        '  </div></article></div></div></body></html>',
     ].join('\n');
     const FIGEES: Array<[string, Record<string, string>, number, Record<string, string>, string]> = [
         ['article daté d’un code non fusionné', { type: 'article', code: 'code-penal', slug: 'art-5', date: '2015-01-01' }, 200,
-            { 'Content-Type': HTML, 'Cache-Control': CACHE_PAGE }, '12b135ec3a02348b26ae5c05c9cb521e6e6a85d3ff3a3913ef5d1df2a4662b80'],
+            { 'Content-Type': HTML, 'Cache-Control': CACHE_PAGE }, 'b34f95ffa392f4098c1b620009a4d974ae664f0d04c72abda3306ead0f107b9f'],
         ['?ancien= ignoré hors fusion', { type: 'article', code: 'code-penal', slug: 'art-5', ancien: 'L56' }, 200,
-            { 'Content-Type': HTML, 'Cache-Control': CACHE_PAGE }, '12b135ec3a02348b26ae5c05c9cb521e6e6a85d3ff3a3913ef5d1df2a4662b80'],
+            { 'Content-Type': HTML, 'Cache-Control': CACHE_PAGE }, 'b34f95ffa392f4098c1b620009a4d974ae664f0d04c72abda3306ead0f107b9f'],
         ['page d’un code non fusionné', { type: 'code', slug: 'code-penal' }, 200,
-            { 'Content-Type': HTML, 'Cache-Control': CACHE_PAGE }, 'de036303bc32a66908f6f6e0c959cf31405239164694bea7e02a00df950f4c8d'],
+            { 'Content-Type': HTML, 'Cache-Control': CACHE_PAGE }, 'ba7f859a618eba7f19ad05b0f78d77e888c04d203e8998607bf5b2f1b71a53e1'],
         ['ancien article de 1997, paramètres ignorés', { type: 'article', code: 'code-travail', slug: 'article-l56', ancien: 'L56', date: '2015-03-04' }, 200,
-            { 'Content-Type': HTML, 'Cache-Control': CACHE_PAGE }, 'ddbac9b7700e3bac497addc0d0282ece86063194c653958670ba0a8468d25376'],
+            { 'Content-Type': HTML, 'Cache-Control': CACHE_PAGE }, '78e56ccd540f046487947cd8315466071344e77c11c4081f182d6a591dccc58d'],
         ['code 1997 sous code-travail', { type: 'code', slug: 'code-travail' }, 200,
-            { 'Content-Type': HTML, 'Cache-Control': CACHE_PAGE }, '4370b14447a58c9c900bdf7d3f22679e90c77b1ed883cdd11e619e90075c2e30'],
+            { 'Content-Type': HTML, 'Cache-Control': CACHE_PAGE }, 'b4b7803b578cc69d50a63650ad9645d51b7fd262f449cc4870570b6045447c1f'],
         // code-travail-2026 est AUJOURD'HUI le texte en vigueur : servi en 200, jamais redirigé.
         ['article du code 2026 sous code-travail-2026', { type: 'article', code: 'code-travail-2026', slug: 'art-137' }, 200,
-            { 'Content-Type': HTML, 'Cache-Control': CACHE_PAGE }, '531a44df2ff3706e97e62d47e9be0da9428845a7b1b7591b0e1ba629a035ba4c'],
+            { 'Content-Type': HTML, 'Cache-Control': CACHE_PAGE }, 'c93242d2954f1c9d6c5d28b0edb340b819ef2e1fb3e6b42041fb79e91ae3cf2c'],
         ['code 2026 sous code-travail-2026', { type: 'code', slug: 'code-travail-2026', node: 'x' }, 200,
-            { 'Content-Type': HTML, 'Cache-Control': CACHE_PAGE }, '81d3b41c2b206ca4469a9823ab4b7a6654d97a180f62cb6994e25d124a0c187c'],
+            { 'Content-Type': HTML, 'Cache-Control': CACHE_PAGE }, '43af8c89185063da22e15c849f77711255c6953a7189d46e4fe94b9b6bec2c63'],
         ['ancien slug préfixé : 301 vers le slug court', { type: 'article', code: 'code-travail', slug: 'code-travail-article-l56' }, 301,
             { Location: `${SITE}/code/code-travail/article-l56`, 'Cache-Control': 'public, s-maxage=86400' }, empreinte('')],
         // Vraie 404 depuis le 03/10/2026 (avant : coquille noindex en 200, « soft 404 ») ; même corps.
@@ -563,7 +583,12 @@ describe('handler de api/render.js (Supabase simulé)', () => {
 
     /*
      * Requêtes d'avant la fusion (HEAD du 02/10/2026), FIGÉES : hors fusion, les seuls ajouts admis sont la
-     * lecture de la concordance et la colonne is_active (lues, jamais utilisées sans concordance).
+     * lecture de la concordance et la colonne is_active (lues, jamais utilisées sans concordance). Page
+     * article (05/10/2026) : statut et notes de l'article, décisions les plus récentes d'abord, plan du
+     * texte toujours lu, articles de l'arbre et versions sans contenu (habillage de la page), le tout
+     * dans le même lot parallèle. Page d'un texte (05/10/2026) : plus les trois lectures de l'habillage
+     * serveur (plan léger, premiers contenus, première division), lancées en parallèle des articles, et
+     * leur colonne node_id.
      */
     const sansAjoutsFusion = (journal: string[]) => journal
         .filter((a) => !a.startsWith('/rest/v1/article_concordance?'))
@@ -575,18 +600,27 @@ describe('handler de api/render.js (Supabase simulé)', () => {
         const art = await appel(AVANT, { type: 'article', code: 'code-penal', slug: 'art-5', date: '2015-01-01' });
         expect(sansAjoutsFusion(art.journal)).toEqual([
             LOI_PENAL,
-            '/rest/v1/articles?code_id=eq.CP&slug=eq.art-5&select=id,num,num_court,article_number,slug,content_html,node_id,display_order&limit=1',
+            '/rest/v1/articles?code_id=eq.CP&slug=eq.art-5&select=id,num,num_court,article_number,slug,content_html,node_id,display_order,is_active,status,notes&limit=1',
             // Aucune lecture des versions datées : le texte vient de la version courante, comme avant.
             '/rest/v1/article_versions?article_id=eq.p5&select=content,is_current&order=effective_date.desc&limit=5',
-            '/rest/v1/decision_article_links?article_id=eq.p5&select=citation_text,decision:decisions(reference,slug,date_decision,chambre)&limit=20',
+            '/rest/v1/decision_article_links?article_id=eq.p5&select=citation_text,anciens_numeros,decision:decisions(reference,slug,date_decision,chambre)&order=decision(date_decision).desc.nullslast,id&limit=20',
+            '/rest/v1/structure_nodes?code_id=eq.CP&select=id,parent_id,type,numero,intitule,label,note,position&order=position&limit=5000',
             '/rest/v1/articles?code_id=eq.CP&or=(display_order.lt.50,and(display_order.eq.50,id.lt.p5))&select=slug,num,num_court,article_number&order=display_order.desc,id.desc&limit=1',
             '/rest/v1/articles?code_id=eq.CP&or=(display_order.gt.50,and(display_order.eq.50,id.gt.p5))&select=slug,num,num_court,article_number&order=display_order.asc,id.asc&limit=1',
+            // Habillage de la page : articles de l'arbre (colonnes légères) et versions sans contenu.
+            // Deux premières pages en parallèle (un seul texte dépasse 1 000 articles).
+            '/rest/v1/articles?code_id=eq.CP&select=slug,node_id,display_order,num,num_court,article_number,status,is_active,tags,part_title,title_name,chapter_name&order=display_order,id&offset=0&limit=1000',
+            '/rest/v1/articles?code_id=eq.CP&select=slug,node_id,display_order,num,num_court,article_number,status,is_active,tags,part_title,title_name,chapter_name&order=display_order,id&offset=1000&limit=1000',
+            '/rest/v1/article_versions?article_id=eq.p5&select=id,effective_date,expiration_date,is_current,version_note,ancien_numero&order=effective_date.desc,id&limit=1000',
         ]);
         expect(art.journal.filter((a) => a.startsWith('/rest/v1/article_concordance?'))).toHaveLength(1);
         const code = await appel(AVANT, { type: 'code', slug: 'code-penal' });
         expect(sansAjoutsFusion(code.journal)).toEqual([
             LOI_PENAL,
-            '/rest/v1/articles?code_id=eq.CP&select=num,num_court,article_number,slug&order=display_order,id&offset=0&limit=1000',
+            '/rest/v1/structure_nodes?code_id=eq.CP&select=id,parent_id,type&order=position,id&limit=1000',
+            '/rest/v1/articles?code_id=eq.CP&select=id,content_html,modifications,status,tags,part_title&order=display_order,id&limit=6',
+            '/rest/v1/structure_nodes?code_id=eq.CP&parent_id=is.null&select=id,type,numero,intitule,label&order=position,id&limit=1',
+            '/rest/v1/articles?code_id=eq.CP&select=id,num,num_court,article_number,slug,is_active,node_id&order=display_order,id&offset=0&limit=1000',
             '/rest/v1/legal_edge?relation=eq.lie_a&or=(src_id.eq.CP,dst_id.eq.CP)&select=src_id,dst_id',
         ]);
     });
@@ -595,6 +629,8 @@ describe('handler de api/render.js (Supabase simulé)', () => {
         for (const [nom, q, statut, entetes, sha] of FIGEES) {
             const r = await appel(AVANT, q);
             expect({ nom, statut: r.statut, entetes: r.entetes, sha: empreinte(r.corps) }).toEqual({ nom, statut, entetes, sha });
+            // Page servie : un seul bloc de mise en forme, celui de son type (api/_ssr/styles.js) ; aucun ailleurs.
+            expect({ nom, styles: r.styles }).toEqual({ nom, styles: statut === 200 ? [`<style id="ssr-style-${q.type}">`] : [] });
         }
     });
 
@@ -669,7 +705,9 @@ describe('handler de api/render.js (Supabase simulé)', () => {
         const a136 = await appel(APRES, { type: 'article', code: 'code-travail', slug: 'art-136' });
         expect(a136.statut).toBe(200);
         expect(a136.corps).not.toContain('rel="prev"');
-        expect(a136.corps).toContain('<a href="/code/code-travail/art-137" rel="next">Article 137 →</a>');
+        expect(a136.corps).toContain('<a class="ssr-nav-next" href="/code/code-travail/art-137" rel="next">Article 137</a>');
+        // Arbre de la colonne de gauche : l'ancien article désactivé n'y figure pas non plus.
+        expect(a136.corps).not.toContain('article-l57');
         expect(a136.journal.filter((a) => a.includes('or=(display_order')).every((a) => a.includes('&id=not.in.(al10)&is_active=eq.true'))).toBe(true);
     });
 

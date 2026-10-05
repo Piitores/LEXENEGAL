@@ -16,6 +16,8 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+// Mise en forme de la version serveur, un bloc par type de page, placé dans le <head> de ce seul type.
+import { styleSsr } from './_ssr/styles.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -178,14 +180,73 @@ function headBlock({ title, description, keywords, canonical, ogType, schema }) 
   ${ldjson(schema)}`;
 }
 
-function textToParagraphs(raw) {
-  if (!raw) return '';
-  let s = String(raw).replace(/\x0c/g, '\n');
-  if (/<div class=|class="decision-body"|class="master-composition"/.test(s)) return s;
-  let blocks = s.split(/\n[ \t]*\n+/);
-  if (blocks.length < 2) blocks = s.split(/;\s+/).map((b, i, a) => (i < a.length - 1 ? b + ' ;' : b));
-  return blocks.map((b) => b.replace(/\s*\n\s*/g, ' ').replace(/\s+/g, ' ').trim())
-    .filter((b) => b.length > 2).map((b) => `<p>${esc(b)}</p>`).join('\n');
+/*
+ * Texte d'une décision mis en forme : COPIE de `decisionTextToHtml` (src/utils/decisionTextFormatter.ts),
+ * que cette fonction Vercel ne peut pas importer. Le serveur produit ainsi le MÊME balisage que la page
+ * React (bloc Composition, en-tête République, visas, sections, dispositif), que le CSS de #ssr-keep
+ * (api/_ssr/styles.js, bloc « decision ») met en forme comme DecisionPage.css : à l'arrivée de React, le
+ * texte ne change ni de police, ni de marges, ni de coupures. Avant le 05/10/2026, le serveur le
+ * découpait en paragraphes nus (textToParagraphs) : autre mise en page, « le rendu saute ».
+ * ⚠️ Toute modification du formateur React se reporte ici (mêmes expressions, même ordre).
+ */
+function compositionDecisionSsr(text) {
+  const m = text.match(/COMPOSITION\s+DE\s+LA\s+JURIDICTION\s*\n+([\s\S]*?)(?=\n*(?:RÉPUBLIQUE|ARRÊT|AU\s+NOM|La\s+Cour|Le\s+Tribunal|$))/i);
+  if (!m) return { html: '', reste: text };
+  const reste = text.replace(m[0], '').trim();
+  const motif = /(Président|Rapporteur|Avocat\s+[gG]énéral|Greffier|Conseillers?)\s*\n*:\s*\n*([\s\S]*?)(?=\n*(?:Président|Rapporteur|Avocat|Greffier|Conseillers?|$))/gi;
+  const roles = [];
+  let r;
+  while ((r = motif.exec(m[1])) !== null) {
+    const nom = r[2].trim().replace(/\n+/g, ', ').replace(/,\s*$/, '');
+    if (nom) roles.push([r[1].trim(), nom]);
+  }
+  if (!roles.length) return { html: '', reste: text };
+  const items = roles.map(([role, nom]) => `<div class="composition-item"><span class="composition-role">${esc(role)}</span>`
+    + `<span class="composition-sep">:</span><span class="composition-name">${esc(nom)}</span></div>`).join('\n');
+  return { html: `<div class="master-composition">\n<h3 class="composition-title">COMPOSITION DE LA JURIDICTION</h3>\n${items}\n</div>`, reste };
+}
+function enTeteRepubliqueSsr(text) {
+  const m = text.match(/\n*(RÉPUBLIQUE\s+DU\s+SÉNÉGAL)\s*\n+(Un\s+Peuple\s*-\s*Un\s+But\s*-\s*Une\s+Foi)\s*\n*/i);
+  if (!m) return { html: '', reste: text };
+  return {
+    html: `\n<div class="decision-header">\n<h2 class="republique">${esc(m[1])}</h2>\n<p class="devise">${esc(m[2])}</p>\n</div>\n`,
+    reste: text.replace(m[0], '\n\n').trim(),
+  };
+}
+function paragrapheDecisionSsr(segment) {
+  const t = segment.trim();
+  if (/^Vu\s+/i.test(t)) return `<p class="visa"><em>${esc(t)}</em></p>`;
+  if (/^Considérant\s+/i.test(t) || /^Attendu\s+(que|qu')/i.test(t)) return `<p>${esc(t)}</p>`;
+  if (/^(EN LA FORME|AU FOND|SUR LE FOND|SUR LA COMP[EÉ]TENCE|SUR L'EXCEPTION|MOTIFS|DISCUSSION|FAITS ET PROC[EÉ]DURE)/i.test(t) && t.length < 100) {
+    return `<h3 class="section-intermediate">${esc(t)}</h3>`;
+  }
+  if (/^(PAR\s+CES\s+MOTIFS|D[EÉ]CIDE|ARR[EÊ]TE|DIT\s+ET\s+JUGE|STATUANT)/i.test(t)) return `<blockquote class="dispositif"><p>${esc(t)}</p></blockquote>`;
+  return `<p>${esc(t)}</p>`;
+}
+export function texteDecisionEnHtml(texte) {
+  if (!texte) return '';
+  let text = String(texte).replace(/\r\n/g, '\n').replace(/\r/g, '\n').trim();
+  let html = '';
+  const compo = compositionDecisionSsr(text);
+  if (compo.html) { html += compo.html + '\n'; text = compo.reste; }
+  const entete = enTeteRepubliqueSsr(text);
+  if (entete.html) { html += entete.html + '\n'; text = entete.reste; }
+  const segments = text.includes('\n\n')
+    ? text.split(/\n\n+/)
+    : text.split(/;\s*/).map((s, i, a) => (i < a.length - 1 ? `${s.trim()} ;` : s.trim()));
+  const corps = segments.map((s) => s.trim()).filter((s) => s.length >= 3).map(paragrapheDecisionSsr).join('\n');
+  return `${html}<div class="decision-body">\n${corps}\n</div>`;
+}
+/*
+ * Corps servi : la MÊME source que la page React (texteDecisionAffiche, ci-dessous : jamais texte_brut
+ * quand texte_integral est structuré, car seul ce dernier est pseudonymisé). Déjà balisé (HTML de la
+ * base) : tel quel, comme la page React ; texte brut : mis en forme comme React (texteDecisionEnHtml).
+ */
+function corpsDecisionSsr(d) {
+  const source = texteDecisionAffiche(d);
+  if (!source) return '';
+  const s = String(source);
+  return /<div class=|class="decision-body"|class="master-composition"/.test(s) ? s : texteDecisionEnHtml(s);
 }
 /*
  * Texte d'une décision : la MÊME source que la page (getDecisionHtml, src/utils/decisionTextFormatter.ts).
@@ -202,6 +263,140 @@ function texteDecisionAffiche(d) {
   return d.texte_brut || i;
 }
 function wrapContent(inner) { return `<div id="ssr-content" class="ssr-prerender">${inner}</div>`; }
+
+/*
+ * ---------- COPIES PARTAGÉES par les gabarits serveur (une seule copie de chaque) ----------
+ * Cette fonction Vercel ne peut pas importer src/ : les libellés de l'arbre (formatNodeLabel), la règle
+ * des préambules (isPreambule) et les icônes lucide-react sont recopiés ICI, une fois, et servent aux pages
+ * article, texte, décision, jurisprudence, guides, doctrine et /codes. Parité vérifiée par
+ * src/lib/__tests__/codeTreeApi.test.ts et articleArbreApi.test.ts.
+ */
+// Icônes : tracés lucide-react 0.562 recopiés, décoratifs (aria-hidden).
+const ICONES_SSR = {
+  Scale: '<path d="M12 3v18"/><path d="m19 8 3 8a5 5 0 0 1-6 0zV7"/><path d="M3 7h1a17 17 0 0 0 8-2 17 17 0 0 0 8 2h1"/><path d="m5 8 3 8a5 5 0 0 1-6 0zV7"/><path d="M7 21h10"/>',
+  BookMarked: '<path d="M10 2v8l3-3 3 3V2"/><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/>',
+  ArrowLeft: '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
+  BookOpen: '<path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/>',
+  Calendar: '<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/>',
+  FileText: '<path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"/><path d="M14 2v5a1 1 0 0 0 1 1h5"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/>',
+  Building: '<path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M12 6h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M16 6h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/><path d="M8 6h.01"/><path d="M9 22v-3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"/><rect x="4" y="2" width="16" height="20" rx="2"/>',
+  Lock: '<rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  Search: '<path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/>',
+  Briefcase: '<path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><rect width="20" height="14" x="2" y="6" rx="2"/>',
+  Users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/>',
+  Gavel: '<path d="m14 13-8.381 8.38a1 1 0 0 1-3.001-3l8.384-8.381"/><path d="m16 16 6-6"/><path d="m21.5 10.5-8-8"/><path d="m8 8 6-6"/><path d="m8.5 7.5 8 8"/>',
+  Scroll: '<path d="M19 17V5a2 2 0 0 0-2-2H4"/><path d="M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3"/>',
+  Landmark: '<path d="M10 18v-7"/><path d="M11.12 2.198a2 2 0 0 1 1.76.006l7.866 3.847c.476.233.31.949-.22.949H3.474c-.53 0-.695-.716-.22-.949z"/><path d="M14 18v-7"/><path d="M18 18v-7"/><path d="M3 22h18"/><path d="M6 18v-7"/>',
+  Radio: '<path d="M16.247 7.761a6 6 0 0 1 0 8.478"/><path d="M19.075 4.933a10 10 0 0 1 0 14.134"/><path d="M4.925 19.067a10 10 0 0 1 0-14.134"/><path d="M7.753 16.239a6 6 0 0 1 0-8.478"/><circle cx="12" cy="12" r="2"/>',
+  Map: '<path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"/><path d="M15 5.764v15"/><path d="M9 3.236v15"/>',
+  Pickaxe: '<path d="m14 13-8.381 8.38a1 1 0 0 1-3.001-3L11 9.999"/><path d="M15.973 4.027A13 13 0 0 0 5.902 2.373c-1.398.342-1.092 2.158.277 2.601a19.9 19.9 0 0 1 5.822 3.024"/><path d="M16.001 11.999a19.9 19.9 0 0 1 3.024 5.824c.444 1.369 2.26 1.676 2.603.278A13 13 0 0 0 20 8.069"/><path d="M18.352 3.352a1.205 1.205 0 0 0-1.704 0l-5.296 5.296a1.205 1.205 0 0 0 0 1.704l2.296 2.296a1.205 1.205 0 0 0 1.704 0l5.296-5.296a1.205 1.205 0 0 0 0-1.704z"/>',
+  Leaf: '<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>',
+  Car: '<path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/>',
+  Sprout: '<path d="M14 9.536V7a4 4 0 0 1 4-4h1.5a.5.5 0 0 1 .5.5V5a4 4 0 0 1-4 4 4 4 0 0 0-4 4c0 2 1 3 1 5a5 5 0 0 1-1 3"/><path d="M4 9a5 5 0 0 1 8 4 5 5 0 0 1-8-4"/><path d="M5 21h14"/>',
+  FolderOpen: '<path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/>',
+  ChevronRight: '<path d="m9 18 6-6-6-6"/>',
+  ExternalLink: '<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
+  CircleHelp: '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>',
+  Tags: '<path d="M13.172 2a2 2 0 0 1 1.414.586l6.71 6.71a2.4 2.4 0 0 1 0 3.408l-4.592 4.592a2.4 2.4 0 0 1-3.408 0l-6.71-6.71A2 2 0 0 1 6 9.172V3a1 1 0 0 1 1-1z"/><path d="M2 7v6.172a2 2 0 0 0 .586 1.414l6.71 6.71a2.4 2.4 0 0 0 3.191.193"/><circle cx="10.5" cy="6.5" r=".5" fill="currentColor"/>',
+};
+function iconeSsr(nom, taille, trait = 2, classe = '') {
+  return `<svg${classe ? ` class="${classe}"` : ''} aria-hidden="true" focusable="false" width="${taille}" height="${taille}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${trait}" stroke-linecap="round" stroke-linejoin="round">${ICONES_SSR[nom] || ICONES_SSR.FolderOpen}</svg>`;
+}
+
+// Copie de isPreambule (src/lib/codeTree.ts) : mêmes préambules en tête de page que React.
+const RE_PREAMBULE_SSR = /^\s*(?:articles?\s+|art\.\s*)?pr[ée]ambule\s*$/i;
+export function estPreambuleSsr(a) {
+  return !!a && ((!!a.tags && typeof a.tags.includes === 'function' && a.tags.includes('preambule'))
+    || RE_PREAMBULE_SSR.test(a.num || '') || RE_PREAMBULE_SSR.test(a.num_court || ''));
+}
+
+// COPIE de NODE_KIND et formatNodeLabel (src/lib/codeTree.ts) : libellés de l'arbre et de
+// l'emplacement dans le texte, au caractère près (« Titre V », « Chapitre premier », « Point A »).
+const NODE_KIND_SSR = {
+  partie: 'Partie', livre: 'Livre', titre: 'Titre', chapitre: 'Chapitre',
+  section: 'Section', 'sous-section': 'Sous-section', paragraphe: 'Paragraphe', division: '',
+  'point-lettre': 'Point',
+};
+const TYPE_WORDS_SSR = 'titre|chapitre|sous-section|section|paragraphe|partie|livre|division';
+const ORDINALS_SSR = {
+  premier: '1', premiere: '1', deuxieme: '2', second: '2', seconde: '2',
+  troisieme: '3', quatrieme: '4', cinquieme: '5', sixieme: '6', septieme: '7',
+  huitieme: '8', neuvieme: '9', dixieme: '10', onzieme: '11', douzieme: '12',
+  treizieme: '13', quatorzieme: '14', quinzieme: '15', seizieme: '16',
+  dixseptieme: '17', dixhuitieme: '18', dixneuvieme: '19', vingtieme: '20',
+};
+// Séparateurs tolérés après un numéro de niveau (tirets longs écrits en échappement).
+const SEP_NIVEAU = ')\\].:°\u2014\u2013-';
+const deburrSsr = (s) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const titleWordSsr = (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+function romanToIntSsr(s) {
+  const map = { I: 1, V: 5, X: 10, L: 50, C: 100, D: 500, M: 1000 };
+  const u = s.toUpperCase();
+  if (!/^[IVXLCDM]+$/.test(u)) return 0;
+  let total = 0;
+  for (let i = 0; i < u.length; i++) {
+    const cur = map[u[i]], next = map[u[i + 1]] || 0;
+    total += cur < next ? -cur : cur;
+  }
+  return total;
+}
+function numToArabicOrNullSsr(token) {
+  const t = (token || '').trim();
+  const suf = t.match(/\b(bis|ter|quater|quinquies)\b/i);
+  const suffix = suf ? ' ' + suf[1].toLowerCase() : '';
+  const core = t.replace(/\b(bis|ter|quater|quinquies)\b/ig, '').trim();
+  if (/^[0-9]+$/.test(core)) return core + suffix;
+  if (ORDINALS_SSR[deburrSsr(core)]) return ORDINALS_SSR[deburrSsr(core)] + suffix;
+  const r = romanToIntSsr(core);
+  if (r > 0) return String(r) + suffix;
+  return null;
+}
+export function formatNodeLabelSsr(n) {
+  let kind = NODE_KIND_SSR[n.type] ?? n.type;
+  let num = (n.numero || '').trim();
+  let label = (n.intitule || n.name || '').trim();
+  let stripped = false;
+  const mType = label.match(new RegExp(`^\\s*(${TYPE_WORDS_SSR})\\s+(\\S+?)(\\s+(?:bis|ter|quater))?\\s*[${SEP_NIVEAU}]+\\s*(.*)$`, 'i'))
+    || label.match(new RegExp(`^\\s*(${TYPE_WORDS_SSR})\\s+(\\S+?)(\\s+(?:bis|ter|quater))?\\s+(.*)$`, 'i'));
+  if (mType && numToArabicOrNullSsr((mType[2] + (mType[3] || '')).trim())) {
+    kind = NODE_KIND_SSR[deburrSsr(mType[1])] ?? titleWordSsr(mType[1]);
+    if (!num || !numToArabicOrNullSsr(num)) num = (mType[2] + (mType[3] || '')).trim();
+    label = (mType[4] || '').trim();
+    stripped = true;
+  }
+  if (!stripped) {
+    const mOrd = label.match(/^\s*([A-Za-zÀ-ÿ]+)\s*(.*)$/);
+    if (mOrd && ORDINALS_SSR[deburrSsr(mOrd[1])]) {
+      if (!num || !numToArabicOrNullSsr(num)) num = mOrd[1];
+      let rest = (mOrd[2] || '').trim();
+      const mt = rest.match(new RegExp(`^(${TYPE_WORDS_SSR})\\b\\s*[${SEP_NIVEAU}]*\\s*(.*)$`, 'i'));
+      if (mt) { kind = NODE_KIND_SSR[deburrSsr(mt[1])] ?? titleWordSsr(mt[1]); rest = (mt[2] || '').trim(); }
+      label = rest;
+    }
+  }
+  if (!stripped) {
+    const m4 = label.match(new RegExp(`^\\s*(?:(${TYPE_WORDS_SSR})\\s*[.:°)\\]-]*\\s*)?([A-Za-zÀ-ÿ0-9]+)?\\s*$`, 'i'));
+    if (m4) {
+      const jeton = (m4[2] || '').trim();
+      const estNum = !!jeton && (!!numToArabicOrNullSsr(jeton) || /^[A-Za-z]$/.test(jeton));
+      const memeQueNum = !!jeton && !!num && deburrSsr(jeton) === deburrSsr(num);
+      if ((m4[1] && (estNum || !jeton)) || (memeQueNum && estNum)) {
+        if (m4[1]) kind = NODE_KIND_SSR[deburrSsr(m4[1])] ?? titleWordSsr(m4[1]);
+        if (jeton && (!num || !numToArabicOrNullSsr(num))) num = jeton;
+        label = '';
+      }
+    }
+  }
+  const arab = numToArabicOrNullSsr(num);
+  const lettre = /^[A-Za-z]$/.test(num);
+  let badge = '';
+  if (kind && (arab || lettre)) badge = `${kind} ${num}`;
+  else if (kind) {
+    const hasKind = new RegExp(`\\b${kind}\\b`, 'i').test(label) || /\bPARTIE\b/i.test(label);
+    badge = hasKind ? '' : kind;
+  }
+  return { badge, label };
+}
 
 /* ---------- DÉCISION ---------- */
 export function buildDecisionHead(d, canonical) {
@@ -298,9 +493,20 @@ export function entreesArticlesCites(cited, dateDecision, bascules) {
   }
   return out;
 }
+/*
+ * Page décision servie : même gabarit que la page React prête (src/pages/Decision/DecisionPage.tsx), pour
+ * que la bascule serveur -> React soit quasi invisible (décision du propriétaire du 05/10/2026, option A).
+ * Fil d'Ariane, grille 3 colonnes, carte centrale (pastille, titre, date, synthèse, texte intégral) ; les
+ * boutons d'action React (retour, favoris, PDF, impression…) sont des EMPLACEMENTS vides de même taille
+ * (aria-hidden, sans texte). Mise en forme : api/_ssr/styles.js, bloc « decision ».
+ * Tout le texte servi auparavant reste dans la page : la fiche (juridiction, chambre, date, matière,
+ * parties) et les mots-clés changent seulement de place. ⚠️ Gabarit à garder synchrone avec DecisionPage.tsx.
+ */
+// Emplacements des actions (DecisionActions + 5 ActionButton) : favoris | dossier, PDF, imprimer, copier, annotations, signaler.
+const outilsDecisionSsr = (cls) => `<div class="ssr-dc-outils ${cls}" aria-hidden="true"><div class="ssr-dc-rang"><span class="ssr-dc-btn"></span><span class="ssr-dc-btn ssr-dc-dossier"></span></div>`
+  + '<span class="ssr-dc-btn ssr-dc-pdf"></span><span class="ssr-dc-btn"></span><span class="ssr-dc-btn"></span><span class="ssr-dc-btn"></span><span class="ssr-dc-btn"></span></div>';
 export function buildDecisionBody(d, cited, related, bascules) {
   const ref = d.reference || 'Décision';
-  const court = d.chambre || d.juridiction || '';
   const dateFr = formatDateFr(d.date_decision);
   const meta = [
     d.juridiction && `<li><strong>Juridiction :</strong> ${esc(d.juridiction)}</li>`,
@@ -309,10 +515,23 @@ export function buildDecisionBody(d, cited, related, bascules) {
     d.matiere_principale && `<li><strong>Matière :</strong> ${esc(d.matiere_principale)}</li>`,
     d.parties_principales && `<li><strong>Parties :</strong> ${esc(d.parties_principales)}</li>`,
   ].filter(Boolean).join('\n');
-  const motscles = (d.mots_cles && d.mots_cles.length)
-    ? `<p class="ssr-motscles"><strong>Mots-clés :</strong> ${esc(d.mots_cles.join(', '))}</p>` : '';
-  const resume = d.resume ? `<section class="ssr-resume"><h2>Résumé</h2><p>${esc(stripHtml(d.resume))}</p></section>` : '';
-  const corps = textToParagraphs(texteDecisionAffiche(d));
+  // Pastilles de la synthèse : la matière (pleine) puis les mots-clés, comme la page React.
+  const motscles = Array.isArray(d.mots_cles) ? d.mots_cles.filter((m) => m != null && String(m).trim()) : [];
+  const pastilles = [
+    d.matiere_principale && `<li class="ssr-dc-matiere">${esc(d.matiere_principale)}</li>`,
+    ...motscles.map((m) => `<li>${esc(m)}</li>`),
+  ].filter(Boolean).join('');
+  const tags = pastilles
+    ? `<ul class="ssr-dc-tags" aria-label="${motscles.length ? 'Matière et mots-clés' : 'Matière'}">${pastilles}</ul>`
+    : '<div class="ssr-dc-tags"></div>';
+  const resume = d.resume ? `<p class="ssr-dc-resume">${esc(stripHtml(d.resume))}</p>` : '';
+  // « Références légales » : la liste brute articles_loi_cites, comme la page React (liens résolus côté client).
+  const lois = Array.isArray(d.articles_loi_cites) ? d.articles_loi_cites.filter((a) => a != null && String(a).trim()) : [];
+  const refs = lois.length
+    ? `<div class="ssr-dc-refs"><p class="ssr-dc-refs-titre">${iconeSsr('Scale', 12)}Références Légales</p><ul>${lois
+        .map((a) => `<li><span aria-hidden="true">§</span>${esc(a)}</li>`).join('')}</ul></div>`
+    : '';
+  const corps = corpsDecisionSsr(d);
   const cites = (cited && cited.length)
     ? `<section class="ssr-cited"><h2>Textes et articles cités</h2><ul>${entreesArticlesCites(cited, d.date_decision, bascules)
         .map((e) => (e.href ? `<li><a href="${esc(e.href)}">${esc(e.label)}</a></li>` : `<li>${esc(e.label)}</li>`))
@@ -327,13 +546,23 @@ export function buildDecisionBody(d, cited, related, bascules) {
         return `<li><a href="/decision/${esc(r.slug)}">${esc(label)}</a>${dt ? ` (${esc(dt)})` : ''}</li>`;
       }).filter(Boolean).join('')}</ul></section>`
     : '';
-  return wrapContent(`<article>
-    <h1>${esc([d.juridiction, ref, d.chambre].filter(Boolean).join(' - '))}</h1>
-    <ul class="ssr-meta">${meta}</ul>
-    ${motscles}${resume}
-    <section class="ssr-corps"><h2>Texte intégral</h2>${corps}</section>
-    ${cites}${liees}
-  </article>`);
+  return wrapContent(`<div class="ssr-decision">
+<nav class="ssr-dc-bc" aria-label="Fil d'Ariane"><ol><li><a href="/">Lexenegal</a></li><li><a href="/jurisprudence">Jurisprudence</a></li><li><a href="/decision/${esc(d.slug || '')}">${esc(ref)}</a></li></ol></nav>
+<div class="ssr-dc-grille">
+<div class="ssr-dc-gauche" aria-hidden="true"><div class="ssr-dc-collant"><span class="ssr-dc-retour"></span><span class="ssr-dc-saut"></span><span class="ssr-dc-saut"></span></div></div>
+<article class="ssr-dc-main">
+<div class="ssr-dc-badge">${iconeSsr('Scale', 14)}Source Certifiée : Lexenegal.sn</div>
+<h1 class="ssr-dc-titre">${esc([d.juridiction, ref, d.chambre].filter(Boolean).join(' - '))}</h1>
+<p class="ssr-dc-date">${esc(dateFr || 'Date N/D')}</p>
+${outilsDecisionSsr('ssr-dc-outils-m')}
+<section class="ssr-dc-synthese" id="ssr-synthese"><h2 class="ssr-dc-synthese-titre">${iconeSsr('BookOpen', 14)}Synthèse Juridique</h2>${tags}${resume}${refs}</section>
+<section class="ssr-dc-corps" id="ssr-texte"><h2 class="ssr-dc-corps-titre">Texte intégral</h2><div class="legal-content-wrapper"><div class="legal-content"><div>${corps}</div></div></div></section>
+<ul class="ssr-meta">${meta}</ul>
+${cites}${liees}
+</article>
+<div class="ssr-dc-droite" aria-hidden="true"><div class="ssr-dc-collant">${outilsDecisionSsr('ssr-dc-outils-d')}</div></div>
+</div>
+</div>`);
 }
 
 /* ---------- CODE (loi entière) ---------- */
@@ -418,11 +647,235 @@ function buildRelatedBlock(related) {
 }
 
 /*
+ * ---------- Page d'un texte : version serveur HABILLÉE COMME LA PAGE REACT PRÊTE ----------
+ * Décision du propriétaire (05/10/2026, option A) : à l'ouverture, on voyait 1 à 2 s une mise en page
+ * (version serveur) puis une autre (page React) : « le rendu saute ». La version serveur reprend donc
+ * la géométrie de src/pages/Code/CodePage.tsx (colonne de sommaire à gauche sur ordinateur, bouton
+ * « Sommaire » sur téléphone, présentation, division ouverte par défaut) ; la bascule vers React ne
+ * change plus que des polices et le contenu des zones en squelette.
+ *  - Rendu À L'IDENTIQUE de React : présentation (TextPresentation.tsx), préambules repliés, fil, titre
+ *    et compteur de la division ouverte, ses premières cartes d'articles (ArticleCard) ou son message
+ *    « division vide ». Lectures en parallèle des articles : aucun temps de réponse ajouté.
+ *  - Libellés de l'arbre (colonne « Sommaire ») et éléments interactifs (recherche, boutons, onglets) :
+ *    EMPLACEMENTS vides de même taille (aria-hidden, sans texte), aux nombres de lignes de l'arbre.
+ *  - Le contenu de référencement d'avant (h1, chapô, sommaire de tous les articles, textes liés) reste
+ *    entier et visible, PREMIER dans le DOM ; le CSS (api/_ssr/styles.js, bloc « code ») l'affiche après la
+ *    division ouverte, sous le premier écran.
+ * ⚠️ DOUBLE RENDU : toute retouche de CodePage.tsx, TextPresentation.tsx ou de leurs CSS (marges,
+ * tailles, ordre des blocs) se reporte ici et dans le bloc « code » de api/_ssr/styles.js.
+ */
+// Copie de CATEGORY_LABELS (src/components/TextPresentation/TextPresentation.tsx).
+const NATURES_TEXTE = {
+  code: 'Code', loi: 'Loi', decret: 'Décret', arrete: 'Arrêté', circulaire: 'Circulaire',
+  ohada: 'Acte uniforme OHADA', uemoa: 'Texte UEMOA', cima: 'Texte CIMA (assurances)',
+  convention: 'Convention collective', jors: 'Journal officiel',
+};
+const texteAbrogeSsr = (law) => !!(law && (law.abrogated_by_slug || law.abrogation_note));
+
+// Bloc « Présentation » : même logique et même texte que TextPresentation.tsx.
+export function presentationTexteSsr(law, nbArticles) {
+  const nature = NATURES_TEXTE[law.category] || 'Texte juridique';
+  const date = law.publication_date ? formatDateFr(law.publication_date) : '';
+  const dateOk = date && date !== 'Invalid Date';
+  const description = law.description && String(law.description).trim() ? law.description : '';
+  const annee = law.publication_date ? String(new Date(law.publication_date).getUTCFullYear()) : null;
+  const refPorteAnnee = !!(annee && law.reference && String(law.reference).includes(annee));
+  const jo = joReferenceSsr(law);
+  const pastille = (t) => `<span class="ssr-tp__chip">${esc(t)}</span>`;
+  const meta = `<span class="ssr-tp__nature">${esc(nature)}</span>`
+    + (law.reference && description ? pastille(law.reference) : '')
+    + (!jo && dateOk && !refPorteAnnee ? pastille(`Publié le ${date}`) : '')
+    + (jo ? pastille(`Publié au ${jo}`) : '')
+    + (nbArticles > 0 ? pastille(`${nbArticles.toLocaleString('fr-FR')} articles`) : '');
+  const corps = description
+    ? `<h2 class="ssr-tp__label">Présentation</h2><div class="ssr-tp__body">${description}</div>`
+    : `<p class="ssr-tp__fallback">${esc(law.short_title || law.title)} - texte intégral consolidé, à jour et structuré `
+      + `article par article, dans le corpus du droit sénégalais sur Lexenegal.${law.reference ? ` Texte institué par : ${esc(law.reference)}.` : ''}</p>`;
+  return `<section class="ssr-tp" aria-label="Présentation du texte"><div class="ssr-tp__meta">${meta}</div>${corps}</section>`;
+}
+
+// Préambule(s) en tête de page, repliés : carte ArticleCard de CodePage.tsx (le bouton « Copier » est un emplacement).
+function preambulesSsr(law, articles) {
+  const pre = (articles || []).filter(estPreambuleSsr);
+  if (!pre.length) return '';
+  const carte = (a) => {
+    const abroge = a.status === 'abrogé' || a.is_active === false || texteAbrogeSsr(law);
+    const numero = a.num_court || a.num || `Art. ${a.article_number}`;
+    return `<div class="ssr-pa__card${abroge ? ' is-abroge' : ''}"><div class="ssr-pa__head"><span class="ssr-pa__left">${iconeSsr('ChevronRight', 15, 2, 'ssr-pa__chev')}`
+      + `<span class="ssr-pa__num">${esc(numero)}</span>${abroge ? '<span class="ssr-pa__abroge">Abrogé</span>' : ''}</span>`
+      + `<i class="ssr-pa__copy" aria-hidden="true"></i></div></div>`;
+  };
+  return `<div class="ssr-pa">${pre.map(carte).join('')}</div>`;
+}
+
+// Bandeau d'abrogation du texte entier, tel que CodePage.tsx l'affiche (.law-abrogation-banner).
+function bandeauAbrogationTexteSsr(law) {
+  if (!law || !law.abrogation_note) return '';
+  const lien = law.abrogated_by_slug ? ` <a href="${esc(urlTexte(law.abrogated_by_slug))}">Voir le texte en vigueur →</a>` : '';
+  return `<div class="ssr-code__abroge" role="note"><span aria-hidden="true">⛔</span><span>${esc(law.abrogation_note)}${lien}</span></div>`;
+}
+
+
+/*
+ * Forme de la division que React ouvre par défaut (tree[0] de buildTreeFromNodes, src/lib/codeTree.ts),
+ * pour que les emplacements aient la géométrie de la page prête : porte-t-elle des articles (bouton
+ * « Imprimer » et cartes, sinon message « Sélectionnez une sous-section ») ; combien de divisions
+ * racines, de pastilles d'articles et de sous-divisions dans la colonne « Sommaire », et son pied
+ * (articles, chapitres). Du plan, seuls id, parent_id et type sont lus (fetchPlanLeger) ; le libellé de
+ * la première racine vient de fetchPremiereRacine, celui d'une partie « legacy » du premier article.
+ * Mêmes règles que React : préambules hors division, articles sans division (« Autres dispositions »)
+ * en tête s'ils précèdent tous les autres. plan null (illisible) : cas le plus courant (division avec
+ * articles, 81 % des textes au 05/10/2026). Plan vide : arbre « legacy » (buildTreeLegacy).
+ */
+export function divisionParDefautSsr(articles, plan, racine = null, premierArticle = null) {
+  const arts = articles || [];
+  const horsPreambule = (a) => !estPreambuleSsr(a);
+  // liste : articles de la division dans l'ordre de lecture, préambules exclus (cartes de la page React).
+  // noeud : la division (pour son libellé), null si inconnue ; enfants null : nombre de sous-divisions inconnu.
+  const parDefaut = { articles: true, liste: null, noeud: null, racines: null, puces: null, enfants: null, chapitres: null };
+  if (!plan) return parDefaut;
+  if (!plan.length) {
+    // buildTreeLegacy : une partie par part_title (« Dispositions » à défaut), des titres par title_name. Les 63
+    // textes sans plan au 05/10/2026 ont tous une seule partie et aucun titre : une division racine qui porte
+    // tous les articles, sans sous-division ni chapitre.
+    const liste = arts.filter(horsPreambule);
+    const partie = premierArticle && premierArticle.id === (arts[0] && arts[0].id) ? (premierArticle.part_title || 'Dispositions') : null;
+    return {
+      ...parDefaut, articles: liste.length > 0, liste, racines: 1, puces: arts, enfants: 0, chapitres: 0,
+      noeud: partie ? { type: 'partie', numero: null, intitule: partie, name: partie } : null,
+    };
+  }
+  const ids = new Set(plan.map((n) => n.id));
+  const enfants = new Map();
+  const racines = [];
+  for (const n of plan) {
+    if (n.parent_id && ids.has(n.parent_id)) {
+      if (!enfants.has(n.parent_id)) enfants.set(n.parent_id, []);
+      enfants.get(n.parent_id).push(n.id);
+    } else racines.push(n.id);
+  }
+  const rattache = (a) => !!a.node_id && ids.has(a.node_id);
+  // Articles triés par display_order puis id (fetchCodeArticles) : le rang dans la liste vaut l'ordre de lecture.
+  const iOrphelins = [], iRattaches = [];
+  arts.forEach((a, i) => { if (rattache(a)) iRattaches.push(i); else if (horsPreambule(a)) iOrphelins.push(i); });
+  const nbRacines = racines.length + (iOrphelins.length ? 1 : 0);
+  // Pied de colonne de CodePage.tsx : nœuds « chapitre » (ou « chapter ») de tout l'arbre.
+  const chapitres = plan.filter((n) => n.type === 'chapitre' || n.type === 'chapter').length;
+  if (iOrphelins.length && iRattaches.length && iOrphelins[iOrphelins.length - 1] < iRattaches[0]) {
+    const liste = iOrphelins.map((i) => arts[i]);
+    const noeud = { type: 'division', numero: null, intitule: 'Autres dispositions', name: 'Autres dispositions' };
+    return { articles: true, liste, noeud, racines: nbRacines, puces: liste, enfants: 0, chapitres };
+  }
+  const premier = racines[0];
+  if (premier == null) {
+    const liste = iOrphelins.map((i) => arts[i]);
+    return { ...parDefaut, articles: liste.length > 0, liste, racines: nbRacines, chapitres };
+  }
+  // Libellé : lu à part (fetchPremiereRacine), retenu seulement s'il s'agit bien de cette racine.
+  const noeud = racine && racine.id === premier ? { ...racine, name: racine.label } : null;
+  const sousArbre = new Set([premier]);
+  for (const id of sousArbre) for (const e of enfants.get(id) || []) sousArbre.add(e);
+  const liste = arts.filter((a) => rattache(a) && sousArbre.has(a.node_id) && horsPreambule(a));
+  return {
+    articles: liste.length > 0,
+    liste,
+    noeud,
+    racines: nbRacines,
+    puces: arts.filter((a) => a.node_id === premier),
+    enfants: (enfants.get(premier) || []).length,
+    chapitres,
+  };
+}
+
+// Colonne « Sommaire » (ordinateur) : en-tête réel ; recherche, boutons et arbre en emplacements, aux
+// nombres de lignes de l'arbre React (division racine active dépliée : pastilles puis sous-divisions).
+function colonneSommaireSsr(law, forme, nbArticles) {
+  const racines = forme.racines == null ? 15 : Math.min(forme.racines, 20);
+  // Largeur d'une pastille d'article ≈ celle de son libellé (articleLabel) en Inter 11,52 px : lettres
+  // étroites, larges, capitales ou courantes, plus 18 px de marges et de bordure.
+  const largeur = (a) => Math.round(Math.min(240, 18 + [...articleLabelSeo(a)].reduce((t, c) => t
+    + (/[ilIjtfr.,'’ 1]/.test(c) ? 3.6 : /[mwMW]/.test(c) ? 9.6 : /[A-ZÀ-Ý]/.test(c) ? 7.6 : 6.3), 0)));
+  const puces = forme.puces == null
+    ? '<i style="width:98px"></i><i style="width:63px"></i><i style="width:63px"></i>'
+    : forme.puces.slice(0, 30).map((a) => `<i style="width:${largeur(a)}px"></i>`).join('');
+  const enfants = '<i class="ssr-st__row ssr-st__row--sub"></i>'.repeat(Math.min(forme.enfants || 0, 10));
+  return `<aside class="ssr-st" aria-hidden="true"><div class="ssr-st__in">`
+    + `<div class="ssr-st__head"><div class="ssr-st__sur">Code sénégalais</div><div class="ssr-st__title">${esc(law.title)}</div></div>`
+    + `<i class="ssr-st__search"></i><span class="ssr-st__ctl"><i></i><i></i></span>`
+    + `<span class="ssr-st__tree"><i class="ssr-st__row is-active"></i>${puces ? `<span class="ssr-st__chips">${puces}</span>` : ''}${enfants}`
+    + `${'<i class="ssr-st__row"></i>'.repeat(Math.max(racines - 1, 0))}</span>`
+    // Pied (compteurs réels) seulement quand l'arbre est connu : sinon sa place est inconnue.
+    + (forme.chapitres == null ? '' : `<span class="ssr-st__foot"><span><b>${nbArticles}</b><small>Articles</small></span>`
+      + `<span><b>${forme.chapitres}</b><small>Chapitres</small></span></span>`)
+    + `</div></aside>`;
+}
+
+// Plafond des cartes rendues ici : de quoi couvrir le premier écran, sans alourdir la page.
+const CARTES_SSR = 4, CARTES_SSR_CARACTERES = 24000;
+
+/*
+ * Cartes d'articles de la division ouverte, telles que ArticleCard (CodePage.tsx) les affiche à son
+ * premier rendu : numéro, date de la dernière modification, contenu (content_html brut : les renvois en
+ * liens n'arrivent qu'ensuite, côté React), mots-clés, lien « Voir l'article complet ». Seuls les premiers
+ * articles lus par fetchPremiersArticles peuvent être rendus ; on s'arrête au premier absent, et au premier
+ * article écarté du sommaire d'un code fusionné (exclus : jamais de lien serveur vers une adresse redirigée).
+ */
+function cartesArticlesSsr(law, liste, contenus, exclus) {
+  if (!liste || !contenus) return '';
+  const cartes = [];
+  let caracteres = 0;
+  for (const a of liste) {
+    const c = contenus.get(a.id);
+    if (!c || !c.content_html || exclus.has(a.id) || cartes.length >= CARTES_SSR || caracteres > CARTES_SSR_CARACTERES) break;
+    caracteres += c.content_html.length;
+    const abroge = c.status === 'abrogé' || a.is_active === false || texteAbrogeSsr(law);
+    const numero = a.num_court || a.num || `Art. ${a.article_number}`;
+    const modifs = Array.isArray(c.modifications) && c.modifications.length ? c.modifications[c.modifications.length - 1] : '';
+    const mots = Array.isArray(c.tags) && c.tags.length
+      ? `<div class="ssr-ac__tags">${c.tags.map((t) => `<span>${esc(t)}</span>`).join('')}</div>` : '';
+    cartes.push(`<article class="ssr-ac${abroge ? ' is-abroge' : ''}"><div class="ssr-ac__head">`
+      + `<span class="ssr-ac__left"><span class="ssr-ac__num">${esc(numero)}</span>${abroge ? '<span class="ssr-pa__abroge">Abrogé</span>' : ''}</span>`
+      + `<span class="ssr-ac__right">${modifs ? `<span class="ssr-ac__date">${esc(modifs)}</span>` : ''}<i class="ssr-ac__copy" aria-hidden="true"></i></span></div>`
+      + `<div class="ssr-ac__body"><div>${c.content_html}</div></div>${mots}`
+      + `<a class="ssr-ac__lien" href="${esc(urlArticle(law.slug, a.slug))}">${iconeSsr('ExternalLink', 13)}Voir l'article complet</a></article>`);
+  }
+  return cartes.length ? `<div class="ssr-acs">${cartes.join('')}</div>` : '';
+}
+
+// Division ouverte par défaut (fil, en-tête, onglets, articles, division suivante) : emplacements, sauf la
+// pastille statique « Version en vigueur », les premières cartes d'articles et le message de division vide.
+function divisionSsr(law, forme, contenus, exclus) {
+  const pastille = texteAbrogeSsr(law) ? '' : '<span class="ssr-dv__pill">Version en vigueur</span>';
+  const articles = forme.articles
+    ? (cartesArticlesSsr(law, forme.liste, contenus, exclus)
+      || `<div class="ssr-dv__carte" aria-hidden="true"><span class="ssr-dv__carte-tete"><i></i><i></i></span><i></i><i></i><i class="ssr-dv__carte-lien"></i></div>`)
+    : `<div class="ssr-dv__vide">${iconeSsr('FileText', 40)}<p>Sélectionnez une sous-section pour consulter les articles.</p></div>`;
+  // Fil, titre et compteur de la division (CodePage.tsx) quand son libellé est connu, emplacements sinon.
+  const f = forme.noeud ? formatNodeLabelSsr(forme.noeud) : null;
+  const fil = f ? `<span class="ssr-dv__crumb">${esc(f.badge && f.label ? `${f.badge} - ${f.label}` : (f.badge || f.label))}</span>` : '<i aria-hidden="true"></i>';
+  const titre = f
+    ? `<h2 class="ssr-dv__titre">${f.badge ? `<span class="ssr-dv__badge">${esc(f.badge)}</span>` : ''}${esc(f.label)}</h2>`
+    : '<span class="ssr-dv__h2" aria-hidden="true"><i></i><i></i></span>';
+  const n = forme.liste ? forme.liste.length : null;
+  const compteur = f && n != null && forme.enfants != null
+    ? `<div class="ssr-dv__compte">${n} article${n > 1 ? 's' : ''}${forme.enfants > 0 ? ` · ${forme.enfants} sous-section${forme.enfants > 1 ? 's' : ''}` : ''}</div>`
+    : '<i class="ssr-dv__meta" aria-hidden="true"></i>';
+  return `<div class="ssr-dv__report" aria-hidden="true"><i></i></div>`
+    + `<div class="ssr-dv__bc">${fil}${pastille}</div>`
+    + `<div class="ssr-dv__head">${titre}${compteur}`
+    + `${forme.articles ? '<i class="ssr-dv__print" aria-hidden="true"></i>' : ''}</div>`
+    // Onglets « Articles (n) » et, s'il y a des sous-divisions, « Structure (n) » : emplacements.
+    + `<div class="ssr-dv__tabs" aria-hidden="true"><i></i>${forme.enfants > 0 ? '<i></i>' : ''}</div>`
+    + articles
+    + `<div class="ssr-dv__nav" aria-hidden="true"><i></i></div>`;
+}
+
+/*
  * fusion (contexteFusion, null tant que la concordance du code est vide) : les anciens articles non
  * repris (rôle « identite ») sortent du sommaire du code en vigueur et forment une liste à part, en fin
  * de page ; le compteur ne retient que les articles en vigueur (fusion des codes 2026, 02/10/2026).
  */
-export function buildCodeBody(law, articles, related, fusion = null) {
+export function buildCodeBody(law, articles, related, fusion = null, plan = null, contenus = null, racine = null) {
   const m = codeSeoMeta(law);
   const anciens = fusion && fusion.anciens && fusion.anciens.size ? fusion.anciens : null;
   // Code fusionné : un article désactivé n'est pas listé (cf. articleDuSommaire). Hors fusion : tous.
@@ -449,18 +902,26 @@ export function buildCodeBody(law, articles, related, fusion = null) {
   const intro = `<p class="ssr-code-intro">${esc(m.baseName)}${refLine ? ` - ${refLine}` : ''}. `
     + `${descriptorCap}${n ? `, ${n} articles` : ''}, consultable gratuitement article par article, `
     + `avec la jurisprudence et les textes liés.</p>`;
-  // Bloc de présentation éditorial (contenu de confiance, rédigé/vérifié) si renseigné
-  const presentation = law.description
-    ? `<section class="ssr-presentation">${law.description}</section>`
-    : '';
-  return wrapContent(`<article>
-    ${abrogationBanner(law)}
+  // Présentation (description éditoriale de confiance, si renseignée) : carte de TextPresentation.tsx.
+  // Compteur de la carte = tous les articles lus, comme React (totalArticles) ; le chapô garde n.
+  // h1, chapô, sommaire et textes liés restent premiers dans le DOM ; le CSS les place sous la division.
+  const forme = divisionParDefautSsr(articles, plan, racine, contenus && contenus.size ? contenus.values().next().value : null);
+  // Articles écartés du sommaire (code fusionné) : aucune carte serveur ne doit y mener.
+  const horsSommaire = new Set(fusion ? (articles || []).filter((a) => !articleDuSommaire(fusion, a)).map((a) => a.id) : []);
+  return wrapContent(`<div class="ssr-code">
+  ${colonneSommaireSsr(law, forme, (articles || []).length)}
+  <article class="ssr-code__main">
     <h1>${esc(m.baseName)}${esc(m.geo)} - ${esc(m.descriptor)}</h1>
     ${intro}
-    ${presentation}
+    <i class="ssr-code__toggle" aria-hidden="true"></i>
+    ${bandeauAbrogationTexteSsr(law)}
+    ${preambulesSsr(law, articles)}
+    ${presentationTexteSsr(law, (articles || []).length)}
+    ${divisionSsr(law, forme, contenus, horsSommaire)}
     <nav class="ssr-toc" aria-label="Articles"><h2>Articles · ${esc(m.baseName)}</h2><ul>${links}</ul></nav>${tocAnciens}
     ${buildRelatedBlock(related)}
-  </article>`);
+  </article>
+</div>`);
 }
 
 /* ---------- ARTICLE de loi ---------- */
@@ -590,47 +1051,14 @@ export function buildArticleHead(law, art, canonical, plain, fa = null) {
   return headBlock({ title, description, keywords: `${numLabel}, ${law.title}, Droit sénégalais, Lexenegal${motsCles}`, canonical, ogType: 'article', schema: [schema, filAriane] });
 }
 /*
- * Place de l'article dans le plan du code (livre / titre / chapitre / section…).
- *
- * 96,5 % des articles portent un node_id : c'est la seule donnée de contexte
- * disponible à grande échelle, et elle n'était pas exploitée dans la page servie
- * au crawler — qui ne montrait que « Code › Article N ».
- *
- * Rendu en TEXTE, volontairement pas en liens : la seule URL de chapitre qui
- * existe est /code/:slug?node=… (/ccn/… pour une convention), or ces URL sont des doublons de la page du
- * code (elles figurent telles quelles dans le rapport « Duplicate without
- * user-selected canonical » de Search Console). Y pousser 17 000 liens
- * aggraverait le problème qu'on vient de corriger. Seuls « précédent » et
- * « suivant » sont cliquables : ce sont de vraies URL canoniques.
+ * Place de l'article dans le plan du code (livre / titre / chapitre / section…) : 96,5 % des articles
+ * portent un node_id, seule donnée de contexte disponible à grande échelle. Rendue en TEXTE (bloc
+ * « emplacement dans le texte » et arbre de la page article, cf. buildArticleBody), volontairement pas
+ * en liens : la seule URL de chapitre qui existe est /code/:slug?node=… (/ccn/… pour une convention),
+ * doublon de la page du code (rapport « Duplicate without user-selected canonical » de Search
+ * Console). Seuls les articles (pastilles de l'arbre, précédent, suivant) sont des liens : ce sont de
+ * vraies URL canoniques.
  */
-const MOTS_NIVEAU = {
-  partie: 'Partie', livre: 'Livre', titre: 'Titre', chapitre: 'Chapitre',
-  section: 'Section', sous_section: 'Sous-section', 'sous-section': 'Sous-section',
-  paragraphe: 'Paragraphe', annexe: 'Annexe',
-};
-// Ordinaux susceptibles d'ouvrir un intitulé dont le mot de niveau a été perdu
-// à l'extraction (ex. « DEUXIEME EFFETS DES OBLIGATIONS » pour un livre).
-const ORDINAUX = /^(PREMIER|PREMIERE|PREMIÈRE|SECOND|SECONDE|DEUXIEME|DEUXIÈME|TROISIEME|TROISIÈME|QUATRIEME|QUATRIÈME|CINQUIEME|CINQUIÈME|SIXIEME|SIXIÈME|SEPTIEME|SEPTIÈME|HUITIEME|HUITIÈME|NEUVIEME|NEUVIÈME|DIXIEME|DIXIÈME)\b\s*(.*)$/i;
-
-function libelleNiveau(n) {
-  const mot = MOTS_NIVEAU[n.type] || (n.type ? n.type.charAt(0).toUpperCase() + n.type.slice(1) : '');
-  const num = (n.numero || '').trim();
-  const intitule = (n.intitule || n.label || '').trim();
-  if (num) return `${mot} ${num}${intitule ? ` - ${intitule}` : ''}`;
-  if (!intitule) return mot;
-  /*
-   * Sans numéro : l'intitulé se suffit en général à lui-même (« PREMIERE
-   * PARTIE », « PRELIMINAIRE »). Seule exception, l'intitulé qui commence par
-   * un ordinal SANS porter son mot de niveau — séquelle d'extraction. On
-   * réinsère alors le mot, sinon le fil d'Ariane affiche « DEUXIEME EFFETS DES
-   * OBLIGATIONS » au lieu de « Livre DEUXIEME — EFFETS DES OBLIGATIONS ».
-   */
-  const m = intitule.match(ORDINAUX);
-  if (m && mot && !new RegExp(`\\b${mot}\\b`, 'i').test(intitule) && m[2]) {
-    return `${mot} ${m[1]} - ${m[2].replace(/^[\s.:—–-]+/, '')}`;
-  }
-  return intitule;
-}
 // Remonte la chaîne des parents jusqu'à la racine, puis remet dans l'ordre de lecture.
 export function cheminDansLePlan(nodeId, noeuds) {
   if (!nodeId || !noeuds || !noeuds.length) return [];
@@ -1079,42 +1507,254 @@ export function fusionArticle({ fusion, law, art, choix = null, params = null, v
   return { ancien, h1, avantTitre, apresTitre, contenu, motsCles };
 }
 
+/* ---------- PAGE D'ARTICLE : version serveur habillée comme la page React prête ---------- */
 /*
- * fa (facultatif) : résultat de fusionArticle (code fusionné en 2026). Sans lui, la page est rendue
- * exactement comme avant la fusion.
+ * Décision du propriétaire du 05/10/2026 (option A) : la version serveur d'un article porte la mise
+ * en page de src/pages/Code/ArticlePage.tsx une fois chargée (colonne de l'arbre, fil d'Ariane,
+ * emplacement dans le texte, encadré du texte, cartes des décisions), pour que la bascule vers React
+ * ne se voie presque plus. Le texte reste affiché tout de suite.
+ *  - Contenu : tout ce que portait la version serveur reste dans la page (h1, texte, correspondance
+ *    avec les anciens articles, décisions, précédent / suivant), en texte et en liens visibles.
+ *  - Boutons de la page React (Sommaire, Imprimer, Comparer, Signaler, Retour) : EMPLACEMENTS vides
+ *    de même taille, aria-hidden, sans texte.
+ *  - Mise en forme : api/_ssr/styles.js, bloc « article » (polices locales recalées, index.html).
+ * ⚠️ DOUBLE RENDU : une modification de la structure d'ArticlePage.tsx, de CodeNavTree.tsx ou de
+ * src/lib/codeTree.ts (arbre, libellés) se reporte ici ET dans ce bloc CSS.
  */
-export function buildArticleBody(law, art, contentHtml, citing, chemin, voisins, fa = null) {
-  const numLabel = art.num || art.num_court || (art.article_number != null ? `Article ${art.article_number}` : 'Article');
-  const citingHtml = (citing && citing.length)
-    ? `<section class="ssr-citing"><h2>Décisions citant cet article</h2><ul>${citing.map((c) => {
-        const d = c.decision; if (!d || !d.slug) return '';
-        return `<li><a href="/decision/${esc(d.slug)}">${esc(d.reference || 'Décision')}</a>${d.chambre ? ` - ${esc(d.chambre)}` : ''}${d.date_decision ? ` (${esc(formatDateFr(d.date_decision))})` : ''}</li>`;
-      }).filter(Boolean).join('')}</ul></section>`
-    : '';
-  // Niveaux du plan intercalés dans le fil d'Ariane (texte, cf. commentaire ci-dessus).
-  const cheminHtml = (chemin || [])
-    .map((n) => ` › <span class="ssr-bc-niveau">${esc(libelleNiveau(n))}</span>`).join('');
 
-  // Précédent / suivant : chaîne les articles entre eux. Sans ça la page est un
-  // cul-de-sac, atteignable seulement depuis la liste de la page du code.
-  const lien = (a, sens, fleche) => (a && a.slug)
-    ? `<a href="${esc(urlArticle(law.slug, a.slug))}" rel="${sens}">${esc(fleche === 'g' ? '← ' : '')}${esc(a.num || a.num_court || (a.article_number != null ? `Article ${a.article_number}` : 'Article'))}${esc(fleche === 'd' ? ' →' : '')}</a>`
-    : '';
-  const prec = lien(voisins && voisins.prec, 'prev', 'g');
-  const suiv = lien(voisins && voisins.suiv, 'next', 'd');
-  const navHtml = (prec || suiv)
-    ? `<nav class="ssr-artnav" aria-label="Article précédent et suivant">${prec}${prec && suiv ? ' · ' : ''}${suiv}</nav>`
-    : '';
+
+// COPIE de buildTreeFromNodes / buildTreeLegacy / countArticles / segmentsNoeud (src/lib/codeTree.ts) :
+// l'arbre de la colonne de gauche, construit comme celui de CodeNavTree.
+const noeudVide = (id, name, type, intitule = name) => ({ id, name, type, numero: null, intitule, note: null, articles: [], children: [] });
+export function arbreDuTexteSsr(noeuds, arts) {
+  const racine = [];
+  if (noeuds && noeuds.length) {
+    const map = new Map();
+    for (const nd of noeuds) {
+      map.set(nd.id, { id: nd.id, name: nd.label, type: nd.type, numero: nd.numero, intitule: nd.intitule, note: nd.note ?? null, articles: [], children: [] });
+    }
+    for (const nd of noeuds) {
+      const h = map.get(nd.id);
+      if (nd.parent_id && map.has(nd.parent_id)) map.get(nd.parent_id).children.push(h);
+      else racine.push(h);
+    }
+    const orphelins = [];
+    for (const a of arts) {
+      if (a.node_id && map.has(a.node_id)) map.get(a.node_id).articles.push(a);
+      else if (!estPreambuleSsr(a)) orphelins.push(a);
+    }
+    if (orphelins.length) {
+      orphelins.sort((x, y) => x.display_order - y.display_order);
+      const noeud = { ...noeudVide('__sans-division', 'Autres dispositions', 'division'), articles: orphelins };
+      const rangs = arts.filter((a) => a.node_id && map.has(a.node_id)).map((a) => a.display_order);
+      const avantTout = rangs.length > 0 && orphelins[orphelins.length - 1].display_order < Math.min(...rangs);
+      if (avantTout) racine.unshift(noeud); else racine.push(noeud);
+    }
+    return racine;
+  }
+  for (const a of arts) {
+    const nomPartie = a.part_title || 'Dispositions';
+    let partie = racine.find((n) => n.name === nomPartie);
+    if (!partie) { partie = noeudVide(nomPartie, nomPartie, 'partie'); racine.push(partie); }
+    if (a.title_name) {
+      let titre = partie.children.find((n) => n.name === a.title_name);
+      if (!titre) { titre = noeudVide(a.title_name, a.title_name, 'titre'); partie.children.push(titre); }
+      if (a.chapter_name) {
+        let chap = titre.children.find((n) => n.name === a.chapter_name);
+        if (!chap) { chap = noeudVide(a.chapter_name, a.chapter_name, 'chapitre'); titre.children.push(chap); }
+        chap.articles.push(a);
+      } else titre.articles.push(a);
+    } else partie.articles.push(a);
+  }
+  return racine;
+}
+const compterSsr = (n) => n.children.reduce((c, ch) => c + compterSsr(ch), n.articles.length);
+function premierRangSsr(n) {
+  if (n._rang !== undefined) return n._rang;
+  let r = Infinity;
+  for (const a of n.articles) if (a.display_order < r) r = a.display_order;
+  for (const ch of n.children) { const c = premierRangSsr(ch); if (c < r) r = c; }
+  n._rang = r;
+  return r;
+}
+function segmentsSsr(n) {
+  const segs = [];
+  const pousser = (kind, x) => {
+    const der = segs[segs.length - 1];
+    if (der && der.kind === kind) der.items.push(x); else segs.push({ kind, items: [x] });
+  };
+  let i = 0;
+  let cle = -Infinity;
+  for (const ch of n.children) {
+    const r = premierRangSsr(ch);
+    if (r !== Infinity) cle = r;
+    while (i < n.articles.length && n.articles[i].display_order < cle) pousser('articles', n.articles[i++]);
+    pousser('divisions', ch);
+  }
+  while (i < n.articles.length) pousser('articles', n.articles[i++]);
+  return segs;
+}
+function cheminArbreSsr(cible, noeuds, chemin = []) {
+  for (const n of noeuds) {
+    const suite = [...chemin, n];
+    if (n.id === cible) return suite;
+    const trouve = cheminArbreSsr(cible, n.children, suite);
+    if (trouve) return trouve;
+  }
+  return null;
+}
+// Colonne de gauche (CodeNavTree), état initial de la page article : chemin de l'article déplié,
+// son nœud actif, sa pastille active. Le nombre d'articles passe par data-n (affiché en CSS) : il
+// ne s'ajoute pas au texte de la page.
+export function arbreHtmlSsr(law, art, noeuds, arts) {
+  const racine = arbreDuTexteSsr(noeuds, arts || []);
+  if (!racine.length) return '';
+  const actif = art.node_id ?? null;
+  const ouverts = new Set(actif ? (cheminArbreSsr(actif, racine) || []).map((n) => n.id) : []);
+  let max = 0;
+  const parcourir = (ns) => ns.forEach((n) => { const c = compterSsr(n); if (c > max) max = c; parcourir(n.children); });
+  parcourir(racine);
+  max = max || 1;
+  const pastille = (a) => {
+    const cls = `ssr-tchip${a.slug === art.slug ? ' is-active' : ''}${(a.status === 'abrogé' || a.is_active === false) ? ' is-abroge' : ''}`;
+    return `<a class="${cls}" href="${esc(urlArticle(law.slug, a.slug))}">${esc(articleLabelSeo(a))}</a>`;
+  };
+  const noeud = (n) => {
+    const ouvert = ouverts.has(n.id);
+    const tog = (n.children.length || n.articles.length) ? (ouvert ? ' is-open' : '') : ' is-ph';
+    const { badge, label } = formatNodeLabelSsr(n);
+    const nb = compterSsr(n);
+    let h = `<div class="ssr-tn"><div class="ssr-th${actif != null && n.id === actif ? ' is-active' : ''}"><span class="ssr-tt${tog}"></span>`
+      + `<span class="ssr-tl"><span class="ssr-ty">${esc(badge || NODE_KIND_SSR[n.type] || n.type)}</span> <span class="ssr-tm">${esc(label)}</span>`
+      + `${n.note ? '<span class="ssr-tnota" aria-hidden="true"></span>' : ''}</span><span class="ssr-tc" data-n="${nb}"></span></div>`
+      + `<div class="ssr-td"><i style="width:${(nb / max) * 100}%"></i></div>`;
+    if (ouvert) {
+      for (const seg of segmentsSsr(n)) {
+        h += seg.kind === 'divisions'
+          ? `<div class="ssr-tch">${seg.items.map(noeud).join('')}</div>`
+          : `<div class="ssr-tas">${seg.items.map(pastille).join(' ')}</div>`;
+      }
+    }
+    return `${h}</div>`;
+  };
+  return `<div class="ssr-troot">${racine.map(noeud).join('')}</div>`;
+}
+
+// COPIE de libellePeriode (src/lib/versionsArticle.ts) : « En vigueur du 1er décembre 1997 au 2 septembre
+// 2026 », ou « En vigueur depuis le … » pour une version sans fin.
+export function libellePeriodeSsr(v, versions, articleNumber) {
+  const fin = finVersion(v, versions, articleNumber);
+  return fin
+    ? `En vigueur du ${dateLongue(v.effective_date)} au ${dateLongue(veille(fin))}`
+    : `En vigueur depuis le ${dateLongue(v.effective_date)}`;
+}
+// Ligne de version sous le titre, comme ArticlePage.tsx : version actuelle sans fin, « En vigueur depuis
+// le 3 septembre 2026 » (date à la façon du navigateur, sans « 1er ») ; version actuelle qui a une fin,
+// ou version datée retenue (choix), sa période. Article sans version : date de publication du texte.
+// null (date illisible) : emplacement vide de même hauteur.
+export function ligneVersionSsr(versions, law, art, choix = null) {
+  const liste = versions && versions.length ? versions : null;
+  if (choix && !choix.estActuelle && choix.versions && choix.versions.length) {
+    const v = choix.versions[0];
+    if (!estDateValide(jourDe(v.effective_date))) return null;
+    return { texte: libellePeriodeSsr(v, liste || choix.versions, art.article_number), note: choix.versions.length === 1 ? (v.version_note || '') : '' };
+  }
+  const v = liste ? versionCourante(liste)
+    : (law && law.publication_date ? { effective_date: law.publication_date, expiration_date: null, version_note: null } : null);
+  if (!v || !estDateValide(jourDe(v.effective_date))) return null;
+  if (v.expiration_date) return { texte: libellePeriodeSsr(v, liste || [v], art.article_number), note: v.version_note || '' };
+  const date = formatDateFr(v.effective_date);
+  if (!date || date === 'Invalid Date') return null;
+  return { texte: `En vigueur depuis le ${date}`, note: v.version_note || '' };
+}
+
+const jourMoisAn = (d) => {
+  try { return new Date(d).toLocaleDateString('fr-FR', { timeZone: 'UTC' }); } catch (e) { return ''; }
+};
+
+/*
+ * fa (facultatif) : résultat de fusionArticle (code fusionné en 2026). Sans lui, aucun élément de la
+ * fusion n'apparaît dans la page.
+ * habillage (facultatif) : { arbre: HTML de la colonne de gauche, version: ligneVersionSsr(…), bascule et
+ * depuis : dates de la fusion, pour les cartes des décisions }.
+ * Absent ou vide : colonne et ligne de version en emplacements gris de même taille.
+ */
+export function buildArticleBody(law, art, contentHtml, citing, chemin, voisins, fa = null, habillage = null) {
+  const numLabel = art.num || art.num_court || (art.article_number != null ? `Article ${art.article_number}` : 'Article');
+  const hab = habillage || {};
+  const CHEVRON = '<span class="ssr-chev" aria-hidden="true"></span>';
+  const racineListe = estConvention(law.slug)
+    ? { nom: 'Conventions collectives', url: '/conventions-collectives' }
+    : { nom: 'Codes', url: '/codes' };
+  const filHtml = `<nav class="ssr-bc" aria-label="Fil d'Ariane"><a href="${racineListe.url}">${racineListe.nom}</a>${CHEVRON}`
+    + `<a href="${esc(urlTexte(law.slug))}">${esc(law.title)}</a>${CHEVRON}<span class="ssr-bc-cur">${esc(numLabel)}</span></nav>`;
+
+  // Emplacement dans le texte (Titre › Chapitre › …), mêmes libellés que la page React.
+  const niveaux = (chemin || []).map((n) => {
+    const { badge, label } = formatNodeLabelSsr({ ...n, name: n.label });
+    return `<span class="ssr-ah-row">${badge ? `<span class="ssr-ah-badge ssr-ah-badge--${esc(n.type)}">${esc(badge)}</span> ` : ''}<span class="ssr-ah-label">${esc(label)}</span></span>`;
+  }).join('');
+  const emplacementHtml = niveaux ? `<div class="ssr-ah" aria-label="Emplacement dans le texte">${niveaux}</div>` : '';
+
+  // Bandeau d'un article abrogé hors fusion (ArticlePage.tsx) ; l'ancien article non repris a le sien (fa).
+  const abroge = art.status === 'abrogé' || art.is_active === false;
+  const bandeauArticle = abroge && !(fa && fa.ancien)
+    ? `<div class="ssr-abrogation" role="note">⛔ ${esc(art.notes || 'Cet article a été abrogé.')}</div>` : '';
+  // Marque « ! » d'une nota (sans son texte) ; jamais sur un ancien article de 1997 (notes internes).
+  const nota = art.notes && !abroge && !(fa && fa.ancien) ? '<span class="ssr-nota" aria-hidden="true"></span>' : '';
+  const v = hab.version;
+  const versionHtml = v
+    ? `<p class="ssr-ver">${esc(v.texte)}${v.note ? `<span class="ssr-ver-note"> · ${esc(v.note)}</span>` : ''}</p>`
+    : '<p class="ssr-ver ssr-ver--vide" aria-hidden="true"></p>';
+
+  // Code fusionné : une décision antérieure à la bascule citait un ancien numéro (lien reporté) ; on le
+  // dit et on mène au texte alors en vigueur, comme ArticlePage.tsx (sauf avant la numérotation d'origine).
+  const bascule = hab.bascule || null;
+  const citingHtml = `<section class="ssr-citing"><h2>Décisions citant cet article</h2>${(citing && citing.length)
+    ? `<ul>${citing.map((c) => {
+        const d = c.decision; if (!d || !d.slug) return '';
+        const jour = jourDe(d.date_decision);
+        const propre = normAncien(art.article_number);
+        const anciensCites = (c.anciens_numeros || []).filter((n) => normAncien(n) && normAncien(n) !== propre);
+        const anciens = anciensCites.map(numeroAncienAffiche).filter(Boolean);
+        const avantBascule = anciens.length > 0 && !!jour && !!bascule && jour < bascule;
+        const meta = [d.chambre, d.date_decision ? jourMoisAn(d.date_decision) : ''].filter(Boolean).join(' · ')
+          + (avantBascule ? ` · cite ${mentionAnciens(anciens)}` : '');
+        const extrait = c.citation_text ? `<span class="ssr-cc-x">"...${esc(c.citation_text)}..."</span>` : '';
+        const alors = avantBascule && estDateValide(jour) && !(hab.depuis && jour < hab.depuis)
+          ? `<li class="ssr-cc-v"><a href="${esc(`${urlArticle(law.slug, art.slug)}?${anciensCites.length === 1 ? `ancien=${encodeURIComponent(normAncien(anciensCites[0]))}&` : ''}date=${jour}`)}">Texte alors en vigueur (${esc(anciens.length > 1 ? `anciens articles ${listeFr(anciens)}` : `ancien article ${anciens[0]}`)}, ${esc(jourMoisAn(d.date_decision))})</a></li>`
+          : '';
+        return `<li class="ssr-cc"><a href="/decision/${esc(d.slug)}">${esc(d.reference || 'Décision')}</a>${meta ? ` <span class="ssr-cc-m">${esc(meta)}</span>` : ''}${extrait}</li>${alors}`;
+      }).filter(Boolean).join('')}</ul>`
+    : '<div class="ssr-cc-vide" aria-hidden="true"></div>'}</section>`;
+
+  // Précédent / suivant : chaîne les articles entre eux (sinon la page est un cul-de-sac). Le
+  // bouton « Retour » de la page React n'a pas d'équivalent ici : emplacement vide.
+  const lien = (a, sens) => (a && a.slug)
+    ? `<a class="ssr-nav-${sens}" href="${esc(urlArticle(law.slug, a.slug))}" rel="${sens}">${esc(a.num || a.num_court || (a.article_number != null ? `Article ${a.article_number}` : 'Article'))}</a>`
+    : `<span class="ssr-nav-${sens} ssr-nav--vide" aria-hidden="true"></span>`;
+  const liens = `${lien(voisins && voisins.prec, 'prev')}<span class="ssr-nav-retour" aria-hidden="true"></span>${lien(voisins && voisins.suiv, 'next')}`;
+  const navHtml = (voisins && ((voisins.prec && voisins.prec.slug) || (voisins.suiv && voisins.suiv.slug)))
+    ? `<nav class="ssr-artnav" aria-label="Article précédent et suivant">${liens}</nav>`
+    : `<div class="ssr-artnav" aria-hidden="true">${liens}</div>`;
 
   // contentHtml = HTML déjà généré par notre pipeline (de confiance) -> injecté tel quel
-  return wrapContent(`<article>
-    <nav class="ssr-bc" aria-label="Fil d'Ariane"><a href="${esc(urlTexte(law.slug))}">${esc(law.title)}</a>${cheminHtml} › ${esc(numLabel)}</nav>
-    ${abrogationBanner(law)}${fa ? fa.avantTitre : ''}
-    <h1>${esc((fa && fa.h1) || numLabel)}</h1>${fa ? fa.apresTitre : ''}
-    <div class="ssr-article-body">${contentHtml || `<p>Texte de l'article non disponible.</p>`}</div>
-    ${citingHtml}
+  return wrapContent(`<article class="ssr-article"><div class="ssr-a-layout"><div class="ssr-a-main">
+    <span class="ssr-a-somm" aria-hidden="true"></span>
+    ${filHtml}
+    ${abrogationBanner(law)}${bandeauArticle}${fa ? fa.avantTitre : ''}
+    <header class="ssr-a-head">${emplacementHtml}
+    <h1>${esc((fa && fa.h1) || numLabel)}${nota}</h1>
+    ${versionHtml}</header>
+    <div class="ssr-act" aria-hidden="true"><span></span><span></span><span></span></div>
+    <div class="ssr-a-box${abroge ? ' is-abroge' : ''}"><div class="ssr-article-body">${contentHtml || `<p>Texte de l'article non disponible.</p>`}</div></div>
+    ${citingHtml}${fa ? fa.apresTitre : ''}
     ${navHtml}
-  </article>`);
+  </div>
+  ${hab.arbre
+    ? `<nav class="ssr-a-tree" aria-label="Sommaire du texte">${hab.arbre}</nav>`
+    : '<div class="ssr-a-tree ssr-a-tree--vide" aria-hidden="true"></div>'}
+  </div></article>`);
 }
 
 /* ---------- Coquille dist/index.html (file + filet HTTP) ---------- */
@@ -1179,24 +1819,62 @@ export function buildCodesHead(canonical) {
   const schema = { '@context': 'https://schema.org', '@type': 'CollectionPage', name: title, url: canonical, inLanguage: 'fr' };
   return headBlock({ title, description, keywords, canonical, ogType: 'website', schema });
 }
-export function buildCodesBody(texts) {
+/*
+ * /codes : premier écran = réplique de CodesListPage (héros « Corpus National », onglets en emplacements
+ * vides, grille des branches avec leurs codes). Les codes rattachés à une branche sont listés dans la
+ * grille (mêmes liens qu'avant) ; le titre h1, le chapô et les autres catégories suivent sous la grille.
+ * `branches` absent (requête en échec) : pas de grille, tous les codes restent dans l'index comme avant.
+ */
+const COULEUR_SSR = /^#[0-9a-fA-F]{3,8}$/;
+export function buildCodesBody(texts, branches = [], comptes = null) {
   const order = ['code', 'loi', 'decret', 'arrete', 'ohada'];
   const groups = {};
   (texts || []).forEach((t) => { const k = String(t.category || 'code').toLowerCase(); (groups[k] = groups[k] || []).push(t); });
+  const lien = (c) => `<li><a href="${esc(urlTexte(c.slug))}">${esc(c.short_title || c.title)}</a></li>`;
+  const grille = (branches || []).filter((b) => b && b.slug && b.slug !== 'autres');
+  const dansGrille = new Set();
+  const cartes = grille.map((b) => {
+    const siens = (groups.code || []).filter((c) => c.branche_slug === b.slug);
+    siens.forEach((c) => dansGrille.add(c));
+    const couleur = COULEUR_SSR.test(String(b.color || '')) ? b.color : '#047857';
+    const liens = siens.map((c) => {
+      const n = comptes && comptes[c.slug] != null
+        ? `<span class="ssr-codes-n">${esc(comptes[c.slug])} art.</span>`
+        : '<span class="ssr-codes-n" aria-hidden="true"></span>';
+      return `<li><a href="${esc(urlTexte(c.slug))}"><span>${esc(c.short_title || c.title)}</span>${n}</a></li>`;
+    }).join('\n');
+    return `<section class="ssr-codes-carte${siens.length ? '' : ' ssr-codes-carte--bientot'}" style="--c:${couleur}">
+      <div class="ssr-codes-carte-tete"><span class="ssr-codes-icone">${iconeSsr(b.icon, 28, 1.5)}</span><div><h2>${esc(b.label)}</h2>${b.description ? `<p>${esc(b.description)}</p>` : ''}</div></div>
+      ${siens.length ? `<ul>${liens}</ul>` : '<p class="ssr-codes-bientot"><span>Prochainement</span></p>'}
+    </section>`;
+  }).join('\n');
   const sections = order.filter((k) => groups[k] && groups[k].length).map((k) => {
-    const items = groups[k].map((c) => `<li><a href="${esc(urlTexte(c.slug))}">${esc(c.short_title || c.title)}</a></li>`).join('\n');
-    return `<section><h2>${esc(CAT_LABELS[k] || k)}</h2><ul>${items}</ul></section>`;
+    const restants = groups[k].filter((c) => !dansGrille.has(c));
+    if (!restants.length) return '';
+    return `<section><h2>${esc(CAT_LABELS[k] || k)}</h2><ul>${restants.map(lien).join('\n')}</ul></section>`;
   }).join('\n');
   // catégories hors liste connue (au cas où), placées en fin
   const extra = Object.keys(groups).filter((k) => !order.includes(k)).map((k) => {
-    const items = groups[k].map((c) => `<li><a href="${esc(urlTexte(c.slug))}">${esc(c.short_title || c.title)}</a></li>`).join('\n');
-    return `<section><h2>${esc(k)}</h2><ul>${items}</ul></section>`;
+    return `<section><h2>${esc(k)}</h2><ul>${groups[k].map(lien).join('\n')}</ul></section>`;
   }).join('\n');
-  return wrapContent(`<article>
-    <h1>Tous les codes et textes juridiques du Sénégal</h1>
-    <p>Codes, lois, décrets, arrêtés et Actes uniformes OHADA consultables en texte intégral et version consolidée sur Lexenegal.</p>
-    ${sections}${extra}
-  </article>`);
+  return wrapContent(`<div class="ssr-codes ssr-ed">
+    <header class="ssr-codes-hero"><div class="ssr-codes-hero-c">
+      <div class="ssr-codes-embleme">${iconeSsr('Scale', 48, 1)}</div>
+      <p class="ssr-codes-titre">Corpus National</p>
+      <p class="ssr-codes-chapo">L'intégralité des textes de loi du Sénégal, structurés, versionnés et accessibles.</p>
+      <div class="ssr-codes-recherche" aria-hidden="true">${iconeSsr('Search', 20)}</div>
+    </div></header>
+    <div class="ssr-codes-contenu"><div class="ssr-codes-c">
+      ${cartes ? `<div class="ssr-codes-onglets" aria-hidden="true"><span></span><span></span><span></span></div>
+      <p class="ssr-codes-sous-titre">le droit en vigueur - codes consolidés, à jour</p>
+      <div class="ssr-codes-grille">${cartes}</div>` : ''}
+      <article class="ssr-codes-index">
+        <h1>Tous les codes et textes juridiques du Sénégal</h1>
+        <p>Codes, lois, décrets, arrêtés et Actes uniformes OHADA consultables en texte intégral et version consolidée sur Lexenegal.</p>
+        ${sections}${extra}
+      </article>
+    </div></div>
+  </div>`);
 }
 
 /* ---------- DOCTRINE FISCALE (teaser public, corps gaté) ---------- */
@@ -1290,7 +1968,7 @@ export function buildDoctrineHead(d, canonical, arts = []) {
 export function buildDoctrineBody(d, arts = []) {
   const objet = (d.objet || '').trim();
   const ref = d.reference_complete || (d.numero ? `Lettre n° ${d.numero}` : 'Doctrine fiscale');
-  const dateFr = formatDateFr(d.date);
+  const dateFr = formatDateFr(d.date) === 'Invalid Date' ? '' : formatDateFr(d.date);
   const meta = [
     ref && `<li><strong>Référence :</strong> ${esc(ref)}</li>`,
     d.service_emetteur && `<li><strong>Service émetteur :</strong> ${esc(d.service_emetteur)}</li>`,
@@ -1301,17 +1979,49 @@ export function buildDoctrineBody(d, arts = []) {
   // content_raw VOLONTAIREMENT absent : teaser + extrait public (colonne doctrine.extrait = exposé de la
   // demande, jamais la réponse ; calculée en base par public.doctrine_extrait).
   const extrait = (d.extrait || '').split('\n').map((p) => p.trim()).filter(Boolean);
-  return wrapContent(`<article>
-    <nav class="ssr-bc" aria-label="Fil d'Ariane"><a href="/doctrine-fiscale">Doctrine fiscale</a> › ${esc(ref)}</nav>
-    <h1>${esc(objet || ref)}</h1>
-    <ul class="ssr-meta">${meta}</ul>
-    ${arts.length ? `<section class="ssr-doctrine-articles"><h2>Articles concernés</h2><ul>${arts.map((a) => `<li><a href="${attr(a.url)}">${esc(a.intitule)}</a></li>`).join('')}</ul></section>` : ''}
-    ${extrait.length ? `<section class="ssr-doctrine-extrait"><h2>Extrait de la lettre</h2>${extrait.map((p) => `<p>${esc(p)}</p>`).join('')}<p>[…]</p></section>` : ''}
-    <section class="ssr-doctrine-gate">
-      <p>Document de doctrine fiscale de la <strong>DGID</strong> (Sénégal). L'objet, les références et l'extrait ci-dessus sont en accès libre.</p>
-      <p>Le <strong>texte intégral</strong> de cette lettre, avec la réponse de l'administration, est réservé aux membres. <a href="/signup">Créez un compte gratuit</a> pour le consulter, ou parcourez l'ensemble de la <a href="/doctrine-fiscale">doctrine fiscale</a>.</p>
-    </section>
-  </article>`);
+  // Premier écran = réplique de DoctrineDetailPage : retour, carte (surtitre, titre, méta à icônes),
+  // articles visés, emplacements des deux boutons d'action, extrait, gate. Les libellés « Référence »,
+  // « Service émetteur », « Date » de l'ancienne liste restent présents dans la fiche en pied de carte.
+  const enTete = [
+    `<li>${iconeSsr('Calendar', 15)}${esc(dateDoctrineSsr(d.date, d.reference_complete))}</li>`,
+    `<li>${iconeSsr('FileText', 15)}${esc(ref)}</li>`,
+    `<li>${iconeSsr('Building', 15)}${esc(d.service_emetteur || 'DGID')}</li>`,
+    d.destinataire && `<li><strong>Destinataire :</strong>&nbsp;${esc(d.destinataire)}</li>`,
+    d.signataire && `<li><strong>Signataire :</strong>&nbsp;${esc(d.signataire)}</li>`,
+  ].filter(Boolean).join('\n');
+  return wrapContent(`<div class="ssr-doctrine ssr-ed"><div class="ssr-doctrine-c">
+    <nav class="ssr-doctrine-retour" aria-label="Fil d'Ariane"><a href="/doctrine-fiscale">${iconeSsr('ArrowLeft', 18)}Toute la doctrine fiscale</a></nav>
+    <article class="ssr-doctrine-carte">
+      <header class="ssr-doctrine-tete">
+        <p class="ssr-doctrine-surtitre">${iconeSsr('BookOpen', 14)}Doctrine fiscale · DGID</p>
+        <h1>${esc(objet || ref)}</h1>
+        <ul class="ssr-meta">${enTete}</ul>
+      </header>
+      ${arts.length ? `<section class="ssr-doctrine-articles"><h2>Articles concernés</h2><ul>${arts.map((a) => `<li><a href="${attr(a.url)}">${esc(a.intitule)}</a></li>`).join('')}</ul></section>` : ''}
+      <div class="ssr-doctrine-actions" aria-hidden="true"><span></span><span></span></div>
+      <div class="ssr-doctrine-corps">
+        ${extrait.length ? `<section class="ssr-doctrine-extrait"><h2>Extrait de la lettre</h2>${extrait.map((p) => `<p>${esc(p)}</p>`).join('')}<p>[…]</p></section>` : ''}
+        <section class="ssr-doctrine-gate">
+          <span class="ssr-doctrine-cadenas">${iconeSsr('Lock', 28)}</span>
+          <p>Document de doctrine fiscale de la <strong>DGID</strong> (Sénégal). L'objet, les références et l'extrait ci-dessus sont en accès libre.</p>
+          <p>Le <strong>texte intégral</strong> de cette lettre, avec la réponse de l'administration, est réservé aux membres. <a href="/signup">Créez un compte gratuit</a> pour le consulter, ou parcourez l'ensemble de la <a href="/doctrine-fiscale">doctrine fiscale</a>.</p>
+        </section>
+        <ul class="ssr-doctrine-fiche">${meta}</ul>
+      </div>
+    </article>
+  </div></div>`);
+}
+/* Date affichée en tête de lettre : même règle que formatDoctrineDate (src/lib/doctrineDate.ts) - champ
+ * `date`, sinon la date lue dans la référence (« … du 18 septembre 2009 »), sinon « Date inconnue ». */
+const MOIS_DOCTRINE = { janvier: 0, fevrier: 1, 'février': 1, mars: 2, avril: 3, mai: 4, juin: 5, juillet: 6, aout: 7, 'août': 7, septembre: 8, octobre: 9, novembre: 10, decembre: 11, 'décembre': 11 };
+export function dateDoctrineSsr(dateStr, ref) {
+  const direct = formatDateFr(dateStr);
+  if (direct && direct !== 'Invalid Date') return direct;
+  const m = String(ref || '').match(/\b(?:le|du)\s+(\d[\s\dA-Za-zÀ-ÿ]{3,40})/i);
+  const mm = m && m[1].replace(/\s+/g, '').match(/^(\d{1,2})([A-Za-zÀ-ÿ]+?)(\d{4})/);
+  const mois = mm ? MOIS_DOCTRINE[mm[2].toLowerCase()] : null;
+  if (mois == null) return 'Date inconnue';
+  return formatDateFr(new Date(Date.UTC(Number(mm[3]), mois, Number(mm[1]))).toISOString()) || 'Date inconnue';
 }
 
 /* ---------- PAGE-THÈME de jurisprudence ---------- */
@@ -1348,6 +2058,13 @@ export function buildThemeHead(data, canonical) {
   }
   return headBlock({ title, description, keywords, canonical, ogType: 'website', schema: schemas });
 }
+
+/*
+ * Corps serveur de la page-thème. Balisage CALQUÉ sur ThemePage.tsx (mêmes blocs, même ordre) et
+ * habillé par le bloc « theme » de api/_ssr/styles.js : la version serveur et la page React prête se
+ * superposent, la bascule ne se voit plus. Seule différence voulue : la FAQ reste dépliée (question +
+ * réponse visibles, pour le référencement) là où React la replie dans des <details>.
+ */
 export function buildThemeBody(data) {
   const t = data.theme;
   const total = data.total || 0;
@@ -1356,33 +2073,41 @@ export function buildThemeBody(data) {
   const decs = (data.decisions || []).map((d) => {
     const meta = [d.juridiction, d.chambre, formatDateFr(d.date_decision)].filter(Boolean).join(' - ');
     const snippet = stripHtml(d.resume || '');
-    return `<li class="ssr-theme-dec">
-      <a href="/decision/${esc(d.slug)}"><strong>${esc(d.reference || 'Décision')}</strong></a>
-      ${meta ? `<span class="ssr-theme-dec-meta"> - ${esc(meta)}</span>` : ''}
-      ${snippet ? `<p>${esc(snippet)}</p>` : ''}
-    </li>`;
+    return `<li class="ssr-theme-dec"><a href="/decision/${esc(d.slug)}"><strong>${esc(d.reference || 'Décision')}</strong></a>${meta ? `<span class="ssr-theme-dec-meta">${esc(meta)}</span>` : ''}${snippet ? `<p>${esc(snippet)}</p>` : ''}</li>`;
   }).join('\n');
   const arts = (data.articles || []).map((a) =>
-    `<li><a href="${esc(urlArticle(a.code_slug, a.article_slug))}">${esc(a.article_label)} - ${esc(a.code_title)}</a> <span class="ssr-theme-art-n">(cité par ${a.n} décision${a.n > 1 ? 's' : ''})</span></li>`
+    `<li><a href="${esc(urlArticle(a.code_slug, a.article_slug))}">${esc(a.article_label)} - ${esc(a.code_title)}</a> <span class="ssr-theme-art-n">cité par ${a.n} décision${a.n > 1 ? 's' : ''}</span></li>`
   ).join('\n');
   const faq = Array.isArray(t.faq) ? t.faq.filter((f) => f && f.q && f.a) : [];
   const faqHtml = faq.length
-    ? `<section class="ssr-theme-faq"><h2>Questions fréquentes - ${esc(t.label)}</h2>
-       ${faq.map((f) => `<h3>${esc(f.q)}</h3><p>${esc(f.a)}</p>`).join('\n')}</section>`
+    ? `<section class="ssr-theme-faq"><h2>${iconeSsr('CircleHelp', 18)} Questions fréquentes - ${esc(t.label)}</h2>
+       ${faq.map((f) => `<div class="ssr-theme-q"><h3>${esc(f.q)}</h3><p>${esc(f.a)}</p></div>`).join('\n')}</section>`
     : '';
-  return wrapContent(`<article>
-    <nav class="ssr-bc" aria-label="Fil d'Ariane"><a href="/jurisprudence">Jurisprudence</a> › ${esc(t.label)}</nav>
-    <h1>${esc(t.h1)}</h1>
-    <p class="ssr-theme-chapo">${esc(t.chapo)}</p>
-    <p class="ssr-theme-stats"><strong>${total} décisions</strong> sur ce thème dans la base${jurisTxt ? ` : ${esc(jurisTxt)}.` : '.'}</p>
-    ${arts ? `<section class="ssr-theme-arts"><h2>Articles de codes les plus cités</h2><ul>${arts}</ul></section>` : ''}
-    <section class="ssr-theme-decs"><h2>Décisions récentes - ${esc(t.label)}</h2><ul>${decs}</ul></section>
+  return wrapContent(`<div class="ssr-theme"><article>
+    <nav class="ssr-bc" aria-label="Fil d'Ariane"><a href="/jurisprudence">Jurisprudence</a> <span>›</span> ${esc(t.label)}</nav>
+    <header>
+      <span class="ssr-theme-eyebrow">${iconeSsr('Scale', 14)} Thème de jurisprudence</span>
+      <h1>${esc(t.h1)}</h1>
+      <p class="ssr-theme-chapo">${esc(t.chapo)}</p>
+      <p class="ssr-theme-stats"><strong>${total} décisions</strong> sur ce thème dans la base${jurisTxt ? ` : ${esc(jurisTxt)}.` : '.'}</p>
+    </header>
+    ${arts ? `<section class="ssr-theme-arts"><h2>${iconeSsr('BookOpen', 18)} Articles de codes les plus cités</h2><ul>${arts}</ul></section>` : ''}
+    <section class="ssr-theme-decs"><h2>${iconeSsr('FileText', 18)} Décisions récentes - ${esc(t.label)}</h2><ul>${decs}</ul></section>
     ${faqHtml}
     <p class="ssr-theme-more"><a href="/search?q=${encodeURIComponent(t.label)}">Rechercher « ${esc(t.label)} » dans toute la base →</a></p>
-  </article>`);
+  </article></div>`);
 }
 
 /* ---------- GUIDES PRATIQUES (/guides et /guides/:slug) ---------- */
+/*
+ * Pages éditoriales (guides, guide, doctrine, codes) : la version serveur reproduit le PREMIER ÉCRAN
+ * de la page React prête (mêmes blocs, mêmes positions), pour que la bascule serveur -> React ne se
+ * voie pas. Mise en forme : api/_ssr/styles.js (blocs guides, guide, doctrine, codes). Icônes :
+ * iconeSsr (copies partagées) ; les boutons et champs de la page
+ * React sont des emplacements vides de même taille, jamais du faux texte.
+ * ⚠️ Double rendu : toute retouche de GuidesPage / GuideDetailPage / DoctrineDetailPage /
+ * CodesListPage (textes fixes, ordre des blocs, tailles) se reporte ici ET dans api/_ssr/styles.js.
+ */
 /*
  * Guides éditoriaux (table guides, contenu rédigé/vérifié par nous → HTML de
  * confiance injecté tel quel). Chaque guide = réponse directe + H2 questions +
@@ -1415,22 +2140,26 @@ export function buildGuideHead(gd, canonical) {
 }
 export function buildGuideBody(gd) {
   const faq = Array.isArray(gd.faq) ? gd.faq.filter((f) => f && f.q && f.a) : [];
+  // FAQ : mêmes boîtes que les <details> de GuideDetailPage, réponses VISIBLES (contenu de référencement).
   const faqHtml = faq.length
     ? `<section class="ssr-guide-faq"><h2>Questions fréquentes</h2>
-       ${faq.map((f) => `<h3>${esc(f.q)}</h3><p>${esc(f.a)}</p>`).join('\n')}</section>`
+       ${faq.map((f) => `<div class="ssr-guide-qr"><h3>${esc(f.q)}</h3><p>${esc(f.a)}</p></div>`).join('\n')}</section>`
     : '';
   const themeLink = gd.theme_slug
-    ? `<p class="ssr-guide-theme"><a href="/jurisprudence/theme/${esc(gd.theme_slug)}">Voir la jurisprudence liée à ce guide →</a></p>`
+    ? `<p class="ssr-guide-theme"><a href="/jurisprudence/theme/${esc(gd.theme_slug)}">${iconeSsr('Scale', 16)}Voir la jurisprudence liée à ce guide →</a></p>`
     : '';
   const dateFr = formatDateFr(gd.published_at);
-  return wrapContent(`<article>
-    <nav class="ssr-bc" aria-label="Fil d'Ariane"><a href="/guides">Guides pratiques</a> › ${esc(gd.title)}</nav>
+  // Premier écran = réplique de GuideDetailPage (fil d'Ariane, titre, date, corps). La devise
+  // « la mémoire juridique du Sénégal », absente de l'en-tête React, est reportée en fin d'article.
+  return wrapContent(`<div class="ssr-guide ssr-ed"><article class="ssr-guide-c">
+    <nav class="ssr-bc" aria-label="Fil d'Ariane"><a href="/guides">Guides pratiques</a> <span>›</span> ${esc(gd.title)}</nav>
     <h1>${esc(gd.h1 || gd.title)}</h1>
-    ${dateFr ? `<p class="ssr-guide-date">Publié le ${esc(dateFr)} - Lexenegal, la mémoire juridique du Sénégal.</p>` : ''}
+    ${dateFr ? `<p class="ssr-guide-date">Publié le ${esc(dateFr)} - Lexenegal</p>` : ''}
     <div class="ssr-guide-body">${gd.content_html || ''}</div>
     ${faqHtml}
     ${themeLink}
-  </article>`);
+    <p class="ssr-guide-devise">Lexenegal, la mémoire juridique du Sénégal.</p>
+  </article></div>`);
 }
 export function buildGuidesHead(canonical) {
   const title = 'Guides pratiques du droit sénégalais | Lexenegal';
@@ -1446,11 +2175,16 @@ export function buildGuidesBody(guides) {
   const items = (guides || []).map((gd) =>
     `<li><a href="/guides/${esc(gd.slug)}">${esc(gd.title)}</a>${gd.description ? `<p>${esc(gd.description)}</p>` : ''}</li>`
   ).join('\n');
-  return wrapContent(`<article>
-    <h1>Guides pratiques du droit sénégalais</h1>
-    <p>Des réponses claires, appuyées sur les <a href="/codes">codes et lois du Sénégal</a> et la <a href="/jurisprudence">jurisprudence</a>, aux questions juridiques les plus fréquentes.</p>
+  // Premier écran = réplique de GuidesPage (surtitre, titre, chapô, cartes). Chapô : mot pour mot celui
+  // de la page React, les deux liens internes conservés.
+  return wrapContent(`<div class="ssr-guides ssr-ed"><article class="ssr-guides-c">
+    <header>
+      <p class="ssr-guides-surtitre">${iconeSsr('BookMarked', 14)}Guides pratiques</p>
+      <h1>Guides pratiques du droit sénégalais</h1>
+      <p class="ssr-guides-chapo">Des réponses claires, appuyées sur les <a href="/codes">codes, les lois</a> et la <a href="/jurisprudence">jurisprudence du Sénégal</a>, aux questions juridiques les plus fréquentes.</p>
+    </header>
     <ul class="ssr-guides-list">${items}</ul>
-  </article>`);
+  </article></div>`);
 }
 
 /* ---------- HUB JURISPRUDENCE (/jurisprudence) ---------- */
@@ -1469,18 +2203,27 @@ export function buildJurisprudenceHead(canonical) {
   };
   return headBlock({ title, description, keywords, canonical, ogType: 'website', schema });
 }
+/*
+ * Balisage CALQUÉ sur JurisprudencePage.tsx et habillé par le bloc « jurisprudence » de
+ * api/_ssr/styles.js. Le formulaire de recherche (purement interactif) est un EMPLACEMENT vide de même
+ * taille (aria-hidden, sans texte) ; le lien texte vers /search est conservé, en bas de page.
+ */
 export function buildJurisprudenceBody(themes) {
   const list = themes || [];
   const matieres = list.filter((t) => t.matiere);
   const sujets = list.filter((t) => !t.matiere);
-  const li = (t) => `<li><a href="/jurisprudence/theme/${esc(t.slug)}">${esc(t.label)}</a>${t.cached_total ? ` <span class="ssr-theme-art-n">(${t.cached_total} décisions)</span>` : ''}</li>`;
-  return wrapContent(`<article>
-    <h1>Jurisprudence du Sénégal et de l'OHADA</h1>
-    <p>Consultez les <strong>décisions de justice du Sénégal</strong> en texte intégral : Cour suprême, Cour de cassation, Conseil constitutionnel, cours d'appel et tribunaux, ainsi que la <strong>Cour commune de justice et d'arbitrage (CCJA)</strong> de l'OHADA. Chaque décision est reliée aux articles de codes qu'elle cite.</p>
-    <p><a href="/search">Rechercher une décision, un mot-clé ou une référence →</a></p>
-    ${matieres.length ? `<section><h2>Jurisprudence par matière</h2><ul>${matieres.map(li).join('\n')}</ul></section>` : ''}
-    ${sujets.length ? `<section><h2>Jurisprudence par thème</h2><ul>${sujets.map(li).join('\n')}</ul></section>` : ''}
-  </article>`);
+  const li = (t) => `<li><a href="/jurisprudence/theme/${esc(t.slug)}">${esc(t.label)}</a>${t.cached_total ? ` <span class="ssr-theme-art-n">${t.cached_total} décisions</span>` : ''}</li>`;
+  return wrapContent(`<div class="ssr-jurisprudence"><article>
+    <header>
+      <span class="ssr-juris-eyebrow">${iconeSsr('Scale', 14)} Jurisprudence</span>
+      <h1>Jurisprudence du Sénégal et de l'OHADA</h1>
+      <p class="ssr-juris-intro">Consultez les <strong>décisions de justice du Sénégal</strong> en texte intégral : Cour suprême, Cour de cassation, Conseil constitutionnel, cours d'appel et tribunaux, ainsi que la <strong>Cour commune de justice et d'arbitrage (CCJA)</strong> de l'OHADA. Chaque décision est reliée aux articles de codes qu'elle cite.</p>
+      <div class="ssr-juris-search" aria-hidden="true">${iconeSsr('Search', 18)}<span class="ssr-juris-field"></span><span class="ssr-juris-btn"></span></div>
+    </header>
+    ${matieres.length ? `<section class="ssr-juris-section"><h2>${iconeSsr('Landmark', 18)} Jurisprudence par matière</h2><ul class="ssr-juris-grid ssr-juris-grid--matieres">${matieres.map(li).join('\n')}</ul></section>` : ''}
+    ${sujets.length ? `<section class="ssr-juris-section"><h2>${iconeSsr('Tags', 18)} Jurisprudence par thème</h2><ul class="ssr-juris-grid">${sujets.map(li).join('\n')}</ul></section>` : ''}
+    <p class="ssr-juris-more"><a href="/search">Rechercher une décision, un mot-clé ou une référence →</a></p>
+  </article></div>`);
 }
 
 /* ---------- Accès Supabase REST ---------- */
@@ -1505,11 +2248,23 @@ async function fetchHomeCodes() {
   catch (e) { return []; }
 }
 async function fetchAllTexts() {
-  try { return await sb(`laws_and_codes?is_active=eq.true&select=slug,title,short_title,category&order=category,title&limit=300`); }
+  try { return await sb(`laws_and_codes?is_active=eq.true&select=slug,title,short_title,category,branche_slug&order=category,title&limit=300`); }
   catch (e) { return []; }
 }
+// Grille des branches de /codes (14 lignes) et nombre d'articles par code : mêmes données que
+// CodesListPage, demandées EN PARALLÈLE de fetchAllTexts. Échec = page servie sans grille / sans nombres.
+async function fetchBranches() {
+  try { return await sb(`branches?select=slug,label,icon,color,description,ordre&order=ordre&limit=100`); }
+  catch (e) { return []; }
+}
+async function fetchComptesCodes() {
+  try {
+    const rows = await sb(`laws_and_codes?is_active=eq.true&category=eq.code&select=slug,articles:articles(count)&limit=300`);
+    return Object.fromEntries((rows || []).map((r) => [r.slug, (r.articles && r.articles[0] && r.articles[0].count) || 0]));
+  } catch (e) { return null; }
+}
 async function fetchDecision(slug) {
-  return one(await sb(`decisions?slug=eq.${encodeURIComponent(slug)}&select=id,reference,slug,date_decision,juridiction,chambre,matiere_principale,parties_principales,resume,mots_cles,texte_brut,texte_integral,decisions_similaires&limit=1`));
+  return one(await sb(`decisions?slug=eq.${encodeURIComponent(slug)}&select=id,reference,slug,date_decision,juridiction,chambre,matiere_principale,parties_principales,resume,mots_cles,articles_loi_cites,texte_brut,texte_integral,decisions_similaires&limit=1`));
 }
 // Décisions liées dans les deux sens du champ decisions_similaires (actives seulement : jamais de lien mort).
 async function fetchRelatedDecisions(d) {
@@ -1608,10 +2363,35 @@ async function fetchCodeArticles(codeId) {
   for (let offset = 0; ; offset += PAGE_POSTGREST) {
     // id et is_active : servent, dans un code fusionné (2026) seulement, à écarter du sommaire les
     // anciens articles non repris (liste à part) et les articles désactivés (articleDuSommaire).
-    const page = await sb(`articles?code_id=eq.${codeId}&select=id,num,num_court,article_number,slug,is_active&order=display_order,id&offset=${offset}&limit=${PAGE_POSTGREST}`);
+    // node_id : forme de la division que la page React ouvre par défaut (divisionParDefautSsr).
+    const page = await sb(`articles?code_id=eq.${codeId}&select=id,num,num_court,article_number,slug,is_active,node_id&order=display_order,id&offset=${offset}&limit=${PAGE_POSTGREST}`);
     lignes.push(...page);
     if (page.length < PAGE_POSTGREST) return lignes;
   }
+}
+// Plan du texte réduit à sa forme (id, parent_id, type, dans l'ordre de CodePage.tsx) : sert seulement à la
+// géométrie de la version serveur (divisionParDefautSsr). Lu en parallèle des articles. null si illisible
+// ou s'il atteint le plafond de PostgREST (plan peut-être tronqué) : la page prend alors la forme courante.
+async function fetchPlanLeger(codeId) {
+  try {
+    const plan = await sb(`structure_nodes?code_id=eq.${codeId}&select=id,parent_id,type&order=position,id&limit=${PAGE_POSTGREST}`);
+    return Array.isArray(plan) && plan.length < PAGE_POSTGREST ? plan : null;
+  } catch (e) { return null; }
+}
+// Contenu des tout premiers articles (ordre de lecture) : les cartes de la division ouverte au premier
+// écran (cartesArticlesSsr). Lu en parallèle des articles ; Map vide si illisible.
+async function fetchPremiersArticles(codeId) {
+  try {
+    const rows = await sb(`articles?code_id=eq.${codeId}&select=id,content_html,modifications,status,tags,part_title&order=display_order,id&limit=${CARTES_SSR + 2}`);
+    return new Map((rows || []).map((r) => [r.id, r]));
+  } catch (e) { return new Map(); }
+}
+// Libellé de la première division racine (ordre de CodePage.tsx) : fil et titre de la division ouverte par
+// défaut. Lu en parallèle ; null si illisible.
+async function fetchPremiereRacine(codeId) {
+  try {
+    return one(await sb(`structure_nodes?code_id=eq.${codeId}&parent_id=is.null&select=id,type,numero,intitule,label&order=position,id&limit=1`));
+  } catch (e) { return null; }
 }
 // Textes & codes liés (legal_edge relation lie_a, bidirectionnel) pour le SSR/SEO.
 async function fetchRelatedTexts(codeId) {
@@ -1623,14 +2403,14 @@ async function fetchRelatedTexts(codeId) {
   } catch (e) { return []; }
 }
 async function fetchArticle(codeId, artSlug) {
-  return one(await sb(`articles?code_id=eq.${codeId}&slug=eq.${encodeURIComponent(artSlug)}&select=id,num,num_court,article_number,slug,content_html,node_id,display_order,is_active&limit=1`));
+  return one(await sb(`articles?code_id=eq.${codeId}&slug=eq.${encodeURIComponent(artSlug)}&select=id,num,num_court,article_number,slug,content_html,node_id,display_order,is_active,status,notes&limit=1`));
 }
-// Plan du code (structure_nodes) : sert à situer l'article dans sa hiérarchie.
-// Chargé en une requête puis parcouru en mémoire — un code compte quelques
-// centaines de nœuds tout au plus.
+// Plan du code (structure_nodes) : sert à situer l'article dans sa hiérarchie et à dessiner l'arbre
+// de la colonne de gauche (même ordre que la page React : position). Chargé en une requête puis
+// parcouru en mémoire : un code compte quelques centaines de nœuds tout au plus (340 au plus haut).
 async function fetchStructureNodes(codeId) {
   try {
-    return await sb(`structure_nodes?code_id=eq.${codeId}&select=id,parent_id,type,numero,intitule,label&limit=5000`);
+    return await sb(`structure_nodes?code_id=eq.${codeId}&select=id,parent_id,type,numero,intitule,label,note,position&order=position&limit=5000`);
   } catch (e) { return []; }
 }
 // Article précédent et suivant, selon l'ordre d'affichage du code (display_order, puis id pour
@@ -1674,6 +2454,35 @@ async function fetchConcordance(codeId) {
 async function fetchVersions(artId) {
   return sb(`article_versions?article_id=eq.${artId}&select=id,content,effective_date,expiration_date,is_current,ancien_numero,version_note,lien_ancien&order=effective_date.desc,id&limit=${PAGE_POSTGREST}`);
 }
+/*
+ * Articles du texte pour l'arbre de la colonne de gauche (page article) : colonnes LÉGÈRES, sans
+ * contenu (≈ 95 Ko pour les 487 articles du Code du travail), paginées avec un ordre total comme
+ * chargerArticlesDuCode. avecChampsPlats : un texte sans structure_nodes construit son arbre sur
+ * part_title / title_name / chapter_name. Échec : [] (la colonne reste un emplacement gris).
+ */
+async function fetchArticlesArbre(codeId, avecChampsPlats) {
+  const colonnes = `slug,node_id,display_order,num,num_court,article_number,status,is_active,tags${avecChampsPlats ? ',part_title,title_name,chapter_name' : ''}`;
+  const page = (offset) => sb(`articles?code_id=eq.${codeId}&select=${colonnes}&order=display_order,id&offset=${offset}&limit=${PAGE_POSTGREST}`);
+  try {
+    // Deux premières pages EN PARALLÈLE : un seul texte dépasse 1 000 articles (AUSCGIE, 1 104), qui
+    // payait sinon un aller-retour de plus (+ 120 ms mesurés) ; pour les autres, la seconde revient vide.
+    const [premiere, seconde] = await Promise.all([page(0), page(PAGE_POSTGREST)]);
+    const lignes = [...premiere];
+    if (premiere.length < PAGE_POSTGREST) return lignes;
+    lignes.push(...seconde);
+    for (let offset = 2 * PAGE_POSTGREST, derniere = seconde; derniere.length === PAGE_POSTGREST; offset += PAGE_POSTGREST) {
+      derniere = await page(offset);
+      lignes.push(...derniere);
+    }
+    return lignes;
+  } catch (e) { return []; }
+}
+// Versions d'un article SANS leur contenu : ligne « En vigueur depuis le … » de la page article.
+async function fetchVersionsLegeres(artId) {
+  try {
+    return await sb(`article_versions?article_id=eq.${artId}&select=id,effective_date,expiration_date,is_current,version_note,ancien_numero&order=effective_date.desc,id&limit=${PAGE_POSTGREST}`);
+  } catch (e) { return []; }
+}
 async function fetchCurrentVersion(artId) {
   try {
     const rows = await sb(`article_versions?article_id=eq.${artId}&select=content,is_current&order=effective_date.desc&limit=5`);
@@ -1688,7 +2497,9 @@ async function fetchCurrentVersion(artId) {
 async function fetchCitingDecisions(artId, parDate = false) {
   const base = `decision_article_links?article_id=eq.${artId}&select=citation_text,decision:decisions(reference,slug,date_decision,chambre)`;
   if (parDate) {
-    try { return await sb(`${base}&order=decision(date_decision).desc.nullslast,id&limit=20`); } catch (e) { /* repli ci-dessous */ }
+    // anciens_numeros : « cite l'ancien article L.32 » et « Texte alors en vigueur » sous chaque décision
+    // antérieure à la bascule, comme la page React (sa lecture triée porte la même colonne).
+    try { return await sb(`${base.replace('select=citation_text,', 'select=citation_text,anciens_numeros,')}&order=decision(date_decision).desc.nullslast,id&limit=20`); } catch (e) { /* repli ci-dessous */ }
   }
   try {
     const rows = await sb(`${base}&limit=20`);
@@ -1819,8 +2630,8 @@ export default async function handler(req, res) {
     }
 
     if (type === 'codes') {
-      const texts = await fetchAllTexts();
-      return serveHtml(buildCodesHead(`${SITE}/codes`), buildCodesBody(texts));
+      const [texts, branches, comptes] = await Promise.all([fetchAllTexts(), fetchBranches(), fetchComptesCodes()]);
+      return serveHtml(buildCodesHead(`${SITE}/codes`) + styleSsr('codes'), buildCodesBody(texts, branches, comptes));
     }
 
     if (type === 'doctrine') {
@@ -1840,12 +2651,12 @@ export default async function handler(req, res) {
       const canonical = `${SITE}/doctrine-fiscale/${slug}`;
       let arts = [];
       try { arts = articlesDeDoctrine(await fetchDoctrineArticles(d.id)); } catch (e) { /* bonus : la page reste servie */ }
-      return serveHtml(buildDoctrineHead(d, canonical, arts), buildDoctrineBody(d, arts));
+      return serveHtml(buildDoctrineHead(d, canonical, arts) + styleSsr('doctrine'), buildDoctrineBody(d, arts));
     }
 
     if (type === 'guides') {
       const guides = await fetchGuidesIndex();
-      return serveHtml(buildGuidesHead(`${SITE}/guides`), buildGuidesBody(guides));
+      return serveHtml(buildGuidesHead(`${SITE}/guides`) + styleSsr('guides'), buildGuidesBody(guides));
     }
 
     if (type === 'guide') {
@@ -1855,12 +2666,12 @@ export default async function handler(req, res) {
       try { gd = await fetchGuide(slug); } catch (e) { return serve503(); }
       if (!gd) return serveIntrouvable();
       const canonical = `${SITE}/guides/${slug}`;
-      return serveHtml(buildGuideHead(gd, canonical), buildGuideBody(gd));
+      return serveHtml(buildGuideHead(gd, canonical) + styleSsr('guide'), buildGuideBody(gd));
     }
 
     if (type === 'jurisprudence') {
       const themes = await fetchThemesIndex();
-      return serveHtml(buildJurisprudenceHead(`${SITE}/jurisprudence`), buildJurisprudenceBody(themes));
+      return serveHtml(buildJurisprudenceHead(`${SITE}/jurisprudence`) + styleSsr('jurisprudence'), buildJurisprudenceBody(themes));
     }
 
     if (type === 'theme') {
@@ -1870,7 +2681,7 @@ export default async function handler(req, res) {
       try { data = await fetchThemePage(slug); } catch (e) { return serve503(); }
       if (!data) return serveIntrouvable();
       const canonical = `${SITE}/jurisprudence/theme/${slug}`;
-      return serveHtml(buildThemeHead(data, canonical), buildThemeBody(data));
+      return serveHtml(buildThemeHead(data, canonical) + styleSsr('theme'), buildThemeBody(data));
     }
 
     if (type === 'code') {
@@ -1887,13 +2698,17 @@ export default async function handler(req, res) {
         if (TEXTES_RETIRES[slug]) return redirigerTexteRetire(slug, null);
         return serveIntrouvable();
       }
+      // Plan léger, premiers contenus et première division lancés AVANT les articles, en parallèle : aucun
+      // temps d'attente ajouté (ces trois lectures ne lèvent jamais).
+      const planP = fetchPlanLeger(law.id), contenusP = fetchPremiersArticles(law.id), racineP = fetchPremiereRacine(law.id);
       let articles = [];
       try { articles = await fetchCodeArticles(law.id); } catch (e) { /* */ }
-      const [related, conc] = await Promise.all([fetchRelatedTexts(law.id), fetchConcordance(law.id)]);
+      const [related, conc, plan, contenus, racine] = await Promise.all([
+        fetchRelatedTexts(law.id), fetchConcordance(law.id), planP, contenusP, racineP]);
       const canonical = `${SITE}${urlTexte(slug)}`;
       // Code fusionné en 2026 : le compteur ne retient que les articles en vigueur.
       const fusion = contexteFusion(conc.lignes);
-      return serveHtml(buildCodeHead(law, nombreArticlesEnVigueur(articles, fusion), canonical), buildCodeBody(law, articles, related, fusion),
+      return serveHtml(buildCodeHead(law, nombreArticlesEnVigueur(articles, fusion), canonical) + styleSsr('code'), buildCodeBody(law, articles, related, fusion, plan, contenus, racine),
         conc.transitoire ? CACHE_COURT : undefined);
     }
 
@@ -1975,20 +2790,33 @@ export default async function handler(req, res) {
       // Tout en parallèle : le contexte enrichi ne doit pas rallonger le rendu.
       // Les trois requêtes ajoutées échouent en silence (contexte = bonus), le
       // texte de l'article reste servi quoi qu'il arrive.
-      const [content, citing, noeuds, voisins] = await Promise.all([
+      // Arbre de la colonne de gauche et ligne de version (habillage de la page, cf. buildArticleBody) :
+      // deux lectures légères de plus, dans le même lot parallèle.
+      const [content, citing, noeuds, voisins, articlesArbre, versionsLegeres] = await Promise.all([
         art.content_html ? Promise.resolve(art.content_html)
           : (versions ? Promise.resolve((versionCourante(versions) || {}).content || '') : fetchCurrentVersion(art.id)),
-        fetchCitingDecisions(art.id, !!fusion),
-        art.node_id ? fetchStructureNodes(law.id) : Promise.resolve([]),
+        // Les plus récentes d'abord pour tous les textes : mêmes premières cartes que la page React.
+        fetchCitingDecisions(art.id, true),
+        fetchStructureNodes(law.id),
         fetchVoisins(law.id, art.display_order, art.id, filtreVoisins),
+        fetchArticlesArbre(law.id, !art.node_id),
+        versions ? Promise.resolve(versions) : fetchVersionsLegeres(art.id),
       ]);
       const chemin = cheminDansLePlan(art.node_id, noeuds);
       const fa = fusionArticle({ fusion, law, art, choix, params, versions });
       // Le titre et la description restent ceux de la version actuelle (adresse canonique) ; le corps
       // montre la version retenue.
       const affiche = fa && fa.contenu != null ? fa.contenu : content;
-      return serveHtml(buildArticleHead(law, art, canonical, texteSeoArticle(content), fa),
-        buildArticleBody(law, art, affiche, citing, chemin, voisins, fa),
+      const habillage = {
+        // Code fusionné : un article désactivé reste hors de l'arbre, comme du sommaire (articleDuSommaire).
+        arbre: articlesArbre.length ? arbreHtmlSsr(law, art, noeuds, articlesArbre.filter((a) => articleDuSommaire(fusion, a))) : '',
+        version: ligneVersionSsr(versionsLegeres, law, art, choix),
+        // Bascule de numérotation (code fusionné) : cartes des décisions antérieures.
+        bascule: fusion ? (fusion.bascule || jourDe((versionCourante(versionsLegeres || []) || {}).effective_date) || null) : null,
+        depuis: fusion ? fusion.depuis : null,
+      };
+      return serveHtml(buildArticleHead(law, art, canonical, texteSeoArticle(content), fa) + styleSsr('article'),
+        buildArticleBody(law, art, affiche, citing, chemin, voisins, fa, habillage),
         conc.transitoire ? CACHE_COURT : undefined);
     }
 
@@ -2018,7 +2846,7 @@ export default async function handler(req, res) {
     // requête tant qu'aucun lien ne porte d'ancien numéro).
     const bascules = await fetchBascules(cited);
     const canonical = `${SITE}/decision/${slug}`;
-    return serveHtml(buildDecisionHead(decision, canonical), buildDecisionBody(decision, cited, related, bascules));
+    return serveHtml(buildDecisionHead(decision, canonical) + styleSsr('decision'), buildDecisionBody(decision, cited, related, bascules));
   } catch (e) {
     res.statusCode = 500;
     return res.end('Erreur de rendu');
