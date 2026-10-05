@@ -84,7 +84,7 @@ const echapperRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const contientMot = (texte: string, mot: string) =>
     new RegExp(`(^|[^a-z0-9])${echapperRe(deburr(mot))}($|[^a-z0-9])`).test(deburr(texte));
 
-const TYPE_WORDS = 'titre|chapitre|sous-section|section|paragraphe|partie|livre|division';
+const TYPE_WORDS = 'titre|chapitre|sous-section|section|paragraphe|partie|livre|division|annexe';
 // Mots de niveau reconnus en tête de la colonne `numero` (« TITRE IV », « sous-paragraphe 1 », « § 2 »).
 const MOTS_NUMERO = `${TYPE_WORDS}|sous-paragraphe|sous-chapitre|§`;
 
@@ -211,7 +211,7 @@ export function formatNodeLabel(
     //     passerait pour un numéro.
     if (!stripped) {
         const m4 = label.match(
-            new RegExp(`^\\s*(?:(${TYPE_WORDS})\\s*[.:°)\\]-]*\\s*)?([A-Za-zÀ-ÿ0-9]+)?\\s*$`, 'i'));
+            new RegExp(`^\\s*(?:(${TYPE_WORDS})(?![A-Za-zÀ-ÿ])\\s*[.:°)\\]-]*\\s*)?([A-Za-zÀ-ÿ0-9]+)?\\s*$`, 'i'));
         if (m4) {
             const jeton = (m4[2] || '').trim();
             const estNum = !!jeton && (!!numToArabicOrNull(jeton) || /^[A-Za-z]$/.test(jeton));
@@ -245,7 +245,7 @@ export function formatNodeLabel(
     let badge = '';
     if (arab || lettre || libre) badge = kind ? `${kind} ${num}` : num;
     else if (kind) {
-        const hasKind = contientMot(label, kind) || /\bPARTIE\b/i.test(label);
+        const hasKind = contientMot(label, kind) || contientMot(label, `${kind}s`) || /\bPARTIE\b/i.test(label);
         badge = hasKind ? '' : kind;
     }
     return { badge, label };

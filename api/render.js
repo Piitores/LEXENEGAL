@@ -338,7 +338,7 @@ const lireCle = (table, cle) => (Object.hasOwn(table, cle) ? table[cle] : undefi
 // Texte littéral dans une expression régulière (un type de nœud « chapitre( » faisait tomber la page en 500).
 const echapperRe = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const contientMotSsr = (texte, mot) => new RegExp(`(^|[^a-z0-9])${echapperRe(deburrSsr(mot))}($|[^a-z0-9])`).test(deburrSsr(texte));
-const TYPE_WORDS_SSR = 'titre|chapitre|sous-section|section|paragraphe|partie|livre|division';
+const TYPE_WORDS_SSR = 'titre|chapitre|sous-section|section|paragraphe|partie|livre|division|annexe';
 const MOTS_NUMERO_SSR = `${TYPE_WORDS_SSR}|sous-paragraphe|sous-chapitre|§`;
 const ORDINALS_SSR = {
   premier: '1', premiere: '1', deuxieme: '2', second: '2', seconde: '2',
@@ -416,7 +416,7 @@ export function formatNodeLabelSsr(n) {
     }
   }
   if (!stripped) {
-    const m4 = label.match(new RegExp(`^\\s*(?:(${TYPE_WORDS_SSR})\\s*[.:°)\\]-]*\\s*)?([A-Za-zÀ-ÿ0-9]+)?\\s*$`, 'i'));
+    const m4 = label.match(new RegExp(`^\\s*(?:(${TYPE_WORDS_SSR})(?![A-Za-zÀ-ÿ])\\s*[.:°)\\]-]*\\s*)?([A-Za-zÀ-ÿ0-9]+)?\\s*$`, 'i'));
     if (m4) {
       const jeton = (m4[2] || '').trim();
       const estNum = !!jeton && (!!numToArabicOrNullSsr(jeton) || /^[A-Za-z]$/.test(jeton));
@@ -434,7 +434,7 @@ export function formatNodeLabelSsr(n) {
   let badge = '';
   if (arab || lettre || libre) badge = kind ? `${kind} ${num}` : num;
   else if (kind) {
-    const hasKind = contientMotSsr(label, kind) || /\bPARTIE\b/i.test(label);
+    const hasKind = contientMotSsr(label, kind) || contientMotSsr(label, `${kind}s`) || /\bPARTIE\b/i.test(label);
     badge = hasKind ? '' : kind;
   }
   return { badge, label };

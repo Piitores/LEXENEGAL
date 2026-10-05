@@ -31,6 +31,10 @@ const CAS = [
     { type: 'chapitre', numero: null, intitule: 'Chapitre unique', label: 'Chapitre unique' },
     { type: 'titre', numero: 'TITRE PREMIER', intitule: 'DES OFFRES DE PAIEMENT', label: 'TITRE PREMIER - DES OFFRES' },
     { type: 'section', numero: '4', intitule: '', label: 'SECTION 4' },
+    // Annexes (contrôle du 06/10/2026) : « Annexe / Annexes » et « Annexe I / ANNEXE I : … » affichaient le mot deux fois.
+    { type: 'annexe', numero: null, intitule: 'Annexes', label: 'Annexes' },
+    { type: 'annexe', numero: 'I', intitule: 'ANNEXE I : CLASSIFICATION PROFESSIONNELLE', label: 'ANNEXE I : CLASSIFICATION PROFESSIONNELLE' },
+    { type: 'annexe', numero: null, intitule: 'ADDITIF A L’ANNEXE II', label: 'ADDITIF A L’ANNEXE II' },
 ].map((n, i) => ({ ...n, id: `n${i}`, code_id: 'X', parent_id: null, position: i + 1 }));
 
 const TYPES_BRUTS = Object.keys(NODE_KIND);
@@ -66,6 +70,7 @@ describe('arbre du plan : aucun type brut, à l’identique des deux côtés', (
             ['', 'Dispositif'], ['', 'MARIAGE ET FAMILLE'], ['', 'Préambule'], ['', 'Promulgation'], ['IV', 'MUTATION'],
             ['Annexe 5', 'EQUIVALENCE DES HORAIRES'], ['Sous-section 3', 'LIEU DE VERIFICATION'], ['Point A', 'Limites du domaine public maritime'],
             ['Sous-chapitre', 'DISPOSITIONS COMMUNES'], ['', 'Chapitre unique'], ['Titre PREMIER', 'DES OFFRES DE PAIEMENT'], ['Section 4', ''],
+            ['', 'Annexes'], ['Annexe I', 'CLASSIFICATION PROFESSIONNELLE'], ['', 'ADDITIF A L’ANNEXE II'],
         ];
         expect(s).toEqual(attendu);
         for (const [type, nom] of s) {
