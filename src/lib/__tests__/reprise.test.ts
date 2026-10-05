@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { avecReprise } from '../reprise';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { avecReprise, attendreAuPlus } from '../reprise';
 
 describe('avecReprise', () => {
     it('ne relance pas une requête réussie', async () => {
@@ -26,5 +26,27 @@ describe('avecReprise', () => {
         const r = await avecReprise(async () => { appels++; return { data: null, error: erreur }; }, 0);
         expect(r.error).toBe(erreur);
         expect(appels).toBe(1);
+    });
+});
+
+describe('attendreAuPlus', () => {
+    afterEach(() => { vi.useRealTimers(); });
+
+    it('rend la valeur si la promesse aboutit à temps', async () => {
+        vi.useFakeTimers();
+        const p = attendreAuPlus(new Promise<number>((ok) => setTimeout(() => ok(7), 300)), 2_500);
+        await vi.advanceTimersByTimeAsync(300);
+        expect(await p).toEqual({ fini: true, valeur: 7 });
+    });
+
+    it('rend la main à l’échéance sans attendre la promesse, qui continue', async () => {
+        vi.useFakeTimers();
+        let resoudre: (v: number) => void = () => {};
+        const lente = new Promise<number>((ok) => { resoudre = ok; });
+        const p = attendreAuPlus(lente, 2_500);
+        await vi.advanceTimersByTimeAsync(2_500);
+        expect(await p).toEqual({ fini: false });
+        resoudre(9);
+        expect(await lente).toBe(9);
     });
 });

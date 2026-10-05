@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
-import { avecReprise } from '../../lib/reprise';
+import { avecReprise, attendreAuPlus } from '../../lib/reprise';
 import ChargementInterrompu from '../../components/ChargementInterrompu/ChargementInterrompu';
 import useAuth from '../../hooks/useAuth';
 import { Loader2, ArrowLeft, Building, Calendar, FileText, Lock, BookOpen, Copy, AlertCircle } from 'lucide-react';
@@ -31,6 +31,29 @@ interface DoctrineDetail {
 // Teaser public (content_raw EXCLU : gate DB par colonne, migration doctrine_gate_content_raw_columns).
 const TEASER_COLUMNS = 'id, slug, numero, annee, date, service_emetteur, reference_complete, objet, destinataire, signataire, extrait';
 
+/**
+ * Attente maximale des articles visés avant d'afficher la lettre. En temps normal ils arrivent
+ * bien avant (une lecture de quelques centaines de ms) : la lettre s'affiche d'un bloc, sans
+ * « Articles concernés » qui surgirait ensuite en poussant la page. Une lecture bloquée ne retient
+ * plus la lettre que ce délai (avant : 15 s, puis une liste vide en silence).
+ */
+const ATTENTE_ARTICLES_VISES_MS = 2_500;
+
+/** Articles du code visés par la lettre (table article_doctrine_links, lecture publique). */
+async function lireArticlesVises(doctrineId: string): Promise<ArticleDoctrine[] | null> {
+    try {
+        const { data, error } = await avecReprise(() => supabase
+            .from('article_doctrine_links')
+            .select('articles(slug, num, num_court, article_number, display_order, is_active, laws_and_codes(slug, title, short_title, category))')
+            .eq('doctrine_id', doctrineId)
+            .limit(60));
+        // Erreur technique : null (encart « Réessayer »), jamais une liste vide qui affirmerait l'absence.
+        return error ? null : articlesDeDoctrine((data || []) as any);
+    } catch {
+        return null;
+    }
+}
+
 const DoctrineDetailPage: React.FC = () => {
     const { slug } = useParams();
     const navigate = useNavigate();
@@ -55,6 +78,9 @@ const DoctrineDetailPage: React.FC = () => {
     const [isReportModalOpen, setIsReportModalOpen] = useState(false);
     // Articles du code visés par la lettre (métadonnée publique, table article_doctrine_links).
     const [articlesVises, setArticlesVises] = useState<ArticleDoctrine[]>([]);
+    // Lecture des articles visés en échec : encart « Réessayer » à la place du bloc.
+    const [articlesEchec, setArticlesEchec] = useState(false);
+    const [tentativeArticles, setTentativeArticles] = useState(0);
 
     // Teaser : chargé pour tout le monde (objet, référence, métadonnées).
     useEffect(() => {
@@ -62,7 +88,13 @@ const DoctrineDetailPage: React.FC = () => {
         setLoading(true);
         setNotFound(false);
         setEchec(false);
-        setArticlesVises([]);
+        // Lettre précédente (navigation interne vers une autre lettre) : rien ne doit lui survivre,
+        // ni son titre de page, ni son texte. Liste déjà vide : même référence (aucun rendu inutile).
+        setDoctrine(null);
+        setBody(null);
+        setBodyEchec(false);
+        setArticlesVises((v) => (v.length ? [] : v));
+        setArticlesEchec(false);
         (async () => {
             const { data, error } = await avecReprise(() => supabase
                 .from('doctrine')
@@ -87,17 +119,20 @@ const DoctrineDetailPage: React.FC = () => {
                 if (redirError) setEchec(true);
                 else setNotFound(true);
             } else {
-                // Articles visés chargés AVANT de quitter « Chargement… » : la lettre s'affiche d'un bloc,
-                // sans « Articles concernés » qui surgissait ensuite en poussant la page, et la version
-                // serveur (#ssr-keep, qui contient déjà ce bloc) reste à l'écran jusque-là.
-                // Métadonnée secondaire : une lecture en échec laisse la liste vide, comme avant.
-                const { data: liens } = await supabase
-                    .from('article_doctrine_links')
-                    .select('articles(slug, num, num_court, article_number, display_order, is_active, laws_and_codes(slug, title, short_title, category))')
-                    .eq('doctrine_id', (data as DoctrineDetail).id)
-                    .limit(60);
+                // Articles visés attendus AU PLUS ATTENTE_ARTICLES_VISES_MS avant de quitter
+                // « Chargement… » : en temps normal la lettre s'affiche d'un bloc, avec « Articles
+                // concernés », et la version serveur (#ssr-keep, qui contient déjà ce bloc) reste à
+                // l'écran jusque-là. Lecture lente : la lettre n'attend pas, le bloc suit ; lecture en
+                // échec : encart « Réessayer ».
+                const appliquer = (articles: ArticleDoctrine[] | null) => {
+                    if (articles) setArticlesVises(articles);
+                    else setArticlesEchec(true);
+                };
+                const lecture = lireArticlesVises((data as DoctrineDetail).id);
+                const r = await attendreAuPlus(lecture, ATTENTE_ARTICLES_VISES_MS);
                 if (!active) return;
-                setArticlesVises(articlesDeDoctrine((liens || []) as any));
+                if (r.fini) appliquer(r.valeur);
+                else lecture.then((articles) => { if (active) appliquer(articles); });
                 setDoctrine(data as DoctrineDetail);
             }
             setLoading(false);
@@ -105,11 +140,30 @@ const DoctrineDetailPage: React.FC = () => {
         return () => { active = false; };
     }, [slug, tentative]);
 
-    // Titre de page côté SPA : même règle que le rendu serveur (src/lib/seoDoctrine.ts).
+    // « Réessayer » de l'encart des articles visés : seule cette lecture repart.
+    useEffect(() => {
+        if (tentativeArticles === 0 || !doctrine) return;
+        let active = true;
+        setArticlesEchec(false);
+        lireArticlesVises(doctrine.id).then((articles) => {
+            if (!active) return;
+            if (articles) setArticlesVises(articles);
+            else setArticlesEchec(true);
+        });
+        return () => { active = false; };
+        // doctrine lue au moment du clic : l'effet ne doit repartir que sur un nouveau clic.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [tentativeArticles]);
+
+    // Titre de page côté SPA : même règle que le rendu serveur (src/lib/seoDoctrine.ts). Tant que
+    // la lettre n'est pas chargée, on ne touche à rien : la version serveur a déjà le bon titre.
     useEffect(() => {
         if (doctrine) document.title = titreSeoDoctrine(doctrine, articlesVises);
-        return () => { document.title = 'Lexenegal'; };
     }, [doctrine, articlesVises]);
+    // « Lexenegal » seulement en QUITTANT la lettre (démontage, autre lettre), jamais pendant son
+    // chargement (avant : le nettoyage de l'effet ci-dessus le posait dès que la liste des articles
+    // changeait, donc à chaque chargement, et il y restait en cas d'échec).
+    useEffect(() => () => { document.title = 'Lexenegal'; }, [slug]);
 
     // Corps (content_raw) chargé à la demande, SEULEMENT pour un membre (gate réel en base).
     useEffect(() => {
@@ -177,7 +231,12 @@ const DoctrineDetailPage: React.FC = () => {
                             </ul>
                         </header>
 
-                        {articlesVises.length > 0 && (
+                        {articlesEchec ? (
+                            <section className="doctrine-detail__articles">
+                                <h2>Articles concernés</h2>
+                                <ChargementInterrompu encart onReessayer={() => setTentativeArticles((t) => t + 1)} />
+                            </section>
+                        ) : articlesVises.length > 0 && (
                             <section className="doctrine-detail__articles">
                                 <h2>Articles concernés</h2>
                                 <ul>
