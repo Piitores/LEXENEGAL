@@ -131,15 +131,49 @@ describe('index.html : cadre générique et jeu unique de polices', () => {
         // Racines des gabarits (.ssr-article, .ssr-code…) ; les règles génériques d'avant (.ssr-article-body…) restent.
         expect(INDEX).not.toMatch(/\.ssr-(article|code|decision|theme|jurisprudence|guides?|doctrine|codes|ed)(?![\w-])/);
     });
-    it('jeu unique : Lx Inter, Lx Inter Roboto, Lx Playfair, Lx Playfair Noto, en polices locales', () => {
+    it('jeu unique : Lx Inter, Lx Inter Roboto, Lx Playfair, Lx Playfair Noto, Lx Georgia, en polices locales', () => {
         const familles = new Set([...INDEX.matchAll(/@font-face\{font-family:'([^']+)'/g)].map((m) => m[1]));
-        expect([...familles].sort()).toEqual(['Lx Inter', 'Lx Inter Roboto', 'Lx Playfair', 'Lx Playfair Noto']);
+        expect([...familles].sort()).toEqual(['Lx Georgia', 'Lx Inter', 'Lx Inter Roboto', 'Lx Playfair', 'Lx Playfair Noto']);
         for (const [regle] of INDEX.matchAll(/@font-face\{[^}]*\}/g)) {
             expect(regle).toMatch(/src:local\(/);
             expect(regle).not.toMatch(/url\(/);
         }
         expect(INDEX).toMatch(/--ssr-ui:'Lx Inter','Lx Inter Roboto'/);
         expect(INDEX).toMatch(/--ssr-titre:'Lx Playfair','Lx Playfair Noto'/);
+        expect(INDEX).toMatch(/--ssr-texte:'Lx Georgia',Georgia,/);
+    });
+    it('Lx Georgia : Georgia lui-même (même chasse que la page React), ses quatre styles, marge LCP seule', () => {
+        // Sans size-adjust : mêmes coupures de ligne que React. Quatre styles réels : jamais de gras ni
+        // d'italique simulés. Même marge en haut et en bas (api/_ssr/styles.js, MARGE LCP).
+        const faces = [...INDEX.matchAll(/@font-face\{font-family:'Lx Georgia';[^}]*\}/g)].map((m) => m[0]);
+        expect(faces).toHaveLength(4);
+        const sources = faces.map((f) => (f.match(/src:local\('([^']+)'\)/) || [])[1]).sort();
+        expect(sources).toEqual(['Georgia', 'Georgia Bold', 'Georgia Bold Italic', 'Georgia Italic']);
+        for (const f of faces) {
+            expect(f).not.toMatch(/size-adjust/);
+            const a = Number((f.match(/ascent-override:([\d.]+)%/) || [])[1]) / 100;
+            const d = Number((f.match(/descent-override:([\d.]+)%/) || [])[1]) / 100;
+            expect(a - 0.917).toBeCloseTo(d - 0.2192, 6);
+            expect(a - 0.917).toBeGreaterThan(0);
+        }
+    });
+    it('marge LCP recalée sur un lot tiré au hasard : Inter 0,84 em, Georgia 0,05 em, titres 0,135 em', () => {
+        // Marge = métrique effective (override x size-adjust) moins la métrique de la police imitée, égale en
+        // haut et en bas. Valeurs et justification : api/_ssr/styles.js, MARGE LCP.
+        const METRIQUES: Record<string, [number, number, number]> = {
+            'Lx Inter': [0.969, 0.241, 0.84], 'Lx Inter Roboto': [0.969, 0.241, 0.84],
+            'Lx Playfair': [1.082, 0.251, 0.135], 'Lx Playfair Noto': [1.082, 0.251, 0.135],
+            'Lx Georgia': [0.917, 0.2192, 0.05],
+        };
+        for (const [regle] of INDEX.matchAll(/@font-face\{[^}]*\}/g)) {
+            const famille = (regle.match(/font-family:'([^']+)'/) || [])[1];
+            const [asc, desc, marge] = METRIQUES[famille];
+            const k = Number((regle.match(/size-adjust:([\d.]+)%/) || [, '100'])[1]) / 100;
+            const a = Number((regle.match(/ascent-override:([\d.]+)%/) || [])[1]) / 100 * k;
+            const d = Number((regle.match(/descent-override:([\d.]+)%/) || [])[1]) / 100 * k;
+            expect(a - asc, regle).toBeCloseTo(marge, 3);
+            expect(d - desc, regle).toBeCloseTo(marge, 3);
+        }
     });
     it('garde d\'interligne sur le contenu serveur', () => {
         expect(INDEX).toMatch(/#ssr-keep,#ssr-content\{line-height:1\.5;\}/);

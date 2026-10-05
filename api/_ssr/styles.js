@@ -11,8 +11,9 @@
  *
  * Polices : le JEU UNIQUE de polices locales recalées (index.html : 'Lx Inter' = Arial à la chasse
  * d'Inter, 'Lx Playfair' = Georgia romain à la chasse de Playfair Display, graisse rendue par
- * -webkit-text-stroke), exposé en variables sur #ssr-content : --ssr-ui (Inter), --ssr-titre
- * (Playfair), --ssr-texte (Georgia, comme --font-body de React), --ssr-trait-600 / --ssr-trait-700
+ * -webkit-text-stroke ; 'Lx Georgia' = Georgia lui-même), exposé en variables sur #ssr-content :
+ * --ssr-ui (Inter), --ssr-titre (Playfair), --ssr-texte ('Lx Georgia' : Georgia, comme --font-body de
+ * React, avec la seule marge LCP), --ssr-trait-600 / --ssr-trait-700
  * (trait des titres en 600 / 700). Jamais de police web ici : elle ferait recouler le texte à son
  * arrivée. ⛔ Jamais de line-height:normal sur du texte serveur : les marges ascent/descent des
  * polices de repli (marge LCP) feraient exploser la hauteur des lignes.
@@ -24,20 +25,52 @@
  *  - 'Lx Inter' = Arial à la chasse d'Inter ; 'Lx Inter Roboto' pour Android (sans Arial) ;
  *  - 'Lx Playfair' = Georgia ROMAIN à la chasse de Playfair Display (Georgia gras est 12 à 13 % trop large) ;
  *    la graisse est rendue par un trait (-webkit-text-stroke, sans effet sur la mise en page :
- *    --ssr-trait-600 / --ssr-trait-700) ; 'Lx Playfair Noto' pour Android.
+ *    --ssr-trait-600 / --ssr-trait-700) ; 'Lx Playfair Noto' pour Android ;
+ *  - 'Lx Georgia' = Georgia lui-même, ses quatre styles (romain, gras, italique, gras italique : jamais de
+ *    graisse ou d'italique simulés), sans size-adjust : même chasse, mêmes coupures de ligne que la page
+ *    React. La face n'existe que pour porter la marge LCP du texte courant (articles, décisions, doctrine).
+ *    Sans Georgia (Android) : repli sur Times New Roman / serif, comme la page React.
  *  Chasse : size-adjust PAR CLASSE de caractères (unicode-range : minuscules, capitales, chiffres, espaces ;
  *  le reste sur la face sans plage), moindres carrés sur 1 787 lignes de texte réel des pages servies,
  *  vérifiés dans Chrome (05/10/2026, macOS) : écart absolu moyen de largeur 0,6 % (Inter) et 0,4 %
  *  (Playfair), contre 0,8 % et 1,3 % avec un facteur unique ; capitales seules 0,5 %. Roboto et Noto Serif :
  *  facteur unique, mesuré sur leurs versions Google Fonts, à vérifier sur appareil.
  *  Ligne de base : ascent/descent-override = métriques effectives d'Inter (0,969/0,241 em) et de Playfair
- *  Display (1,082/0,251 em), divisées par le size-adjust de chaque face.
- *  MARGE LCP (technique unique) : +0,135 em ajoutés à ascent ET à descent de toutes les faces. La ligne de
- *  base et la mise en page ne bougent pas (hauteurs de ligne toujours explicites : garde « line-height:1.5 »
- *  d'index.html, jamais de line-height:normal ici), mais la boîte de texte que mesure le LCP grandit : le
- *  bloc serveur reste le plus grand candidat après la bascule vers React. C'est la plus petite valeur qui
- *  tient sur les 10 pages de référence en 1440 et 390 px (Chrome arrondit ascent et descent au pixel : à
- *  0,13 em, le chapô de la page-thème en 390 px repasse sous celui de React).
+ *  Display (1,082/0,251 em), divisées par le size-adjust de chaque face ; Georgia : ses propres métriques
+ *  (0,917/0,2192 em, hhea = win, identiques dans les quatre styles).
+ *  MARGE LCP (technique unique) : des em ajoutés à ascent ET à descent. La ligne de base et la mise en page
+ *  ne bougent pas (hauteurs de ligne toujours explicites : garde « line-height:1.5 » d'index.html, jamais de
+ *  line-height:normal ici), mais la boîte de texte que mesure le LCP grandit : le bloc serveur reste le plus
+ *  grand candidat après la bascule vers React (sinon le LCP mesuré par Google recule à l'heure où React est
+ *  prête). Valeurs recalées le 05/10/2026 sur un LOT TIRÉ AU HASARD dans la base (46 pages de tous types hors
+ *  des 11 pages de calage, plus les 6 pages où le relecteur avait vu basculer le LCP ; 1440x900 et 390x844,
+ *  soit 104 vues ; Supabase retenu 3 s puis relâché), chaque essai refait sur tout le lot :
+ *   - texte courant en Inter ('Lx Inter', 'Lx Inter Roboto') : +0,84 em, la plus petite valeur (au centième)
+ *     sans aucune bascule. À 0,135 (valeur calée sur les seules pages de calage) : 3 vues sur 104 basculaient
+ *     en 390 px (chapô de la page-thème droit du travail et du guide « créer une entreprise », qui gagnent une
+ *     ligne chez React ; premier paragraphe du guide divorce, dont la ligne la plus longue est plus large chez
+ *     React). À 0,80, 0,825 et 0,83, le chapô du guide « créer une entreprise » repasse encore sous React.
+ *     ⚠️ Une ligne ENTIÈRE de plus chez React n'est couverte par construction qu'à partir de la moitié de
+ *     l'interligne (0,85 em à 1,7 ; 0,875 em à 1,75) : à 0,84 elle l'est sur le lot grâce à l'arrondi au pixel
+ *     d'ascent et de descent et à quelques pixels de largeur. Si une bascule réapparaît hors du lot sur un
+ *     paragraphe qui gagne une ligne, monter à 0,9 (aucun effet visible mesuré entre 0,84 et 0,9) ;
+ *   - texte courant en Georgia ('Lx Georgia') : +0,05 em. Sans marge, 2 vues basculaient (douanes art-194 en
+ *     1440, loi cybercriminalité art-2 en 390) : même police que React, même place au demi-pixel près, et la
+ *     boîte de texte React, arrondie autrement, a 1 px de plus que la serveur. Chrome arrondit ascent et descent
+ *     SÉPARÉMENT au pixel : une marge qui change l'écart ascent - descent déplace la ligne de base d'un
+ *     demi-pixel. 0,05 em est la plus petite valeur qui ajoute 1 px en haut et en bas sans changer cet écart
+ *     au corps du texte (16,8 px), des intitulés (17,64 px) et des tableaux (15,2 px), donc sans déplacer de
+ *     ligne. À 0,03, aucune bascule non plus, mais des lignes bougent de 1 px et le premier écran se dégrade
+ *     (5 vues sur 104 de +0,7 à +1,1 point de pixels différents serveur/React) ;
+ *   - titres ('Lx Playfair', 'Lx Playfair Noto') : +0,135 em, inchangé, sans rétrécir leur chasse : aucune
+ *     bascule ne venait d'un titre, et un titre serveur plus étroit perdrait des lignes là où il est lui-même
+ *     l'élément LCP (titre des décisions en 390 px, h1 de la doctrine : 9 vues sur 104).
+ *  Contrôles : zéro bascule sur les 104 vues du lot (la production, mesurée de la même façon : 1 bascule,
+ *  procédure civile art-800 en 1440, et aucun LCP serveur sur les 6 vues de doctrine) et sur les 22 vues des
+ *  pages de calage ; premier écran (% de pixels différents serveur/React) inchangé : moyenne 3,41 -> 3,41 sur le lot, 3,71 ->
+ *  3,65 sur les pages de calage, aucune vue en hausse de plus de 0,12 point. ⚠️ La marge étire verticalement
+ *  le fond, la bordure et le padding d'un élément « inline » : dans un bloc serveur, tout élément de texte qui
+ *  porte un fond ou une bordure doit être en flex, inline-flex, inline-block ou block (c'est le cas partout).
  *  font-display:optional : si une police locale n'est pas prête à la première image (processeur lent), le
  *  texte garde la police de repli plutôt que de recouler ensuite.
  *
