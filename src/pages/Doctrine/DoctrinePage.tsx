@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
+import { avecReprise } from '../../lib/reprise';
+import ChargementInterrompu from '../../components/ChargementInterrompu/ChargementInterrompu';
 import { Search, Loader2, BookOpen, ChevronRight, Building, Calendar, FileText } from 'lucide-react';
 import { formatDoctrineDate } from '../../lib/doctrineDate';
 import { contientSansAccents } from '../../lib/recherche';
@@ -31,17 +33,24 @@ const TAILLE_PAGE = 1000;
 const DoctrinePage: React.FC = () => {
     const [doctrines, setDoctrines] = useState<DoctrineItem[]>([]);
     const [loading, setLoading] = useState(true);
+    // Lecture en échec : « Chargement interrompu » + « Réessayer », jamais « Aucune doctrine trouvée ».
+    const [echec, setEchec] = useState(false);
+    const [tentative, setTentative] = useState(0);
     const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
-        fetchDoctrines();
-    }, []);
+        let active = true;
+        fetchDoctrines(() => active);
+        return () => { active = false; };
+    }, [tentative]);
 
-    const fetchDoctrines = async () => {
+    const fetchDoctrines = async (actif: () => boolean) => {
+        setLoading(true);
+        setEchec(false);
         try {
             const toutes: DoctrineItem[] = [];
             for (let debut = 0; ; debut += TAILLE_PAGE) {
-                const { data, error } = await supabase
+                const { data, error } = await avecReprise(() => supabase
                     .from('doctrine')
                     .select(TEASER_COLUMNS)
                     // nullsFirst: false - sinon Postgres met les NULL en tête en ordre
@@ -49,7 +58,8 @@ const DoctrinePage: React.FC = () => {
                     .order('annee', { ascending: false, nullsFirst: false })
                     .order('date', { ascending: false, nullsFirst: false })
                     .order('id', { ascending: true })
-                    .range(debut, debut + TAILLE_PAGE - 1);
+                    .range(debut, debut + TAILLE_PAGE - 1));
+                if (!actif()) return;
 
                 if (error) throw error;
                 toutes.push(...((data || []) as DoctrineItem[]));
@@ -58,8 +68,9 @@ const DoctrinePage: React.FC = () => {
             setDoctrines(toutes);
         } catch (error) {
             console.error('Error fetching doctrines:', error);
+            if (actif()) setEchec(true);
         } finally {
-            setLoading(false);
+            if (actif()) setLoading(false);
         }
     };
 
@@ -98,6 +109,8 @@ const DoctrinePage: React.FC = () => {
                         <Loader2 size={40} className="spinner" />
                         <p>Chargement de la doctrine fiscale...</p>
                     </div>
+                ) : echec ? (
+                    <ChargementInterrompu onReessayer={() => setTentative((t) => t + 1)} />
                 ) : (
                     <div className="doctrine-list">
                         {filteredDoctrines.map((item) => (

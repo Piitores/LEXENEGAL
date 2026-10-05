@@ -6,7 +6,9 @@ import {
     BookOpen, FileText, ChevronDown, ExternalLink, Copy, Check, AlertCircle, Printer
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { avecReprise } from '../../lib/reprise';
 import SEO from '../../components/SEO/SEO';
+import ChargementInterrompu from '../../components/ChargementInterrompu/ChargementInterrompu';
 import CodeNavTree from '../../components/CodeNavTree/CodeNavTree';
 import TextPresentation from '../../components/TextPresentation/TextPresentation';
 import RelatedTexts from '../../components/RelatedTexts/RelatedTexts';
@@ -195,6 +197,14 @@ const CodePage: React.FC = () => {
     const [articles, setArticles] = useState<Article[]>([]);
     const [hierarchy, setHierarchy] = useState<HierarchyNode[]>([]);
     const [loading, setLoading] = useState(true);
+    // Échec technique persistant (erreur ou délai maximal dépassé, cf. lib/delaiRequetes.ts) :
+    // « Chargement interrompu » + « Réessayer », JAMAIS « Code non trouvé » (Soft 404).
+    const [echec, setEchec] = useState(false);
+    // « Réessayer » incrémente ce compteur : l'effet de chargement repart, sans recharger la page.
+    const [tentative, setTentative] = useState(0);
+    // Numéro du chargement en cours : une réponse d'un chargement dépassé (autre texte, nouvelle
+    // tentative) n'écrit rien.
+    const chargementCourant = useRef(0);
     const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
     const [selectedNode, setSelectedNode] = useState<HierarchyNode | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
@@ -226,7 +236,7 @@ const CodePage: React.FC = () => {
 
     useEffect(() => {
         if (slug) fetchCodeData();
-    }, [slug]);
+    }, [slug, tentative]);
 
     // À chaque changement de section : ramener la PAGE en haut APRÈS que le nouveau
     // contenu (potentiellement plus court) soit posé dans le DOM, mais AVANT le rendu
@@ -267,15 +277,23 @@ const CodePage: React.FC = () => {
     // ── Data fetching ──
 
     const fetchCodeData = async () => {
+        const numero = ++chargementCourant.current;
+        const depasse = () => numero !== chargementCourant.current;
         setLoading(true);
+        setEchec(false);
         try {
-            const { data: lawData } = await supabase
+            // maybeSingle et non single : « aucune ligne » est une ABSENCE (data null, sans erreur),
+            // toute erreur est technique. Avec single, les deux se confondaient en « Code non trouvé ».
+            const { data: lawData, error: lawError } = await avecReprise(() => supabase
                 .from('laws_and_codes')
                 .select('*')
                 .eq('slug', slug)
-                .single();
+                .maybeSingle());
+            if (depasse()) return;
+            if (lawError) throw lawError;
 
-            if (!lawData) { setLoading(false); return; }
+            // Vraie absence : « Code non trouvé » (et non le texte consulté précédemment).
+            if (!lawData) { setLaw(null); return; }
             setLaw(lawData);
 
             // Parties du même code (option A) : si le code appartient à une famille
@@ -287,6 +305,7 @@ const CodePage: React.FC = () => {
                     .select('slug, partie')
                     .eq('code_famille', famille)
                     .eq('is_active', true);
+                if (depasse()) return;
                 setParties((sib || []).sort(
                     (a, b) => (a.partie === 'legislative' ? 0 : 1) - (b.partie === 'legislative' ? 0 : 1)
                 ));
@@ -305,18 +324,22 @@ const CodePage: React.FC = () => {
                     ? chargerConcordanceDesCodes([lawData.slug]).then((c) => (c[lawData.slug] === undefined ? [] : c[lawData.slug]))
                     : Promise.resolve([] as LigneConcordance[]),
             ]);
+            if (depasse()) return;
             // AVANT les articles : les renvois d'une carte sont liés à son premier affichage
             // (LinkedLegalContent ne revient pas sur un lien déjà posé), la date doit être juste d'emblée.
             setNonRepris(datesNonRepris(concordance));
             setArticles(allArticles);
             setTotalArticles(allArticles.length);
 
-            // Fetch structure_nodes
-            const { data: nodesData } = await supabase
+            // Fetch structure_nodes. Une lecture en échec n'est plus prise pour « aucun nœud » :
+            // l'arbre de repli (buildTreeLegacy) serait faux sans que rien ne le signale.
+            const { data: nodesData, error: nodesError } = await avecReprise(() => supabase
                 .from('structure_nodes')
                 .select('*')
                 .eq('code_id', lawData.id)
-                .order('position');
+                .order('position'));
+            if (depasse()) return;
+            if (nodesError) throw nodesError;
 
             let tree: HierarchyNode[];
             if (nodesData && nodesData.length > 0) {
@@ -366,10 +389,13 @@ const CodePage: React.FC = () => {
             }
         } catch (error) {
             console.error('Error fetching code:', error);
+            if (!depasse()) setEchec(true);
         } finally {
-            setLoading(false);
+            if (!depasse()) setLoading(false);
         }
     };
+
+    const reessayer = () => setTentative((t) => t + 1);
 
     // ── Helpers ──
 
@@ -528,6 +554,14 @@ const CodePage: React.FC = () => {
                     <div className="loading-spinner" />
                     <p>Chargement du code...</p>
                 </div>
+            </div>
+        );
+    }
+
+    if (echec) {
+        return (
+            <div className="code-page">
+                <ChargementInterrompu pleineHauteur onReessayer={reessayer} />
             </div>
         );
     }

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { avecReprise } from '../../lib/reprise';
+import ChargementInterrompu from '../../components/ChargementInterrompu/ChargementInterrompu';
 import useAuth from '../../hooks/useAuth';
 import { Loader2, ArrowLeft, Building, Calendar, FileText, Lock, BookOpen, Copy, AlertCircle } from 'lucide-react';
 import ConversionModal from '../../components/ConversionModal/ConversionModal';
@@ -41,9 +42,15 @@ const DoctrineDetailPage: React.FC = () => {
     const [notFound, setNotFound] = useState(false);
     // Erreur technique persistante : jamais présentée comme « introuvable » (cf. lib/reprise.ts).
     const [echec, setEchec] = useState(false);
+    // « Réessayer » incrémente ce compteur : l'effet de chargement repart, sans recharger la page.
+    const [tentative, setTentative] = useState(0);
     const [loading, setLoading] = useState(true);
     const [body, setBody] = useState<string | null>(null);
     const [loadingBody, setLoadingBody] = useState(false);
+    // Lecture du texte intégral en échec : « Réessayer » dans le corps, au lieu d'affirmer
+    // « Texte intégral indisponible » (ou de tourner sans fin).
+    const [bodyEchec, setBodyEchec] = useState(false);
+    const [tentativeBody, setTentativeBody] = useState(0);
     const [showModal, setShowModal] = useState(false);
     const [isReportModalOpen, setIsReportModalOpen] = useState(false);
     // Articles du code visés par la lettre (métadonnée publique, table article_doctrine_links).
@@ -54,6 +61,7 @@ const DoctrineDetailPage: React.FC = () => {
         let active = true;
         setLoading(true);
         setNotFound(false);
+        setEchec(false);
         (async () => {
             const { data, error } = await avecReprise(() => supabase
                 .from('doctrine')
@@ -64,22 +72,24 @@ const DoctrineDetailPage: React.FC = () => {
             if (error) setEchec(true);
             else if (!data) {
                 // Slug inconnu : peut-être un ancien slug (refonte SEO) → redirection vers le nouveau.
-                const { data: redir } = await supabase
+                const { data: redir, error: redirError } = await avecReprise(() => supabase
                     .from('doctrine_slug_redirects')
                     .select('new_slug')
                     .eq('old_slug', slug)
-                    .maybeSingle();
+                    .maybeSingle());
                 if (!active) return;
                 if (redir?.new_slug && redir.new_slug !== slug) {
                     navigate(`/doctrine-fiscale/${redir.new_slug}`, { replace: true });
                     return;
                 }
-                setNotFound(true);
+                // Table des redirections illisible : on ne sait pas, ce n'est pas « introuvable ».
+                if (redirError) setEchec(true);
+                else setNotFound(true);
             } else setDoctrine(data as DoctrineDetail);
             setLoading(false);
         })();
         return () => { active = false; };
-    }, [slug]);
+    }, [slug, tentative]);
 
     useEffect(() => {
         if (!doctrine) return;
@@ -106,18 +116,20 @@ const DoctrineDetailPage: React.FC = () => {
         if (!doctrine || !canRead || authLoading || body !== null) return;
         let active = true;
         setLoadingBody(true);
+        setBodyEchec(false);
         (async () => {
-            const { data } = await supabase
+            const { data, error } = await avecReprise(() => supabase
                 .from('doctrine')
                 .select('content_raw')
                 .eq('id', doctrine.id)
-                .single();
+                .maybeSingle());
             if (!active) return;
-            setBody((data?.content_raw as string) ?? '');
+            if (error) setBodyEchec(true);
+            else setBody((data?.content_raw as string) ?? '');
             setLoadingBody(false);
         })();
         return () => { active = false; };
-    }, [doctrine, canRead, authLoading, body]);
+    }, [doctrine, canRead, authLoading, body, tentativeBody]);
 
     const paragraphs = useMemo(
         () => (body || '').split('\n').map((p) => p.trim()),
@@ -139,14 +151,7 @@ const DoctrineDetailPage: React.FC = () => {
                         <p>Chargement…</p>
                     </div>
                 ) : echec ? (
-                    <div className="empty-state" style={{ textAlign: 'center', padding: '4rem', color: '#6b7280' }}>
-                        <FileText size={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
-                        <h3>Chargement interrompu</h3>
-                        <p>La connexion a été interrompue avant la fin du chargement.</p>
-                        <button type="button" className="doctrine-detail__cta" style={{ marginTop: '1.5rem', display: 'inline-flex' }} onClick={() => window.location.reload()}>
-                            Réessayer
-                        </button>
-                    </div>
+                    <ChargementInterrompu onReessayer={() => setTentative((t) => t + 1)} />
                 ) : notFound ? (
                     <div className="empty-state" style={{ textAlign: 'center', padding: '4rem', color: '#6b7280' }}>
                         <FileText size={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
@@ -203,7 +208,9 @@ const DoctrineDetailPage: React.FC = () => {
 
                         <div className="doctrine-detail__body">
                             {canRead ? (
-                                loadingBody || body === null ? (
+                                bodyEchec ? (
+                                    <ChargementInterrompu encart onReessayer={() => setTentativeBody((t) => t + 1)} />
+                                ) : loadingBody || body === null ? (
                                     <div className="doctrine-loading" style={{ padding: '2rem' }}>
                                         <Loader2 size={24} className="spinner" />
                                         <p>Chargement du texte…</p>

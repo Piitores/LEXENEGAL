@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
+import { avecReprise } from '../../lib/reprise';
+import ChargementInterrompu from '../../components/ChargementInterrompu/ChargementInterrompu';
 import { Loader2, BookMarked } from 'lucide-react';
 import './GuidesPage.css';
 
@@ -19,22 +21,28 @@ interface GuideIndexItem {
 const GuidesPage: React.FC = () => {
     const [guides, setGuides] = useState<GuideIndexItem[]>([]);
     const [loading, setLoading] = useState(true);
+    // Lecture en échec : « Chargement interrompu » + « Réessayer », jamais une liste vide.
+    const [echec, setEchec] = useState(false);
+    const [tentative, setTentative] = useState(0);
 
     useEffect(() => {
         let active = true;
+        setLoading(true);
+        setEchec(false);
         (async () => {
-            const { data } = await supabase
+            const { data, error } = await avecReprise(() => supabase
                 .from('guides')
                 .select('slug, title, description, published_at')
                 .eq('is_active', true)
                 .order('published_at', { ascending: false })
-                .limit(200);
+                .limit(200));
             if (!active) return;
-            setGuides((data as GuideIndexItem[]) || []);
+            if (error) setEchec(true);
+            else setGuides((data as GuideIndexItem[]) || []);
             setLoading(false);
         })();
         return () => { active = false; };
-    }, []);
+    }, [tentative]);
 
     useEffect(() => {
         document.title = 'Guides pratiques du droit sénégalais | Lexenegal';
@@ -55,6 +63,8 @@ const GuidesPage: React.FC = () => {
 
                 {loading ? (
                     <div className="guides-page__loading"><Loader2 size={32} className="spinner" /></div>
+                ) : echec ? (
+                    <ChargementInterrompu onReessayer={() => setTentative((t) => t + 1)} />
                 ) : (
                     <ul className="guides-page__list">
                         {guides.map((g) => (

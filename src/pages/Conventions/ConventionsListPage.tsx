@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight, FileText, Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { avecReprise } from '../../lib/reprise';
+import ChargementInterrompu from '../../components/ChargementInterrompu/ChargementInterrompu';
 import SEO from '../../components/SEO/SEO';
 import { urlTexte } from '../../lib/urls';
 import '../Codes/CodesListPage.css';
@@ -19,15 +21,23 @@ interface ConventionItem {
 // texte intégral sous /ccn/<segment> (ccn-banques → /ccn/banques, cf. src/lib/urls.ts).
 const ConventionsListPage: React.FC = () => {
     const [items, setItems] = useState<ConventionItem[] | null>(null);
+    // Lecture en échec : « Chargement interrompu » + « Réessayer », jamais « Aucune convention ».
+    const [echec, setEchec] = useState(false);
+    const [tentative, setTentative] = useState(0);
 
     useEffect(() => {
+        let active = true;
+        setItems(null);
+        setEchec(false);
         (async () => {
-            const { data } = await supabase
+            const { data, error } = await avecReprise(() => supabase
                 .from('laws_and_codes')
                 .select('id, title, slug, short_title, category, is_active, articles:articles(count)')
                 .eq('category', 'convention_collective')
                 .eq('is_active', true)
-                .order('title');
+                .order('title'));
+            if (!active) return;
+            if (error) { setEchec(true); return; }
             setItems(
                 (data || []).map((c: any) => ({
                     id: c.id,
@@ -38,7 +48,8 @@ const ConventionsListPage: React.FC = () => {
                 })),
             );
         })();
-    }, []);
+        return () => { active = false; };
+    }, [tentative]);
 
     return (
         <div className="corpus-page">
@@ -63,7 +74,9 @@ const ConventionsListPage: React.FC = () => {
 
             <section className="corpus-content">
                 <div className="corpus-container">
-                    {items === null ? (
+                    {echec ? (
+                        <ChargementInterrompu onReessayer={() => setTentative((t) => t + 1)} />
+                    ) : items === null ? (
                         <div className="corpus-loading">
                             <Loader2 size={40} className="spinner" />
                         </div>

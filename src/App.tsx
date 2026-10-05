@@ -41,6 +41,7 @@ import AccountNudge from './components/AccountNudge/AccountNudge';
 import InstallPrompt from './components/Pwa/InstallPrompt';
 import UpdateBanner from './components/Pwa/UpdateBanner';
 import { recordOrigin } from './lib/authRedirect';
+import { surveillerVersionServeur } from './lib/versionServeur';
 import './App.css';
 
 // Gère le défilement à la navigation :
@@ -126,25 +127,27 @@ function App() {
 
   // Contenu serveur conservé sous React (cf. src/index.tsx) : on le retire dès que
   // plus aucun état « Chargement… » n'est monté dans #app, ou au bout de 20 s (filet
-  // de sécurité). Un MutationObserver, et non un minuteur : son rappel s'exécute
-  // dans la même tâche que la mise à jour du DOM par React, AVANT le rendu à l'écran.
-  // Le navigateur ne peint donc jamais l'état intermédiaire « contenu React + contenu
-  // serveur en dessous », qui comptait comme un décalage de mise en page de 0,5 à 1,0.
+  // de sécurité) ; un état « Chargement interrompu » le garde. Un MutationObserver, et
+  // non un minuteur : son rappel s'exécute dans la même tâche que la mise à jour du DOM
+  // par React, AVANT le rendu à l'écran. Le navigateur ne peint donc jamais l'état
+  // intermédiaire « contenu React + contenu serveur en dessous », qui comptait comme un
+  // décalage de mise en page de 0,5 à 1,0. Règles et sélecteurs : lib/versionServeur.ts.
   useEffect(() => {
     const keep = document.getElementById('ssr-keep');
     const app = document.getElementById('app');
     if (!keep || !app) return;
-    const LOADING = '#app .route-fallback, #app .code-loading, #app .article-loading, #app .decisionPage .loading-bar-container, #app .theme-page__loading, #app .guides-page__loading';
-    const dismiss = () => {
-      document.getElementById('ssr-keep')?.remove();
-      document.body.classList.remove('ssr-live');
-    };
-    const check = () => { if (!document.querySelector(LOADING)) { observer.disconnect(); window.clearTimeout(timer); dismiss(); } };
-    const observer = new MutationObserver(check);
-    observer.observe(app, { childList: true, subtree: true });
-    const timer = window.setTimeout(() => { observer.disconnect(); dismiss(); }, 20000);
-    check();
-    return () => { observer.disconnect(); window.clearTimeout(timer); };
+    return surveillerVersionServeur({
+      present: (selecteur) => !!document.querySelector(selecteur),
+      observer: (rappel) => {
+        const observateur = new MutationObserver(rappel);
+        observateur.observe(app, { childList: true, subtree: true });
+        return observateur;
+      },
+      retirer: () => {
+        document.getElementById('ssr-keep')?.remove();
+        document.body.classList.remove('ssr-live');
+      },
+    });
   }, []);
 
   // Retire le splash anti-FOUC une fois l'app React montée (le design est prêt).

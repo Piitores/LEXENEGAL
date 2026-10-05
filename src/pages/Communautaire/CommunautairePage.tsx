@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Globe2, FileText, ArrowRight, Loader2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { avecReprise } from '../../lib/reprise';
+import ChargementInterrompu from '../../components/ChargementInterrompu/ChargementInterrompu';
 import { urlTexte } from '../../lib/urls';
 import SEO from '../../components/SEO/SEO';
 import './CommunautairePage.css';
@@ -20,19 +22,28 @@ interface OhadaText {
 const CommunautairePage: React.FC = () => {
     const [actes, setActes] = useState<OhadaText[]>([]);
     const [loading, setLoading] = useState(true);
+    // Lecture en échec : « Chargement interrompu » + « Réessayer », jamais « Aucun texte OHADA ».
+    const [echec, setEchec] = useState(false);
+    const [tentative, setTentative] = useState(0);
 
     useEffect(() => {
+        let active = true;
+        setLoading(true);
+        setEchec(false);
         (async () => {
-            const { data } = await supabase
+            const { data, error } = await avecReprise(() => supabase
                 .from('laws_and_codes')
                 .select('slug, title, short_title')
                 .eq('category', 'ohada')
                 .eq('is_active', true)
-                .order('title');
-            setActes(data || []);
+                .order('title'));
+            if (!active) return;
+            if (error) setEchec(true);
+            else setActes(data || []);
             setLoading(false);
         })();
-    }, []);
+        return () => { active = false; };
+    }, [tentative]);
 
     return (
         <main className="comm-page">
@@ -62,6 +73,8 @@ const CommunautairePage: React.FC = () => {
 
                     {loading ? (
                         <div className="comm-loading"><Loader2 size={28} className="comm-spin" /></div>
+                    ) : echec ? (
+                        <ChargementInterrompu onReessayer={() => setTentative((t) => t + 1)} />
                     ) : actes.length === 0 ? (
                         <p className="comm-empty">Aucun texte OHADA publié pour l'instant.</p>
                     ) : (

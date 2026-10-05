@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
+import { avecReprise } from '../../lib/reprise';
+import ChargementInterrompu from '../../components/ChargementInterrompu/ChargementInterrompu';
 import { Loader2, Scale, Search, Landmark, Tags } from 'lucide-react';
 import './JurisprudencePage.css';
 
@@ -21,23 +23,29 @@ const JurisprudencePage: React.FC = () => {
     const navigate = useNavigate();
     const [themes, setThemes] = useState<ThemeIndexItem[]>([]);
     const [loading, setLoading] = useState(true);
+    // Lecture en échec : « Chargement interrompu » + « Réessayer », jamais une page sans thèmes.
+    const [echec, setEchec] = useState(false);
+    const [tentative, setTentative] = useState(0);
     const [query, setQuery] = useState('');
 
     useEffect(() => {
         let active = true;
+        setLoading(true);
+        setEchec(false);
         (async () => {
-            const { data } = await supabase
+            const { data, error } = await avecReprise(() => supabase
                 .from('seo_themes')
                 .select('slug, label, matiere, cached_total')
                 .eq('is_active', true)
                 .order('cached_total', { ascending: false })
-                .limit(200);
+                .limit(200));
             if (!active) return;
-            setThemes((data as ThemeIndexItem[]) || []);
+            if (error) setEchec(true);
+            else setThemes((data as ThemeIndexItem[]) || []);
             setLoading(false);
         })();
         return () => { active = false; };
-    }, []);
+    }, [tentative]);
 
     useEffect(() => {
         document.title = 'Jurisprudence du Sénégal - décisions de justice en texte intégral | Lexenegal';
@@ -80,6 +88,8 @@ const JurisprudencePage: React.FC = () => {
                     <div className="juris-hub__loading">
                         <Loader2 size={32} className="spinner" />
                     </div>
+                ) : echec ? (
+                    <ChargementInterrompu onReessayer={() => setTentative((t) => t + 1)} />
                 ) : (
                     <>
                         {matieres.length > 0 && (

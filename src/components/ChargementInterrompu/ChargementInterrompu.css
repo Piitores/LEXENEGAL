@@ -1,0 +1,132 @@
+/* « Chargement interrompu » (cf. ChargementInterrompu.tsx) : même allure que les états
+   « introuvable » des pages thème et guide (titre Playfair, bouton émeraude). */
+.chargement-interrompu {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 4rem 1.5rem;
+    color: var(--color-text-secondary);
+    font-family: var(--font-ui);
+}
+
+/* Remplace l'état « Chargement… » d'une page entière : même hauteur, le pied de page reste hors
+   écran (pas de décalage de mise en page à l'apparition du message). */
+.chargement-interrompu--pleine-hauteur {
+    min-height: 100vh;
+}
+
+.chargement-interrompu__icone {
+    color: var(--color-text-faint);
+}
+
+.chargement-interrompu__titre {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1.25;
+    margin: 1rem 0 0.5rem;
+    color: var(--color-text);
+}
+
+.chargement-interrompu__texte {
+    max-width: 34rem;
+    margin: 0;
+    line-height: 1.6;
+}
+
+.chargement-interrompu__bouton {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+    padding: 0.7rem 1.4rem;
+    border: none;
+    border-radius: var(--radius-md);
+    background: var(--color-accent);
+    color: #FFFFFF;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+.chargement-interrompu__bouton:hover { background: var(--color-accent-dark); }
+.chargement-interrompu__bouton:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; }
+
+/* Bandeau fixe : seulement tant que la version serveur est affichée (body.ssr-live). Hors du
+   flux, il ne décale rien ; polices système, comme #ssr-keep (aucun recalcul à l'arrivée des
+   polices web). */
+.chargement-interrompu-bandeau { display: none; }
+body.ssr-live .chargement-interrompu-bandeau {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: fixed;
+    z-index: 950;
+    left: 50%;
+    bottom: 20px;
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: calc(100vw - 32px);
+    padding: 10px 10px 10px 16px;
+    background: #FFFFFF;
+    color: #374151;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+    font: 500 0.9rem/1.4 system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+}
+body.ssr-live .chargement-interrompu-bandeau button {
+    flex: none;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 14px;
+    background: #047857;
+    color: #FFFFFF;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+body.ssr-live .chargement-interrompu-bandeau button:hover { background: #065F46; }
+@media (max-width: 480px) {
+    body.ssr-live .chargement-interrompu-bandeau {
+        left: 16px;
+        right: 16px;
+        bottom: 16px;
+        transform: none;
+        width: auto;
+        max-width: none;
+    }
+}
+
+/* Encart : échec d'un bloc secondaire dans une page chargée. Même allure que les états vides
+   de ces blocs (« Aucune décision ne cite cet article… »), qu'il remplace. */
+.chargement-interrompu-encart {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 24px 32px;
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-bg);
+    color: var(--color-text-secondary);
+    font-family: var(--font-ui);
+    font-size: 0.95rem;
+    text-align: center;
+}
+.chargement-interrompu-encart button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--color-accent);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+.chargement-interrompu-encart button:hover { text-decoration: underline; }

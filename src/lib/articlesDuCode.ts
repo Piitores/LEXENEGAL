@@ -4,6 +4,7 @@
  */
 import { supabase } from './supabase';
 import { lireToutesLesPages } from './lecturePaginee';
+import { avecReprise } from './reprise';
 import type { LigneConcordance } from './articleRefResolver';
 import { TEXTES_FUSIONNES, textesRetires } from './routeTexte';
 import { choisirVersions, type ParamsVersion, type VersionArticle } from './versionsArticle';
@@ -22,15 +23,17 @@ export const COLONNES_LECTURE = `${COLONNES_ARBRE}, content_html, content_raw, m
 /**
  * Tous les articles d'un texte, dans l'ordre de lecture : display_order, puis id pour départager
  * (le Code de procédure pénale compte 923 articles pour 834 rangs distincts).
+ * Chaque page est relancée une fois sur une erreur passagère (avecReprise) ; un échec persistant
+ * LÈVE l'erreur (lireToutesLesPages) : la page affiche alors « Chargement interrompu ».
  */
 export function chargerArticlesDuCode<T>(codeId: string, colonnes: string): Promise<T[]> {
-    return lireToutesLesPages<T>((de, a) => supabase
+    return lireToutesLesPages<T>((de, a) => avecReprise(() => supabase
         .from('articles')
         .select(colonnes)
         .eq('code_id', codeId)
         .order('display_order')
         .order('id')
-        .range(de, a) as unknown as PromiseLike<{ data: T[] | null; error: unknown }>);
+        .range(de, a) as unknown as PromiseLike<{ data: T[] | null; error: unknown }>));
 }
 
 export interface ArticleDeRenvoi {

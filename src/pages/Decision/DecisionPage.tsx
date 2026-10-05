@@ -3,7 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Download, ArrowLeft, Copy, Scale, BookOpen, Printer, AlertCircle, FileText, Home, Search } from 'lucide-react';
 import { useReactToPrint } from 'react-to-print';
 import { supabase } from '../../lib/supabase';
+import { avecReprise } from '../../lib/reprise';
 import useAuth from '../../hooks/useAuth';
+import ChargementInterrompu from '../../components/ChargementInterrompu/ChargementInterrompu';
 import LexenegalSymbol from '../../components/LexenegalSymbol/LexenegalSymbol';
 import SEO from '../../components/SEO/SEO';
 import DecisionActions from '../../components/DecisionActions/DecisionActions';
@@ -53,6 +55,13 @@ const DecisionPage: React.FC = () => {
     };
     const [decision, setDecision] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
+    // Échec technique persistant (erreur ou délai maximal dépassé, cf. lib/delaiRequetes.ts) :
+    // « Chargement interrompu » + « Réessayer », JAMAIS « Décision introuvable » (Soft 404).
+    const [echec, setEchec] = useState(false);
+    // « Réessayer » incrémente ce compteur : l'effet de chargement repart, sans recharger la page.
+    const [tentative, setTentative] = useState(0);
+    // Numéro du chargement en cours : une réponse d'un chargement dépassé n'écrit rien.
+    const chargementCourant = useRef(0);
     const [articles, setArticles] = useState<ArticleInfo[]>([]);
     // Concordance des codes refondus cités dans le corps (fusion des codes 2026) : [] = aucune.
     const [concordances, setConcordances] = useState<Record<string, LigneConcordance[] | null>>({});
@@ -88,7 +97,7 @@ const DecisionPage: React.FC = () => {
         if (!slug) return;
         fetchDecision();
         fetchCodesIndex();
-    }, [slug]);
+    }, [slug, tentative]);
 
     // Liens du corps de l'arrêt : on ne charge que les articles des codes RÉELLEMENT cités
     // dans le texte (motifs de CODE_CONFIG), en lecture paginée. Avant, la page chargeait
@@ -182,41 +191,58 @@ const DecisionPage: React.FC = () => {
     }, [decision, codeIndex, successions, retires]);
 
     const fetchDecision = async () => {
+        const numero = ++chargementCourant.current;
+        const depasse = () => numero !== chargementCourant.current;
         setLoading(true);
+        setEchec(false);
         console.log("🔍 Fetching decision from Supabase for slug:", slug);
         try {
-            const { data, error } = await supabase
+            // maybeSingle et non single : « aucune ligne » est une ABSENCE (data null, sans erreur) ;
+            // toute erreur est technique (« Chargement interrompu »), jamais « introuvable ».
+            const { data, error } = await avecReprise(() => supabase
                 .from('decisions')
                 .select('*')
                 .eq('slug', slug)
-                .single();
+                .maybeSingle());
+            if (depasse()) return;
 
             if (error) {
                 console.error('Supabase error:', error);
-            } else if (data) {
-                setDecision(data);
+                setEchec(true);
+            } else {
+                // Vraie absence : « Décision introuvable » (et non la décision consultée précédemment).
+                setDecision(data ?? null);
+            }
+            if (data) {
                 // Log view for audit trail
                 logViewDecision(slug || '');
 
-                // Fetch annotations for this decision if user is logged in
-                const { data: { session } } = await supabase.auth.getSession();
-                if (session?.user) {
-                    const { data: annotationsData } = await supabase
-                        .from('user_annotations')
-                        .select('*')
-                        .eq('decision_id', data.id)
-                        .eq('user_id', session.user.id);
-                    if (annotationsData) {
-                        setAnnotations(annotationsData);
+                // Annotations de l'utilisateur connecté : secondaires, un échec ne prive pas du texte.
+                try {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (session?.user) {
+                        const { data: annotationsData } = await supabase
+                            .from('user_annotations')
+                            .select('*')
+                            .eq('decision_id', data.id)
+                            .eq('user_id', session.user.id);
+                        if (annotationsData && !depasse()) {
+                            setAnnotations(annotationsData);
+                        }
                     }
+                } catch (error) {
+                    console.error('Error fetching annotations:', error);
                 }
             }
         } catch (error) {
             console.error(error);
+            if (!depasse()) setEchec(true);
         } finally {
-            setLoading(false);
+            if (!depasse()) setLoading(false);
         }
     };
+
+    const reessayer = () => setTentative((t) => t + 1);
 
     const handleSaveAnnotation = async (annotation: any) => {
         const { data: { session } } = await supabase.auth.getSession();
@@ -373,6 +399,12 @@ const DecisionPage: React.FC = () => {
                     <div className="skeleton-btn" style={{ marginTop: '1rem' }}></div>
                 </aside>
             </div>
+        </div>
+    );
+
+    if (echec) return (
+        <div className="decisionPage">
+            <ChargementInterrompu pleineHauteur onReessayer={reessayer} />
         </div>
     );
 

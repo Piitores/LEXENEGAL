@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useCopyAttribution } from '../../hooks/useCopyAttribution';
 import { articleLabel } from '../../lib/articleLabel';
@@ -11,7 +11,10 @@ import {
     GitCompare, Clock, Scale, Lock, FileText, Gavel, AlertCircle, X, ExternalLink, BookOpen, Loader2, Printer
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { avecReprise } from '../../lib/reprise';
+import { estDelaiDepasse } from '../../lib/delaiRequetes';
 import SEO from '../../components/SEO/SEO';
+import ChargementInterrompu from '../../components/ChargementInterrompu/ChargementInterrompu';
 import ConversionModal from '../../components/ConversionModal/ConversionModal';
 import ReportErrorModal from '../../components/ReportError/ReportErrorModal';
 import ActionButton from '../../components/ui/ActionButton';
@@ -166,6 +169,14 @@ const ArticlePage: React.FC = () => {
     // de code sont les siens, pas ceux du Code du travail (numerotationPropreEnL, 02/10/2026).
     const [numerotationEnL, setNumerotationEnL] = useState(false);
     const [loading, setLoading] = useState(true);
+    // Échec technique persistant (erreur ou délai maximal dépassé, cf. lib/delaiRequetes.ts) :
+    // « Chargement interrompu » + « Réessayer », JAMAIS « Article non trouvé » (Soft 404).
+    const [echec, setEchec] = useState(false);
+    // « Réessayer » incrémente ce compteur : l'effet de chargement repart, sans recharger la page.
+    const [tentative, setTentative] = useState(0);
+    // Numéro du chargement en cours : une réponse d'un chargement dépassé (autre article, nouvelle
+    // tentative) n'écrit rien.
+    const chargementCourant = useRef(0);
 
     // Arbre de navigation (même mécanique que la page Code)
     const [hierarchy, setHierarchy] = useState<HierarchyNode[]>([]);
@@ -195,11 +206,16 @@ const ArticlePage: React.FC = () => {
     // Citing decisions
     const [citingDecisions, setCitingDecisions] = useState<CitingDecision[]>([]);
     const [loadingDecisions, setLoadingDecisions] = useState(false);
+    // Lecture en échec : on le dit (« Chargement interrompu »), au lieu d'affirmer qu'aucune
+    // décision ne cite l'article.
+    const [decisionsEchec, setDecisionsEchec] = useState(false);
 
     // CGI Annotations & Doctrine
     const [annotations, setAnnotations] = useState<ArticleAnnotation[]>([]);
     const [doctrineLinks, setDoctrineLinks] = useState<DoctrineLink[]>([]);
     const [selectedDoctrine, setSelectedDoctrine] = useState<DoctrineLink['doctrine'] | null>(null);
+    // Lettre dont le texte n'a pas pu être lu (panneau latéral) : « Réessayer » au lieu d'une roue.
+    const [doctrineEchecId, setDoctrineEchecId] = useState<string | null>(null);
     const [showAuthModal, setShowAuthModal] = useState(false);
     const [doctrineOpen, setDoctrineOpen] = useState(false); // repliée par défaut
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -213,7 +229,7 @@ const ArticlePage: React.FC = () => {
             fetchArticleData();
             checkProAccess();
         }
-    }, [codeSlug, articleSlug]);
+    }, [codeSlug, articleSlug, tentative]);
 
     // Ferme le tiroir « Sommaire » (mobile) quand on change d'article
     useEffect(() => { setMobileNavOpen(false); }, [articleSlug]);
@@ -228,20 +244,31 @@ const ArticlePage: React.FC = () => {
     };
 
     const fetchArticleData = async () => {
+        const numero = ++chargementCourant.current;
+        const depasse = () => numero !== chargementCourant.current;
         setLoading(true);
+        setEchec(false);
         setPrevArticle(null);
         setNextArticle(null);
         setConcordance([]);
+        // L'article affiché jusque-là ne doit pas survivre à un chargement sans résultat : sans
+        // ces remises à zéro, une adresse introuvable montrait l'article précédent.
+        setArticle(null);
+        setVersions([]);
+        setCurrentVersion(null);
         // Ancienne adresse redirigée : le chargement continue sur la nouvelle (pas de « non trouvé »).
         let redirige = false;
 
         try {
-            // Get law info
-            const { data: lawData } = await supabase
+            // Get law info. maybeSingle et non single : « aucune ligne » est une ABSENCE (data null,
+            // sans erreur), toute erreur est technique et lève (« Chargement interrompu »).
+            const { data: lawData, error: lawError } = await avecReprise(() => supabase
                 .from('laws_and_codes')
                 .select('id, title, short_title, slug, category, publication_date, reference, abrogation_note, abrogated_by_slug, code_famille, partie')
                 .eq('slug', codeSlug)
-                .single();
+                .maybeSingle());
+            if (depasse()) return;
+            if (lawError) throw lawError;
 
             if (lawData) {
                 setLaw(lawData);
@@ -254,6 +281,7 @@ const ArticlePage: React.FC = () => {
                         .select('slug, partie')
                         .eq('code_famille', famille)
                         .eq('is_active', true);
+                    if (depasse()) return;
                     setParties((sib || []).sort(
                         (a, b) => (a.partie === 'legislative' ? 0 : 1) - (b.partie === 'legislative' ? 0 : 1)
                     ));
@@ -262,12 +290,14 @@ const ArticlePage: React.FC = () => {
                 }
 
                 // Get article
-                const { data: articleData } = await supabase
+                const { data: articleData, error: articleError } = await avecReprise(() => supabase
                     .from('articles')
                     .select(`${COLONNES_ARBRE}, code_id, content_raw, modifications, notes`)
                     .eq('code_id', lawData.id)
                     .eq('slug', articleSlug)
-                    .maybeSingle();
+                    .maybeSingle());
+                if (depasse()) return;
+                if (articleError) throw articleError;
 
                 // Fusion des codes 2026 : l'ancien article repris ou éclaté n'existe plus ; son
                 // adresse (article-l56) mène à l'article qui en a repris le sujet (ligne « principal »
@@ -275,6 +305,7 @@ const ArticlePage: React.FC = () => {
                 // concordance (ou lecture en échec) : « Article non trouvé », comme avant.
                 if (!articleData && articleSlug) {
                     const cible = await chercherAncienSlug(lawData.id, articleSlug);
+                    if (depasse()) return;
                     if (cible && cible.slug !== articleSlug) {
                         redirige = true;
                         const requete = requeteVersion({ ancien: cible.ancienNorm, date: paramsVersion.date });
@@ -299,6 +330,7 @@ const ArticlePage: React.FC = () => {
                             .eq('code_id', lawData.id)
                             .order('position'),
                     ]);
+                    if (depasse()) return;
                     const tree = (nodesData && nodesData.length > 0)
                         ? buildTreeFromNodes(nodesData as StructureNode[], allArts)
                         : buildTreeLegacy(allArts);
@@ -314,12 +346,15 @@ const ArticlePage: React.FC = () => {
                         setNodePath([]);
                     }
 
-                    // Get versions
-                    const { data: versionsData } = await supabase
+                    // Get versions. Une lecture en échec n'est plus prise pour « aucune version » : le
+                    // repli sur content_raw daterait le texte de la publication du code, sans le dire.
+                    const { data: versionsData, error: versionsError } = await avecReprise(() => supabase
                         .from('article_versions')
                         .select('*')
                         .eq('article_id', articleData.id)
-                        .order('effective_date', { ascending: false });
+                        .order('effective_date', { ascending: false }));
+                    if (depasse()) return;
+                    if (versionsError) throw versionsError;
 
                     if (versionsData && versionsData.length > 0) {
                         setVersions(versionsData);
@@ -360,7 +395,9 @@ const ArticlePage: React.FC = () => {
                         .map((v: any) => normAncien(v.ancien_numero))
                         .filter(Boolean);
                     if (articleData.status === 'abrogé' || anciensNorms.length) {
-                        setConcordance(await chargerConcordanceArticle(lawData.id, articleData.id, anciensNorms));
+                        const lignes = await chargerConcordanceArticle(lawData.id, articleData.id, anciensNorms);
+                        if (depasse()) return;
+                        setConcordance(lignes);
                     }
 
                     // Fetch citing decisions
@@ -372,6 +409,7 @@ const ArticlePage: React.FC = () => {
                         .select('*')
                         .eq('article_id', articleData.id)
                         .order('created_at', { ascending: true });
+                    if (depasse()) return;
                     if (annoData) setAnnotations(annoData);
 
                     // Fetch doctrine links
@@ -382,18 +420,25 @@ const ArticlePage: React.FC = () => {
                             doctrine:doctrine(id, reference_complete, objet)
                         `)
                         .eq('article_id', articleData.id);
+                    if (depasse()) return;
                     if (doctrineData) setDoctrineLinks(doctrineData as unknown as DoctrineLink[]);
                 }
             }
         } catch (error) {
             console.error('Error fetching article:', error);
+            if (!depasse()) setEchec(true);
         } finally {
-            if (!redirige) setLoading(false);
+            if (!redirige && !depasse()) setLoading(false);
         }
     };
 
+    const reessayer = () => setTentative((t) => t + 1);
+
     const fetchCitingDecisions = async (articleId: string) => {
+        const numero = chargementCourant.current;
+        const depasse = () => numero !== chargementCourant.current;
         setLoadingDecisions(true);
+        setDecisionsEchec(false);
         try {
             // Décisions les plus récentes d'abord (tri sur la table liée, côté PostgREST) : après la
             // fusion des codes 2026, art-137 hérite de toutes les décisions qui citaient L.56, et
@@ -406,7 +451,8 @@ const ArticlePage: React.FC = () => {
                 .eq('article_id', articleId)
                 .order('decision(date_decision)', { ascending: false, nullsFirst: false })
                 .limit(10);
-            const lecture = triee.error
+            // Délai dépassé : pas de seconde lecture (l'attente doublerait), l'encart propose « Réessayer ».
+            const lecture = triee.error && !estDelaiDepasse(triee.error)
                 ? await supabase
                     .from('decision_article_links')
                     .select(`citation_text, ${decisionsLiees}`)
@@ -430,11 +476,15 @@ const ArticlePage: React.FC = () => {
                 }))
                 .sort((a, b) => (b.date_decision || '').localeCompare(a.date_decision || ''));
 
-            setCitingDecisions(decisions);
+            if (!depasse()) setCitingDecisions(decisions);
         } catch (error) {
             console.error('Error fetching citing decisions:', error);
+            if (!depasse()) {
+                setCitingDecisions([]);
+                setDecisionsEchec(true);
+            }
         } finally {
-            setLoadingDecisions(false);
+            if (!depasse()) setLoadingDecisions(false);
         }
     };
 
@@ -488,17 +538,21 @@ const ArticlePage: React.FC = () => {
         // Ouvre d'abord (teaser), puis charge le corps à la demande. Le gate réel
         // est en base : un anon ne peut pas lire content_raw (migration colonne).
         setSelectedDoctrine(doctrine);
+        setDoctrineEchecId(null);
         if (doctrine.content_raw === undefined) {
-            const { data } = await supabase
+            const { data, error } = await avecReprise(() => supabase
                 .from('doctrine')
                 .select('content_raw')
                 .eq('id', doctrine.id)
-                .single();
-            if (data?.content_raw != null) {
-                setSelectedDoctrine((prev) =>
-                    prev && prev.id === doctrine.id ? { ...prev, content_raw: data.content_raw } : prev
-                );
-            }
+                .maybeSingle());
+            // Lecture en échec : « Réessayer » dans le panneau (avant : roue « Chargement du texte… »
+            // pour toujours, le texte n'arrivant jamais).
+            if (error) { setDoctrineEchecId(doctrine.id); return; }
+            // Texte absent en base : chaîne vide (« Texte intégral indisponible »), plus de roue.
+            const texte = (data?.content_raw as string | null | undefined) ?? '';
+            setSelectedDoctrine((prev) =>
+                prev && prev.id === doctrine.id ? { ...prev, content_raw: texte } : prev
+            );
         }
     };
 
@@ -533,11 +587,21 @@ const ArticlePage: React.FC = () => {
         [showComparison, compareVersion, currentVersion]
     );
 
+    // ⛔ Aucun <SEO> dans les états transitoires (chargement, échec, introuvable) : l'en-tête du
+    // rendu serveur (api/render.js), déjà spécifique à l'URL, doit rester en place.
     if (loading) {
         return (
             <div className="article-page article-loading">
                 <div className="loading-spinner" />
                 <p>Chargement de l'article...</p>
+            </div>
+        );
+    }
+
+    if (echec) {
+        return (
+            <div className="article-page">
+                <ChargementInterrompu pleineHauteur onReessayer={reessayer} />
             </div>
         );
     }
@@ -910,6 +974,8 @@ const ArticlePage: React.FC = () => {
                     </h2>
                     {loadingDecisions ? (
                         <p className="citing-loading">Chargement...</p>
+                    ) : decisionsEchec ? (
+                        <ChargementInterrompu encart onReessayer={() => fetchCitingDecisions(article.id)} />
                     ) : citingDecisions.length === 0 ? (
                         <p className="citing-empty">
                             Aucune décision ne cite cet article pour le moment.
@@ -1055,13 +1121,17 @@ const ArticlePage: React.FC = () => {
                                         <strong>Objet :</strong> {selectedDoctrine.objet}
                                     </div>
                                 )}
-                                {selectedDoctrine.content_raw !== undefined ? (
+                                {selectedDoctrine.content_raw ? (
                                     <div
                                         className="doctrine-text"
                                         dangerouslySetInnerHTML={{
                                             __html: selectedDoctrine.content_raw.replace(/\n/g, '<br />')
                                         }}
                                     />
+                                ) : selectedDoctrine.content_raw === '' ? (
+                                    <p className="doctrine-text">Texte intégral indisponible pour ce document.</p>
+                                ) : doctrineEchecId === selectedDoctrine.id ? (
+                                    <ChargementInterrompu encart onReessayer={() => handleDoctrineClick(selectedDoctrine)} />
                                 ) : (
                                     <div className="doctrine-text" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#6b7280' }}>
                                         <Loader2 size={18} className="spinner" /> Chargement du texte…

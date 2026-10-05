@@ -20,4 +20,11 @@ describe('avecReprise', () => {
         expect(r.error).toBe('délai');
         expect(appels).toBe(2);
     });
+    it('ne relance PAS après un délai maximal dépassé (le lecteur a déjà attendu 15 s)', async () => {
+        let appels = 0;
+        const erreur = { message: 'TimeoutError: Aucune réponse du serveur après 15 s (délai maximal dépassé)', code: '' };
+        const r = await avecReprise(async () => { appels++; return { data: null, error: erreur }; }, 0);
+        expect(r.error).toBe(erreur);
+        expect(appels).toBe(1);
+    });
 });

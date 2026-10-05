@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
+import { avecReprise } from '../../lib/reprise';
+import ChargementInterrompu from '../../components/ChargementInterrompu/ChargementInterrompu';
 import { urlTexte } from '../../lib/urls';
 import {
     Scale, BookOpen, Users, Building, Briefcase, Radio, Pickaxe,
@@ -75,6 +77,9 @@ const CodesListPage: React.FC = () => {
     const [codes, setCodes] = useState<LawCode[]>([]);
     const [branches, setBranches] = useState<Branche[]>([]);
     const [loading, setLoading] = useState(true);
+    // Lecture en échec : « Chargement interrompu » + « Réessayer », jamais un corpus à 0 texte.
+    const [echec, setEchec] = useState(false);
+    const [tentative, setTentative] = useState(0);
     const [searchQuery, setSearchQuery] = useState('');
     // Le Droit communautaire (OHADA) est une entrée AUTONOME du header (hors Corpus National).
     const [searchParams] = useSearchParams();
@@ -88,14 +93,18 @@ const CodesListPage: React.FC = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        fetchData();
-    }, []);
+        let active = true;
+        fetchData(() => active);
+        return () => { active = false; };
+    }, [tentative]);
 
-    const fetchData = async () => {
+    const fetchData = async (actif: () => boolean) => {
+        setLoading(true);
+        setEchec(false);
         try {
             const [branchesRes, codesRes] = await Promise.all([
-                supabase.from('branches').select('slug,label,icon,color,description,ordre').order('ordre'),
-                supabase
+                avecReprise(() => supabase.from('branches').select('slug,label,icon,color,description,ordre').order('ordre')),
+                avecReprise(() => supabase
                     .from('laws_and_codes')
                     .select(`
                         id,
@@ -110,8 +119,9 @@ const CodesListPage: React.FC = () => {
                         articles:articles(count)
                     `)
                     .eq('is_active', true)   // visibilité pilotée par l'interrupteur "publié" en base
-                    .order('title'),
+                    .order('title')),
             ]);
+            if (!actif()) return;
 
             if (branchesRes.error) throw branchesRes.error;
             if (codesRes.error) throw codesRes.error;
@@ -134,8 +144,9 @@ const CodesListPage: React.FC = () => {
             setCodes(transformedCodes);
         } catch (err) {
             console.error('Error fetching codes:', err);
+            if (actif()) setEchec(true);
         } finally {
-            setLoading(false);
+            if (actif()) setLoading(false);
         }
     };
 
@@ -254,6 +265,8 @@ const CodesListPage: React.FC = () => {
                             <Loader2 size={40} className="spinner" />
                             <p>Chargement du corpus...</p>
                         </div>
+                    ) : echec ? (
+                        <ChargementInterrompu onReessayer={() => setTentative((t) => t + 1)} />
                     ) : filteredCodes ? (
                         /* Résultats de recherche */
                         <div className="corpus-search-results">

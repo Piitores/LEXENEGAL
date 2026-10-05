@@ -6,7 +6,11 @@
 
 /* Tant que le contenu serveur (#ssr-keep, cf. src/index.tsx) est affiché, les états
    « Chargement… » et le pied de page de React n'occupent aucune place : le lecteur
-   lit le texte serveur, puis React le remplace d'un bloc quand il est prêt. */
+   lit le texte serveur, puis React le remplace d'un bloc quand il est prêt.
+   Même chose pour « Chargement interrompu » (components/ChargementInterrompu) : la page
+   React en échec est repliée, la version serveur reste lisible et un bandeau fixe propose
+   « Réessayer ». ⚠️ Tout nouvel état de chargement d'une page SSR va ici ET dans
+   SELECTEUR_CHARGEMENT (lib/versionServeur.ts). */
 body.ssr-live #app .app { min-height: 0; }
 body.ssr-live #app .route-fallback,
 body.ssr-live #app .code-loading,
@@ -15,6 +19,8 @@ body.ssr-live #app .article-loading,
 body.ssr-live #app .decisionPage:has(.loading-bar-container),
 body.ssr-live #app .theme-page:has(.theme-page__loading),
 body.ssr-live #app .guides-page:has(.guides-page__loading),
+body.ssr-live #app .chargement-interrompu,
+body.ssr-live #app .app > :has(.chargement-interrompu),
 body.ssr-live #app .footer {
   height: 0;
   min-height: 0;

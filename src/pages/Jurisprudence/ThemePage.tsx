@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { avecReprise } from '../../lib/reprise';
+import ChargementInterrompu from '../../components/ChargementInterrompu/ChargementInterrompu';
 import { urlArticle } from '../../lib/urls';
 import { Loader2, Scale, FileText, BookOpen, HelpCircle } from 'lucide-react';
 import './ThemePage.css';
@@ -59,6 +60,8 @@ const ThemePage: React.FC = () => {
     const [notFound, setNotFound] = useState(false);
     // Erreur technique persistante : jamais présentée comme « introuvable » (cf. lib/reprise.ts).
     const [echec, setEchec] = useState(false);
+    // « Réessayer » incrémente ce compteur : l'effet de chargement repart, sans recharger la page.
+    const [tentative, setTentative] = useState(0);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -75,7 +78,7 @@ const ThemePage: React.FC = () => {
             setLoading(false);
         })();
         return () => { active = false; };
-    }, [slug]);
+    }, [slug, tentative]);
 
     // Titre côté SPA (le SSR sert déjà le <head> complet aux crawlers).
     useEffect(() => {
@@ -99,12 +102,7 @@ const ThemePage: React.FC = () => {
     if (echec) {
         return (
             <div className="theme-page">
-                <div className="theme-page__container theme-page__empty">
-                    <Scale size={48} />
-                    <h1>Chargement interrompu</h1>
-                    <p>La connexion a été interrompue avant la fin du chargement.</p>
-                    <button type="button" className="theme-page__cta" onClick={() => window.location.reload()}>Réessayer</button>
-                </div>
+                <ChargementInterrompu onReessayer={() => setTentative((t) => t + 1)} />
             </div>
         );
     }
