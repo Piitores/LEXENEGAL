@@ -69,7 +69,7 @@ describe('code fusionné (rendu serveur)', () => {
      * ne prouverait rien, les deux suivent le même chemin.
      */
     const CORPS_AVANT_FUSION = [
-        '<div id="ssr-content" class="ssr-prerender"><div class="ssr-code">',
+        '<div id="ssr-content" class="ssr-prerender ssr-type-code"><div class="ssr-code">',
         '  <aside class="ssr-st" aria-hidden="true"><div class="ssr-st__in"><div class="ssr-st__head"><div class="ssr-st__sur">Code sénégalais</div><div class="ssr-st__title">Code du Travail</div></div><i class="ssr-st__search"></i><span class="ssr-st__ctl"><i></i><i></i></span><span class="ssr-st__tree"><i class="ssr-st__row is-active"></i><span class="ssr-st__chips"><i style="width:98px"></i><i style="width:63px"></i><i style="width:63px"></i></span><i class="ssr-st__row"></i><i class="ssr-st__row"></i><i class="ssr-st__row"></i><i class="ssr-st__row"></i><i class="ssr-st__row"></i><i class="ssr-st__row"></i><i class="ssr-st__row"></i><i class="ssr-st__row"></i><i class="ssr-st__row"></i><i class="ssr-st__row"></i><i class="ssr-st__row"></i><i class="ssr-st__row"></i><i class="ssr-st__row"></i><i class="ssr-st__row"></i></span></div></aside>',
         '  <article class="ssr-code__main">',
         '    <h1>Code du Travail du Sénégal - texte intégral et version consolidée</h1>',

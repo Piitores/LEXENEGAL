@@ -17,7 +17,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 // Mise en forme de la version serveur, un bloc par type de page, placé dans le <head> de ce seul type.
-import { styleSsr } from './_ssr/styles.js';
+import { styleSsr, STYLES_SSR } from './_ssr/styles.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -266,7 +266,16 @@ function texteDecisionAffiche(d) {
   if (i.includes('COMPOSITION DE LA JURIDICTION')) return i;
   return d.texte_brut || i;
 }
-function wrapContent(inner) { return `<div id="ssr-content" class="ssr-prerender">${inner}</div>`; }
+/*
+ * Racine de la version serveur. type : type de page (clé de api/_ssr/styles.js) ; la classe ssr-type-TYPE est
+ * recopiée sur #ssr-keep par src/index.tsx. Elle annule le cadre générique de #ssr-keep (index.html) sans
+ * :has(), que Firefox avant 121 et Safari avant 15.4 ignorent, et désactive les règles génériques « #ssr-keep … »
+ * d'index.html (gardées pour l'accueil) : chaque bloc de styles.js ne dépend que de lui-même.
+ */
+function wrapContent(inner, type = null) {
+  const classe = type && lireCle(STYLES_SSR, type) ? ` ssr-type-${type}` : '';
+  return `<div id="ssr-content" class="ssr-prerender${classe}">${inner}</div>`;
+}
 
 /*
  * ---------- COPIES PARTAGÉES par les gabarits serveur (une seule copie de chaque) ----------
@@ -595,7 +604,7 @@ ${cites}${liees}
 </article>
 <div class="ssr-dc-droite" aria-hidden="true"><div class="ssr-dc-collant">${outilsDecisionSsr('ssr-dc-outils-d')}</div></div>
 </div>
-</div>`);
+</div>`, 'decision');
 }
 
 /* ---------- CODE (loi entière) ---------- */
@@ -965,7 +974,7 @@ export function buildCodeBody(law, articles, related, fusion = null, plan = null
     <nav class="ssr-toc" aria-label="Articles"><h2>Articles · ${esc(m.baseName)}</h2><ul>${links}</ul></nav>${tocAnciens}
     ${buildRelatedBlock(related)}
   </article>
-</div>`);
+</div>`, 'code');
 }
 
 /* ---------- ARTICLE de loi ---------- */
@@ -1827,7 +1836,7 @@ export function buildArticleBody(law, art, contentHtml, citing, chemin, voisins,
   ${hab.arbre
     ? `<nav class="ssr-a-tree" aria-label="Sommaire du texte">${hab.arbre}</nav>`
     : '<div class="ssr-a-tree ssr-a-tree--vide" aria-hidden="true"></div>'}
-  </div></article>`);
+  </div></article>`, 'article');
 }
 
 /* ---------- Coquille dist/index.html (file + filet HTTP) ---------- */
@@ -1951,7 +1960,7 @@ export function buildCodesBody(texts, branches = [], comptes = null) {
         ${sections}${extra}
       </article>
     </div></div>
-  </div>`);
+  </div>`, 'codes');
 }
 
 /* ---------- DOCTRINE FISCALE (teaser public, corps gaté) ---------- */
@@ -2086,7 +2095,7 @@ export function buildDoctrineBody(d, arts = []) {
         <ul class="ssr-doctrine-fiche">${meta}</ul>
       </div>
     </article>
-  </div></div>`);
+  </div></div>`, 'doctrine');
 }
 /* Date affichée en tête de lettre : même règle que formatDoctrineDate (src/lib/doctrineDate.ts) - champ
  * `date`, sinon la date lue dans la référence (« … du 18 septembre 2009 »), sinon « Date inconnue ». */
@@ -2172,7 +2181,7 @@ export function buildThemeBody(data) {
     <section class="ssr-theme-decs"><h2>${iconeSsr('FileText', 18)} Décisions récentes - ${esc(t.label)}</h2><ul>${decs}</ul></section>
     ${faqHtml}
     <p class="ssr-theme-more"><a href="/search?q=${encodeURIComponent(t.label)}">Rechercher « ${esc(t.label)} » dans toute la base →</a></p>
-  </article></div>`);
+  </article></div>`, 'theme');
 }
 
 /* ---------- GUIDES PRATIQUES (/guides et /guides/:slug) ---------- */
@@ -2236,7 +2245,7 @@ export function buildGuideBody(gd) {
     ${faqHtml}
     ${themeLink}
     <p class="ssr-guide-devise">Lexenegal, la mémoire juridique du Sénégal.</p>
-  </article></div>`);
+  </article></div>`, 'guide');
 }
 export function buildGuidesHead(canonical) {
   const title = 'Guides pratiques du droit sénégalais | Lexenegal';
@@ -2261,7 +2270,7 @@ export function buildGuidesBody(guides) {
       <p class="ssr-guides-chapo">Des réponses claires, appuyées sur les <a href="/codes">codes, les lois</a> et la <a href="/jurisprudence">jurisprudence du Sénégal</a>, aux questions juridiques les plus fréquentes.</p>
     </header>
     <ul class="ssr-guides-list">${items}</ul>
-  </article></div>`);
+  </article></div>`, 'guides');
 }
 
 /* ---------- HUB JURISPRUDENCE (/jurisprudence) ---------- */
@@ -2300,7 +2309,7 @@ export function buildJurisprudenceBody(themes) {
     ${matieres.length ? `<section class="ssr-juris-section"><h2>${iconeSsr('Landmark', 18)} Jurisprudence par matière</h2><ul class="ssr-juris-grid ssr-juris-grid--matieres">${matieres.map(li).join('\n')}</ul></section>` : ''}
     ${sujets.length ? `<section class="ssr-juris-section"><h2>${iconeSsr('Tags', 18)} Jurisprudence par thème</h2><ul class="ssr-juris-grid">${sujets.map(li).join('\n')}</ul></section>` : ''}
     <p class="ssr-juris-more"><a href="/search">Rechercher une décision, un mot-clé ou une référence →</a></p>
-  </article></div>`);
+  </article></div>`, 'jurisprudence');
 }
 
 /* ---------- Accès Supabase REST ---------- */

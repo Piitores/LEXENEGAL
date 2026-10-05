@@ -20,6 +20,9 @@ const ssr = document.getElementById('ssr-content');
 if (container && ssr && window.location.pathname !== '/') {
   const keep = document.createElement('div');
   keep.id = 'ssr-keep';
+  // Type de page (« ssr-type-article »… posé par api/render.js) : il annule le cadre générique de #ssr-keep
+  // sans :has(), que Firefox avant 121 et Safari avant 15.4 ignorent (api/_ssr/styles.js, index.html).
+  ssr.classList.forEach((c) => { if (c.startsWith('ssr-type-')) keep.classList.add(c); });
   keep.appendChild(ssr);
   container.after(keep);
   document.body.classList.add('ssr-live');

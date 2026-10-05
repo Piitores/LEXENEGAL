@@ -293,7 +293,7 @@ describe('rendu serveur : page d’un article de code fusionné', () => {
             '  <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Legislation","name":"Article 5 - Code Pénal","legislationIdentifier":"5","inLanguage":"fr","isPartOf":{"@type":"Legislation","name":"Code Pénal","url":"https://www.lexenegal.sn/code/code-penal"},"legislationJurisdiction":{"@type":"AdministrativeArea","name":"Sénégal"},"url":"https://www.lexenegal.sn/code/code-penal/art-5"},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Codes et textes","item":"https://www.lexenegal.sn/codes"},{"@type":"ListItem","position":2,"name":"Code Pénal","item":"https://www.lexenegal.sn/code/code-penal"},{"@type":"ListItem","position":3,"name":"Article 5","item":"https://www.lexenegal.sn/code/code-penal/art-5"}]}]</script>',
         ].join('\n');
         const CORPS = [
-            '<div id="ssr-content" class="ssr-prerender"><article class="ssr-article"><div class="ssr-a-layout"><div class="ssr-a-main">',
+            '<div id="ssr-content" class="ssr-prerender ssr-type-article"><article class="ssr-article"><div class="ssr-a-layout"><div class="ssr-a-main">',
             '    <span class="ssr-a-somm" aria-hidden="true"></span>',
             '    <nav class="ssr-bc" aria-label="Fil d\'Ariane"><a href="/codes">Codes</a><span class="ssr-chev" aria-hidden="true"></span><a href="/code/code-penal">Code Pénal</a><span class="ssr-chev" aria-hidden="true"></span><span class="ssr-bc-cur">Article 5</span></nav>',
             '    ',
@@ -513,7 +513,9 @@ describe('handler de api/render.js (Supabase simulé)', () => {
      * (version serveur habillée comme la page React : arbre, ligne de version, cartes des décisions ;
      * colonne Sommaire, présentation, division ouverte et premières cartes d'articles), mêmes mots et
      * mêmes liens qu'avant (seule la date des décisions passe en jj/mm/aaaa, comme React). Le corps de
-     * l'article 5 est écrit en entier ; pour les autres adresses, son empreinte sha256.
+     * l'article 5 est écrit en entier ; pour les autres adresses, son empreinte sha256. Refigés le 05/10/2026
+     * (correctifs) : classe du type de page sur #ssr-content (ssr-type-article, ssr-type-code), seul écart,
+     * vérifié corps par corps contre la version précédente.
      */
     const CORPS_PENAL_5 = [
         '<!doctype html><html lang="fr"><head><meta charset="utf-8" />',
@@ -536,7 +538,7 @@ describe('handler de api/render.js (Supabase simulé)', () => {
         '  <meta data-rh="true" property="twitter:description" content="Article 5 du Code Pénal du Sénégal : Rédaction actuelle de l’article 5." />',
         '  <meta data-rh="true" property="twitter:image" content="https://www.lexenegal.sn/og-image.svg" />',
         '  <script type="application/ld+json">[{"@context":"https://schema.org","@type":"Legislation","name":"Article 5 - Code Pénal","legislationIdentifier":"5","inLanguage":"fr","isPartOf":{"@type":"Legislation","name":"Code Pénal","url":"https://www.lexenegal.sn/code/code-penal"},"legislationJurisdiction":{"@type":"AdministrativeArea","name":"Sénégal"},"url":"https://www.lexenegal.sn/code/code-penal/art-5"},{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Codes et textes","item":"https://www.lexenegal.sn/codes"},{"@type":"ListItem","position":2,"name":"Code Pénal","item":"https://www.lexenegal.sn/code/code-penal"},{"@type":"ListItem","position":3,"name":"Article 5","item":"https://www.lexenegal.sn/code/code-penal/art-5"}]}]</script>',
-        '</head><body><div id="app"><div id="ssr-content" class="ssr-prerender"><article class="ssr-article"><div class="ssr-a-layout"><div class="ssr-a-main">',
+        '</head><body><div id="app"><div id="ssr-content" class="ssr-prerender ssr-type-article"><article class="ssr-article"><div class="ssr-a-layout"><div class="ssr-a-main">',
         '    <span class="ssr-a-somm" aria-hidden="true"></span>',
         '    <nav class="ssr-bc" aria-label="Fil d\'Ariane"><a href="/codes">Codes</a><span class="ssr-chev" aria-hidden="true"></span><a href="/code/code-penal">Code Pénal</a><span class="ssr-chev" aria-hidden="true"></span><span class="ssr-bc-cur">Article 5</span></nav>',
         '    ',
@@ -553,21 +555,21 @@ describe('handler de api/render.js (Supabase simulé)', () => {
     ].join('\n');
     const FIGEES: Array<[string, Record<string, string>, number, Record<string, string>, string]> = [
         ['article daté d’un code non fusionné', { type: 'article', code: 'code-penal', slug: 'art-5', date: '2015-01-01' }, 200,
-            { 'Content-Type': HTML, 'Cache-Control': CACHE_PAGE }, 'b34f95ffa392f4098c1b620009a4d974ae664f0d04c72abda3306ead0f107b9f'],
+            { 'Content-Type': HTML, 'Cache-Control': CACHE_PAGE }, '8d02b177e41306fc87c33b12452de203bb109f9f84719b03a17c7413b40f2f1f'],
         ['?ancien= ignoré hors fusion', { type: 'article', code: 'code-penal', slug: 'art-5', ancien: 'L56' }, 200,
-            { 'Content-Type': HTML, 'Cache-Control': CACHE_PAGE }, 'b34f95ffa392f4098c1b620009a4d974ae664f0d04c72abda3306ead0f107b9f'],
+            { 'Content-Type': HTML, 'Cache-Control': CACHE_PAGE }, '8d02b177e41306fc87c33b12452de203bb109f9f84719b03a17c7413b40f2f1f'],
         ['page d’un code non fusionné', { type: 'code', slug: 'code-penal' }, 200,
-            { 'Content-Type': HTML, 'Cache-Control': CACHE_PAGE }, 'ba7f859a618eba7f19ad05b0f78d77e888c04d203e8998607bf5b2f1b71a53e1'],
+            { 'Content-Type': HTML, 'Cache-Control': CACHE_PAGE }, '816323b8ec74d2ac83b9dd2aff4e8799aa48a1fa480677ba6462ca0b77a351fb'],
         // Refigé le 05/10/2026 : bandeau d'abrogation du texte en boîte flex (icône à part), même texte, même lien.
         ['ancien article de 1997, paramètres ignorés', { type: 'article', code: 'code-travail', slug: 'article-l56', ancien: 'L56', date: '2015-03-04' }, 200,
-            { 'Content-Type': HTML, 'Cache-Control': CACHE_PAGE }, 'd7b3a8cf0e930867ba06dfaaec4b1bbab35aedccd9bb5783c67e63498462daa6'],
+            { 'Content-Type': HTML, 'Cache-Control': CACHE_PAGE }, '1675d8885b7f84f02bc6510b5ed0dae4013d2c0af628734c301af4b4744d5be6'],
         ['code 1997 sous code-travail', { type: 'code', slug: 'code-travail' }, 200,
-            { 'Content-Type': HTML, 'Cache-Control': CACHE_PAGE }, 'b4b7803b578cc69d50a63650ad9645d51b7fd262f449cc4870570b6045447c1f'],
+            { 'Content-Type': HTML, 'Cache-Control': CACHE_PAGE }, '50d5cdca26815030a0fb87d24b25f54a0a082c0cffa2101557ce292dcfeb711f'],
         // code-travail-2026 est AUJOURD'HUI le texte en vigueur : servi en 200, jamais redirigé.
         ['article du code 2026 sous code-travail-2026', { type: 'article', code: 'code-travail-2026', slug: 'art-137' }, 200,
-            { 'Content-Type': HTML, 'Cache-Control': CACHE_PAGE }, 'c93242d2954f1c9d6c5d28b0edb340b819ef2e1fb3e6b42041fb79e91ae3cf2c'],
+            { 'Content-Type': HTML, 'Cache-Control': CACHE_PAGE }, '0f68e06a17bed0a7b19dc0f04e6c4d1937d3e957ceb9d21b06d7a3de7d660c88'],
         ['code 2026 sous code-travail-2026', { type: 'code', slug: 'code-travail-2026', node: 'x' }, 200,
-            { 'Content-Type': HTML, 'Cache-Control': CACHE_PAGE }, '43af8c89185063da22e15c849f77711255c6953a7189d46e4fe94b9b6bec2c63'],
+            { 'Content-Type': HTML, 'Cache-Control': CACHE_PAGE }, '72d813bc743b9ddac417966556cfe2ce0b320e43769b9159cf31e7a1510ed214'],
         ['ancien slug préfixé : 301 vers le slug court', { type: 'article', code: 'code-travail', slug: 'code-travail-article-l56' }, 301,
             { Location: `${SITE}/code/code-travail/article-l56`, 'Cache-Control': 'public, s-maxage=86400' }, empreinte('')],
         // Vraie 404 depuis le 03/10/2026 (avant : coquille noindex en 200, « soft 404 ») ; même corps.

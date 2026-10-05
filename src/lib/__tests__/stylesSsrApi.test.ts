@@ -30,14 +30,75 @@ describe('blocs de mise en forme de la version serveur (api/_ssr/styles.js)', ()
         expect(styleSsr('home')).toBe('');
     });
 
-    it('chaque bloc annule le cadre générique de #ssr-keep pour sa propre racine', async () => {
+    it('chaque bloc met en forme le cadre de sa page par la classe de type, sans :has()', async () => {
+        // Firefox avant 121 et Safari avant 15.4 rejettent toute règle contenant :has() : le cadre de la page
+        // passe par #ssr-keep.ssr-type-TYPE (classe posée par render.js, recopiée par src/index.tsx).
         const { STYLES_SSR } = await charger('_ssr/styles.js');
-        const RACINE: Record<string, string> = { article: 'ssr-article', code: 'ssr-code', decision: 'ssr-decision', theme: 'ssr-theme',
-            jurisprudence: 'ssr-jurisprudence', guides: 'ssr-ed', guide: 'ssr-ed', doctrine: 'ssr-ed', codes: 'ssr-ed' };
         for (const t of TYPES) {
-            const regle = new RegExp(`#ssr-keep:has\\(\\.${RACINE[t]}\\)[^{]*\\{[^}]*padding:0`);
-            expect(STYLES_SSR[t], t).toMatch(regle);
+            expect(STYLES_SSR[t], t).toMatch(new RegExp(`(^|\\n)#ssr-keep\\.ssr-type-${t}\\{[^}]*padding:0`));
+            expect(STYLES_SSR[t], t).not.toMatch(/#ssr-keep:has/);
         }
+    });
+
+    it('la racine servie porte la classe de son type, que src/index.tsx recopie sur #ssr-keep', async () => {
+        const api = await charger('render.js');
+        const pages: Record<string, string> = {
+            article: api.buildArticleBody({ slug: 'code-x', title: 'X' }, { slug: 'a', num: 'Article 1' }, '<p>T</p>', [], [], {}),
+            code: api.buildCodeBody({ slug: 'code-x', title: 'X', category: 'code' }, [], []),
+            decision: api.buildDecisionBody({ slug: 'd', reference: 'R' }, [], []),
+            theme: api.buildThemeBody({ theme: { label: 'L', h1: 'H', chapo: 'C' }, decisions: [] }),
+            jurisprudence: api.buildJurisprudenceBody([]),
+            guides: api.buildGuidesBody([]),
+            guide: api.buildGuideBody({ title: 'G', content_html: '' }),
+            doctrine: api.buildDoctrineBody({ objet: 'O' }),
+            codes: api.buildCodesBody([], []),
+        };
+        expect(Object.keys(pages).sort()).toEqual([...TYPES].sort());
+        for (const [t, html] of Object.entries(pages)) expect(html, t).toMatch(new RegExp(`^<div id="ssr-content" class="ssr-prerender ssr-type-${t}">`));
+        // Accueil : aucun bloc, aucune classe (cadre générique d'index.html).
+        expect(api.buildHomeBody([])).toMatch(/^<div id="ssr-content" class="ssr-prerender">/);
+        const INDEX_TSX = readFileSync(decodeURIComponent(new URL('../../index.tsx', import.meta.url).pathname), 'utf8');
+        expect(INDEX_TSX).toMatch(/c\.startsWith\('ssr-type-'\)\) keep\.classList\.add\(c\)/);
+    });
+
+    /*
+     * Autonomie des blocs : les règles génériques « #ssr-keep … » d'index.html ne valent plus sur une page typée.
+     * Ce dont les blocs héritaient sans le dire (relevé le 05/10/2026 en retirant ces règles dans le navigateur :
+     * couleur des liens, grille du sommaire, police des paragraphes) est porté par le bloc lui-même.
+     */
+    it('autonomie : liens, sommaire et paragraphes mis en forme par le bloc, pas par index.html', async () => {
+        const { STYLES_SSR } = await charger('_ssr/styles.js');
+        const LIENS: Record<string, RegExp> = {
+            article: /#ssr-content \.ssr-article a\{color:#047857;text-decoration:none\}/,
+            code: /#ssr-content \.ssr-code a\{color:#047857;text-decoration:none;\}/,
+            decision: /#ssr-content \.ssr-decision a\{color:#047857;text-decoration:none\}/,
+            theme: /#ssr-content \.ssr-theme a\{color:#047857;text-decoration:none;\}/,
+            jurisprudence: /#ssr-content \.ssr-jurisprudence a\{color:#047857;text-decoration:none;\}/,
+            guides: /#ssr-content \.ssr-ed :where\(a\)\{color:inherit;text-decoration:none\}/,
+            guide: /#ssr-content \.ssr-ed :where\(a\)\{color:inherit;text-decoration:none\}/,
+            doctrine: /#ssr-content \.ssr-ed :where\(a\)\{color:inherit;text-decoration:none\}/,
+            codes: /#ssr-content \.ssr-ed :where\(a\)\{color:inherit;text-decoration:none\}/,
+        };
+        for (const t of TYPES) expect(STYLES_SSR[t], t).toMatch(LIENS[t]);
+        expect(STYLES_SSR.code).toMatch(/\.ssr-toc ul\{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat\(auto-fill,minmax\(150px,1fr\)\);gap:6px 16px;/);
+        expect(STYLES_SSR.article).toMatch(/#ssr-content \.ssr-article-body p\{font-family:inherit;/);
+    });
+
+    it('impression : chaque bloc a son @media print ; emplacements masqués, badges en noir sur blanc', async () => {
+        const { STYLES_SSR } = await charger('_ssr/styles.js');
+        for (const t of TYPES) expect(STYLES_SSR[t], t).toContain('@media print{');
+        const impression = (t: string) => (STYLES_SSR[t] as string).split('@media print{')[1];
+        expect(impression('article')).toMatch(/:is\(\.ssr-a-somm,\.ssr-act,\.ssr-citing,\.ssr-artnav,\.ssr-a-tree,\.ssr-ver--vide\)\{display:none!important\}/);
+        expect(impression('article')).toMatch(/\.ssr-ah-badge\{background:#fff!important;color:#000!important;border-color:#000!important\}/);
+        expect(impression('code')).toMatch(/:is\(\.ssr-st,\.ssr-code__toggle,[^)]*\.ssr-dv__tabs,\.ssr-dv__nav,/);
+        expect(impression('code')).toMatch(/\.ssr-tp__nature,[^)]*\)\{background:#fff!important;color:#000!important;/);
+        // Titre du texte en tête de l'impression : sans !important, « order:1 » de l'écran (:is(), plus spécifique)
+        // l'emportait et le titre sortait APRÈS les articles.
+        expect(impression('code')).toMatch(/\.ssr-code__main>h1\{order:0!important;/);
+        // Chevrons du fil d'Ariane : print.css rend tous les fonds transparents, le chevron est un fond masqué.
+        expect(impression('article')).toMatch(/\.ssr-bc \.ssr-chev\{background:currentColor!important\}/);
+        expect(impression('decision')).toMatch(/:is\(\.ssr-dc-gauche,\.ssr-dc-droite,\.ssr-dc-outils\)\{display:none!important\}/);
+        expect(impression('decision')).toMatch(/\.ssr-dc-tags li,\.ssr-dc-badge\)\{background:#fff!important;color:#000!important;/);
     });
 
     it('polices : seulement les variables du jeu commun (aucune police web, aucun @font-face propre)', async () => {
@@ -82,5 +143,49 @@ describe('index.html : cadre générique et jeu unique de polices', () => {
     });
     it('garde d\'interligne sur le contenu serveur', () => {
         expect(INDEX).toMatch(/#ssr-keep,#ssr-content\{line-height:1\.5;\}/);
+    });
+    it('règles génériques « #ssr-keep … » réservées aux pages sans bloc (aucune classe de type)', () => {
+        const css = [...INDEX.matchAll(/<style>([\s\S]*?)<\/style>/g)].map((m) => m[1]).join('\n').replace(/\/\*[\s\S]*?\*\//g, '');
+        const occurrences = [...css.matchAll(/#ssr-keep(?![\w-])([^,{]*)/g)].map((m) => m[1]);
+        expect(occurrences.length).toBeGreaterThan(10);
+        for (const suite of occurrences) {
+            // Seule exception : la garde d'interligne, qui vaut pour toutes les pages.
+            if (suite === '') continue;
+            expect(suite).toMatch(/^:where\(:not\(\[class\]\)\)/);
+        }
+    });
+    it('commentaires CSS courts (servis à chaque visiteur, accueil et routes sans version serveur comprises)', () => {
+        const css = [...INDEX.matchAll(/<style>([\s\S]*?)<\/style>/g)].map((m) => m[1]).join('\n');
+        const commentaires = [...css.matchAll(/\/\*[\s\S]*?\*\//g)].reduce((n, m) => n + m[0].length, 0);
+        expect(commentaires).toBeLessThan(900);
+    });
+});
+
+describe('App.css : navigateurs sans :has()', () => {
+    const APP_CSS = readFileSync(decodeURIComponent(new URL('../../App.css', import.meta.url).pathname), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+    it('aucune liste de sélecteurs body.ssr-live ne mêle :has() et sélecteurs simples', () => {
+        const css = APP_CSS;
+        const regles = [...css.matchAll(/((?:body\.ssr-live[^{]*?)+)\{/g)].map((m) => m[1].split(',').map((x) => x.trim()).filter(Boolean));
+        expect(regles.length).toBeGreaterThan(1);
+        for (const liste of regles) {
+            const avecHas = liste.filter((x) => x.includes(':has('));
+            expect({ liste, melange: avecHas.length > 0 && avecHas.length < liste.length }).toEqual({ liste, melange: false });
+        }
+        const simples = regles.filter((l) => !l.some((x) => x.includes(':has('))).flat();
+        for (const x of ['body.ssr-live #app .route-fallback', 'body.ssr-live #app .footer', 'body.ssr-live #app .chargement-interrompu']) {
+            expect(simples).toContain(x);
+        }
+    });
+    it('repli @supports : sans :has(), chaque conteneur replié par :has() l\'est aussi par sa seule classe', () => {
+        // Sans ce repli, le conteneur (min-height:100vh) repoussait d'un écran la version serveur déjà affichée.
+        const repli = APP_CSS.match(/@supports not selector\(:has\(\*\)\)\s*\{([\s\S]*?\})\s*\}/);
+        expect(repli).not.toBeNull();
+        const conteneursRepli = [...repli![1].matchAll(/body\.ssr-live #app \.([\w-]+)\s*[,{]/g)].map((m) => m[1]);
+        const conteneursHas = [...APP_CSS.matchAll(/body\.ssr-live #app \.([\w-]+):has\(/g)].map((m) => m[1]);
+        expect(conteneursHas.length).toBeGreaterThan(5);
+        for (const c of conteneursHas) expect(conteneursRepli, c).toContain(c);
+        // « Chargement interrompu » (.app > :has(.chargement-interrompu)) : la page d'article l'enveloppe aussi.
+        expect(conteneursRepli).toContain('article-page');
+        expect(repli![1]).toMatch(/height:\s*0;[\s\S]*visibility:\s*hidden;/);
     });
 });

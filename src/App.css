@@ -10,20 +10,17 @@
    Même chose pour « Chargement interrompu » (components/ChargementInterrompu) : la page
    React en échec est repliée, la version serveur reste lisible et un bandeau fixe propose
    « Réessayer ». ⚠️ Tout nouvel état de chargement d'une page SSR va ici ET dans
-   SELECTEUR_CHARGEMENT (lib/versionServeur.ts). */
+   SELECTEUR_CHARGEMENT (lib/versionServeur.ts).
+   Règles séparées : un navigateur sans :has() (Firefox avant 121, Safari avant 15.4) rejette une liste
+   de sélecteurs ENTIÈRE dès qu'un seul lui est inconnu. La première, sans :has(), vaut partout ; la
+   deuxième (:has) replie le conteneur de la page en chargement ; le repli @supports fait la même chose
+   pour les navigateurs sans :has(). Avant, « Chargement… » et le pied de page y repoussaient la version
+   serveur hors du premier écran. */
 body.ssr-live #app .app { min-height: 0; }
 body.ssr-live #app .route-fallback,
 body.ssr-live #app .code-loading,
-body.ssr-live #app .code-page:has(> .code-loading),
 body.ssr-live #app .article-loading,
-body.ssr-live #app .decisionPage:has(.loading-bar-container),
-body.ssr-live #app .theme-page:has(.theme-page__loading),
-body.ssr-live #app .guides-page:has(.guides-page__loading),
-body.ssr-live #app .juris-hub:has(.juris-hub__loading),
-body.ssr-live #app .corpus-page:has(.corpus-loading > .spinner),
-body.ssr-live #app .doctrine-detail:has(> .doctrine-detail__container > .doctrine-loading),
 body.ssr-live #app .chargement-interrompu,
-body.ssr-live #app .app > :has(.chargement-interrompu),
 body.ssr-live #app .footer {
   height: 0;
   min-height: 0;
@@ -31,6 +28,43 @@ body.ssr-live #app .footer {
   margin: 0;
   overflow: hidden;
   visibility: hidden;
+}
+body.ssr-live #app .code-page:has(> .code-loading),
+body.ssr-live #app .decisionPage:has(.loading-bar-container),
+body.ssr-live #app .theme-page:has(.theme-page__loading),
+body.ssr-live #app .guides-page:has(.guides-page__loading),
+body.ssr-live #app .juris-hub:has(.juris-hub__loading),
+body.ssr-live #app .corpus-page:has(.corpus-loading > .spinner),
+body.ssr-live #app .doctrine-detail:has(> .doctrine-detail__container > .doctrine-loading),
+body.ssr-live #app .app > :has(.chargement-interrompu) {
+  height: 0;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  visibility: hidden;
+}
+/* Même chose SANS :has(), seulement pour les navigateurs qui l'ignorent : la page entière est repliée.
+   Sinon son conteneur (min-height:100vh), qui reste, repoussait d'un écran la version serveur déjà
+   affichée en haut (décalage de 0,625 mesuré en 1440 sur un code et une décision, 05/10/2026). Tant
+   que body.ssr-live est posé, la page React est en chargement ou en échec (lib/versionServeur.ts retire
+   la classe dès qu'elle est prête) : rien d'utile n'est replié. */
+@supports not selector(:has(*)) {
+  body.ssr-live #app .code-page,
+  body.ssr-live #app .article-page,
+  body.ssr-live #app .decisionPage,
+  body.ssr-live #app .theme-page,
+  body.ssr-live #app .guides-page,
+  body.ssr-live #app .juris-hub,
+  body.ssr-live #app .corpus-page,
+  body.ssr-live #app .doctrine-detail {
+    height: 0;
+    min-height: 0;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    visibility: hidden;
+  }
 }
 
 /* Attente d'un morceau de page chargé à la demande (React.lazy) */
