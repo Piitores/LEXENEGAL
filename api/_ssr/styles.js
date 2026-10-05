@@ -142,6 +142,9 @@ export const STYLES_SSR = {
 #ssr-content .ssr-article-body em{font-style:italic;color:#374151}
 #ssr-content .ssr-article-body p:is(.nota,.nota-ohada){margin:16px 0;padding:8px 16px;background:#FEF3C7;border-left:4px solid #F59E0B;border-radius:6px;color:#B45309;font-size:.9rem;font-style:normal;line-height:1.6;text-indent:0;text-align:left}
 #ssr-content .ssr-article-body p:is(.nota,.nota-ohada) em{font-style:normal;color:inherit}
+#ssr-content .ssr-article-body p.alinea:is(.nota,.nota-ohada){margin:0 0 1.25rem;line-height:1.9;text-indent:1.5rem;text-align:justify}
+#ssr-content .ssr-article-body p.alinea:is(.nota,.nota-ohada):first-of-type{text-indent:0}
+#ssr-content .ssr-article-body p.alinea:is(.nota,.nota-ohada):last-child{margin-bottom:0}
 #ssr-content .ssr-article-body .enum-dash{list-style:none;margin:1.5rem 0;padding:0 0 0 .5rem}
 #ssr-content .ssr-article-body .enum-dash li{position:relative;padding-left:2rem;margin-bottom:.875rem;line-height:1.75;text-align:justify}
 #ssr-content .ssr-article-body .enum-dash li::before{content:"-";position:absolute;left:0;top:0;color:#047857;font-weight:600;font-size:1.1em}
@@ -334,6 +337,7 @@ export const STYLES_SSR = {
 #ssr-content .ssr-code .ssr-ac__body .alinea.niv3{margin-left:4.2rem;}
 #ssr-content .ssr-code .ssr-ac__body .alinea .marqueur{font-weight:600;color:#166534;margin-right:.25rem;}
 #ssr-content .ssr-code .ssr-ac__body p:is(.nota,.nota-ohada){margin:16px 0;padding:8px 16px;background:#FEF3C7;border-left:4px solid #F59E0B;border-radius:6px;color:#B45309;font-size:.9rem;line-height:1.6;text-align:left;}
+#ssr-content .ssr-code .ssr-ac__body p.alinea:is(.nota,.nota-ohada){margin-bottom:12px;text-align:justify;}
 #ssr-content .ssr-code .ssr-ac__body :is(.art-tableau,.bareme-table,.alinea-tableau){width:100%;border-collapse:collapse;margin:1rem 0;display:block;overflow-x:auto;font-size:.95rem;}
 #ssr-content .ssr-code .ssr-ac__body :is(.art-tableau,.bareme-table,.alinea-tableau) :is(th,td){border:1px solid #E5E7EB;padding:.5rem .7rem;text-align:left;vertical-align:top;}
 #ssr-content .ssr-code .ssr-ac.is-abroge .ssr-ac__body,#ssr-content .ssr-code .ssr-ac.is-abroge .ssr-ac__body *{color:#9CA3AF;font-style:italic;}
