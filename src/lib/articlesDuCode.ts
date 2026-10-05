@@ -171,26 +171,26 @@ export interface CibleAncienSlug {
 /**
  * Ancienne adresse d'article (/code/code-travail/article-l56) : l'article qui en a repris le sujet,
  * ligne « principal » de la concordance (ou « identite » pour un ancien article non repris, qui
- * existe toujours). null si l'adresse n'est pas dans la concordance, ou si la lecture échoue.
+ * existe toujours). null si l'adresse n'est PAS dans la concordance (absence).
+ *
+ * ⛔ Une lecture en ÉCHEC n'est pas une absence : elle LÈVE l'erreur (reprise une fois, cf.
+ * lib/reprise.ts). La page article affiche alors « Chargement interrompu », jamais « Article non
+ * trouvé » (Soft 404) ; l'aperçu au survol (resoudreAdresseArticle) l'intercepte lui-même.
  */
 export async function chercherAncienSlug(codeId: string, ancienSlug: string): Promise<CibleAncienSlug | null> {
-    try {
-        const { data, error } = await supabase
-            .from('article_concordance')
-            .select('ancien_norm, role, article:articles(id, slug, article_number)')
-            .eq('code_id', codeId)
-            .eq('ancien_slug', ancienSlug)
-            .in('role', ['principal', 'identite'])
-            .order('role')
-            .order('article_id');
-        if (error || !data) return null;
-        const lignes = data as any[];
-        const l = lignes.find((r) => r.role === 'principal' && r.article) ?? lignes.find((r) => r.role === 'identite' && r.article);
-        if (!l) return null;
-        return { id: l.article.id, slug: l.article.slug, article_number: l.article.article_number, ancienNorm: l.ancien_norm };
-    } catch {
-        return null;
-    }
+    const { data, error } = await avecReprise(() => supabase
+        .from('article_concordance')
+        .select('ancien_norm, role, article:articles(id, slug, article_number)')
+        .eq('code_id', codeId)
+        .eq('ancien_slug', ancienSlug)
+        .in('role', ['principal', 'identite'])
+        .order('role')
+        .order('article_id'));
+    if (error) throw error;
+    const lignes = (data || []) as any[];
+    const l = lignes.find((r) => r.role === 'principal' && r.article) ?? lignes.find((r) => r.role === 'identite' && r.article);
+    if (!l) return null;
+    return { id: l.article.id, slug: l.article.slug, article_number: l.article.article_number, ancienNorm: l.ancien_norm };
 }
 
 /** Article désigné par une adresse (aperçu au survol d'un lien), avec l'ancien numéro éventuel. */
@@ -218,7 +218,8 @@ export async function resoudreAdresseArticle(codeSlug: string, articleSlug: stri
     const { data: art } = await supabase
         .from('articles').select('id, article_number').eq('slug', articleSlug).eq('code_id', codeId).maybeSingle();
     if (art) return { id: (art as any).id, article_number: (art as any).article_number, ancien: null };
-    const cible = await chercherAncienSlug(codeId, articleSlug);
+    // Aperçu au survol : une lecture en échec donne « Contenu non disponible », comme une absence.
+    const cible = await chercherAncienSlug(codeId, articleSlug).catch(() => null);
     return cible ? { id: cible.id, article_number: cible.article_number, ancien: cible.ancienNorm } : null;
 }
 

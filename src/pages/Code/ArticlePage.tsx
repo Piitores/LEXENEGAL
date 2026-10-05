@@ -302,7 +302,9 @@ const ArticlePage: React.FC = () => {
                 // Fusion des codes 2026 : l'ancien article repris ou éclaté n'existe plus ; son
                 // adresse (article-l56) mène à l'article qui en a repris le sujet (ligne « principal »
                 // de la concordance), dans la rédaction de l'ancien article. Rien dans la
-                // concordance (ou lecture en échec) : « Article non trouvé », comme avant.
+                // concordance : « Article non trouvé », comme avant. Lecture en ÉCHEC : elle lève
+                // (catch ci-dessous) et la page passe en « Chargement interrompu », jamais en
+                // « Article non trouvé » (Soft 404).
                 if (!articleData && articleSlug) {
                     const cible = await chercherAncienSlug(lawData.id, articleSlug);
                     if (depasse()) return;
