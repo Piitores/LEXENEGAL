@@ -1518,8 +1518,9 @@ const STYLE_BANDEAU_VERSION = 'background:#fffbeb;border:1px solid #fcd34d;borde
  * Éléments propres à une page d'article d'un code fusionné : { ancien, h1, avantTitre, apresTitre,
  * contenu, motsCles }, ou null hors fusion (rendu inchangé).
  *  - ancien article non repris : bandeau construit à partir des DONNÉES (référence du code, même texte
- *    que le site), jamais du champ notes, qui porte des remarques éditoriales internes ; H1 marqué
- *    « (abrogé) » ;
+ *    que le site), jamais du champ notes, texte libre rédigé pour la pastille « ! » ; H1 marqué
+ *    « (abrogé) ». ⚠️ notes, structure_nodes.note et version_note sont PUBLICS : la base refuse toute
+ *    note interne (déclencheur refuser_note_interne, 06/10/2026 ; remarques internes : table notes_internes) ;
  *  - version antérieure retenue (choix de choisirVersions) : bandeau « voir la version actuelle » en tête,
  *    texte de la version (une section par prédécesseur s'il y en a plusieurs) ;
  *  - article 2026 qui reprend d'anciens articles : « Correspond aux anciens articles L.56 et L.57 du
