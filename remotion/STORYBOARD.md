@@ -1,3 +1,6 @@
+> **Outils retirés le 06/10/2026** (nettoyage du stockage, choix du proprio) ; la vidéo finale reste dans `out/lexenegal-promo.mp4`.
+> Pour la modifier ou la refaire : `npm install -D remotion@^4.0.489 @remotion/cli@^4.0.489 @remotion/google-fonts@^4.0.489 @remotion/transitions@^4.0.489`.
+
 # LEXENEGAL — Vidéo promotionnelle (Remotion)
 
 **Format** : 1920 × 1080, 30 i/s, **~55 secondes** (montage V4 : coupes rapides, transitions 1/3 s).
