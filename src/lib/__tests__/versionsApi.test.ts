@@ -561,8 +561,10 @@ describe('handler de api/render.js (Supabase simulé)', () => {
         ['page d’un code non fusionné', { type: 'code', slug: 'code-penal' }, 200,
             { 'Content-Type': HTML, 'Cache-Control': CACHE_PAGE }, '816323b8ec74d2ac83b9dd2aff4e8799aa48a1fa480677ba6462ca0b77a351fb'],
         // Refigé le 05/10/2026 : bandeau d'abrogation du texte en boîte flex (icône à part), même texte, même lien.
+        // Refigé le 06/10/2026 : seule la ligne de version change, « 1 décembre 1997 » devient « 1er décembre 1997 »
+        // (date lue sans fuseau, comme la page React : libelleSansFin).
         ['ancien article de 1997, paramètres ignorés', { type: 'article', code: 'code-travail', slug: 'article-l56', ancien: 'L56', date: '2015-03-04' }, 200,
-            { 'Content-Type': HTML, 'Cache-Control': CACHE_PAGE }, '1675d8885b7f84f02bc6510b5ed0dae4013d2c0af628734c301af4b4744d5be6'],
+            { 'Content-Type': HTML, 'Cache-Control': CACHE_PAGE }, '95a73e26d7f78403aec8742556346c228d291fea8c28b37f8a848d61073f96ed'],
         ['code 1997 sous code-travail', { type: 'code', slug: 'code-travail' }, 200,
             { 'Content-Type': HTML, 'Cache-Control': CACHE_PAGE }, '50d5cdca26815030a0fb87d24b25f54a0a082c0cffa2101557ce292dcfeb711f'],
         // code-travail-2026 est AUJOURD'HUI le texte en vigueur : servi en 200, jamais redirigé.

@@ -27,7 +27,7 @@ import {
 import type { LigneConcordance } from '../../lib/articleRefResolver';
 import {
     lireParamsVersion, requeteVersion, choisirVersions, versionCourante, normAncien, jourDe,
-    libelleBandeauVersion, libelleVersionComparateur, libellePeriode, titreSectionVersion,
+    libelleBandeauVersion, libelleVersionComparateur, libellePeriode, libelleSansFin, estAbroge, titreSectionVersion,
     referenceCopie, libelleNonRepris, autresSuccesseurs, numeroAncienAffiche, mentionAnciens, listeFr,
     dateCitationVersion, anciensNumerosCites,
     type VersionArticle,
@@ -784,10 +784,13 @@ const ArticlePage: React.FC = () => {
                                 <>
                                     {/* Version qui a une date de fin (ancien article non repris, abrogé le
                                         03/09/2026) : « En vigueur du … au … », jamais « en vigueur depuis »
-                                        pour un texte qui ne l'est plus (constaté en production, 02/10/2026). */}
+                                        pour un texte qui ne l'est plus (constaté en production, 02/10/2026).
+                                        Sans fin : « En vigueur depuis le … » (date lue sans fuseau, « 1er »),
+                                        ou « Article abrogé » pour un article abrogé (06/10/2026). Même libellé
+                                        côté serveur : ligneVersionSsr (api/render.js). */}
                                     {currentVersion.expiration_date
                                         ? libellePeriode(currentVersion, versionsBase, article.article_number)
-                                        : `En vigueur depuis le ${new Date(currentVersion.effective_date).toLocaleDateString('fr-FR', { dateStyle: 'long' })}`}
+                                        : libelleSansFin(currentVersion.effective_date, estAbroge(article))}
                                     {currentVersion.version_note && (
                                         <span className="version-note"> · {currentVersion.version_note}</span>
                                     )}
@@ -912,7 +915,7 @@ const ArticlePage: React.FC = () => {
                             <section key={v.id} className="article-version-section">
                                 <h2 className="article-version-section__titre">
                                     {titreSectionVersion(v, articleLabel(article))}
-                                    <span className="article-version-section__periode">{libellePeriode(v, versionsBase, article.article_number)}</span>
+                                    <span className="article-version-section__periode">{libellePeriode(v, versionsBase, article.article_number, estAbroge(article))}</span>
                                 </h2>
                                 <LinkedLegalContent className="article-text" html={v.content} dateCitation={dateDeCitation(v)} numerotationPropreEnL={numerotationEnL} />
                             </section>

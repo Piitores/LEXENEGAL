@@ -468,14 +468,29 @@ export function libelleNonRepris(reference: string | null | undefined): string {
 }
 
 /**
- * Période d'une version : « En vigueur du 1er décembre 1997 au 2 septembre 2026 », ou « En vigueur
- * depuis le 3 septembre 2026 » quand elle n'a pas de fin.
+ * Article abrogé (statut « abrogé ») ou retiré (`is_active` faux). Sa version sans date de fin n'est
+ * jamais « en vigueur depuis » : 132 articles abrogés affichaient « En vigueur depuis le … » sous le
+ * bandeau « abrogé », souvent avec une date de remplissage (« 1er janvier 2000 ») (06/10/2026).
  */
-export function libellePeriode<V extends VersionArticle>(v: V, versions: V[], articleNumber?: string | null): string {
+export function estAbroge(a: { status?: string | null; is_active?: boolean | null } | null | undefined): boolean {
+    return !!a && (a.status === 'abrogé' || a.is_active === false);
+}
+
+/** Version sans date de fin : « En vigueur depuis le 3 septembre 2026 », ou « Article abrogé ». */
+export function libelleSansFin(effectiveDate: string, abroge = false): string {
+    return abroge ? 'Article abrogé' : `En vigueur depuis le ${dateLongue(effectiveDate)}`;
+}
+
+/**
+ * Période d'une version : « En vigueur du 1er décembre 1997 au 2 septembre 2026 », ou, sans fin,
+ * libelleSansFin (« En vigueur depuis le 3 septembre 2026 », « Article abrogé » si `abroge`).
+ * ⚠️ COPIE côté serveur : libellePeriodeSsr (api/render.js), à modifier ensemble.
+ */
+export function libellePeriode<V extends VersionArticle>(v: V, versions: V[], articleNumber?: string | null, abroge = false): string {
     const fin = finVersion(v, versions, articleNumber);
     return fin
         ? `En vigueur du ${dateLongue(v.effective_date)} au ${dateLongue(veille(fin))}`
-        : `En vigueur depuis le ${dateLongue(v.effective_date)}`;
+        : libelleSansFin(v.effective_date, abroge);
 }
 
 /** Ligne de concordance, réduite à ce qu'il faut pour les autres successeurs d'un ancien article. */

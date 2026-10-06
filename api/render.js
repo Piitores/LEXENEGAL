@@ -1694,16 +1694,20 @@ export function arbreHtmlSsr(law, art, noeuds, arts) {
   return `<div class="ssr-troot">${racine.map(noeud).join('')}</div>`;
 }
 
-// COPIE de libellePeriode (src/lib/versionsArticle.ts) : « En vigueur du 1er décembre 1997 au 2 septembre
-// 2026 », ou « En vigueur depuis le … » pour une version sans fin.
-export function libellePeriodeSsr(v, versions, articleNumber) {
+// COPIES de estAbroge, libelleSansFin et libellePeriode (src/lib/versionsArticle.ts) : « En vigueur du
+// 1er décembre 1997 au 2 septembre 2026 » ; sans fin, « En vigueur depuis le … », ou « Article abrogé »
+// pour un article abrogé (jamais « en vigueur depuis » sous le bandeau « abrogé », 06/10/2026).
+export const estAbrogeSsr = (a) => !!a && (a.status === 'abrogé' || a.is_active === false);
+export const libelleSansFinSsr = (effectiveDate, abroge = false) =>
+  (abroge ? 'Article abrogé' : `En vigueur depuis le ${dateLongue(effectiveDate)}`);
+export function libellePeriodeSsr(v, versions, articleNumber, abroge = false) {
   const fin = finVersion(v, versions, articleNumber);
   return fin
     ? `En vigueur du ${dateLongue(v.effective_date)} au ${dateLongue(veille(fin))}`
-    : `En vigueur depuis le ${dateLongue(v.effective_date)}`;
+    : libelleSansFinSsr(v.effective_date, abroge);
 }
-// Ligne de version sous le titre, comme ArticlePage.tsx : version actuelle sans fin, « En vigueur depuis
-// le 3 septembre 2026 » (date à la façon du navigateur, sans « 1er ») ; version actuelle qui a une fin,
+// Ligne de version sous le titre, comme ArticlePage.tsx : version actuelle sans fin, libelleSansFinSsr
+// (« En vigueur depuis le 1er septembre 2026 », ou « Article abrogé ») ; version actuelle qui a une fin,
 // ou version datée retenue (choix), sa période. Article sans version : date de publication du texte.
 // null (date illisible) : emplacement vide de même hauteur.
 export function ligneVersionSsr(versions, law, art, choix = null) {
@@ -1717,9 +1721,7 @@ export function ligneVersionSsr(versions, law, art, choix = null) {
     : (law && law.publication_date ? { effective_date: law.publication_date, expiration_date: null, version_note: null } : null);
   if (!v || !estDateValide(jourDe(v.effective_date))) return null;
   if (v.expiration_date) return { texte: libellePeriodeSsr(v, liste || [v], art.article_number), note: v.version_note || '' };
-  const date = formatDateFr(v.effective_date);
-  if (!date || date === 'Invalid Date') return null;
-  return { texte: `En vigueur depuis le ${date}`, note: v.version_note || '' };
+  return { texte: libelleSansFinSsr(v.effective_date, estAbrogeSsr(art)), note: v.version_note || '' };
 }
 
 const jourMoisAn = (d) => {
