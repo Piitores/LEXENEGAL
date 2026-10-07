@@ -632,6 +632,8 @@ const ArticlePage: React.FC = () => {
                 title={titreSeoArticle(article, law ?? {})}
                 description={descriptionSeoArticle(article, law ?? {}, texteAvecIntitule(currentVersion.content, (h) => h.replace(/<[^>]+>/g, ' ')))}
                 url={`https://www.lexenegal.sn${urlArticle(codeSlug || '', article.slug)}`}
+                // Ancienne rédaction affichée (?ancien= / ?date=) : consultable, jamais indexée à part.
+                noindex={!choix.estActuelle}
             />
 
             <div className="article-layout">

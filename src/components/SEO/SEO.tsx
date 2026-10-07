@@ -15,6 +15,12 @@ interface SEOProps {
     resume?: string;
     motsCles?: string[];
     chambre?: string;
+    /**
+     * Page à ne pas indexer (« noindex, follow »), SANS balise canonical : ancienne rédaction d'un
+     * article (?ancien= / ?date=), décision du propriétaire du 07/10/2026. Même règle que
+     * api/render.js (headBlock).
+     */
+    noindex?: boolean;
 }
 
 // Origine canonique du site (jamais location.origin : sur un déploiement de
@@ -48,7 +54,8 @@ const SEO: React.FC<SEOProps> = ({
     date,
     resume,
     motsCles,
-    chambre
+    chambre,
+    noindex = false
 }) => {
     // URL canonique effective : celle fournie par la page, sinon la page elle-même.
     const canonicalUrl = url || selfCanonicalUrl();
@@ -136,8 +143,8 @@ const SEO: React.FC<SEOProps> = ({
             <meta name="description" content={pageDescription} />
             <meta name="keywords" content={pageKeywords} />
 
-            {/* Canonical URL - Prevent duplicate content */}
-            <link rel="canonical" href={canonicalUrl} />
+            {/* Canonical URL - Prevent duplicate content ; jamais avec noindex (signaux contradictoires) */}
+            {noindex ? <meta name="robots" content="noindex, follow" /> : <link rel="canonical" href={canonicalUrl} />}
 
             {/* Geo Targeting */}
             <meta name="geo.region" content="SN" />

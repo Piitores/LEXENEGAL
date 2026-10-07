@@ -171,12 +171,18 @@ function ldjson(obj) { return `<script type="application/ld+json">${JSON.stringi
  * générique du composant React — on le laisse hors du périmètre de Helmet.
  */
 const RH = 'data-rh="true"';
-function headBlock({ title, description, keywords, canonical, ogType, schema }) {
+/*
+ * noindex (07/10/2026, ancienne rédaction d'un article affichée par ?ancien= / ?date=) : « noindex, follow »
+ * et PAS de balise canonical (deux signaux contradictoires). Décision du propriétaire : les anciennes
+ * rédactions restent consultables par le versionnement (liens des décisions, comparateur), mais ne
+ * sortent pas dans Google comme des pages à part, sous le titre de l'article en vigueur.
+ */
+function headBlock({ title, description, keywords, canonical, ogType, schema, noindex = false }) {
   return `
   <title ${RH}>${esc(title)}</title>
   <meta ${RH} name="description" content="${attr(description)}" />
   ${keywords ? `<meta ${RH} name="keywords" content="${attr(keywords)}" />` : ''}
-  <link ${RH} rel="canonical" href="${attr(canonical)}" />
+  ${noindex ? `<meta ${RH} name="robots" content="noindex, follow" />` : `<link ${RH} rel="canonical" href="${attr(canonical)}" />`}
   <meta ${RH} name="geo.region" content="SN" />
   <meta ${RH} name="language" content="fr" />
   <meta ${RH} property="og:type" content="${ogType || 'article'}" />
@@ -533,9 +539,13 @@ export function entreesArticlesCites(cited, dateDecision, bascules) {
     const bascule = info && estDateValide(info.bascule) ? info.bascule : null;
     const deCode = deTexte(String(a.code.title || '').trim());
     const devenu = libelleSeoArticle(a);
+    const propre = normAncien(a.article_number);
     for (const n of anciens) {
       const num = numeroAncienAffiche(n);
       if (date && depuis && date < depuis) { ajoute(null, `Article ${num} ${deCode}`); continue; }
+      // Ancien article NON repris, cité sous son propre numéro : il est lui-même la page (abrogé, rangé
+      // dans « Articles du Code de … non repris »), sans paramètre (07/10/2026 : 27 liens passaient par un 301).
+      if (normAncien(n) === propre) { ajoute(base, `${label} - ${a.code.title ?? ''}`); continue; }
       const libelle = `Article ${num} ${deCode}${depuis ? ` de ${depuis.slice(0, 4)}` : ''}, repris à l'${devenu.charAt(0).toLowerCase()}${devenu.slice(1)}`;
       let href = base;
       if (bascule && !date) href = `${base}?ancien=${encodeURIComponent(normAncien(n))}`;
@@ -1082,7 +1092,7 @@ export function descriptionSeoArticle(a, t, texte, ancien) {
  * (legislationLegalForce : en vigueur, ou abrogé pour un ancien article non repris), le titre marqué
  * « (abrogé) » et les anciens numéros repris dans les mots-clés. Sans lui, en-tête inchangé.
  */
-export function buildArticleHead(law, art, canonical, plain, fa = null) {
+export function buildArticleHead(law, art, canonical, plain, fa = null, ancienneRedaction = false) {
   const numLabel = libelleSeoArticle(art);
   const ancien = (fa && fa.ancien) || undefined;
   const title = titreSeoArticle(art, law, ancien);
@@ -1111,7 +1121,7 @@ export function buildArticleHead(law, art, canonical, plain, fa = null) {
     ],
   };
   const motsCles = fa && fa.motsCles ? `, ${fa.motsCles}` : '';
-  return headBlock({ title, description, keywords: `${numLabel}, ${law.title}, Droit sénégalais, Lexenegal${motsCles}`, canonical, ogType: 'article', schema: [schema, filAriane] });
+  return headBlock({ title, description, keywords: `${numLabel}, ${law.title}, Droit sénégalais, Lexenegal${motsCles}`, canonical, ogType: 'article', schema: [schema, filAriane], noindex: ancienneRedaction });
 }
 /*
  * Place de l'article dans le plan du code (livre / titre / chapitre / section…) : 96,5 % des articles
@@ -1330,6 +1340,17 @@ export function mentionAnciens(numeros) {
  * « Rédaction de l'ancien article L.56, en vigueur jusqu'au 2 septembre 2026 » (sans date) ;
  * « Version la plus ancienne disponible, en vigueur à partir du 1er décembre 1997 (ancien article L.56) ».
  */
+/*
+ * ?ancien=X&date=D superflue : la même version que ?ancien=X seul, et pas « avant la première version ».
+ * Rend la requête de l'adresse unique (« ?ancien=X »), ou null s'il faut garder l'adresse demandée.
+ */
+export function adresseUniqueAncienneRedaction(versions, params, choix, articleNumber) {
+  if (!params || !params.ancien || !params.date || !choix || choix.estActuelle || choix.horsPeriode === 'avant') return null;
+  const sansDate = choisirVersions(versions, { ancien: params.ancien, date: null }, articleNumber);
+  if (sansDate.estActuelle) return null;
+  const ids = (c) => c.versions.map((v) => v.id).join('|');
+  return ids(sansDate) === ids(choix) ? `?ancien=${encodeURIComponent(params.ancien)}` : null;
+}
 export function libelleBandeauVersion(choix, params, versions, articleNumber) {
   if (choix.estActuelle || !choix.versions.length) return null;
   const numeros = anciensNumerosAffiches(choix.versions);
@@ -2902,6 +2923,12 @@ export default async function handler(req, res) {
         try { versions = await fetchVersions(art.id); } catch (e) { return serveShell(60); }
         choix = choisirVersions(versions, params, art.article_number);
         if (choix.estActuelle) return serve301Fusion(canonical);
+        // Une seule adresse par ancienne rédaction (décision du propriétaire du 07/10/2026) : une date qui
+        // ne change pas la version affichée (cas de presque toutes les chaînes, qui n'ont qu'une version)
+        // est superflue : 301 vers ?ancien=X. Une date antérieure à la première version garde son adresse
+        // (le bandeau « version la plus ancienne disponible » en dépend).
+        const adresseAncien = adresseUniqueAncienneRedaction(versions, params, choix, art.article_number);
+        if (adresseAncien) return serve301Fusion(`${canonical}${adresseAncien}`);
       }
       // Précédent et suivant restent dans le même ensemble (code en vigueur, ou anciens articles non
       // repris) et sautent les articles désactivés ; hors fusion, filtre vide.
@@ -2937,7 +2964,7 @@ export default async function handler(req, res) {
         depuis: fusion ? fusion.depuis : null,
         parties,
       };
-      return serveHtml(buildArticleHead(law, art, canonical, texteSeoArticle(content), fa) + styleSsr('article'),
+      return serveHtml(buildArticleHead(law, art, canonical, texteSeoArticle(content), fa, !!(choix && !choix.estActuelle)) + styleSsr('article'),
         buildArticleBody(law, art, affiche, citing, chemin, voisins, fa, habillage),
         conc.transitoire ? CACHE_COURT : undefined);
     }

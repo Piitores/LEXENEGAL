@@ -334,6 +334,16 @@ describe('rendu serveur : « Textes et articles cités » d’une décision', ()
         ]);
     });
 
+    // 07/10/2026 : 27 liens de décisions vers un ancien article NON repris passaient par un 301
+    // (article-l256?ancien=L256&date=… -> article-l256). L'article est lui-même la page : lien direct.
+    it('ancien article non repris cité sous son propre numéro : lien direct, sans paramètre', async () => {
+        const api = await charger('render.js');
+        const l256 = { slug: 'article-l256', num: 'Article L.256 (Code de 1997)', num_court: null, article_number: 'L.256.', code: CODE_CT };
+        expect(api.entreesArticlesCites([{ anciens_numeros: ['L.256.'], article: l256 }], '2000-02-13', BASCULES)).toEqual([
+            { href: '/code/code-travail/article-l256', label: 'Article L.256 (Code de 1997) - Code du Travail' },
+        ]);
+    });
+
     it('lien reporté : ancien numéro, lien daté si la décision précède la bascule, dédoublonné', async () => {
         const api = await charger('render.js');
         const cites = [
@@ -687,14 +697,37 @@ describe('handler de api/render.js (Supabase simulé)', () => {
         }
     });
 
-    it('code fusionné : version datée en 200, bandeau, canonical sans paramètre', async () => {
+    /*
+     * Décision du propriétaire du 07/10/2026 : une ancienne rédaction reste consultable (versionnement, liens
+     * des décisions) mais n'est JAMAIS indexée comme une page à part (« noindex, follow », sans canonical), et
+     * n'a qu'UNE adresse : une date qui ne change pas la version affichée renvoie (301) vers ?ancien=X.
+     */
+    it('code fusionné : date superflue -> 301 vers l’adresse unique ?ancien=X', async () => {
         const r = await appel(APRES, { type: 'article', code: 'code-travail', slug: 'art-137', ancien: 'L56', date: '2015-03-04' });
+        expect({ statut: r.statut, entetes: r.entetes }).toEqual({ statut: 301, entetes: redirection(`${SITE}/code/code-travail/art-137?ancien=L56`) });
+    });
+
+    it('code fusionné : ancienne rédaction en 200, bandeau, noindex et pas de canonical', async () => {
+        const r = await appel(APRES, { type: 'article', code: 'code-travail', slug: 'art-137', ancien: 'L56' });
         expect(r.statut).toBe(200);
         expect(r.entetes).toEqual({ 'Content-Type': HTML, 'Cache-Control': CACHE_PAGE });
-        expect(r.corps).toContain('<link data-rh="true" rel="canonical" href="https://www.lexenegal.sn/code/code-travail/art-137" />');
-        expect(r.corps).toContain('Version en vigueur le 4 mars 2015 (ancien article L.56) - <a href="/code/code-travail/art-137">voir la version actuelle</a>');
+        expect(r.corps).toContain('<meta data-rh="true" name="robots" content="noindex, follow" />');
+        expect(r.corps).not.toContain('rel="canonical"');
+        // Texte échappé (esc) : apostrophes en &#039;.
+        expect(r.corps).toContain('Rédaction de l&#039;ancien article L.56, en vigueur jusqu&#039;au 2 septembre 2026 - <a href="/code/code-travail/art-137">voir la version actuelle</a>');
         expect(r.corps).toContain('<div class="ssr-article-body"><p>Rédaction de l’ancien L.56.</p></div>');
-        expect(r.corps).not.toContain('noindex');
+        // La version actuelle, elle, reste indexable avec sa canonical.
+        const actuelle = await appel(APRES, { type: 'article', code: 'code-travail', slug: 'art-137' });
+        expect(actuelle.corps).toContain('<link data-rh="true" rel="canonical" href="https://www.lexenegal.sn/code/code-travail/art-137" />');
+        expect(actuelle.corps).not.toContain('noindex');
+    });
+
+    it('code fusionné : date antérieure à la première version, adresse gardée (bandeau « plus ancienne »), noindex', async () => {
+        const r = await appel(APRES, { type: 'article', code: 'code-travail', slug: 'art-137', ancien: 'L56', date: '1990-01-01' });
+        expect(r.statut).toBe(200);
+        expect(r.corps).toContain('Version la plus ancienne disponible, en vigueur à partir du 1er décembre 1997 (ancien article L.56)');
+        expect(r.corps).toContain('<meta data-rh="true" name="robots" content="noindex, follow" />');
+        expect(r.corps).not.toContain('rel="canonical"');
     });
 
     it('texte retiré absent de la base : 301 en un seul saut, chemin et paramètres conservés', async () => {
@@ -765,6 +798,22 @@ describe('handler de api/render.js (Supabase simulé)', () => {
         const introuvable = await appel(etat, { type: 'article', code: 'code-electoral', slug: 'art-l-9999' });
         expect(introuvable.statut).toBe(404);
         expect(introuvable.journal.filter((a) => a.includes('/articles?') && a.includes('slug=eq.')).length).toBe(1);
+    });
+});
+
+describe('adresseUniqueAncienneRedaction (api/render.js)', () => {
+    it('garde la date seulement quand elle change la version affichée ou précède la première', async () => {
+        const api = await charger('render.js');
+        const choix = (date: string) => api.choisirVersions(ART_137, { ancien: 'L56', date }, '137');
+        // 2001 : rédaction de 1997 (la chaîne L.56 en a deux) : la date compte, adresse gardée.
+        expect(api.adresseUniqueAncienneRedaction(ART_137, { ancien: 'L56', date: '2001-01-01' }, choix('2001-01-01'), '137')).toBeNull();
+        // 2016 : rédaction de 2015 = celle de ?ancien=L56 sans date : date superflue.
+        expect(api.adresseUniqueAncienneRedaction(ART_137, { ancien: 'L56', date: '2016-01-01' }, choix('2016-01-01'), '137')).toBe('?ancien=L56');
+        // Avant 1997 : bandeau « version la plus ancienne disponible », adresse gardée.
+        expect(api.adresseUniqueAncienneRedaction(ART_137, { ancien: 'L56', date: '1990-01-01' }, choix('1990-01-01'), '137')).toBeNull();
+        // Sans ancien numéro, ou sans date : rien à faire.
+        expect(api.adresseUniqueAncienneRedaction(ART_137, { ancien: null, date: '2016-01-01' }, choix('2016-01-01'), '137')).toBeNull();
+        expect(api.adresseUniqueAncienneRedaction(ART_137, { ancien: 'L56', date: null }, choix('2016-01-01'), '137')).toBeNull();
     });
 });
 
