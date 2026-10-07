@@ -69,6 +69,18 @@ export function urlArticle(codeSlug, articleSlug) {
 }
 
 /*
+ * Slug d'article en MAJUSCULES d'une version remplacée (ancien Code électoral, avant le 30/08/2026 :
+ * « art-L-5 », « art-LO-24 », « art-R-premier »), que Google connaît encore (Search Console, 07/10/2026 :
+ * « Exclue par noindex » puis 404). Rend la forme actuelle (« art-l-5 », « art-l-o-24 »), ou null si le
+ * slug est déjà en minuscules. Vérifié le 07/10/2026 : les 473 anciens slugs donnent les 473 slugs
+ * actuels, et aucun slug d'article en base ne contient de majuscule.
+ */
+export function slugArticleMinuscule(slug) {
+  if (!slug || slug === slug.toLowerCase()) return null;
+  return slug.toLowerCase().replace(/^art-lo-/, 'art-l-o-');
+}
+
+/*
  * Textes retirés par la fusion des codes 2026 (décision du propriétaire du 02/10/2026 : un seul Code
  * du travail, un seul Code de la sécurité sociale). Le 301 vient de ce relais, et SEULEMENT quand la
  * ligne du texte a disparu de la base (après la migration de données) : le handler va alors en UN seul
@@ -2863,6 +2875,14 @@ export default async function handler(req, res) {
           let alt = null;
           try { alt = await fetchArticle(law.id, short); } catch (e) { return serve503(); }
           if (alt) return serve301(adresseArticle(short));
+        }
+        // Ancien slug en majuscules (version remplacée du Code électoral) : 301 vers l'article actuel
+        // s'il existe dans ce texte, sinon introuvable comme avant.
+        const minuscule = slugArticleMinuscule(artSlug);
+        if (minuscule) {
+          let alt = null;
+          try { alt = await fetchArticle(law.id, minuscule); } catch (e) { return serve503(); }
+          if (alt) return serve301(adresseArticle(minuscule));
         }
         // Concordance illisible (panne) : l'adresse est peut-être un ancien slug à rediriger. 503
         // (Google réessaiera), jamais 404.

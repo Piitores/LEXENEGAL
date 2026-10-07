@@ -110,6 +110,12 @@ const ScrollManager = () => {
   return null;
 };
 
+// L'erreur d'affichage est oubliée à chaque changement d'adresse (ErrorBoundary, cleNavigation).
+const ErrorBoundaryParAdresse: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const location = useLocation();
+  return <ErrorBoundary cleNavigation={location.key}>{children}</ErrorBoundary>;
+};
+
 function App() {
   const [scrolled, setScrolled] = useState(false);
 
@@ -151,7 +157,7 @@ function App() {
             <SurveillanceVersionServeur />
             <AmbientEffects />
             <Navbar scrolled={scrolled} />
-            <ErrorBoundary>
+            <ErrorBoundaryParAdresse>
               {/* Même hauteur que les états « Chargement… » des pages : le pied de page
                   reste hors écran pendant le chargement du morceau de code (pas de CLS). */}
               <Suspense fallback={<div className="route-fallback" aria-busy="true"><div className="route-fallback__spinner" /></div>}>
@@ -202,7 +208,7 @@ function App() {
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
               </Suspense>
-          </ErrorBoundary>
+          </ErrorBoundaryParAdresse>
           <Footer />
           <AccountNudge />
           <InstallPrompt />

@@ -170,7 +170,8 @@ const PAGES_STATIQUES = [
   { url: '/', priority: '1.0', changefreq: 'daily' },
   { url: '/jurisprudence', priority: '0.9', changefreq: 'weekly' },
   { url: '/guides', priority: '0.8', changefreq: 'weekly' },
-  { url: '/search', priority: '0.9', changefreq: 'daily' },
+  // ⛔ Pas de /search : page de résultats servie en noindex (vercel.json, X-Robots-Tag) ; la déclarer
+  // ici demandait à Google de l'indexer (Search Console, 07/10/2026).
   { url: '/codes', priority: '0.9', changefreq: 'daily' },
   { url: '/droit-communautaire', priority: '0.8', changefreq: 'weekly' },
   { url: '/doctrine-fiscale', priority: '0.8', changefreq: 'weekly' },

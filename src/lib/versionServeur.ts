@@ -20,7 +20,10 @@
  *    l'on cliquait à chaque bandeau ; relecture finale). « Réessayer », sans rechargement, reste
  *    réservé à « Chargement interrompu », dont le bandeau suffit (jamais deux bandeaux) ;
  *  - un « Réessayer » (passage « interrompu » -> « en chargement ») ouvre une NOUVELLE tentative :
- *    l'échéance de 20 s est réarmée, le bandeau du filet ne paraît pas à l'instant du clic.
+ *    l'échéance de 20 s est réarmée, le bandeau du filet ne paraît pas à l'instant du clic ;
+ *  - une page qui PLANTE pendant que la version serveur est affichée (morceau de code d'un ancien
+ *    déploiement introuvable, bug) monte aussi « Chargement interrompu » via l'ErrorBoundary
+ *    (lib/erreurChargement.ts, 07/10/2026) : jamais « Une erreur inattendue » à la place du texte.
  *
  * ⚠️ Le rappel doit venir d'un MutationObserver, jamais d'un minuteur : il s'exécute dans la même
  * tâche que la mise à jour du DOM par React, AVANT le rendu à l'écran. Le navigateur ne peint donc

@@ -132,3 +132,43 @@ describe('textes retirés (fusion des codes 2026)', () => {
         }
     });
 });
+
+/*
+ * Diagnostic Search Console du 07/10/2026.
+ * - Un morceau de code /assets/ disparu (ancien déploiement) recevait index.html en 200 : le navigateur
+ *   et Google lisaient du HTML à la place du JavaScript. Il doit répondre un vrai 404.
+ * - L'ancienne adresse d'un article du COCC (V1) allait à la racine du code : Google rattachait l'article
+ *   à la page du code. Elle va désormais à l'article de même slug (les 6 adresses connues existent).
+ */
+describe('vercel.json : fichiers /assets et ancien COCC', () => {
+    const lireConfig = async () => {
+        const fs = await import('fs');
+        return JSON.parse(fs.readFileSync(decodeURIComponent(new URL('../../../vercel.json', import.meta.url).pathname), 'utf8'));
+    };
+
+    it('la réécriture finale vers index.html ne capte pas /assets/', async () => {
+        const config = await lireConfig();
+        const finales = (config.rewrites as Array<{ source: string; destination: string }>).filter((r) => r.destination === '/index.html');
+        expect(finales.length).toBe(1);
+        const re = new RegExp(`^${finales[0].source}$`);
+        for (const adresse of ['/', '/search', '/cabinet', '/code/code-penal/art-5', '/assets-guide']) expect(re.test(adresse), adresse).toBe(true);
+        for (const adresse of ['/assets/index-C0PDiAPM.js', '/assets/DecisionPage-Cot-Doef.js', '/assets/index-BtqJPVEy.css']) expect(re.test(adresse), adresse).toBe(false);
+    });
+
+    it('ancien COCC : le texte va à /code/cocc, chaque article à son équivalent', async () => {
+        const config = await lireConfig();
+        const r = (source: string) => (config.redirects as Array<{ source: string; destination: string; permanent?: boolean }>).find((x) => x.source === source);
+        expect(r('/code/code-des-obligations-civiles-et-commerciales')).toMatchObject({ destination: '/code/cocc', permanent: true });
+        expect(r('/code/code-des-obligations-civiles-et-commerciales/:path*')).toMatchObject({ destination: '/code/cocc/:path*', permanent: true });
+    });
+});
+
+describe('sitemap : pas de page servie en noindex', () => {
+    it('/search (X-Robots-Tag noindex dans vercel.json) ne figure pas dans les pages statiques', async () => {
+        const fs = await import('fs');
+        const source = fs.readFileSync(decodeURIComponent(new URL('../../../api/sitemap.js', import.meta.url).pathname), 'utf8');
+        const bloc = source.slice(source.indexOf('const PAGES_STATIQUES'), source.indexOf('];', source.indexOf('const PAGES_STATIQUES')));
+        expect(bloc).toContain("url: '/codes'");
+        expect(bloc).not.toMatch(/url: '\/search'/);
+    });
+});

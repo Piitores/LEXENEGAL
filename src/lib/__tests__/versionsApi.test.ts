@@ -737,4 +737,45 @@ describe('handler de api/render.js (Supabase simulé)', () => {
             expect({ q, statut: r.statut, cache: r.entetes['Cache-Control'] }).toEqual({ q, statut: 503, cache: 'no-store' });
         }
     });
+
+    /*
+     * Ancien Code électoral (remplacé le 30/08/2026) : slugs en majuscules connus de Google (Search
+     * Console, 07/10/2026 : « Exclue par noindex » puis 404). 301 vers l'article actuel s'il existe.
+     */
+    it('ancien slug en majuscules : 301 vers l’article en minuscules, 404 s’il n’existe pas', async () => {
+        const ELECTORAL = { ...PENAL, id: 'CE', slug: 'code-electoral', title: 'Code électoral', short_title: 'Code électoral', reference: 'Loi n° 2021-35 du 23 juillet 2021', publication_date: '2021-07-23' };
+        const etat: Etat = {
+            ...APRES,
+            laws: [...APRES.laws, ELECTORAL],
+            articles: [...APRES.articles,
+                article('e5', 'CE', 'art-l-5', 'Article L.5', 'L.5', 5),
+                article('e24', 'CE', 'art-l-o-24', 'Article L.O.24', 'L.O.24', 24),
+                article('er1', 'CE', 'art-r-premier', 'Article R.premier', 'R.premier', 1001)],
+        };
+        const permanente = (location: string) => ({ Location: location, 'Cache-Control': 'public, s-maxage=86400' });
+        for (const [ancien, actuel] of [['art-L-5', 'art-l-5'], ['art-LO-24', 'art-l-o-24'], ['art-R-premier', 'art-r-premier']]) {
+            const r = await appel(etat, { type: 'article', code: 'code-electoral', slug: ancien });
+            expect({ ancien, statut: r.statut, entetes: r.entetes }).toEqual({ ancien, statut: 301, entetes: permanente(`${SITE}/code/code-electoral/${actuel}`) });
+        }
+        const inconnu = await appel(etat, { type: 'article', code: 'code-electoral', slug: 'art-L-9999' });
+        expect(inconnu.statut).toBe(404);
+        // Slug déjà en minuscules : aucune lecture supplémentaire, réponse inchangée.
+        const actuel = await appel(etat, { type: 'article', code: 'code-electoral', slug: 'art-l-5' });
+        expect(actuel.statut).toBe(200);
+        const introuvable = await appel(etat, { type: 'article', code: 'code-electoral', slug: 'art-l-9999' });
+        expect(introuvable.statut).toBe(404);
+        expect(introuvable.journal.filter((a) => a.includes('/articles?') && a.includes('slug=eq.')).length).toBe(1);
+    });
+});
+
+describe('slugArticleMinuscule (api/render.js)', () => {
+    it('rend la forme actuelle d’un ancien slug en majuscules, null sinon', async () => {
+        const api = await charger('render.js');
+        expect(api.slugArticleMinuscule('art-L-5')).toBe('art-l-5');
+        expect(api.slugArticleMinuscule('art-LO-24')).toBe('art-l-o-24');
+        expect(api.slugArticleMinuscule('art-L-premier')).toBe('art-l-premier');
+        expect(api.slugArticleMinuscule('art-R-12')).toBe('art-r-12');
+        expect(api.slugArticleMinuscule('art-l-5')).toBeNull();
+        expect(api.slugArticleMinuscule('')).toBeNull();
+    });
 });
