@@ -16,13 +16,13 @@ async function checkRows() {
     
     const { count: total, error: err1 } = await supabase
         .from('decisions')
-        .select('*', { count: 'exact', head: true });
+        .select('id', { count: 'exact', head: true });
         
     console.log(`Nombre total de décisions : ${total}`);
     
     const { count: nullCount, error: err2 } = await supabase
         .from('decisions')
-        .select('*', { count: 'exact', head: true })
+        .select('id', { count: 'exact', head: true })
         .is('fts_vector', null);
         
     console.log(`Nombre de décisions avec fts_vector vide (NULL) : ${nullCount}`);

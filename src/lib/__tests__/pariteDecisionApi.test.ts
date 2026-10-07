@@ -71,13 +71,13 @@ describe('parité du formateur de décisions (React / serveur)', () => {
         }
     });
 
-    it('corps servi = corps de la page React (texte_brut, texte_integral brut ou déjà balisé)', async () => {
+    it('corps servi = corps de la page React (texte_integral brut, avec composition ou déjà balisé)', async () => {
         const { buildDecisionBody } = await charger('render.js');
         const cas = [
-            { texte_brut: PARAGRAPHES, texte_integral: null },
-            { texte_brut: null, texte_integral: COMPOSITION + '\n\n' + PARAGRAPHES },
-            { texte_brut: null, texte_integral: SANS_PARAGRAPHES },
-            { texte_brut: null, texte_integral: HTML },
+            { texte_integral: PARAGRAPHES },
+            { texte_integral: COMPOSITION + '\n\n' + PARAGRAPHES },
+            { texte_integral: SANS_PARAGRAPHES },
+            { texte_integral: HTML },
         ];
         for (const d of cas) {
             const corps = buildDecisionBody({ ...d, slug: 'x', reference: 'R' }, [], [], {});
@@ -85,10 +85,39 @@ describe('parité du formateur de décisions (React / serveur)', () => {
         }
     });
 
+    /*
+     * ⛔ texte_brut n'est JAMAIS servi (07/10/2026) : non pseudonymisé (charte Juricaf du 22/06/2026),
+     * plus lisible par le rôle public. Même présent dans l'objet, il est ignoré par les deux rendus.
+     */
+    it('texte_brut ignoré par le serveur et par la page, même quand texte_integral n’est pas structuré', async () => {
+        const { buildDecisionBody } = await charger('render.js');
+        const secret = 'Monsieur Secretnom demeurant Quartier Secret';
+        for (const d of [
+            { texte_brut: secret, texte_integral: PARAGRAPHES },
+            { texte_brut: secret, texte_integral: HTML },
+            { texte_brut: secret, texte_integral: null },
+        ]) {
+            const corps = buildDecisionBody({ ...d, slug: 'x', reference: 'R' }, [], [], {});
+            expect(corps).not.toContain('Secretnom');
+            expect(getDecisionHtml(d)).not.toContain('Secretnom');
+        }
+        expect(getDecisionHtml({ texte_brut: secret, texte_integral: null })).toBe('<p>Texte intégral non disponible.</p>');
+        // Les deux lectures de la table ne demandent plus la colonne (droit retiré au rôle public).
+        const { readFileSync } = await import('node:fs');
+        const lire = (chemin: string) => readFileSync(decodeURIComponent(new URL(chemin, import.meta.url).pathname), 'utf8');
+        expect(lire('../../../api/render.js')).not.toMatch(/decisions\?[^`]*texte_brut/);
+        const page = lire('../../pages/Decision/DecisionPage.tsx');
+        expect(page).toMatch(/\.select\(COLONNES_DECISION\)/);
+        expect(page).not.toMatch(/from\('decisions'\)\s*\.select\('\*'/);
+        const colonnes = page.match(/COLONNES_DECISION = '([^']+)'/)?.[1] ?? '';
+        expect(colonnes).not.toContain('texte_brut');
+        expect(colonnes).toContain('texte_integral');
+    });
+
     it('aucun mot du texte de la base ne se perd dans le corps servi', async () => {
         const { buildDecisionBody } = await charger('render.js');
         for (const t of [...TEXTES, HTML]) {
-            const servi = new Set(mots(buildDecisionBody({ texte_brut: t, slug: 'x', reference: 'R' }, [], [], {})));
+            const servi = new Set(mots(buildDecisionBody({ texte_integral: t, slug: 'x', reference: 'R' }, [], [], {})));
             const manquants = [...new Set(mots(t))].filter((m) => m.length > 2 && !servi.has(m));
             expect(manquants).toEqual([]);
         }

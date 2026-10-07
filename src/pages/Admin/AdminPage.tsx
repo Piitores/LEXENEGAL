@@ -102,7 +102,7 @@ const AdminPage: React.FC = () => {
         setLoading(true);
         try {
             const [decisionsRes, articlesRes, usersRes, downloadsRes] = await Promise.all([
-                supabase.from('decisions').select('*', { count: 'exact', head: true }),
+                supabase.from('decisions').select('id', { count: 'exact', head: true }), // jamais '*' : texte_brut n'est plus lisible (07/10/2026)
                 supabase.from('articles').select('*', { count: 'exact', head: true }),
                 supabase.from('profiles').select('*', { count: 'exact', head: true }),
                 supabase.from('audit_log').select('*', { count: 'exact', head: true }).eq('action', 'download_pdf'),

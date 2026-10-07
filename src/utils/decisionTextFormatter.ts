@@ -241,18 +241,10 @@ export function structureDecisionText(texte: string): StructuredParagraph[] {
 }
 
 /**
- * Détecte si une décision utilise le nouveau format texte_brut
- */
-export function isNewFormat(decision: any): boolean {
-    return (
-        decision.texte_brut &&
-        (!decision.texte_integral || decision.encodage_propre === true)
-    );
-}
-
-/**
- * Obtient le contenu HTML à afficher pour une décision
- * Gère automatiquement les deux formats
+ * Obtient le contenu HTML à afficher pour une décision, à partir de texte_integral seul.
+ * ⛔ Jamais texte_brut : la charte Juricaf du 22/06/2026 n'a pseudonymisé que texte_integral ;
+ * depuis le 07/10/2026 la colonne n'est plus lue par le site et le rôle public n'y a plus accès.
+ * Même règle dans api/render.js (texteDecisionAffiche) et lexenegal-mcp/src/texteDecision.ts.
  */
 export function getDecisionHtml(decision: any): string {
     // If texte_integral already has proper HTML structure, return it directly
@@ -269,13 +261,8 @@ export function getDecisionHtml(decision: any): string {
         return decisionTextToHtml(decision.texte_integral);
     }
 
-    // Use texte_brut if available
-    if (decision.texte_brut) {
-        return decisionTextToHtml(decision.texte_brut);
-    }
-
-    // Fallback : texte_integral en texte brut (ni HTML structuré reconnu, ni texte_brut).
-    // On le passe dans le MÊME formateur que texte_brut (découpe en paragraphes via
+    // texte_integral en texte brut (ni HTML structuré reconnu, ni composition) : on le passe dans
+    // le formateur des textes bruts (découpe en paragraphes via
     // parseDecisionBody, échappement HTML) au lieu de le renvoyer tel quel - sinon le texte
     // s'affiche en un seul gros bloc non formaté dans dangerouslySetInnerHTML.
     if (decision.texte_integral) {

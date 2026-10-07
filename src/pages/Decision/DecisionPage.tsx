@@ -21,7 +21,10 @@ import {
 } from '../../lib/articleRefResolver';
 import { CODES_REFONDUS, TEXTES_FUSIONNES, textesRetires } from '../../lib/routeTexte';
 import { requeteVersion } from '../../lib/versionsArticle';
-import { getDecisionHtml, isNewFormat } from '../../utils/decisionTextFormatter';
+import { getDecisionHtml } from '../../utils/decisionTextFormatter';
+
+/** Colonnes lues par la page (et le PDF). ⛔ Jamais texte_brut ni '*' : cf. getDecisionHtml. */
+export const COLONNES_DECISION = 'id, slug, reference, juridiction, chambre, date_decision, matiere_principale, resume, mots_cles, articles_loi_cites, decisions_similaires, texte_integral';
 import { logViewDecision, logDownloadPdf } from '../../utils/auditLogger';
 import ReportErrorModal from '../../components/ReportError/ReportErrorModal';
 import AnnotationPanel from '../../components/AnnotationPanel/AnnotationPanel';
@@ -199,9 +202,11 @@ const DecisionPage: React.FC = () => {
         try {
             // maybeSingle et non single : « aucune ligne » est une ABSENCE (data null, sans erreur) ;
             // toute erreur est technique (« Chargement interrompu »), jamais « introuvable ».
+            // Colonnes EXPLICITES (07/10/2026) : le rôle public n'a plus le droit de lire texte_brut
+            // (non pseudonymisé), un select('*') échouerait pour toutes les décisions (42501).
             const { data, error } = await avecReprise(() => supabase
                 .from('decisions')
-                .select('*')
+                .select(COLONNES_DECISION)
                 .eq('slug', slug)
                 .maybeSingle());
             if (depasse()) return;
@@ -445,7 +450,7 @@ const DecisionPage: React.FC = () => {
         </div>
     );
 
-    // Get the HTML content - handles both old (texte_integral) and new (texte_brut) formats
+    // Contenu HTML tiré de texte_integral (jamais texte_brut, cf. getDecisionHtml)
     const rawText = getDecisionHtml(decision);
 
     // Transform article citations to clickable links. La date de la décision choisit, pour un

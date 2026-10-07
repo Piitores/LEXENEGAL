@@ -266,17 +266,15 @@ function corpsDecisionSsr(d) {
 }
 /*
  * Texte d'une décision : la MÊME source que la page (getDecisionHtml, src/utils/decisionTextFormatter.ts).
- * ⛔ Jamais texte_brut quand texte_integral est structuré : la pseudonymisation (charte Juricaf du
- * 22/06/2026, voie médiane) a été appliquée à texte_integral, PAS à texte_brut, qui garde l'en-tête
- * d'origine (noms des parties, naissance, domicile, téléphone). Jusqu'au 05/10/2026 ce rendu servait
- * texte_brut en priorité : ces données partaient dans le HTML lu par Google alors que la page affichait
- * les initiales. texte_brut n'est retenu que là où la page le retient (identique à texte_integral).
+ * ⛔ Jamais texte_brut : la charte Juricaf du 22/06/2026 n'a pseudonymisé que texte_integral, texte_brut
+ * garde l'en-tête d'origine (noms des parties, naissance, domicile, téléphone). Jusqu'au 05/10/2026 ce
+ * rendu servait texte_brut en priorité ; depuis le 07/10/2026 la colonne n'est plus lue du tout (ni ici,
+ * ni par la page React, ni par le MCP) et le rôle public n'a plus le droit de la lire. Là où la page
+ * affichait texte_brut, il était identique à texte_integral (1 606 décisions sur 1 607 ; la dernière a
+ * reçu le même texte dans texte_integral le 07/10/2026).
  */
 function texteDecisionAffiche(d) {
-  const i = d.texte_integral || '';
-  if (/class="master-composition"|class="decision-body"|<div class=/.test(i)) return i;
-  if (i.includes('COMPOSITION DE LA JURIDICTION')) return i;
-  return d.texte_brut || i;
+  return d.texte_integral || '';
 }
 /*
  * Racine de la version serveur. type : type de page (clé de api/_ssr/styles.js) ; la classe ssr-type-TYPE est
@@ -2369,7 +2367,7 @@ async function fetchComptesCodes() {
   } catch (e) { return null; }
 }
 async function fetchDecision(slug) {
-  return one(await sb(`decisions?slug=eq.${encodeURIComponent(slug)}&select=id,reference,slug,date_decision,juridiction,chambre,matiere_principale,parties_principales,resume,mots_cles,articles_loi_cites,texte_brut,texte_integral,decisions_similaires&limit=1`));
+  return one(await sb(`decisions?slug=eq.${encodeURIComponent(slug)}&select=id,reference,slug,date_decision,juridiction,chambre,matiere_principale,parties_principales,resume,mots_cles,articles_loi_cites,texte_integral,decisions_similaires&limit=1`));
 }
 // Décisions liées dans les deux sens du champ decisions_similaires (actives seulement : jamais de lien mort).
 async function fetchRelatedDecisions(d) {
