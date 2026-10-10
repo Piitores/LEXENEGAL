@@ -2456,6 +2456,10 @@ async function fetchDoctrineRedirect(oldSlug) {
 async function fetchDecisionRedirect(oldSlug) {
   return one(await sb(`decision_slug_redirects?old_slug=eq.${encodeURIComponent(oldSlug)}&select=new_slug&limit=1`));
 }
+// Anciennes adresses d'articles renommées (Code pénal, 11/10/2026 : « annexe1-art-56 » → « art-56 ») : 301 permanent.
+async function fetchArticleRedirect(codeId, oldSlug) {
+  return one(await sb(`article_slug_redirects?code_id=eq.${codeId}&old_slug=eq.${encodeURIComponent(oldSlug)}&select=new_slug&limit=1`));
+}
 async function fetchGuide(slug) {
   return one(await sb(`guides?slug=eq.${encodeURIComponent(slug)}&is_active=eq.true&select=slug,title,h1,description,content_html,faq,theme_slug,published_at,updated_at&limit=1`));
 }
@@ -2903,6 +2907,10 @@ export default async function handler(req, res) {
           try { alt = await fetchArticle(law.id, minuscule); } catch (e) { return serve503(); }
           if (alt) return serve301(adresseArticle(minuscule));
         }
+        // Adresse d'article renommée (table article_slug_redirects) : 301 vers la nouvelle.
+        let renomme = null;
+        try { renomme = await fetchArticleRedirect(law.id, artSlug); } catch (e) { return serve503(); }
+        if (renomme && renomme.new_slug && renomme.new_slug !== artSlug) return serve301(adresseArticle(renomme.new_slug));
         // Concordance illisible (panne) : l'adresse est peut-être un ancien slug à rediriger. 503
         // (Google réessaiera), jamais 404.
         if (conc && conc.transitoire) return serve503();

@@ -347,6 +347,21 @@ const ArticlePage: React.FC = () => {
                         navigate(`${urlArticle(codeSlug || '', cible.slug)}${requete}${location.hash}`, { replace: true });
                         return;
                     }
+                    // Adresse d'article renommée (Code pénal, 11/10/2026 : « annexe1-art-56 » → « art-56 ») :
+                    // même redirection que le 301 du rendu serveur (article_slug_redirects).
+                    const { data: renomme, error: erreurRenomme } = await supabase
+                        .from('article_slug_redirects')
+                        .select('new_slug')
+                        .eq('code_id', lawData.id)
+                        .eq('old_slug', articleSlug)
+                        .maybeSingle();
+                    if (depasse()) return;
+                    if (erreurRenomme) throw erreurRenomme;
+                    if (renomme?.new_slug && renomme.new_slug !== articleSlug) {
+                        redirige = true;
+                        navigate(`${urlArticle(codeSlug || '', renomme.new_slug)}${location.search}${location.hash}`, { replace: true });
+                        return;
+                    }
                 }
 
                 if (articleData) {
