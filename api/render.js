@@ -1815,7 +1815,7 @@ export function buildArticleBody(law, art, contentHtml, citing, chemin, voisins,
     : '<p class="ssr-ver ssr-ver--vide" aria-hidden="true"></p>';
   // Texte modificateur (dernier élément de article.modifications), à droite de la ligne de version et
   // repassant dessous quand la place manque, comme .version-info-wrapper d'ArticlePage.tsx (+32 px à la
-  // bascule en 390 px quand il manquait). Texte seul : le lien React ne mène nulle part (href="#").
+  // bascule en 390 px quand il manquait). Texte seul côté serveur (le lien React vers la loi n'existe que si elle est publiée).
   const modifs = Array.isArray(art.modifications) ? art.modifications.filter((m) => m != null && String(m).trim()) : [];
   const versionHtml = modifs.length
     ? `<div class="ssr-ver-wrap">${ligneVersion}<div class="ssr-modif"><span>${esc(modifs[modifs.length - 1])}</span></div></div>`

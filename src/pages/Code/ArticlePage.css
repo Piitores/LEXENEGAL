@@ -1592,3 +1592,12 @@
     color: #047857;
     text-decoration: underline;
 }
+
+/* « Voir ce que cette loi a changé » : lien d'action discret sous la ligne de version (10/10/2026). */
+.voir-changements {
+    display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; padding: 0;
+    background: none; border: none; cursor: pointer; font: inherit; font-size: 0.88rem;
+    color: var(--color-primary, #1f6f43); text-decoration: underline; text-underline-offset: 3px;
+}
+.voir-changements:hover { opacity: 0.8; }
+@media print { .voir-changements { display: none; } }

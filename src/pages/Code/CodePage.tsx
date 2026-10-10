@@ -27,7 +27,7 @@ import { CODES_REFONDUS, slugDuTexte } from '../../lib/routeTexte';
 import { chargerArticlesDuCode, chargerConcordanceDesCodes, COLONNES_LECTURE } from '../../lib/articlesDuCode';
 import { dateCitationCarte, datesNonRepris, type LigneConcordance } from '../../lib/articleRefResolver';
 import { numerotationPropreEnL } from '../../utils/articleLinkRenderer';
-import { correspond, texteCherchable } from '../../lib/rechercheDansLeTexte';
+import { correspond, extraitAutour, texteCherchable } from '../../lib/rechercheDansLeTexte';
 import './CodePage.css';
 import '../../styles/legal-content.css';
 import { separerIntitule } from '../../lib/intituleArticle';
@@ -700,15 +700,26 @@ const CodePage: React.FC = () => {
                         <div className="search-results">
                             <h2>{filteredArticles.length} résultat{filteredArticles.length > 1 ? 's' : ''} pour « {searchQuery} »</h2>
                             <div className="search-results-list">
-                                {filteredArticles.map(a => (
-                                    <Link key={a.id} to={urlArticle(law.slug, a.slug)} className={`search-result-item ${(a.status === 'abrogé' || a.is_active === false || law.abrogated_by_slug || law.abrogation_note) ? 'is-abroge' : ''}`}>
-                                        <strong>
-                                            {a.num || `Article ${a.article_number}`}
-                                            {(a.status === 'abrogé' || a.is_active === false || law.abrogated_by_slug || law.abrogation_note) && <span className="article-card-abroge" style={{ marginLeft: 8 }}>Abrogé</span>}
-                                        </strong>
-                                        <span>{a.chapter_name || a.title_name || ''}</span>
-                                    </Link>
-                                ))}
+                                {filteredArticles.map(a => {
+                                    // Extrait autour du mot cherché (comme Légifrance), mot surligné.
+                                    const ex = extraitAutour(a.content_html || a.content_raw, searchQuery);
+                                    return (
+                                        <Link key={a.id} to={urlArticle(law.slug, a.slug)} className={`search-result-item ${ex ? 'avec-extrait' : ''} ${(a.status === 'abrogé' || a.is_active === false || law.abrogated_by_slug || law.abrogation_note) ? 'is-abroge' : ''}`}>
+                                            <div className="search-result-tete">
+                                                <strong>
+                                                    {a.num || `Article ${a.article_number}`}
+                                                    {(a.status === 'abrogé' || a.is_active === false || law.abrogated_by_slug || law.abrogation_note) && <span className="article-card-abroge" style={{ marginLeft: 8 }}>Abrogé</span>}
+                                                </strong>
+                                                <span>{a.chapter_name || a.title_name || ''}</span>
+                                            </div>
+                                            {ex && (
+                                                <p className="search-result-extrait">
+                                                    {ex.avant}<mark>{ex.trouve}</mark>{ex.apres}
+                                                </p>
+                                            )}
+                                        </Link>
+                                    );
+                                })}
                             </div>
                         </div>
                     ) : selectedNode ? (

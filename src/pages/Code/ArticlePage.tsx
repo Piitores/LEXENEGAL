@@ -106,29 +106,43 @@ interface DoctrineLink {
 // --- Diff mot à mot, conscient des balises HTML (aucune dépendance) ----------
 // Tokenise : balises <...> (atomiques), mots, espaces. Compare par plus longue
 // sous-séquence commune (LCS) et surligne les écarts SANS jamais couper une balise.
-const tokenizeHtml = (html: string): string[] => html.match(/<[^>]+>|[^<\s]+|\s+/g) || [];
+// Les nombres à séparateurs (« 50 000 », « 50.000 ») sont UN seul jeton, pour être comparés entiers.
+const tokenizeHtml = (html: string): string[] =>
+    html.match(/<[^>]+>|\d{1,3}(?:[ .\u00a0\u202f]\d{3})+(?![\d])|[^<\s]+|\s+/g) || [];
 const isWord = (t: string): boolean => t.length > 0 && t[0] !== '<' && /\S/.test(t);
+// Clé de comparaison : une simple différence de PRÉSENTATION n'est pas une modification
+// (« 50 000 » / « 50.000 », « code » / « Code », ’ / ', ponctuation seule ; demande du propriétaire
+// du 10/10/2026 : faire ressortir ce que la loi a réellement changé).
+const PONCTUATION_SEULE = /^[;:,.!?«»"“”()\-–—…]+$/;
+const cleDiff = (t: string): string => {
+    if (!isWord(t)) return t[0] === '<' ? t : ' ';
+    if (PONCTUATION_SEULE.test(t)) return '';
+    return t.toLowerCase().replace(/[’‘ʼ`´]/g, "'").replace(/°/g, '').replace(/(\d)[ .\u00a0\u202f](?=\d{3}\b)/g, '$1')
+        .replace(/[;:,.!?«»"“”]+$/, '');
+};
 
 function diffVersions(oldHtml: string, newHtml: string): { oldHtml: string; newHtml: string } {
     const a = tokenizeHtml(oldHtml);
     const b = tokenizeHtml(newHtml);
+    // Les jetons de pure ponctuation et les blancs ne participent pas à l'alignement.
+    const ka = a.map(cleDiff), kb = b.map(cleDiff);
     const n = a.length, m = b.length;
     // Garde-fou perf : sur un texte gigantesque, on ne tente pas le diff.
     if (n * m > 4_000_000) return { oldHtml, newHtml };
     const dp: number[][] = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
     for (let i = n - 1; i >= 0; i--)
         for (let j = m - 1; j >= 0; j--)
-            dp[i][j] = a[i] === b[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+            dp[i][j] = ka[i] === kb[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
     let oldOut = '', newOut = '', i = 0, j = 0;
-    const del = (t: string) => (isWord(t) ? `<mark class="diff-removed">${t}</mark>` : t);
-    const ins = (t: string) => (isWord(t) ? `<mark class="diff-added">${t}</mark>` : t);
+    // Ponctuation seule ou blanc : jamais surlignés (différence de présentation).
+    const marque = (t: string, k: string, cls: string) => (isWord(t) && k !== '' ? `<mark class="${cls}">${t}</mark>` : t);
     while (i < n && j < m) {
-        if (a[i] === b[j]) { oldOut += a[i]; newOut += b[j]; i++; j++; }
-        else if (dp[i + 1][j] >= dp[i][j + 1]) { oldOut += del(a[i]); i++; }
-        else { newOut += ins(b[j]); j++; }
+        if (ka[i] === kb[j]) { oldOut += a[i]; newOut += b[j]; i++; j++; }
+        else if (dp[i + 1][j] >= dp[i][j + 1]) { oldOut += marque(a[i], ka[i], 'diff-removed'); i++; }
+        else { newOut += marque(b[j], kb[j], 'diff-added'); j++; }
     }
-    while (i < n) oldOut += del(a[i++]);
-    while (j < m) newOut += ins(b[j++]);
+    while (i < n) { oldOut += marque(a[i], ka[i], 'diff-removed'); i++; }
+    while (j < m) { newOut += marque(b[j], kb[j], 'diff-added'); j++; }
     return { oldHtml: oldOut, newHtml: newOut };
 }
 
@@ -197,6 +211,24 @@ const ArticlePage: React.FC = () => {
     const [prevArticle, setPrevArticle] = useState<{ slug: string; number: string } | null>(null);
     const [nextArticle, setNextArticle] = useState<{ slug: string; number: string } | null>(null);
 
+    // Adresse du texte de la dernière loi modificative, s'il est publié (sinon : pas de lien).
+    const [lienLoiModificative, setLienLoiModificative] = useState<string | null>(null);
+    useEffect(() => {
+        const mention = article?.modifications?.[article.modifications.length - 1];
+        const num = mention?.match(/n[°º]\s*(\d{2,4}\s*-\s*\d{1,4})/i)?.[1]?.replace(/\s/g, '');
+        setLienLoiModificative(null);
+        if (!num) return;
+        let annule = false;
+        // Le texte doit porter EXACTEMENT ce numéro (2017-22 ≠ 2017-221) et être publié.
+        const exact = new RegExp(`n[°º]\\s*${num.replace('-', '\\s*-\\s*')}(?!\\d)`, 'i');
+        supabase.from('laws_and_codes').select('slug, title').eq('is_active', true).ilike('title', `%${num}%`).limit(10)
+            .then(({ data }) => {
+                if (annule || !data) return;
+                const t = data.find((l: { slug: string; title: string }) => exact.test(l.title));
+                if (t) setLienLoiModificative(urlTexte(t.slug));
+            });
+        return () => { annule = true; };
+    }, [article?.modifications]);
     // Comparison mode
     const [showComparison, setShowComparison] = useState(false);
     const [compareVersion, setCompareVersion] = useState<ArticleVersion | null>(null);
@@ -501,6 +533,21 @@ const ArticlePage: React.FC = () => {
             setCompareVersion(choix.versions.find((v) => v.id !== currentVersion?.id) ?? null);
         }
         setShowComparison(!showComparison);
+    };
+
+    // Version immédiatement antérieure à la version courante (celle que la dernière loi a remplacée).
+    const versionPrecedente = React.useMemo(() => {
+        if (!currentVersion) return null;
+        const autres = versions.filter(v => v.id !== currentVersion.id && v.effective_date && currentVersion.effective_date
+            && v.effective_date < currentVersion.effective_date);
+        if (!autres.length) return null;
+        return autres.reduce((x, y) => (y.effective_date > x.effective_date ? y : x));
+    }, [versions, currentVersion]);
+
+    const voirChangements = () => {
+        if (!isAuthenticated) { setShowConversionModal(true); return; }
+        setCompareVersion(versionPrecedente);
+        setShowComparison(true);
     };
 
     const selectCompareVersion = (version: ArticleVersion) => {
@@ -809,14 +856,31 @@ const ArticlePage: React.FC = () => {
                         </div>
 
                         {/* MODIFICATIONS INFO (Légifrance Style) */}
+                        {/* Dernière loi modificative : lien vers SON texte quand il est publié chez nous,
+                            sinon simple mention (règle « jamais de lien mort » ; l'ancien href="#" ne
+                            menait nulle part, constaté le 10/10/2026). */}
                         {article.modifications && article.modifications.length > 0 && (
-                            <div className="article-modifications" style={{ textAlign: 'right', fontSize: '0.85rem', color: '#2563EB' }}>
-                                <a href="#" style={{ textDecoration: 'underline', color: 'inherit' }}>
-                                    {article.modifications[article.modifications.length - 1]}
-                                </a>
+                            <div className="article-modifications" style={{ textAlign: 'right', fontSize: '0.85rem' }}>
+                                {lienLoiModificative ? (
+                                    <Link to={lienLoiModificative} style={{ textDecoration: 'underline', color: '#2563EB' }}>
+                                        {article.modifications[article.modifications.length - 1]}
+                                    </Link>
+                                ) : (
+                                    <span style={{ color: 'var(--color-text-muted, #64748b)' }}>
+                                        {article.modifications[article.modifications.length - 1]}
+                                    </span>
+                                )}
                             </div>
                         )}
                     </div>
+                    {/* « Voir ce que cette loi a changé » : ouvre la comparaison avec la version
+                        précédente en un clic (demande du propriétaire, 10/10/2026). */}
+                    {choix.estActuelle && versionPrecedente && (
+                        <button type="button" className="voir-changements" onClick={voirChangements}>
+                            <GitCompare size={14} /> Voir ce que cette loi a changé
+                            {!isAuthenticated && <Lock size={12} className="pro-lock" />}
+                        </button>
+                    )}
                 </header>
 
                 {/* ACTIONS */}

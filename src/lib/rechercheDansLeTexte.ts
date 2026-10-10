@@ -73,3 +73,42 @@ export function correspond(cherchable: string, requete: string): boolean {
     const q = normaliserPourRecherche(requete);
     return q.length > 0 && cherchable.includes(q);
 }
+
+/** Forme de comparaison d'UN caractère (même règles que normaliserPourRecherche). */
+function normaliserCaractere(c: string): string {
+    if (/\s/.test(c)) return ' ';
+    return c.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+        .replace(/œ/g, 'oe').replace(/æ/g, 'ae').replace(/[‘’ʼ`´]/g, "'");
+}
+
+/**
+ * Extrait du texte affiché autour de la 1re occurrence de la requête, pour la liste des résultats
+ * (« … porte sur du bétail ; … »), comme Légifrance. null si la requête n'est que dans le numéro
+ * ou les intitulés (rien à montrer dans le corps).
+ */
+export function extraitAutour(html: string | null | undefined, requete: string, rayon = 90):
+    { avant: string; trouve: string; apres: string } | null {
+    const texte = texteAffiche(html);
+    const q = normaliserPourRecherche(requete);
+    if (!texte || !q) return null;
+    // Texte normalisé + correspondance position normalisée → position d'origine.
+    let norm = '';
+    const origine: number[] = [];
+    for (let i = 0; i < texte.length; i++) {
+        for (const c of normaliserCaractere(texte[i])) { norm += c; origine.push(i); }
+    }
+    const k = norm.indexOf(q);
+    if (k < 0) return null;
+    const debut = origine[k];
+    const fin = origine[k + q.length - 1] + 1;
+    let d = Math.max(0, debut - rayon);
+    let f = Math.min(texte.length, fin + rayon);
+    // Couper sur un blanc pour ne pas trancher un mot.
+    if (d > 0) { const b = texte.indexOf(' ', d); if (b > -1 && b < debut) d = b + 1; }
+    if (f < texte.length) { const b = texte.lastIndexOf(' ', f); if (b > fin) f = b; }
+    return {
+        avant: (d > 0 ? '… ' : '') + texte.slice(d, debut),
+        trouve: texte.slice(debut, fin),
+        apres: texte.slice(fin, f) + (f < texte.length ? ' …' : ''),
+    };
+}
