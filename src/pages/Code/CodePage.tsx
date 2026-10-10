@@ -12,6 +12,7 @@ import ChargementInterrompu from '../../components/ChargementInterrompu/Chargeme
 import CodeNavTree from '../../components/CodeNavTree/CodeNavTree';
 import TextPresentation from '../../components/TextPresentation/TextPresentation';
 import RelatedTexts from '../../components/RelatedTexts/RelatedTexts';
+import TextesLiesJO from '../../components/TextesLiesJO/TextesLiesJO';
 import LinkedLegalContent from '../../components/LinkedLegalContent/LinkedLegalContent';
 import ReportErrorModal from '../../components/ReportError/ReportErrorModal';
 import ActionButton from '../../components/ui/ActionButton';
@@ -904,6 +905,7 @@ const CodePage: React.FC = () => {
                         </>
                     )}
                     {law && <RelatedTexts codeId={law.id} />}
+                    {law && <TextesLiesJO cible={{ type: 'code', id: law.id }} />}
                 </main>
             </div>
 

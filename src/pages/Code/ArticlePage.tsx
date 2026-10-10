@@ -18,6 +18,7 @@ import ChargementInterrompu from '../../components/ChargementInterrompu/Chargeme
 import ConversionModal from '../../components/ConversionModal/ConversionModal';
 import ReportErrorModal from '../../components/ReportError/ReportErrorModal';
 import ActionButton from '../../components/ui/ActionButton';
+import TextesLiesJO from '../../components/TextesLiesJO/TextesLiesJO';
 import CodeNavTree from '../../components/CodeNavTree/CodeNavTree';
 import { estConvention, urlArticle, urlTexte } from '../../lib/urls';
 import { slugDuTexte } from '../../lib/routeTexte';
@@ -1002,6 +1003,9 @@ const ArticlePage: React.FC = () => {
                         </div>
                     )}
                 </div>
+
+                {/* TEXTES LIÉS (graphe du J.O. : modifié par, appliqué par, visé par…), replié par défaut */}
+                {article?.id && <TextesLiesJO cible={{ type: 'article', id: article.id }} />}
 
                 {/* DOCTRINE FISCALE */}
                 {doctrineLinks.length > 0 && (
